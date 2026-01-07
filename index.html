@@ -263,6 +263,11 @@
             document.getElementById('highscoreInputArea').style.display = 'block';
         } 
     }
+    function spawnParticles(x, y, c, count) { 
+        for(let i=0; i<count; i++) {
+            particles.push(new Particle(x, y, c)); 
+        }
+    }
     function loop() {
         if (!gameRunning) return;
         try { 
@@ -301,6 +306,7 @@
 </body>
 </html>
 }
+
 
 
 
