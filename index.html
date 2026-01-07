@@ -232,6 +232,29 @@
         for(let s of stations) { ctx.shadowColor = s.color; ctx.shadowBlur = 20; try { ctx.drawImage(s.img, s.x, s.y, s.w, s.h); } catch(e) {} ctx.shadowBlur = 0; ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Courier New'; ctx.textAlign='center'; ctx.shadowColor="black"; ctx.shadowBlur=4; ctx.fillText(s.label, s.x + s.w/2, s.y - 10); ctx.shadowBlur=0; }
     }
 
+    function spawnLogic() {
+        if (frame % 600 === 0) difficulty += 0.1;
+        if (currentBossStage < bosses.length && score >= bosses[currentBossStage].score) {
+            if (!activeBoss) {
+                let bossData = bosses[currentBossStage]; activeBoss = new Enemy(bossData); enemies.push(activeBoss);
+                playSound('boss'); screenShake = 30; player.bossSpawnTimer = 240; bossNameDisplay.innerText = bossData.name; bossSubtextDisplay.innerText = bossData.subtitle; currentBossStage++;
+            }
+        }
+        let spawnRate = Math.max(15, 60 - difficulty * 4); if (activeBoss) spawnRate *= 2; 
+        if (frame % Math.floor(spawnRate) === 0) enemies.push(new Enemy());
+        
+        if (Math.random() < 0.003) { 
+            let r = Math.random();
+            if (r < 0.25) { items.push(new Item('crate')); playSound('delivery'); player.deliveryTimer = 180; } 
+            else if (r < 0.35) { items.push(new Item('shield')); }
+            else if (r < 0.45) { items.push(new Item('vodka')); } 
+            else if (r < 0.70) { items.push(new Item('chicken')); }
+            else if (r < 0.85) { items.push(new Item('vacation')); }
+            else if (r < 0.96) { if (player.isMartin) items.push(new Item('bike')); else items.push(new Item('bug')); }
+            else if (r < 0.99) { items.push(new Item('hammer')); playSound('delivery'); player.hammerSpawnTimer = 180; }
+            else { if(difficulty > 3) { items.push(new Item('nuke')); } else { items.push(new Item('chicken')); } }
+        }
+    }
     function loop() {
         if (!gameRunning) return;
         try { 
@@ -270,4 +293,5 @@
 </body>
 </html>
 }
+
 
