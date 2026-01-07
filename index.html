@@ -255,6 +255,14 @@
             else { if(difficulty > 3) { items.push(new Item('nuke')); } else { items.push(new Item('chicken')); } }
         }
     }
+    function checkGameOver() { 
+        if (player.hp <= 0) { 
+            gameRunning = false; 
+            document.getElementById('finalScore').innerText = score; 
+            document.getElementById('gameOverScreen').style.display = 'block'; 
+            document.getElementById('highscoreInputArea').style.display = 'block';
+        } 
+    }
     function loop() {
         if (!gameRunning) return;
         try { 
@@ -293,5 +301,6 @@
 </body>
 </html>
 }
+
 
 
