@@ -1,0 +1,46 @@
+💀 TICKET SLAYER: THE LOGISTICS PROTOCOL
+
+Status: Wurm, Ort: Hamm-Rhynern, Mission: Ticket-Eskalation vermeiden.
+
+1. DAS SZENARIO
+Sie wurden dem ZLS zugeteilt. Die Systeme laufen heiß. 
+Die Tickets (Gegner) kommen nicht einzeln, sie kommen in Wellen. Es gibt kein "Gewinnen". 
+Es gibt nur die Schicht, und wie lange Sie durchhalten, bevor der Arbeitsunfall eintritt.
+
+Sie starten als Nichts. Ein Wurm im Getriebe. Unbedeutend. Aber Gerüchte besagen, dass Mitarbeiter, die genug leisten, aufsteigen. Zu etwas... Legendärem.
+
+2. DAS INTERFACE (STEUERUNG)
+Die Logistik erfordert Präzision. Falsche Eingaben führen zur Kündigung.
+
+[W, A, S, D]: Bewegung im Sektor. Stillstand ist Tod.
+
+[MAUS]: Zielen.
+
+[KLICK]: Ticket bearbeiten (Feuer).
+
+[E]: Interaktion mit Witwe Bolte. (Nahrungsmittelaufnahme).
+
+[Q]: Interaktion mit Kaffeeautomat. (Stimulanzien).
+
+[G]: Antrag auf Urlaub (Gelber Schein).
+
+3. ÜBERLEBENS-HANDBUCH (CLASSIFIED)
+Die Bedrohungslage: Nicht jedes Ticket ist gleich.
+
+Einige sind lästig und klein.
+
+Andere sind massiv und schnell.
+
+Manche Probleme... scheinen unlösbar. Sie gehen durch Wände. Sie ignorieren Ihre Standard-Lösungen. Laufen Sie. Oder finden Sie heraus, wie Sie es lösen.
+
+Das Arsenal: Die IT-Abteilung stellt keine Ausrüstung. Sie müssen nehmen, was vom Himmel fällt (Kisten).
+
+Die Vorgesetzten (Bosse): Wenn die Performance stimmt, wird das Management aufmerksam.
+
+Sie kündigen sich nicht an.
+
+Sie haben Fähigkeiten, die Sie nicht verstehen.
+
+4. LETZTE WORTE AN DEN NEUEN
+Es gibt keine Karte. Es gibt kein Tutorial. Finden Sie heraus, was der Wurm kann.
+Schichtbeginn: SOFORT. Viel Glück. Sie werden es brauchen.
