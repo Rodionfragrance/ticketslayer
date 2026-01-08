@@ -207,8 +207,30 @@ let currentDiffLabel = "PRAKTIKANT"; // <--- NEU
             let driveBy = (this.weaponType === 'uzi' && (this.bikeTimer > 0)); let canShoot = (this.vodkaTimer <= 0) || this.isMartin; if ((input.mouseDown || driveBy) && frame - this.lastShot > this.fireRate && canShoot) { this.shoot(); this.lastShot = frame; }
         }
         triggerEvolution() { this.isMartin = true; this.promoTriggered = true; this.hp = this.maxHp; playSound('evolve'); screenShake = 20; setTimeout(() => { this.promoTriggered = false; }, 3000); }
-        equipWeapon(type) { this.weaponType = type; this.weaponTimer = 1800; if (type === 'minigun') this.fireRate = 4; else if (type === 'uzi') this.fireRate = 7; else if (type === 'shotgun') this.fireRate = 40; else if (type === 'rocket') this.fireRate = 60; else this.fireRate = 20; this.crateFlashTimer = 120; crateContent.innerText = type.toUpperCase(); flashScreen = 10; }
-        shoot() { let angle = Math.atan2(input.worldY - this.y, input.worldX - this.x); if(this.weaponType === 'uzi' && this.bikeTimer > 0 && !input.mouseDown) angle = Math.random() * Math.PI * 2; playSound('shoot'); let bulletOffset = this.isMartin ? -15 : -2; if (this.weaponType === 'shotgun') { for(let i=-2; i<=2; i++) bullets.push(new Bullet(this.x, this.y + bulletOffset, angle + i * 0.15, 'standard')); } else if (this.weaponType === 'minigun') { let spread = (Math.random() - 0.5) * 0.4; bullets.push(new Bullet(this.x, this.y + bulletOffset, angle + spread, 'standard')); } else if (this.weaponType === 'uzi') { let spread = (Math.random() - 0.5) * 0.1; bullets.push(new Bullet(this.x, this.y + bulletOffset, angle + spread, 'standard')); } else if (this.weaponType === 'rocket') { bullets.push(new Bullet(this.x, this.y + bulletOffset, angle, 'rocket')); } else { bullets.push(new Bullet(this.x, this.y + bulletOffset, angle, 'standard')); } }
+        equipWeapon(type) { 
+            this.weaponType = type; this.weaponTimer = 1800; 
+            if (type === 'minigun') this.fireRate = 4; 
+            else if (type === 'uzi') this.fireRate = 7; 
+            else if (type === 'ak47') this.fireRate = 6; // <--- NEU
+            else if (type === 'shotgun') this.fireRate = 40; 
+            else if (type === 'rocket') this.fireRate = 60; 
+            else this.fireRate = 20; 
+            this.crateFlashTimer = 120; crateContent.innerText = type.toUpperCase(); flashScreen = 10; 
+        }
+    shoot() { 
+            // AIM FIX: BOXHEAD STYLE (Winkel relativ zur Kamera berechnen)
+            let angle = Math.atan2(input.y - (this.y - camera.y), input.x - (this.x - camera.x));
+            if(this.weaponType === 'uzi' && this.bikeTimer > 0 && !input.mouseDown) angle = Math.random() * Math.PI * 2; 
+            
+            playSound('shoot'); 
+            
+            if (this.weaponType === 'shotgun') { for(let i=-2; i<=2; i++) bullets.push(new Bullet(this.x, this.y, angle + i * 0.15, 'standard')); } 
+            else if (this.weaponType === 'minigun') { let spread = (Math.random() - 0.5) * 0.4; bullets.push(new Bullet(this.x, this.y, angle + spread, 'standard')); } 
+            else if (this.weaponType === 'uzi') { let spread = (Math.random() - 0.5) * 0.1; bullets.push(new Bullet(this.x, this.y, angle + spread, 'standard')); } 
+            else if (this.weaponType === 'ak47') { let spread = (Math.random() - 0.5) * 0.05; bullets.push(new Bullet(this.x, this.y, angle + spread, 'standard')); } // <--- NEU
+            else if (this.weaponType === 'rocket') { bullets.push(new Bullet(this.x, this.y, angle, 'rocket')); } 
+            else { bullets.push(new Bullet(this.x, this.y, angle, 'standard')); } 
+        }
         draw() { ctx.save(); ctx.translate(this.x, this.y); let facingRight = input.worldX > this.x; let imgRight, imgLeft; if (this.isMartin) { imgRight = martinImgRight; imgLeft = martinImgLeft; } else { imgRight = wormImgRight; imgLeft = wormImgLeft; } let currentImg = facingRight ? imgRight : imgLeft; if (this.bikeTimer > 0) ctx.translate(0, Math.sin(frame * 0.5) * 3); if (this.bugTimer > 0) { ctx.translate((Math.random()-0.5)*5, (Math.random()-0.5)*5); ctx.filter = "hue-rotate("+Math.random()*360+"deg)"; } if (this.vacationTimer > 0) ctx.globalAlpha = 0.5; let w = this.isMartin ? 60 : 60; let h = this.isMartin ? 90 : 60; let offX = w / 2; let offY = h / 2; ctx.drawImage(currentImg, -offX, -offY, w, h); if (this.vodkaTimer > 0) { ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'; ctx.fillRect(-offX, -offY, w, h); ctx.globalCompositeOperation = 'source-over'; } if (this.shieldTimer > 0) { ctx.beginPath(); ctx.arc(0, 0, 50, 0, Math.PI*2); ctx.strokeStyle = `rgba(0, 255, 255, ${0.5 + Math.sin(frame*0.2)*0.5})`; ctx.lineWidth = 3; ctx.stroke(); this.shieldTimer--; } if(this.speedBoostTimer > 0) spawnParticles(0, -40, '#fff', 1); ctx.globalAlpha = 1.0; ctx.filter = "none"; ctx.restore(); }
     }
 
@@ -239,6 +261,9 @@ let currentDiffLabel = "PRAKTIKANT"; // <--- NEU
     function triggerServerExplosion(x, y) { screenShake = 30; playSound('hammer'); spawnParticles(x, y, '#ff0000', 30); if(difficulty > 5) { lightTimer = 1800; floatingTexts.push(new FloatingText(player.x, player.y - 80, "NOTSTROM AKTIV!", "#ffff00")); } for(let e of enemies) { if(Math.hypot(e.x - x, e.y - y) < 300) { e.hp -= 500; floatingTexts.push(new FloatingText(e.x, e.y, "SERVER DOWN!", "#ff0000")); } } }
 
     function drawWorld() {
+        // FIX: Schwärze den Bereich außerhalb der Map
+        ctx.fillStyle = '#000'; 
+        ctx.fillRect(-2000, -2000, WORLD_WIDTH + 4000, WORLD_HEIGHT + 4000);
         ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0, 0, WORLD_WIDTH, 1200); ctx.fillStyle = '#111111'; ctx.fillRect(0, 1200, WORLD_WIDTH, 1400); ctx.fillStyle = '#050505'; ctx.fillRect(0, 2600, WORLD_WIDTH, 1400);
         ctx.fillStyle = '#f1c40f'; for(let i=0; i<WORLD_WIDTH; i+=200) ctx.fillRect(i, 1200, 100, 10); ctx.fillStyle = '#444'; for(let i=0; i<WORLD_HEIGHT-2600; i+=200) ctx.fillRect(WORLD_WIDTH/2 - 5, 2600+i, 10, 100);
         ctx.save(); ctx.globalAlpha = 0.08; ctx.fillStyle = '#ffffff'; ctx.font = '300px Impact'; ctx.textAlign = 'center'; ctx.fillText("OFFICE", WORLD_WIDTH/2, 600); ctx.fillText("WAREHOUSE", WORLD_WIDTH/2, 1900); ctx.fillText("LOGISTICS", WORLD_WIDTH/2, 3300); ctx.restore();
@@ -259,7 +284,7 @@ let currentDiffLabel = "PRAKTIKANT"; // <--- NEU
         let spawnRate = Math.max(15, 60 - difficulty * 4); if (activeBoss) spawnRate *= 2; 
         if (frame % Math.floor(spawnRate) === 0) enemies.push(new Enemy());
         
-        if (Math.random() < 0.003) { 
+        if (Math.random() < 0.01) { 
             let r = Math.random();
             if (r < 0.25) { items.push(new Item('crate')); playSound('delivery'); player.deliveryTimer = 180; } 
             else if (r < 0.35) { items.push(new Item('shield')); }
@@ -294,8 +319,15 @@ let currentDiffLabel = "PRAKTIKANT"; // <--- NEU
             input.worldX = input.x + camera.x; input.worldY = input.y + camera.y;
             for (let i = bullets.length - 1; i >= 0; i--) { let b = bullets[i]; b.update(); let hitServer = false; for(let k=servers.length-1; k>=0; k--) { let s = servers[k]; if(b.x > s.x && b.x < s.x+s.w && b.y > s.y && b.y < s.y+s.h) { triggerServerExplosion(s.x + s.w/2, s.y + s.h/2); servers.splice(k, 1); hitServer = true; break; } } if (hitServer || checkWallCollision(b.x, b.y, 2) || b.life<=0) { bullets.splice(i, 1); } }
             for (let i = enemies.length - 1; i >= 0; i--) { let e = enemies[i]; e.update(); for (let j = bullets.length - 1; j >= 0; j--) { let b = bullets[j]; let hitRadius = e.radius + (b.type==='rocket'?20:0); if (Math.hypot(e.x - b.x, e.y - b.y) < hitRadius) { if (e.type === 6) { if (!player.isMartin || b.type !== 'rocket') { bullets.splice(j, 1); spawnParticles(e.x, e.y, '#f1c40f', 2); playSound('hit'); continue; } } if(b.type === 'rocket') { screenShake = 15; playSound('hammer'); spawnParticles(b.x, b.y, '#ff0000', 20); for(let otherE of enemies) { if(Math.hypot(otherE.x - b.x, otherE.y - b.y) < 150) { otherE.hp -= 100; floatingTexts.push(new FloatingText(otherE.x, otherE.y, "BOOM", "#ff0000")); } } } else { e.hp -= 10; } bullets.splice(j, 1); spawnParticles(e.x, e.y, e.color, 3); playSound('hit'); if (e.hp <= 0) { score += e.score; splatters.push(new Splatter(e.x, e.y, e.color)); if (e.type === 99) { activeBoss = null; floatingTexts.push(new FloatingText(e.x, e.y, "BEFÖRDERUNG ABGELEHNT!", "#gold")); screenShake = 50; items.push(new Item('briefcase', e.x, e.y)); } if(splatters.length > 200) splatters.shift(); enemies.splice(i, 1); spawnParticles(e.x, e.y, '#fff', 8); if(player.isMartin && Math.random() < 0.3) { let shouts = ["NOCHMAL!", "BEINE WEG!", "VOLLE PULLE!", "GEWÜRM!"]; floatingTexts.push(new FloatingText(e.x, e.y, shouts[Math.floor(Math.random()*shouts.length)], "#fff")); } break; } } } }
-            for (let i = enemies.length - 1; i >= 0; i--) { if (enemies[i].hp <= 0) { let e = enemies[i]; if(e.hp === -1000) { enemies.splice(i, 1); continue; } score += e.score; splatters.push(new Splatter(e.x, e.y, e.color)); if (e.type === 99) { activeBoss = null; floatingTexts.push(new FloatingText(e.x, e.y, "GIFTIGES ARBEITSKLIMA!", "#gold")); screenShake = 50; items.push(new Item('briefcase', e.x, e.y)); } enemies.splice(i, 1); spawnParticles(e.x, e.y, '#0f0', 5); } }
-            for(let i=items.length-1; i>=0; i--) { let item = items[i]; if (item.life !== Infinity) { item.life--; if (item.life <= 0) { items.splice(i, 1); continue; } } if (Math.hypot(player.x - item.x, player.y - item.y) < player.radius + item.radius) { if (item.type === 'chicken') { player.hp = Math.min(player.maxHp, player.hp + 30); spawnParticles(item.x, item.y, '#d35400', 10); playSound('powerup'); } else if (item.type === 'vodka') { player.vodkaTimer = 300; spawnParticles(item.x, item.y, '#0984e3', 10); playSound('vodka'); } else if (item.type === 'crate') { const arsenal = ['minigun', 'shotgun', 'rocket', 'uzi']; const randomWeapon = arsenal[Math.floor(Math.random() * arsenal.length)]; player.equipWeapon(randomWeapon); spawnParticles(item.x, item.y, '#8e44ad', 15); } else if (item.type === 'shield') { player.shieldTimer = 600; playSound('powerup'); floatingTexts.push(new FloatingText(player.x, player.y, "SCHUTZSCHILD!", "#0000ff")); } else if (item.type === 'bug') { player.bugTimer = 600; playSound('bug'); spawnParticles(item.x, item.y, '#ff00ff', 20); } else if (item.type === 'hammer') { player.hammerEffectTimer = 120; playSound('hammer'); screenShake = 30; for(let k=enemies.length-1; k>=0; k--) { if(enemies[k].type !== 99) { score += Math.max(1, Math.floor(enemies[k].score * 0.1)); splatters.push(new Splatter(enemies[k].x, enemies[k].y, enemies[k].color)); enemies.splice(k, 1); } else { enemies[k].hp -= 500; } } } else if (item.type === 'nuke') { triggerNuke(); break; } else if (item.type === 'vacation') { player.yellowSlips++; playSound('vacation'); floatingTexts.push(new FloatingText(player.x, player.y, "+1 URLAUB!", "#ffff00")); } else if (item.type === 'bike') { player.bikeTimer = 600; playSound('powerup'); floatingTexts.push(new FloatingText(player.x, player.y, "RADL-RAMBO!", "#00ff00")); } else if (item.type === 'briefcase') { player.maxHp += 50; player.hp = player.maxHp; playSound('evolve'); floatingTexts.push(new FloatingText(player.x, player.y, "GEHALTSERHÖHUNG!", "#gold")); spawnParticles(item.x, item.y, '#gold', 20); } items.splice(i, 1); } }
+            for (let i = enemies.length - 1; i >= 0; i--) { if (enemies[i].hp <= 0) { let e = enemies[i]; if(e.hp === -1000)// --- NEU: GEGNER DROP CHANCE (20%) ---
+                    if (Math.random() < 0.2) {
+                        let loot = Math.random();
+                        if (loot < 0.4) items.push(new Item('crate', e.x, e.y));     // Waffe
+                        else if (loot < 0.7) items.push(new Item('chicken', e.x, e.y)); // Heilung
+                        else items.push(new Item('vodka', e.x, e.y));                // Unbesiegbar
+                    }
+                    // ------------------------------------- { enemies.splice(i, 1); continue; } score += e.score; splatters.push(new Splatter(e.x, e.y, e.color)); if (e.type === 99) { activeBoss = null; floatingTexts.push(new FloatingText(e.x, e.y, "GIFTIGES ARBEITSKLIMA!", "#gold")); screenShake = 50; items.push(new Item('briefcase', e.x, e.y)); } enemies.splice(i, 1); spawnParticles(e.x, e.y, '#0f0', 5); } }
+            for(let i=items.length-1; i>=0; i--) { let item = items[i]; if (item.life !== Infinity) { item.life--; if (item.life <= 0) { items.splice(i, 1); continue; } } if (Math.hypot(player.x - item.x, player.y - item.y) < player.radius + item.radius) { if (item.type === 'chicken') { player.hp = Math.min(player.maxHp, player.hp + 30); spawnParticles(item.x, item.y, '#d35400', 10); playSound('powerup'); } else if (item.type === 'vodka') { player.vodkaTimer = 300; spawnParticles(item.x, item.y, '#0984e3', 10); playSound('vodka'); } else if (item.type === 'crate') { const arsenal = ['minigun', 'shotgun', 'rocket', 'uzi', 'ak47']; const randomWeapon = arsenal[Math.floor(Math.random() * arsenal.length)]; player.equipWeapon(randomWeapon); spawnParticles(item.x, item.y, '#8e44ad', 15); } else if (item.type === 'shield') { player.shieldTimer = 600; playSound('powerup'); floatingTexts.push(new FloatingText(player.x, player.y, "SCHUTZSCHILD!", "#0000ff")); } else if (item.type === 'bug') { player.bugTimer = 600; playSound('bug'); spawnParticles(item.x, item.y, '#ff00ff', 20); } else if (item.type === 'hammer') { player.hammerEffectTimer = 120; playSound('hammer'); screenShake = 30; for(let k=enemies.length-1; k>=0; k--) { if(enemies[k].type !== 99) { score += Math.max(1, Math.floor(enemies[k].score * 0.1)); splatters.push(new Splatter(enemies[k].x, enemies[k].y, enemies[k].color)); enemies.splice(k, 1); } else { enemies[k].hp -= 500; } } } else if (item.type === 'nuke') { triggerNuke(); break; } else if (item.type === 'vacation') { player.yellowSlips++; playSound('vacation'); floatingTexts.push(new FloatingText(player.x, player.y, "+1 URLAUB!", "#ffff00")); } else if (item.type === 'bike') { player.bikeTimer = 600; playSound('powerup'); floatingTexts.push(new FloatingText(player.x, player.y, "RADL-RAMBO!", "#00ff00")); } else if (item.type === 'briefcase') { player.maxHp += 50; player.hp = player.maxHp; playSound('evolve'); floatingTexts.push(new FloatingText(player.x, player.y, "GEHALTSERHÖHUNG!", "#gold")); spawnParticles(item.x, item.y, '#gold', 20); } items.splice(i, 1); } }
             for(let i=particles.length-1; i>=0; i--) { if(!particles[i]) continue; particles[i].update(); if(particles[i].life<=0) particles.splice(i, 1); }
             for(let i=floatingTexts.length-1; i>=0; i--) { if(!floatingTexts[i]) continue; floatingTexts[i].update(); if(floatingTexts[i].life<=0) floatingTexts.splice(i, 1); }
             checkGameOver();
@@ -340,6 +372,7 @@ let currentDiffLabel = "PRAKTIKANT"; // <--- NEU
 </body>
 </html>
 }
+
 
 
 
