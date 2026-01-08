@@ -109,7 +109,11 @@
             querySnapshot.forEach((doc) => {
                 let d = doc.data();
                 let color = rank === 1 ? 'gold' : (rank === 2 ? 'silver' : (rank === 3 ? '#cd7f32' : '#aaa'));
-                html += `<span style="color:${color}">${rank}. ${d.name}: ${d.score}</span><br>`;
+                
+                // Prüfen ob es ein alter Score ohne Label ist
+                let diffText = d.difficulty ? ` [${d.difficulty}]` : ""; 
+                
+                html += `<span style="color:${color}">${rank}. ${d.name}${diffText}: ${d.score}</span><br>`;
                 rank++;
             });
             document.getElementById('highscore-overlay').innerHTML = html;
@@ -119,12 +123,23 @@
     function saveHighscoreAndRestart() {
         let name = document.getElementById('playerName').value || "ANONYM";
         name = name.toUpperCase().substring(0, 10);
+        
         if(db && score > 0) {
             db.collection("highscores").add({
-                name: name, score: score, date: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => { loadHighscores(); startGame(lastChosenDifficulty); })
-              .catch((e) => { console.error(e); startGame(lastChosenDifficulty); });
-        } else { startGame(lastChosenDifficulty); }
+                name: name,
+                score: score,
+                difficulty: currentDiffLabel, // <--- HIER WIRD ES GESPEICHERT
+                date: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => { 
+                loadHighscores(); 
+                startGame(lastChosenDifficulty); 
+            }).catch((e) => { 
+                console.error(e); 
+                startGame(lastChosenDifficulty); 
+            });
+        } else { 
+            startGame(lastChosenDifficulty); 
+        }
     }
 
     // --- GAME LOGIC ---
@@ -146,6 +161,7 @@
     const msgArea = document.getElementById('msgArea'); const jammedMsg = document.getElementById('jammedMsg'); const patientZeroMsg = document.getElementById('patientZeroMsg'); const promoMsg = document.getElementById('promoMsg'); const bugMsg = document.getElementById('bugMsg'); const deliveryMsg = document.getElementById('deliveryMsg'); const ludwigCallMsg = document.getElementById('ludwigCallMsg'); const hammerEffectMsg = document.getElementById('hammerEffectMsg'); const vacationMsg = document.getElementById('vacationMsg'); const bossMsg = document.getElementById('bossMsg'); const bossNameDisplay = document.getElementById('bossNameDisplay'); const bossSubtextDisplay = document.getElementById('bossSubtextDisplay'); const crateMsg = document.getElementById('crateMsg'); const crateContent = document.getElementById('crateContent');
     
     let gameRunning = false; let score = 0; let frame = 0; let difficulty = 1; let screenShake = 0; let flashScreen = 0; let lastChosenDifficulty = 1; let lightTimer = 0;
+let currentDiffLabel = "PRAKTIKANT"; // <--- NEU
 
     let currentBossStage = 0;
     const bosses = [
@@ -296,16 +312,35 @@
     }
 
     function startGame(startDiff = 1) {
-        initAudio(); if(!document.getElementById('doom-hud')) { alert("HUD FEHLT! Kopierfehler?"); return; }
-        document.getElementById('startScreen').style.display = 'none'; document.getElementById('gameOverScreen').style.display = 'none';
-        input.keys = {}; input.mouseDown = false; score = 0; player = new Player(); enemies = []; bullets = []; particles = []; items = []; splatters = []; floatingTexts = [];
-        generateWorld(); gameRunning = true; frame = 0; difficulty = startDiff; lastChosenDifficulty = startDiff; currentBossStage = 0; activeBoss = null;
+        initAudio(); 
+        if(!document.getElementById('doom-hud')) { alert("HUD FEHLT! Kopierfehler?"); return; }
+        document.getElementById('startScreen').style.display = 'none'; 
+        document.getElementById('gameOverScreen').style.display = 'none';
+        
+        input.keys = {}; input.mouseDown = false; score = 0; 
+        player = new Player(); 
+        enemies = []; bullets = []; particles = []; items = []; splatters = []; floatingTexts = [];
+        
+        // --- MODUS MERKEN ---
+        difficulty = startDiff;
+        if(difficulty === 1) currentDiffLabel = "PRAKTIKANT";
+        else if(difficulty === 3) currentDiffLabel = "VOLLZEIT";
+        else if(difficulty === 6) currentDiffLabel = "BURNOUT";
+        // --------------------
+
+        generateWorld(); 
+        gameRunning = true; 
+        frame = 0; 
+        lastChosenDifficulty = startDiff; 
+        currentBossStage = 0; 
+        activeBoss = null;
         loop();
     }
 </script>
 </body>
 </html>
 }
+
 
 
 
