@@ -166,7 +166,128 @@
         appId: "1:967281658984:web:13936a39b85cc7314ebfdd"
     };
     // ----------------------------------------------------
-    if(this.cooldown <= 0) {
+   let db;
+    try {
+        if(firebaseConfig && firebaseConfig.apiKey) {
+            firebase.initializeApp(firebaseConfig); db = firebase.firestore();
+            console.log("FIREBASE VERBUNDEN"); loadHighscores();
+        } else {
+            console.error("FIREBASE CONFIG FEHLT!");
+            document.getElementById('highscore-overlay').innerText = "OFFLINE MODE (Config fehlt)";
+        }
+    } catch(e) { console.error("Firebase Fehler:", e); }
+
+    function loadHighscores() {
+        if(!db) return;
+        db.collection("highscores").orderBy("score", "desc").limit(5).get().then((snap) => {
+            let html = "<span style='color:#fff; text-decoration:underline'>GLOBALE TOP 5:</span><br>";
+            let rank = 1;
+            snap.forEach((doc) => {
+                let d = doc.data();
+                let c = rank === 1 ? 'gold' : (rank === 2 ? 'silver' : (rank === 3 ? '#cd7f32' : '#aaa'));
+                let diff = d.difficulty ? ` [${d.difficulty}]` : "";
+                html += `<span style="color:${c}">${rank}. ${d.name}${diff}: ${d.score}</span><br>`;
+                rank++;
+            });
+            document.getElementById('highscore-overlay').innerHTML = html;
+        });
+    }
+
+    function saveHighscoreAndRestart() {
+        let name = document.getElementById('playerName').value || "ANONYM";
+        name = name.toUpperCase().substring(0, 10);
+        if(db && score > 0) {
+            db.collection("highscores").add({
+                name: name, score: score, difficulty: currentDiffLabel, date: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => { loadHighscores(); startGame(lastChosenDifficulty); })
+              .catch((e) => { console.error(e); startGame(lastChosenDifficulty); });
+        } else { startGame(lastChosenDifficulty); }
+    }
+
+    // --- ASSETS & VARS ---
+    const wormImgRight = new Image(); wormImgRight.src = "wurmr.png"; 
+    const wormImgLeft = new Image(); wormImgLeft.src = "wurml.png";   
+    const martinImgRight = new Image(); martinImgRight.src = "maddinr.png"; 
+    const martinImgLeft = new Image(); martinImgLeft.src = "maddinl.png";   
+    const chickenImg = new Image(); chickenImg.src = "bolte.png";
+    const coffeeImg = new Image(); coffeeImg.src = "kaffee.png";
+    
+    // UI ELEMENTS (EXTENDED FOR V16.3)
+    const msgArea = document.getElementById('msgArea');
+    const shiftMsg = document.getElementById('shiftMsg'); const shiftName = document.getElementById('shiftName');
+    const idocMsg = document.getElementById('idocMsg'); const idocName = document.getElementById('idocName');
+    const jammedMsg = document.getElementById('jammedMsg'); const patientZeroMsg = document.getElementById('patientZeroMsg'); 
+    const promoMsg = document.getElementById('promoMsg'); const bugMsg = document.getElementById('bugMsg'); 
+    const deliveryMsg = document.getElementById('deliveryMsg'); const ludwigCallMsg = document.getElementById('ludwigCallMsg'); 
+    const hammerEffectMsg = document.getElementById('hammerEffectMsg'); const vacationMsg = document.getElementById('vacationMsg');
+    const bossMsg = document.getElementById('bossMsg'); const bossNameDisplay = document.getElementById('bossNameDisplay'); 
+    const bossSubtextDisplay = document.getElementById('bossSubtextDisplay'); const crateMsg = document.getElementById('crateMsg'); 
+    const crateContent = document.getElementById('crateContent');
+    const meetingText = document.getElementById('meeting-text'); const meetingBarContainer = document.getElementById('meeting-bar-container'); 
+    const meetingBar = document.getElementById('meeting-bar'); const emailOverlay = document.getElementById('emailOverlay');
+    const startScreen = document.getElementById('startScreen');
+
+    // AUDIO
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+    function initAudio() { if (!audioCtx && AudioContext) audioCtx = new AudioContext(); if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
+    function playSound(type) { 
+        if (!audioCtx) return; 
+        try { 
+            const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain(); osc.connect(gainNode); gainNode.connect(audioCtx.destination); const now = audioCtx.currentTime; 
+            if (type === 'shoot') { osc.type = 'square'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(50, now + 0.1); gainNode.gain.setValueAtTime(0.05, now); gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1); osc.start(now); osc.stop(now + 0.1); }
+            else if (type === 'hit') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.1); gainNode.gain.setValueAtTime(0.1, now); gainNode.gain.linearRampToValueAtTime(0, now + 0.1); osc.start(now); osc.stop(now + 0.1); }
+            else if (type === 'alarm') { osc.type = 'square'; osc.frequency.setValueAtTime(600, now); osc.frequency.linearRampToValueAtTime(800, now+0.5); gainNode.gain.setValueAtTime(0.5, now); gainNode.gain.linearRampToValueAtTime(0, now+0.5); osc.start(now); osc.stop(now+0.5); }
+            else if (type === 'meeting') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(100, now+1.0); gainNode.gain.setValueAtTime(0.5, now); osc.start(now); osc.stop(now+1.0); }
+            else if (type === 'vacation') { osc.type = 'triangle'; osc.frequency.setValueAtTime(300, now); osc.frequency.linearRampToValueAtTime(50, now+1.0); gainNode.gain.setValueAtTime(0.3, now); osc.start(now); osc.stop(now+1.0); }
+            else if (type === 'powerup') { osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.linearRampToValueAtTime(800, now+0.3); gainNode.gain.setValueAtTime(0.3, now); osc.start(now); osc.stop(now+0.3); }
+            else if (type === 'bug') { osc.type = 'square'; osc.frequency.setValueAtTime(100, now); osc.frequency.linearRampToValueAtTime(50, now+0.5); gainNode.gain.setValueAtTime(0.3, now); osc.start(now); osc.stop(now+0.5); }
+            else if (type === 'hammer') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now); gainNode.gain.setValueAtTime(0.8, now); osc.start(now); osc.stop(now+0.2); }
+            else if (type === 'delivery') { osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); gainNode.gain.setValueAtTime(0.3, now); osc.start(now); osc.stop(now+0.5); }
+            else { osc.type = 'sine'; osc.frequency.setValueAtTime(440, now); gainNode.gain.setValueAtTime(0.1, now); osc.start(now); osc.stop(now+0.1); }
+        } catch(e) {} 
+    }
+
+    const canvas = document.getElementById('game'); const ctx = canvas.getContext('2d');
+    
+    // GAME STATE
+    let gameRunning = false; let score = 0; let frame = 0; let difficulty = 1; let screenShake = 0; let flashScreen = 0; let lastChosenDifficulty = 1; 
+    let currentDiffLabel = "PRAKTIKANT";
+    let gamePaused = false;
+    let currentShift = 0; let shiftTimer = 0; let idocEvent = null; let meetingZone = null; let turrets = []; 
+    let currentBossStage = 0;
+    const bosses = [
+        { score: 5000, name: "RIAN", subtitle: "Update!", hp: 1500, color: '#8e44ad', radius: 60, speed: 2.5 },
+        { score: 10000, name: "TIM", subtitle: "Update!", hp: 3000, color: '#2980b9', radius: 70, speed: 3.0 },
+        { score: 15000, name: "FLOF", subtitle: "Prozesse!", hp: 5000, color: '#27ae60', radius: 80, speed: 3.5 },
+        { score: 20000, name: "JANSKI", subtitle: "Dienstag!", hp: 8000, color: '#d35400', radius: 90, speed: 4.0 },
+        { score: 30000, name: "PETER BAYER", subtitle: "TICKET FOKUSSIERT!", hp: 20000, color: '#c0392b', radius: 130, speed: 4.5 }
+    ];
+    let activeBoss = null;
+
+    const WORLD_WIDTH = 4000; const WORLD_HEIGHT = 4000; const camera = { x: 0, y: 0 };
+    let player; let bullets = []; let enemies = []; let particles = []; let obstacles = []; let stations = []; let servers = []; let items = []; let splatters = []; let floatingTexts = []; 
+    
+    const input = { keys: {}, mouseDown: false, x: 0, y: 0, worldX: 0, worldY: 0 };
+    window.addEventListener('keydown', e => { 
+        input.keys[e.code] = true; 
+        if(e.code === 'Space' && player && player.inMeeting) player.meetingProgress += 10; 
+    }); 
+    window.addEventListener('keyup', e => input.keys[e.code] = false); 
+    window.addEventListener('mousedown', () => input.mouseDown = true); window.addEventListener('mouseup', () => input.mouseDown = false); 
+    window.addEventListener('mousemove', e => { input.x = e.clientX; input.y = e.clientY; });
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight - 85; } window.addEventListener('resize', resize); resize();
+
+    function showEmail() { startScreen.style.display = 'none'; emailOverlay.style.display = 'block'; }
+    function hideEmail() { emailOverlay.style.display = 'none'; startScreen.style.display = 'block'; }
+
+    class FloatingText { constructor(x, y, text, color) { this.x = x; this.y = y; this.text = text; this.color = color; this.life = 90; this.dy = -1; } update() { this.y += this.dy; this.life--; } draw() { ctx.fillStyle = this.color; ctx.font = "bold 24px Courier New"; ctx.textAlign = "center"; ctx.globalAlpha = this.life / 90; ctx.fillText(this.text, this.x, this.y); ctx.globalAlpha = 1.0; } }
+    
+    class Turret {
+        constructor(x, y) { this.x = x; this.y = y; this.cooldown = 0; }
+        update() {
+            this.cooldown--;
+            if(this.cooldown <= 0) {
                 let nearest = null; let minDist = 800;
                 for(let e of enemies) {
                     let d = Math.hypot(e.x - this.x, e.y - this.y);
@@ -533,6 +654,4 @@
 </script>
 </body>
 </html>
-
-
 
