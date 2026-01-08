@@ -525,10 +525,10 @@
             checkGameOver();
             
             // HUD
-            document.getElementById('hud-hp').innerText = Math.floor(player.hp) + "%"; document.getElementById('hud-score').innerText = score; document.getElementById('hud-level').innerText = difficulty.toFixed(1); document.getElementById('hud-slips').innerText = player.yellowSlips; document.getElementById('hud-weapon-name').innerText = player.weaponType.toUpperCase();
+            document.getElementById('hud-hp').innerText = Math.floor(player.hp) + "%"; document.getElementById('hud-score').innerText = score; document.getElementById('hud-slips').innerText = player.yellowSlips; document.getElementById('hud-weapon-name').innerText = player.weaponType.toUpperCase();
             document.getElementById('hud-shift').innerText = currentShift === 0 ? "FRÜH" : (currentShift === 1 ? "SPÄT" : "NACHT"); // Shift update
 
-            let faceImg = document.getElementById('hud-face'); let targetSrc = player.isMartin ? "maddinr.png" : "wurmr.png"; if (!faceImg.src.includes(targetSrc)) { faceImg.src = targetSrc; }
+            let faceImg = document.getElementById('hud-face'); let targetSrc = player.isMartin ? "maddinl.png" : "wurml.png"; if (!faceImg.src.includes(targetSrc)) { faceImg.src = targetSrc; }
             if(player.weaponType === 'standard') { document.getElementById('weapon-bar').style.width = "0%"; } else { let pct = (player.weaponTimer / 1800) * 100; document.getElementById('weapon-bar').style.width = pct + "%"; let bar = document.getElementById('weapon-bar'); if(player.weaponType === 'minigun') bar.style.backgroundColor = '#ff00ff'; else if(player.weaponType === 'rocket') bar.style.backgroundColor = '#ff3333'; else bar.style.backgroundColor = '#33ccff'; }
             
             ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save(); ctx.translate(-camera.x, -camera.y);
@@ -561,3 +561,4 @@
 </script>
 </body>
 </html>
+
