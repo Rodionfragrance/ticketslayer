@@ -61,6 +61,7 @@
 </style>
 </head>
 <body>
+    <audio id="menuMusic" src="main.mp3" loop></audio>
     <div id="highscore-overlay">Lade Online Scores...</div>
     <div id="stationInfo">[E] Interagieren | [B] Azubi (5000 Pkt) | [Q] Kaffee | [G] Urlaub</div>
     <canvas id="game"></canvas>
@@ -196,6 +197,23 @@
     }
 
     // --- ASSETS & VARS ---
+// --- MUSIK PLAYLIST ---
+    const playlist = ['track1.mp3', 'track2.mp3',]; // <--- HIER DEINE DATEINAMEN REIN!
+    const bgMusic = new Audio();
+    bgMusic.volume = 0.2; // 20% Lautstärke (damit Effekte hörbar bleiben)
+
+    function playNextSong() {
+        // Zufälliges Lied aus der Liste wählen
+        let nextSong = playlist[Math.floor(Math.random() * playlist.length)];
+        bgMusic.src = nextSong;
+        bgMusic.play().catch(e => console.log("Musik Autoplay blockiert:", e));
+    }
+
+    // Wenn ein Lied vorbei ist, starte automatisch ein neues
+    bgMusic.onended = function() {
+        playNextSong();
+    };
+    
     const wormImgRight = new Image(); wormImgRight.src = "wurmr.png"; 
     const wormImgLeft = new Image(); wormImgLeft.src = "wurml.png";   
     const martinImgRight = new Image(); martinImgRight.src = "maddinr.png"; 
@@ -671,8 +689,19 @@
     }
 
     function startGame(startDiff = 1) {
-        initAudio(); if(!document.getElementById('doom-hud')) { alert("HUD FEHLT! Kopierfehler?"); return; }
-        document.getElementById('startScreen').style.display = 'none'; document.getElementById('gameOverScreen').style.display = 'none';
+        // MENÜ MUSIK AUSSCHALTEN
+        let mm = document.getElementById('menuMusic'); 
+        if(mm) { mm.pause(); mm.currentTime = 0; }
+        
+        initAudio(); 
+        
+        // INGAME MUSIK STARTEN
+        playNextSong(); 
+        
+        if(!document.getElementById('doom-hud')) { alert("HUD FEHLT! Kopierfehler?"); return; }
+        
+        document.getElementById('startScreen').style.display = 'none'; 
+        document.getElementById('gameOverScreen').style.display = 'none';
         
         input.keys = {}; input.mouseDown = false; score = 0; 
         player = new Player(); 
@@ -680,15 +709,30 @@
         turrets = []; idocEvent = null; meetingZone = null; currentShift = 0; shiftTimer = 0; 
         
         difficulty = startDiff;
-        if(difficulty === 1) currentDiffLabel = "PRAKTIKANT"; else if(difficulty === 3) currentDiffLabel = "VOLLZEIT"; else if(difficulty === 6) currentDiffLabel = "BURNOUT";
+        if(difficulty === 1) currentDiffLabel = "PRAKTIKANT"; 
+        else if(difficulty === 3) currentDiffLabel = "VOLLZEIT"; 
+        else if(difficulty === 6) currentDiffLabel = "BURNOUT";
         
-        generateWorld(); gameRunning = true; frame = 0; lastChosenDifficulty = startDiff; currentBossStage = 0; activeBoss = null;
+        generateWorld(); 
+        gameRunning = true; 
+        frame = 0; 
+        lastChosenDifficulty = startDiff; 
+        currentBossStage = 0; 
+        activeBoss = null;
         
         // NO PAUSE ALLOWED
         gamePaused = false; 
         emailOverlay.style.display='none';
+        
         loop();
     }
+    // START MENÜ-MUSIK (beim ersten Klick auf die Seite)
+    window.addEventListener('click', () => {
+        const mm = document.getElementById('menuMusic');
+        // Nur abspielen, wenn das Spiel NICHT läuft
+        if(mm && mm.paused && !gameRunning) mm.play().catch(e=>{});
+    });
 </script>
 </body>
 </html>
+
