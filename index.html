@@ -317,23 +317,48 @@ let currentDiffLabel = "PRAKTIKANT"; // <--- NEU
             camera.x = player.x - canvas.width / 2; camera.y = player.y - canvas.height / 2;
             camera.x = Math.max(0, Math.min(camera.x, WORLD_WIDTH - canvas.width)); camera.y = Math.max(0, Math.min(camera.y, WORLD_HEIGHT - canvas.height));
             input.worldX = input.x + camera.x; input.worldY = input.y + camera.y;
+            
+            // BULLETS UPDATE
             for (let i = bullets.length - 1; i >= 0; i--) { let b = bullets[i]; b.update(); let hitServer = false; for(let k=servers.length-1; k>=0; k--) { let s = servers[k]; if(b.x > s.x && b.x < s.x+s.w && b.y > s.y && b.y < s.y+s.h) { triggerServerExplosion(s.x + s.w/2, s.y + s.h/2); servers.splice(k, 1); hitServer = true; break; } } if (hitServer || checkWallCollision(b.x, b.y, 2) || b.life<=0) { bullets.splice(i, 1); } }
-            for (let i = enemies.length - 1; i >= 0; i--) { let e = enemies[i]; e.update(); for (let j = bullets.length - 1; j >= 0; j--) { let b = bullets[j]; let hitRadius = e.radius + (b.type==='rocket'?20:0); if (Math.hypot(e.x - b.x, e.y - b.y) < hitRadius) { if (e.type === 6) { if (!player.isMartin || b.type !== 'rocket') { bullets.splice(j, 1); spawnParticles(e.x, e.y, '#f1c40f', 2); playSound('hit'); continue; } } if(b.type === 'rocket') { screenShake = 15; playSound('hammer'); spawnParticles(b.x, b.y, '#ff0000', 20); for(let otherE of enemies) { if(Math.hypot(otherE.x - b.x, otherE.y - b.y) < 150) { otherE.hp -= 100; floatingTexts.push(new FloatingText(otherE.x, otherE.y, "BOOM", "#ff0000")); } } } else { e.hp -= 10; } bullets.splice(j, 1); spawnParticles(e.x, e.y, e.color, 3); playSound('hit'); if (e.hp <= 0) { score += e.score; splatters.push(new Splatter(e.x, e.y, e.color)); if (e.type === 99) { activeBoss = null; floatingTexts.push(new FloatingText(e.x, e.y, "BEFÖRDERUNG ABGELEHNT!", "#gold")); screenShake = 50; items.push(new Item('briefcase', e.x, e.y)); } if(splatters.length > 200) splatters.shift(); enemies.splice(i, 1); spawnParticles(e.x, e.y, '#fff', 8); if(player.isMartin && Math.random() < 0.3) { let shouts = ["NOCHMAL!", "BEINE WEG!", "VOLLE PULLE!", "GEWÜRM!"]; floatingTexts.push(new FloatingText(e.x, e.y, shouts[Math.floor(Math.random()*shouts.length)], "#fff")); } break; } } } }
-            for (let i = enemies.length - 1; i >= 0; i--) { if (enemies[i].hp <= 0) { let e = enemies[i]; if(e.hp === -1000)// --- NEU: GEGNER DROP CHANCE (20%) ---
+            
+            // ENEMIES UPDATE
+            for (let i = enemies.length - 1; i >= 0; i--) { let e = enemies[i]; e.update(); for (let j = bullets.length - 1; j >= 0; j--) { let b = bullets[j]; let hitRadius = e.radius + (b.type==='rocket'?20:0); if (Math.hypot(e.x - b.x, e.y - b.y) < hitRadius) { if (e.type === 6) { if (!player.isMartin || b.type !== 'rocket') { bullets.splice(j, 1); spawnParticles(e.x, e.y, '#f1c40f', 2); playSound('hit'); continue; } } if(b.type === 'rocket') { screenShake = 15; playSound('hammer'); spawnParticles(b.x, b.y, '#ff0000', 20); for(let otherE of enemies) { if(Math.hypot(otherE.x - b.x, otherE.y - b.y) < 150) { otherE.hp -= 100; floatingTexts.push(new FloatingText(otherE.x, otherE.y, "BOOM", "#ff0000")); } } } else { e.hp -= 10; } bullets.splice(j, 1); spawnParticles(e.x, e.y, e.color, 3); playSound('hit'); if (e.hp <= 0) { score += e.score; splatters.push(new Splatter(e.x, e.y, e.color)); if (e.type === 99) { activeBoss = null; floatingTexts.push(new FloatingText(e.x, e.y, "BEFÖRDERUNG ABGELEHNT!", "#gold")); screenShake = 50; items.push(new Item('briefcase', e.x, e.y)); } if(splatters.length > 200) splatters.shift(); enemies.splice(i, 1); spawnParticles(e.x, e.y, '#fff', 8); if(player.isMartin && Math.random() < 0.3) { let shouts = ["NOCHMAL!", "BEINE WEG!", "ALARM!", "GEWÜRM!"]; floatingTexts.push(new FloatingText(e.x, e.y, shouts[Math.floor(Math.random()*shouts.length)], "#fff")); } break; } } } }
+            
+            // ENEMIES DEATH CHECK & LOOT
+            for (let i = enemies.length - 1; i >= 0; i--) { 
+                if (enemies[i].hp <= 0) { 
+                    let e = enemies[i]; 
+                    if(e.hp === -1000) { enemies.splice(i, 1); continue; } 
+                    score += e.score; 
+                    splatters.push(new Splatter(e.x, e.y, e.color)); 
+                    if (e.type === 99) { activeBoss = null; floatingTexts.push(new FloatingText(e.x, e.y, "GIFTIGES ARBEITSKLIMA!", "#gold")); screenShake = 50; items.push(new Item('briefcase', e.x, e.y)); } 
+                    
+                    // --- LOOT SYSTEM ---
                     if (Math.random() < 0.2) {
                         let loot = Math.random();
-                        if (loot < 0.4) items.push(new Item('crate', e.x, e.y));     // Waffe
-                        else if (loot < 0.7) items.push(new Item('chicken', e.x, e.y)); // Heilung
-                        else items.push(new Item('vodka', e.x, e.y));                // Unbesiegbar
+                        if (loot < 0.4) items.push(new Item('crate', e.x, e.y));
+                        else if (loot < 0.7) items.push(new Item('chicken', e.x, e.y));
+                        else items.push(new Item('vodka', e.x, e.y));
                     }
-                    // ------------------------------------- { enemies.splice(i, 1); continue; } score += e.score; splatters.push(new Splatter(e.x, e.y, e.color)); if (e.type === 99) { activeBoss = null; floatingTexts.push(new FloatingText(e.x, e.y, "GIFTIGES ARBEITSKLIMA!", "#gold")); screenShake = 50; items.push(new Item('briefcase', e.x, e.y)); } enemies.splice(i, 1); spawnParticles(e.x, e.y, '#0f0', 5); } }
+                    // -------------------
+
+                    enemies.splice(i, 1); spawnParticles(e.x, e.y, '#0f0', 5); 
+                } 
+            }
+
+            // ITEMS UPDATE
             for(let i=items.length-1; i>=0; i--) { let item = items[i]; if (item.life !== Infinity) { item.life--; if (item.life <= 0) { items.splice(i, 1); continue; } } if (Math.hypot(player.x - item.x, player.y - item.y) < player.radius + item.radius) { if (item.type === 'chicken') { player.hp = Math.min(player.maxHp, player.hp + 30); spawnParticles(item.x, item.y, '#d35400', 10); playSound('powerup'); } else if (item.type === 'vodka') { player.vodkaTimer = 300; spawnParticles(item.x, item.y, '#0984e3', 10); playSound('vodka'); } else if (item.type === 'crate') { const arsenal = ['minigun', 'shotgun', 'rocket', 'uzi', 'ak47']; const randomWeapon = arsenal[Math.floor(Math.random() * arsenal.length)]; player.equipWeapon(randomWeapon); spawnParticles(item.x, item.y, '#8e44ad', 15); } else if (item.type === 'shield') { player.shieldTimer = 600; playSound('powerup'); floatingTexts.push(new FloatingText(player.x, player.y, "SCHUTZSCHILD!", "#0000ff")); } else if (item.type === 'bug') { player.bugTimer = 600; playSound('bug'); spawnParticles(item.x, item.y, '#ff00ff', 20); } else if (item.type === 'hammer') { player.hammerEffectTimer = 120; playSound('hammer'); screenShake = 30; for(let k=enemies.length-1; k>=0; k--) { if(enemies[k].type !== 99) { score += Math.max(1, Math.floor(enemies[k].score * 0.1)); splatters.push(new Splatter(enemies[k].x, enemies[k].y, enemies[k].color)); enemies.splice(k, 1); } else { enemies[k].hp -= 500; } } } else if (item.type === 'nuke') { triggerNuke(); break; } else if (item.type === 'vacation') { player.yellowSlips++; playSound('vacation'); floatingTexts.push(new FloatingText(player.x, player.y, "+1 URLAUB!", "#ffff00")); } else if (item.type === 'bike') { player.bikeTimer = 600; playSound('powerup'); floatingTexts.push(new FloatingText(player.x, player.y, "RADL-RAMBO!", "#00ff00")); } else if (item.type === 'briefcase') { player.maxHp += 50; player.hp = player.maxHp; playSound('evolve'); floatingTexts.push(new FloatingText(player.x, player.y, "GEHALTSERHÖHUNG!", "#gold")); spawnParticles(item.x, item.y, '#gold', 20); } items.splice(i, 1); } }
+            
             for(let i=particles.length-1; i>=0; i--) { if(!particles[i]) continue; particles[i].update(); if(particles[i].life<=0) particles.splice(i, 1); }
             for(let i=floatingTexts.length-1; i>=0; i--) { if(!floatingTexts[i]) continue; floatingTexts[i].update(); if(floatingTexts[i].life<=0) floatingTexts.splice(i, 1); }
             checkGameOver();
+            
+            // HUD UPDATE
             document.getElementById('hud-hp').innerText = Math.floor(player.hp) + "%"; document.getElementById('hud-score').innerText = score; document.getElementById('hud-level').innerText = difficulty.toFixed(1); document.getElementById('hud-slips').innerText = player.yellowSlips; document.getElementById('hud-weapon-name').innerText = player.weaponType.toUpperCase();
             let faceImg = document.getElementById('hud-face'); let targetSrc = player.isMartin ? "maddinr.png" : "wurmr.png"; if (!faceImg.src.includes(targetSrc)) { faceImg.src = targetSrc; }
             if(player.weaponType === 'standard') { document.getElementById('weapon-bar').style.width = "0%"; } else { let pct = (player.weaponTimer / 1800) * 100; document.getElementById('weapon-bar').style.width = pct + "%"; let bar = document.getElementById('weapon-bar'); if(player.weaponType === 'minigun') bar.style.backgroundColor = '#ff00ff'; else if(player.weaponType === 'rocket') bar.style.backgroundColor = '#ff3333'; else bar.style.backgroundColor = '#33ccff'; }
+            
+            // DRAW
             ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save(); ctx.translate(-camera.x, -camera.y);
             drawWorld(); for (let item of items) item.draw(); for (let b of bullets) b.draw(); for (let p of particles) p.draw(); for (let e of enemies) e.draw(); for (let ft of floatingTexts) ft.draw(); player.draw();
             if(flashScreen > 0) { ctx.fillStyle = `rgba(255,255,255, ${flashScreen/50})`; ctx.fillRect(player.x - 1000, player.y - 1000, 2000, 2000); flashScreen *= 0.9; if(flashScreen < 0.1) flashScreen = 0; }
@@ -372,6 +397,7 @@ let currentDiffLabel = "PRAKTIKANT"; // <--- NEU
 </body>
 </html>
 }
+
 
 
 
