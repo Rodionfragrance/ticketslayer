@@ -447,10 +447,42 @@
         for(let s of stations) { ctx.shadowColor = s.color; ctx.shadowBlur = 20; try { ctx.drawImage(s.img, s.x, s.y, s.w, s.h); } catch(e) {} ctx.shadowBlur = 0; ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Courier New'; ctx.textAlign='center'; ctx.shadowColor="black"; ctx.shadowBlur=4; ctx.fillText(s.label, s.x + s.w/2, s.y - 10); ctx.shadowBlur=0; }
         
         // IDOC MARKER
+        // IDOC MARKER & NAVI-PFEIL
         if(idocEvent) {
+            // 1. Ziel-Markierung (Am Ort des Geschehens - Server)
             ctx.beginPath(); ctx.arc(idocEvent.x+20, idocEvent.y+40, 60, 0, Math.PI*2);
             ctx.strokeStyle = "red"; ctx.lineWidth = 4; ctx.stroke();
             ctx.fillStyle = "white"; ctx.font = "bold 20px Arial"; ctx.fillText("!", idocEvent.x+20, idocEvent.y+40);
+
+            // 2. Navi-Pfeil beim Spieler
+            let dx = idocEvent.x - player.x;
+            let dy = idocEvent.y - player.y;
+            let dist = Math.hypot(dx, dy);
+            
+            // Zeige Pfeil nur, wenn das Ziel weiter als 300px weg ist (also nicht direkt vor der Nase)
+            if(dist > 300) { 
+                let angle = Math.atan2(dy, dx);
+                let arrowDist = 80; // Abstand vom Spieler
+                let ax = player.x + Math.cos(angle) * arrowDist;
+                let ay = player.y + Math.sin(angle) * arrowDist;
+
+                ctx.save();
+                ctx.translate(ax, ay);
+                ctx.rotate(angle);
+                
+                // Pulsierender Effekt
+                let scale = 1.0 + Math.sin(frame * 0.2) * 0.3;
+                ctx.scale(scale, scale);
+                
+                ctx.fillStyle = "#ff0000"; // Signalfarbe Rot
+                ctx.beginPath();
+                ctx.moveTo(15, 0);   // Spitze
+                ctx.lineTo(-15, 10); // Unten links
+                ctx.lineTo(-15, -10);// Unten rechts
+                ctx.fill();
+                
+                ctx.restore();
+            }
         }
     }
 
@@ -561,4 +593,5 @@
 </script>
 </body>
 </html>
+
 
