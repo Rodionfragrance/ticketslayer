@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8"><title>TICKET SLAYER: V16.5</title>
+<meta charset="UTF-8"><title>TICKET SLAYER: V16.6</title>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 <link rel="icon" type="image/png" href="wurml.png">
@@ -66,19 +66,39 @@
     <canvas id="game"></canvas>
     
     <div id="emailOverlay">
-        <div class="email-header"><div class="email-row"><span class="email-label">VON:</span> IT-Leitstand &lt;noreply@ticketslayer.corp&gt;</div><div class="email-row"><span class="email-label">AN:</span> Alle Mitarbeiter</div><div class="email-row email-subject">WICHTIG: Neue Prozessanweisung V16.5</div></div>
+        <div class="email-header">
+            <div class="email-row"><span class="email-label">VON:</span> IT-Leitstand &lt;noreply@ticketslayer.corp&gt;</div>
+            <div class="email-row"><span class="email-label">AN:</span> Alle Mitarbeiter</div>
+            <div class="email-row email-subject">WICHTIG: Neue Prozessanweisung V16.6 (Leitstand)</div>
+        </div>
         <div class="email-content">
-            <p><strong>WARNUNG:</strong> Keine Pausen während der Schicht.</p>
+            <p>Hallo Team,</p>
+            <p><strong>WARNUNG:</strong> Sobald die Schicht beginnt (Spielstart), gibt es keine Pausen mehr. Lesen Sie diese Anweisung JETZT.</p>
             <hr class="email-hr">
-            <h3>1. STEUERUNG</h3>
-            <ul><li><span class="key-hint">WASD</span> + <span class="key-hint">Maus</span>: Bewegen & Feuern</li><li><span class="key-hint">E</span>: Interaktion (Heilen/Systemfehler)</li><li><span class="key-hint">B</span>: <strong>Personal (Azubi)</strong> (5000 Pkt)</li><li><span class="key-hint">G</span>: <strong>Krankmeldung</strong></li></ul>
-            <h3>2. ALARM (Leitstand)</h3>
-            <p>Bei <strong>PROZESSAUSFALL</strong> dem <span style="color:red; font-weight:bold;">ROTEN PFEIL</span> folgen und <span class="key-hint">E</span> drücken (15s Zeit!).</p>
-            <h3>3. SCHICHTEN</h3>
-            <ul><li>Früh: Normal</li><li>Spät (Orange): Mehr Gegner</li><li>Nacht (Dunkel): <strong>DOPPELTE PUNKTE</strong></li></ul>
-            <h3>4. MEETING</h3>
-            <p>Blaue Zonen meiden! Entkommen mit <span class="key-hint">LEERTASTE</span> hämmern.</p>
-            <hr class="email-hr"><p><em>Der Leitstand</em></p>
+            <h3>1. NOTFALL-STEUERUNG</h3>
+            <ul>
+                <li><span class="key-hint">WASD</span> + <span class="key-hint">Maus</span>: Bewegung & Ticket-Bearbeitung.</li>
+                <li><span class="key-hint">E</span>: Interaktion (Heilen am Hähnchenwagen / Systemfehler beheben).</li>
+                <li><span class="key-hint">B</span>: <strong>Personal anfordern.</strong> Kostet 5000 Pkt. Platziert einen Azubi (Geschütz).</li>
+                <li><span class="key-hint">G</span>: <strong>Krankmeldung.</strong> (Urlaubstag einlösen).</li>
+            </ul>
+            <h3>2. ALARMSTUFEN (Leitstand)</h3>
+            <p>Wenn <strong>PROZESSAUSFALL</strong> oder <strong>AUFTRAGSFREIGABE</strong> blinkt:</p>
+            <ul>
+                <li>Folgen Sie sofort dem <span style="color:red; font-weight:bold;">ROTEN PFEIL</span>.</li>
+                <li>Ziel: Das blinkende Terminal erreichen und <span class="key-hint">E</span> drücken.</li>
+                <li>Zeitfenster: 15 Sekunden. Bei Versagen: <strong>Bandstillstand (Gegner-Speed erhöht!)</strong>.</li>
+            </ul>
+            <h3>3. SCHICHT-SYSTEM</h3>
+            <ul>
+                <li><strong>Frühschicht:</strong> Normalbetrieb.</li>
+                <li><strong>Spätschicht (Orange):</strong> Erhöhtes Aufkommen.</li>
+                <li><strong>Nachtschicht (Dunkel):</strong> Sicht eingeschränkt, aber <span class="h-highlight">DOPPELTE PUNKTE</span> (Nachtzuschlag).</li>
+            </ul>
+            <h3>4. MEETING-RÄUME (Gefahr!)</h3>
+            <p>Vermeiden Sie blaue Zonen. Hämmern Sie die <span class="key-hint">LEERTASTE</span>, um zu entkommen.</p>
+            <hr class="email-hr">
+            <p>Viel Erfolg.<br><em>Der Leitstand</em></p>
         </div>
         <div class="close-hint" onclick="hideEmail()">ZURÜCK ZUM HAUPTMENÜ</div>
     </div>
@@ -103,7 +123,7 @@
 
     <div id="screens">
         <div id="startScreen" class="panel" style="display: block;">
-            <h1>Ticket Slayer<br><span style="font-size:20px; color:#fff;">V16.5 FINAL</span></h1>
+            <h1>Ticket Slayer<br><span style="font-size:20px; color:#fff;">V16.6 PRECISION AIM</span></h1>
             <p>Steuerung: WASD + Maus | [B] Bauen | [SPACE] Escape</p>
             <div class="btn-group"><button class="btn-easy" onclick="startGame(1)">Praktikant</button><button class="btn-normal" onclick="startGame(3)">Vollzeit</button><button class="btn-hard" onclick="startGame(6)">Burnout</button></div>
             <button class="btn-info" onclick="showEmail()">[I] PROZESSANWEISUNG LESEN</button>
@@ -137,7 +157,7 @@
         appId: "1:967281658984:web:13936a39b85cc7314ebfdd"
     };
     // ---------------------------------------------------
-    let db;
+   let db;
     try {
         if(firebaseConfig && firebaseConfig.apiKey) {
             firebase.initializeApp(firebaseConfig); db = firebase.firestore();
@@ -248,7 +268,15 @@
     }); 
     window.addEventListener('keyup', e => input.keys[e.code] = false); 
     window.addEventListener('mousedown', () => input.mouseDown = true); window.addEventListener('mouseup', () => input.mouseDown = false); 
-    window.addEventListener('mousemove', e => { input.x = e.clientX; input.y = e.clientY; });
+    
+    // --- AIM FIX: KORREKTE MAUS-POSITION ---
+    window.addEventListener('mousemove', e => { 
+        const rect = canvas.getBoundingClientRect();
+        input.x = e.clientX - rect.left; 
+        input.y = e.clientY - rect.top; 
+    });
+    // ---------------------------------------
+
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight - 85; } window.addEventListener('resize', resize); resize();
 
     function showEmail() { startScreen.style.display = 'none'; emailOverlay.style.display = 'block'; }
@@ -312,7 +340,7 @@
             if (input.keys['KeyG']) { if(this.vacationTimer <= 0) this.activateVacation(); if(frame % 30 === 0) { floatingTexts.push(new FloatingText(this.x, this.y - 60, "ARBEITSZEITBETRUG!", "#ff0000")); } }
             if (input.keys['KeyQ']) { for(let s of stations) { if(s.type === 'coffee_machine' && Math.hypot(this.x - s.x - s.w/2, this.y - s.y - s.h/2) < 100) { if(frame % 20 === 0) { this.speedBoostTimer += 600; playSound('powerup'); floatingTexts.push(new FloatingText(this.x, this.y - 50, "KAFFEE KICK!", "#6f4e37")); } if(frame%30===0) floatingTexts.push(new FloatingText(this.x, this.y - 60, "KOFFEIN JUNKIE!", "#ff0000")); } } }
 
-            // UI & MSGS (RESTORED)
+            // UI & MSGS
             if(msgArea) msgArea.style.display = 'none'; let showMsg = false;
             if(this.crateFlashTimer > 0) { this.crateFlashTimer--; showMsg=true; msgArea.style.display='block'; crateMsg.style.display='block'; } else crateMsg.style.display='none';
             if(this.bossSpawnTimer > 0) { this.bossSpawnTimer--; showMsg=true; msgArea.style.display='block'; bossMsg.style.display='block'; } else bossMsg.style.display='none';
@@ -323,19 +351,19 @@
             if(this.deliveryTimer > 0 && !showMsg) { this.deliveryTimer--; showMsg = true; msgArea.style.display = 'block'; deliveryMsg.style.display = 'block'; } else { deliveryMsg.style.display = 'none'; }
             if(this.bugTimer > 0 && !showMsg) { this.bugTimer--; showMsg = true; msgArea.style.display = 'block'; bugMsg.style.display = 'block'; if(frame % 10 === 0) screenShake = 5; } else { bugMsg.style.display = 'none'; }
             
-            // MARTIN GIFTWOLKE & TEXTE
+            // MARTIN
             if(this.vodkaTimer > 0 && !showMsg) { 
                 this.vodkaTimer--; showMsg = true; msgArea.style.display = 'block'; 
                 if (this.isMartin) { 
                     patientZeroMsg.style.display = 'block'; jammedMsg.style.display = 'none'; 
-                    if(frame % 2 === 0) spawnParticles(this.x, this.y, '#0f0', 4); // DICHTERE WOLKE
+                    if(frame % 2 === 0) spawnParticles(this.x, this.y, '#0f0', 8); // DICHTE WOLKE!
                     for(let e of enemies) { if(Math.hypot(this.x - e.x, this.y - e.y) < 120) { e.hp -= 3; spawnParticles(e.x, e.y, '#0f0', 1); } } 
                 } else { jammedMsg.style.display = 'block'; patientZeroMsg.style.display = 'none'; } 
                 if(frame % 4 === 0) { this.x += (Math.random()-0.5) * 10; this.y += (Math.random()-0.5) * 10; } 
             } else if (this.vodkaTimer > 0) { 
                 this.vodkaTimer--; 
                 if(this.isMartin) { 
-                    if(frame % 2 === 0) spawnParticles(this.x, this.y, '#0f0', 4); 
+                    if(frame % 2 === 0) spawnParticles(this.x, this.y, '#0f0', 8); 
                     for(let e of enemies) if(Math.hypot(this.x - e.x, this.y - e.y) < 120) { e.hp -= 3; spawnParticles(e.x, e.y, '#0f0', 1); } 
                 } 
             } else { jammedMsg.style.display = 'none'; patientZeroMsg.style.display = 'none'; }
@@ -349,7 +377,6 @@
 
             if(!showMsg) msgArea.style.display='none';
 
-            // Movement & Logic
             let dx = 0; let dy = 0; if (input.keys['KeyW']) dy = -1; if (input.keys['KeyS']) dy = 1; if (input.keys['KeyA']) dx = -1; if (input.keys['KeyD']) dx = 1; if (this.bugTimer > 0) { dx = -dx; dy = -dy; }
             let currentSpeed = this.speed; if (this.bikeTimer > 0) currentSpeed = 10; if (this.speedBoostTimer > 0) currentSpeed += 3; 
             if (this.vacationTimer > 0) { this.vacationTimer--; if (frame % 60 === 0 && this.hp < this.maxHp) this.hp += 2; }
@@ -357,7 +384,6 @@
             
             if (dx !== 0 || dy !== 0) { let length = Math.sqrt(dx*dx + dy*dy); dx /= length; dy /= length; let nextX = this.x + dx * currentSpeed; let nextY = this.y + dy * currentSpeed; if (!checkWallCollision(nextX, this.y, this.radius)) this.x = Math.max(this.radius, Math.min(WORLD_WIDTH - this.radius, nextX)); if (!checkWallCollision(this.x, nextY, this.radius)) this.y = Math.max(this.radius, Math.min(WORLD_HEIGHT - this.radius, nextY)); }
             
-            // Shoot
             let canShoot = (this.vodkaTimer <= 0) || this.isMartin; 
             if ((input.mouseDown || (this.weaponType === 'uzi' && this.bikeTimer > 0)) && frame - this.lastShot > this.fireRate && canShoot) { this.shoot(); this.lastShot = frame; }
         }
@@ -368,8 +394,8 @@
             this.crateFlashTimer = 120; crateContent.innerText = type.toUpperCase(); flashScreen = 10; 
         }
         shoot() { 
-            // AIM FIX: WINKEL BERECHNUNG MIT OFFSET
-            let bulletOffset = this.isMartin ? -15 : -10; // Kugel kommt aus Brusthöhe/Waffe, nicht Füße
+            // AIM FIX: BERECHNUNG AB WAFFE
+            let bulletOffset = this.isMartin ? -20 : -10; 
             let angle = Math.atan2(input.y - (this.y + bulletOffset - camera.y), input.x - (this.x - camera.x));
             
             if(this.weaponType === 'uzi' && this.bikeTimer > 0 && !input.mouseDown) angle = Math.random() * Math.PI * 2; 
@@ -387,27 +413,16 @@
             ctx.translate(this.x, this.y); 
             let facingRight = input.worldX > this.x; 
             let imgRight, imgLeft; 
-            
-            if (this.isMartin) { imgRight = martinImgRight; imgLeft = martinImgLeft; } 
-            else { imgRight = wormImgRight; imgLeft = wormImgLeft; } 
-            
+            if (this.isMartin) { imgRight = martinImgRight; imgLeft = martinImgLeft; } else { imgRight = wormImgRight; imgLeft = wormImgLeft; } 
             let currentImg = facingRight ? imgRight : imgLeft; 
             
             if (this.bikeTimer > 0) ctx.translate(0, Math.sin(frame * 0.5) * 3); 
             if (this.bugTimer > 0) { ctx.translate((Math.random()-0.5)*5, (Math.random()-0.5)*5); ctx.filter = "hue-rotate("+Math.random()*360+"deg)"; } 
             if (this.vacationTimer > 0) ctx.globalAlpha = 0.5; 
             
-            let w = this.isMartin ? 60 : 60; 
-            let h = this.isMartin ? 90 : 60; 
-            let offX = w / 2; 
-            let offY = h / 2; 
-            
-            if (currentImg && currentImg.complete && currentImg.naturalHeight !== 0) {
-                ctx.drawImage(currentImg, -offX, -offY, w, h); 
-            } else {
-                ctx.fillStyle = this.isMartin ? 'gold' : '#e67e22';
-                ctx.fillRect(-offX, -offY, w, h);
-            }
+            let w = this.isMartin ? 60 : 60; let h = this.isMartin ? 90 : 60; 
+            let offX = w / 2; let offY = h / 2; 
+            if (currentImg && currentImg.complete && currentImg.naturalHeight !== 0) { ctx.drawImage(currentImg, -offX, -offY, w, h); } else { ctx.fillStyle = this.isMartin ? 'gold' : '#e67e22'; ctx.fillRect(-offX, -offY, w, h); }
 
             if (this.vodkaTimer > 0) { ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'; ctx.fillRect(-offX, -offY, w, h); ctx.globalCompositeOperation = 'source-over'; } 
             if (this.shieldTimer > 0) { ctx.beginPath(); ctx.arc(0, 0, 50, 0, Math.PI*2); ctx.strokeStyle = `rgba(0, 255, 255, ${0.5 + Math.sin(frame*0.2)*0.5})`; ctx.lineWidth = 3; ctx.stroke(); this.shieldTimer--; } 
@@ -424,6 +439,7 @@
             this.laserState = 0; this.laserTimer = 0; if(bossData) { let angle = Math.random() * Math.PI * 2; let dist = Math.max(canvas.width, canvas.height) / 1.5 + 150; this.x = player.x + Math.cos(angle) * dist; this.y = player.y + Math.sin(angle) * dist; this.x = Math.max(30, Math.min(WORLD_WIDTH - 30, this.x)); this.y = Math.max(30, Math.min(WORLD_HEIGHT - 30, this.y)); this.type = 99; this.hp = bossData.hp; this.maxHp = bossData.hp; this.speed = bossData.speed; this.radius = bossData.radius; this.color = bossData.color; this.score = 5000; this.label = bossData.name; this.symbol = "☠"; this.laserCooldown = 300; return; } let safe = false; let attempts = 0; while(!safe && attempts < 50) { let angle = Math.random() * Math.PI * 2; let dist = Math.max(canvas.width, canvas.height) / 1.5 + 150; this.x = player.x + Math.cos(angle) * dist; this.y = player.y + Math.sin(angle) * dist; this.x = Math.max(30, Math.min(WORLD_WIDTH - 30, this.x)); this.y = Math.max(30, Math.min(WORLD_HEIGHT - 30, this.y)); if(!checkWallCollision(this.x, this.y, 30)) safe = true; attempts++; } let rand = Math.random(); if (difficulty > 3 && rand < 0.02) this.type = 1; else if (difficulty > 1.5 && rand < 0.10) this.type = 2; else if (rand < 0.25) this.type = 3; else if (rand < 0.45) this.type = 4; else if (rand < 0.50) { const hasLKW = enemies.some(e => e.type === 6); if (hasLKW) this.type = 5; else this.type = 6; } else this.type = 5; switch(this.type) { case 6: this.hp=100; this.maxHp=100; this.speed=1.5; this.radius=35; this.color='#f39c12'; this.score=500; this.label="TEICHMANN"; this.symbol="👻"; break; case 5: this.hp=10; this.maxHp=10; this.speed=3.5; this.radius=14; this.color='#2ecc71'; this.score=10; this.label="PRIO5"; this.symbol="🪱"; break; case 4: this.hp=25; this.maxHp=25; this.speed=2.8; this.radius=16; this.color='#1abc9c'; this.score=25; this.label="PRIO4"; this.symbol="📄"; break; case 3: this.hp=50; this.maxHp=50; this.speed=2.0; this.radius=20; this.color='#f1c40f'; this.score=50; this.label="PRIO3"; this.symbol="⚙"; break; case 2: this.hp=120; this.maxHp=120; this.speed=1.5; this.radius=26; this.color='#e67e22'; this.score=150; this.label="PRIO2"; this.symbol="⚡"; break; case 1: this.hp=400; this.maxHp=400; this.speed=1.0; this.radius=50; this.color='#c0392b'; this.score=300; this.label="PRIO1"; this.symbol="☠"; break; } }
         update() { 
             if(this.freezeTimer > 0) { this.freezeTimer--; return; } 
+            
             if(this.type === 99 && this.label === "PETER BAYER") {
                 if(Math.random() < 0.005) { 
                     screenShake = 40; player.stunned = 60; 
@@ -435,6 +451,7 @@
                     for(let i=0; i<10; i++) { let ne = new Enemy(); ne.x = this.x; ne.y = this.y; enemies.push(ne); }
                 }
             }
+
             if(this.type === 99) { if(this.laserCooldown > 0) this.laserCooldown--; else { if(this.laserState === 0) { this.laserState = 1; this.laserTimer = 120; } } if(this.laserState === 1) { this.laserTimer--; if(this.laserTimer <= 0) { this.laserState = 2; this.laserTimer = 30; playSound('laser'); } } if(this.laserState === 2) { this.laserTimer--; if(this.laserTimer <= 0) { this.laserState = 0; this.laserCooldown = 300; } let angleToPlayer = Math.atan2(player.y - this.y, player.x - this.x); for(let otherE of enemies) { if(otherE !== this && otherE.type !== 1 && otherE.type !== 99 && otherE.type !== 6) { let dist = Math.hypot(otherE.x - this.x, otherE.y - this.y); if(dist < 800 && Math.abs(Math.atan2(otherE.y-this.y, otherE.x-this.x) - angleToPlayer) < 0.2) { otherE.type = 2; otherE.color = '#e67e22'; otherE.hp = 120; otherE.label="PRIO2"; otherE.symbol="⚡"; } } } } } let angle; if (player.vacationTimer > 0 && this.type !== 99) angle = Math.sin(frame * 0.1 + this.x) * Math.PI; else angle = Math.atan2(player.y - this.y, player.x - this.x); let nextX = this.x + Math.cos(angle) * this.speed; let nextY = this.y + Math.sin(angle) * this.speed; if (this.type === 99 || this.type === 6 || !checkWallCollision(nextX, this.y, this.radius)) this.x = nextX; if (this.type === 99 || this.type === 6 || !checkWallCollision(this.x, nextY, this.radius)) this.y = nextY; let dist = Math.hypot(player.x - this.x, player.y - this.y); if (dist < player.radius + this.radius) { if (this.type === 6) { screenShake = 20; if(typeof floatingTexts !== 'undefined') floatingTexts.push(new FloatingText(player.x, player.y, "CRITICAL UPDATE!", "#ff0000")); playSound('bug'); for(let otherE of enemies) { if(otherE.type !== 99 && otherE.type !== 1 && otherE !== this) { otherE.type = 1; otherE.color = '#c0392b'; otherE.hp = 400; otherE.maxHp = 400; otherE.score = 1000; otherE.radius = 50; otherE.label="PRIO1"; otherE.symbol="☠"; } } this.hp = -1000; } else { if (player.isMartin && player.vodkaTimer > 0) { this.x -= Math.cos(angle) * 5; this.y -= Math.sin(angle) * 5; } else { if(player.shieldTimer > 0) { this.x -= Math.cos(angle) * 10; this.y -= Math.sin(angle) * 10; } else { let dmg = 0.5; if(this.type === 4) dmg = 1.0; if(this.type === 3) dmg = 1.5; if(this.type === 2) dmg = 2.0; if(this.type === 1) dmg = 2.5; if(this.type === 99) dmg = 3.5; player.hp -= dmg; spawnParticles(player.x, player.y, '#f00', 1); this.x -= Math.cos(angle) * 5; this.y -= Math.sin(angle) * 5; screenShake = 5; } } } } }
         draw() { 
             if(this.freezeTimer > 0) { ctx.globalAlpha = 0.5; ctx.fillStyle = "#0ff"; ctx.fillText("❄️", this.x, this.y-40); }
