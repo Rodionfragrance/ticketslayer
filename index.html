@@ -505,7 +505,7 @@ function buyUpgrade(id) {
 // SECTION 4 — ASSET PRELOADER
 // ============================================================
 const ASSETS = {
-    images: ['wurmr.png','wurml.png','maddinr.png','maddinl.png','bolte.png','kaffee.png'],
+    images: ['wurmr.png','wurml.png','maddinr.png','maddinl.png','bolte.png','kaffee.png','kloska.png'],
     audio:  ['main.mp3','track1.mp3','track2.mp3']
 };
 let assetsLoaded = 0;
@@ -517,6 +517,7 @@ const martinImgRight = new Image(); martinImgRight.src = 'maddinr.png';
 const martinImgLeft  = new Image(); martinImgLeft.src  = 'maddinl.png';
 const chickenImg     = new Image(); chickenImg.src     = 'bolte.png';
 const coffeeImg      = new Image(); coffeeImg.src      = 'kaffee.png';
+const kloskaImg      = new Image(); kloskaImg.src      = 'kloska.png';
 
 function onAssetLoad() {
     assetsLoaded++;
@@ -533,7 +534,7 @@ function finishLoading() {
 }
 
 // Load images
-[wormImgRight,wormImgLeft,martinImgRight,martinImgLeft,chickenImg,coffeeImg].forEach(img=>{
+[wormImgRight,wormImgLeft,martinImgRight,martinImgLeft,chickenImg,coffeeImg,kloskaImg].forEach(img=>{
     img.onload  = onAssetLoad;
     img.onerror = onAssetLoad; // count even on error so game doesn't hang
 });
@@ -609,6 +610,7 @@ let screenShake=0, flashScreen=0;
 let currentShift=0, shiftTimer=0;
 let currentBossStage=0, activeBoss=null;
 let idocEvent=null, meetingZone=null;
+let idocEvent=null, meetingZone=null, kloskaEvent=null;
 
 let player=null;
 let bullets=[], enemies=[], particles=[], obstacles=[], stations=[];
@@ -811,6 +813,18 @@ class Player{
                 floatingTexts.push(new FloatingText(this.x,this.y,"PROBLEM GELÖST!","#0f0"));
                 showToast("PROBLEM GELÖST!","#00ff00","+2000 Punkte — Gegner eingefroren");
                 enemies.forEach(e=>e.freezeTimer=300);
+            }
+           if(idocEvent&&Math.hypot(this.x-idocEvent.x,this.y-idocEvent.y)<100){
+                idocEvent=null; score+=2000; removePersistentToast();
+                floatingTexts.push(new FloatingText(this.x,this.y,"PROBLEM GELÖST!","#0f0"));
+                showToast("PROBLEM GELÖST!","#00ff00","+2000 Punkte");
+                enemies.forEach(e=>e.freezeTimer=300);
+            }
+            // --- NEU: KLOSKA VERJAGEN ---
+            if(kloskaEvent&&Math.hypot(this.x-kloskaEvent.x,this.y-kloskaEvent.y)<120){
+                kloskaEvent=null; score+=1500; removePersistentToast();
+                floatingTexts.push(new FloatingText(this.x,this.y,"KLOSKA VERJAGT!","#0f0"));
+                showToast("KLOSKA VERJAGT!","#00ff00","Server gerettet! (+1500 Pkt)");
             }
         }
         // [G] Vacation
@@ -1214,6 +1228,19 @@ function spawnLogic(){
             playSound('alarm');
             showToast("🚨 "+idocEvent.label,"#f00","Rotem Pfeil folgen → [E] drücken! (15 Sek)",true);
         }
+       // KLOSKA EVENT (greift Farmen an)
+    if(!kloskaEvent && serverFarms.length > 0 && frame % 2500 === 1800) {
+        // Wähle eine zufällige aktive Farm
+        let farm = serverFarms[Math.floor(Math.random() * serverFarms.length)];
+        kloskaEvent = {
+            serverRef: farm.serverRef,
+            x: farm.serverRef.x - 40, // Er steht links daneben
+            y: farm.serverRef.y + 10,
+            timer: 900 // 15 Sekunden Zeit
+        };
+        playSound('alarm');
+        showToast("⚠️ ALARM!", "#ff00ff", "Kloska ist im Serverraum unterwegs!", true);
+    }
     }
 
     // Schicht
@@ -1308,6 +1335,32 @@ function drawWorld(){
             ctx.restore();
         }
     }
+   // KLOSKA marker + arrow
+    if(kloskaEvent) {
+        // Kloska zeichnen
+        ctx.shadowColor = "#ff00ff"; ctx.shadowBlur = 15;
+        if(kloskaImg && kloskaImg.complete && kloskaImg.naturalHeight !== 0) {
+            ctx.drawImage(kloskaImg, kloskaEvent.x, kloskaEvent.y, 50, 75);
+        } else {
+            // Platzhalter falls Bild fehlt
+            ctx.fillStyle = "#8e44ad"; ctx.fillRect(kloskaEvent.x, kloskaEvent.y, 40, 70);
+        }
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#fff"; ctx.font = "bold 16px Arial"; ctx.textAlign="center";
+        ctx.fillText("KLOSKA", kloskaEvent.x + 25, kloskaEvent.y - 10);
+
+        // Lila Pfeil zum Spieler
+        let dx = kloskaEvent.x - player.x, dy = kloskaEvent.y - player.y;
+        let angle = Math.atan2(dy, dx);
+        let arrowDist = Math.min(Math.hypot(dx, dy) - 30, 80);
+        if(arrowDist > 20) {
+            ctx.save(); ctx.translate(player.x + Math.cos(angle)*arrowDist, player.y + Math.sin(angle)*arrowDist); ctx.rotate(angle);
+            let sc = 1 + Math.sin(frame * 0.2) * 0.3; ctx.scale(sc, sc);
+            ctx.fillStyle = "#ff00ff"; // Lila Pfeil für Kloska
+            ctx.beginPath(); ctx.moveTo(15, 0); ctx.lineTo(-15, 10); ctx.lineTo(-15, -10); ctx.fill();
+            ctx.restore();
+        }
+    }
 }
 
 // ============================================================
@@ -1353,6 +1406,21 @@ function loop(){
                 enemies.forEach(e=>e.speed+=2);
             }
         }
+       // KLOSKA timeout
+        if(kloskaEvent) {
+            kloskaEvent.timer--;
+            if(kloskaEvent.timer <= 0) {
+                // Kloska jagt die Farm hoch
+                triggerServerExplosion(kloskaEvent.serverRef.x + 20, kloskaEvent.serverRef.y + 40);
+                // Farm aus Arrays löschen
+                serverFarms = serverFarms.filter(f => f.serverRef !== kloskaEvent.serverRef);
+                servers = servers.filter(s => s !== kloskaEvent.serverRef);
+                kloskaEvent = null;
+                removePersistentToast();
+                floatingTexts.push(new FloatingText(player.x, player.y, "FARM ZERSTÖRT!", "#f00"));
+                showToast("FARM ZERSTÖRT!", "#ff4400", "Kloska hat das Kabel gezogen!");
+            }
+        }
 
         // Meeting
         if(meetingZone?.active){
@@ -1379,12 +1447,26 @@ function loop(){
         camera.x=Math.max(0,Math.min(player.x-canvas.width/2, WORLD_WIDTH-canvas.width));
         camera.y=Math.max(0,Math.min(player.y-canvas.height/2,WORLD_HEIGHT-canvas.height));
         input.worldX=input.x+camera.x; input.worldY=input.y+camera.y;
-
+       
         // Bullets
         for(let i=bullets.length-1;i>=0;i--){
             let b=bullets[i]; b.update();
             let hit=false;
-            for(let k=servers.length-1;k>=0;k--){let sv=servers[k];if(b.x>sv.x&&b.x<sv.x+sv.w&&b.y>sv.y&&b.y<sv.y+sv.h){triggerServerExplosion(sv.x+sv.w/2,sv.y+sv.h/2);serverFarms=serverFarms.filter(f=>f.serverRef!==sv);servers.splice(k,1);hit=true;break;}}
+            for(let k=servers.length-1;k>=0;k--){
+                let sv=servers[k];
+                if(b.x>sv.x&&b.x<sv.x+sv.w&&b.y>sv.y&&b.y<sv.y+sv.h){
+                    if(sv.isFarm) {
+                        hit=true; // Kugel verpufft an der Farm (Schusssicher!)
+                        break;
+                    } else {
+                        triggerServerExplosion(sv.x+sv.w/2,sv.y+sv.h/2);
+                        serverFarms=serverFarms.filter(f=>f.serverRef!==sv);
+                        servers.splice(k,1);
+                        hit=true;
+                        break;
+                    }
+                }
+            }
             if(hit||checkWallCollision(b.x,b.y,2)||b.life<=0) bullets.splice(i,1);
         }
 
@@ -1431,12 +1513,25 @@ function loop(){
         }
 
         // Items
-        for(let i=items.length-1;i>=0;i--){
-            let item=items[i];
-            if(!item) continue; // <--- BUGFIX: Verhindert Absturz, wenn Nuke das Array leert!
+        for(let i=items.length-1; i>=0; i--){
+            let item = items[i];
+            // 1. Absoluter Sicherheits-Check: Gibt es das Item überhaupt?
+            if(!item) {
+                items.splice(i, 1);
+                continue; 
+            }
             
-            if(item.life!==Infinity){item.life--;if(item.life<=0){items.splice(i,1);continue;}}
-            if(Math.hypot(player.x-item.x,player.y-item.y)<player.radius+item.radius){
+            // 2. Lebenszeit prüfen
+            if(item.life !== Infinity){
+                item.life--;
+                if(item.life <= 0){
+                    items.splice(i, 1);
+                    continue;
+                }
+            }
+            
+            // 3. Kollision mit Spieler
+            if(Math.hypot(player.x-item.x, player.y-item.y) < player.radius + item.radius){
                 switch(item.type){
                     case 'chicken': player.hp=Math.min(player.maxHp,player.hp+30);spawnParticles(item.x,item.y,'#d35400',10);playSound('powerup');showToast("STÄRKUNG! 🍗","#d35400","+30 Gesundheit");break;
                     case 'vodka':   player.vodkaTimer=300;spawnParticles(item.x,item.y,'#0984e3',10);playSound('vodka');showToast(player.isMartin?"PATIENT NULL! 🍺":"WAFFE BLOCKIERT! 🍺",player.isMartin?"#0f0":"#f00",player.isMartin?"Unbesiegbar & giftig!":"KURWA...");break;
@@ -1449,7 +1544,8 @@ function loop(){
                     case 'bike':    player.bikeTimer=600;playSound('powerup');showToast("RADL-RAMBO! 🚲","#0f0","Speed x2 + Autofire");floatingTexts.push(new FloatingText(player.x,player.y,"RADL-RAMBO!","#0f0"));break;
                     case 'briefcase':player.maxHp+=50;player.hp=player.maxHp;playSound('evolve');showToast("GEHALTSERHÖHUNG! 💼","#ffd700","Max-HP +50");floatingTexts.push(new FloatingText(player.x,player.y,"GEHALTSERHÖHUNG!","#ffd700"));spawnParticles(item.x,item.y,'#ffd700',20);break;
                 }
-                items.splice(i,1);
+                // Item nach dem Einsammeln sicher entfernen
+                items.splice(i, 1);
             }
         }
 
@@ -1508,7 +1604,7 @@ function startGame(diff=1){
     lastChosenDifficulty=diff;
     currentBossStage=0;activeBoss=null;
     currentShift=0;shiftTimer=0;
-    gamePaused=false;idocEvent=null;meetingZone=null;
+    gamePaused=false;idocEvent=null;meetingZone=null;kloskaEvent=null;
     enemies=[];bullets=[];particles=[];items=[];splatters=[];floatingTexts=[];turrets=[];serverFarms=[];
     clearAllToasts();
 
@@ -1526,6 +1622,7 @@ window.addEventListener('click',()=>{
 </script>
 </body>
 </html>
+
 
 
 
