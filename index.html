@@ -664,7 +664,7 @@ function checkWallCollision(x,y,r){
     return false;
 }
 function spawnParticles(x,y,c,n){ for(let i=0;i<n;i++) particles.push(new Particle(x,y,c)); }
-function triggerNuke(){ screenShake=50;flashScreen=50;playSound('hammer');enemies=[];items=[];splatters=[];floatingTexts.push(new FloatingText(player.x,player.y,"ALLES PLATT!!!","#f00")); }
+// function triggerNuke(){ screenShake=50;flashScreen=50;playSound('hammer');enemies=[];items=[];splatters=[];floatingTexts.push(new FloatingText(player.x,player.y,"ALLES PLATT!!!","#f00")); }
 function triggerServerExplosion(x,y){ screenShake=30;playSound('hammer');spawnParticles(x,y,'#f00',30);enemies.forEach(e=>{ if(Math.hypot(e.x-x,e.y-y)<300){e.hp-=500;floatingTexts.push(new FloatingText(e.x,e.y,"SERVER DOWN!","#f00"));} }); }
 function checkGameOver(){
     if(player.hp<=0){
@@ -1203,7 +1203,7 @@ function spawnLogic(){
         else if(r<0.85) items.push(new Item('vacation'));
         else if(r<0.96){if(player.isMartin)items.push(new Item('bike'));else items.push(new Item('bug'));}
         else if(r<0.99){items.push(new Item('hammer'));playSound('delivery');player.hammerSpawnTimer=180;showToast("LUDWIG RUAFT O!","#c0392b","Hammer gesichtet.");}
-        else{if(difficulty>3)items.push(new Item('nuke'));else items.push(new Item('chicken'));}
+        // else{if(difficulty>3)items.push(new Item('nuke'));else items.push(new Item('chicken'));}
     }
 
     // IDOC
@@ -1444,7 +1444,7 @@ function loop(){
                     case 'shield':  player.shieldTimer=600;playSound('powerup');showToast("SCHUTZSCHILD! 🛡️","#00f","Immunität für 10 Sek");floatingTexts.push(new FloatingText(player.x,player.y,"SCHUTZSCHILD!","#00f"));break;
                     case 'bug':     player.bugTimer=600;playSound('bug');spawnParticles(item.x,item.y,'#f0f',20);showToast("JANSKIS HOTFIX! 💾","#f0f","Steuerung invertiert...");break;
                     case 'hammer':  player.hammerEffectTimer=120;playSound('hammer');screenShake=30;for(let k=enemies.length-1;k>=0;k--){if(enemies[k].type!==99){score+=Math.max(1,Math.floor(enemies[k].score*.1));splatters.push(new Splatter(enemies[k].x,enemies[k].y,enemies[k].color));enemies.splice(k,1);}else enemies[k].hp-=500;}showToast("RAMADAMA! 🔨","#e74c3c","Schleichst eich!");break;
-                    case 'nuke':    triggerNuke();break;
+                    // case 'nuke':    triggerNuke();break;
                     case 'vacation':player.yellowSlips++;playSound('vacation');showToast("+1 URLAUBSTAG! 💤","#ffff00","Minusstunden gespart");floatingTexts.push(new FloatingText(player.x,player.y,"+1 URLAUB!","#ffff00"));break;
                     case 'bike':    player.bikeTimer=600;playSound('powerup');showToast("RADL-RAMBO! 🚲","#0f0","Speed x2 + Autofire");floatingTexts.push(new FloatingText(player.x,player.y,"RADL-RAMBO!","#0f0"));break;
                     case 'briefcase':player.maxHp+=50;player.hp=player.maxHp;playSound('evolve');showToast("GEHALTSERHÖHUNG! 💼","#ffd700","Max-HP +50");floatingTexts.push(new FloatingText(player.x,player.y,"GEHALTSERHÖHUNG!","#ffd700"));spawnParticles(item.x,item.y,'#ffd700',20);break;
@@ -1526,5 +1526,6 @@ window.addEventListener('click',()=>{
 </script>
 </body>
 </html>
+
 
 
