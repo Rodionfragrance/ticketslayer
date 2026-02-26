@@ -44,7 +44,7 @@ canvas { display:block; cursor:crosshair; }
     padding:9px 13px; color:#fff;
     font-family:'Courier New',monospace; font-size:13px; font-weight:bold;
     border-radius:3px; text-transform:uppercase;
-    animation:toastIn 0.18s ease, toastOut 0.4s ease 2.2s forwards;
+    animation:toastIn 0.18s ease, toastOut 0.4s ease 10.2s forwards;
     box-shadow:0 2px 12px rgba(0,0,0,0.7);
 }
 .toast.persistent { animation:toastIn 0.18s ease; }
@@ -621,7 +621,7 @@ const bosses=[
     {score:10000, name:"TIM",         subtitle:"Update!",            hp:3000,  color:'#2980b9',radius:70, speed:3.0},
     {score:15000, name:"FLOF",        subtitle:"Prozesse!",          hp:5000,  color:'#27ae60',radius:80, speed:3.5},
     {score:20000, name:"JANSKI",      subtitle:"Dienstag!",          hp:8000,  color:'#d35400',radius:90, speed:4.0},
-    {score:30000, name:"PETER BAYER", subtitle:"TICKET FOKUSSIERT!", hp:20000, color:'#c0392b',radius:130,speed:4.5}
+    {score:50000, name:"PETER BAYER", subtitle:"TICKET FOKUSSIERT!", hp:20000, color:'#c0392b',radius:130,speed:4.5}
 ];
 
 // ============================================================
@@ -1424,6 +1424,8 @@ function loop(){
         // Items
         for(let i=items.length-1;i>=0;i--){
             let item=items[i];
+            if(!item) continue; // <--- BUGFIX: Verhindert Absturz, wenn Nuke das Array leert!
+            
             if(item.life!==Infinity){item.life--;if(item.life<=0){items.splice(i,1);continue;}}
             if(Math.hypot(player.x-item.x,player.y-item.y)<player.radius+item.radius){
                 switch(item.type){
@@ -1515,3 +1517,4 @@ window.addEventListener('click',()=>{
 </script>
 </body>
 </html>
+
