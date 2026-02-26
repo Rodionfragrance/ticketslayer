@@ -934,14 +934,23 @@ class Item{
         this.type=type; this.bobOffset=Math.random()*100;
         this.life=(this.type==='bug'||this.type==='briefcase')?Infinity:1000;
     }
-    draw(){
-        let bob=Math.sin((frame+this.bobOffset)/20)*5;
-        ctx.save(); ctx.translate(this.x,this.y+bob);
-        if(this.life<120&&this.life%10<5) ctx.globalAlpha=.3;
-        ctx.font='40px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.shadowColor="rgba(0,0,0,.8)"; ctx.shadowBlur=8;
-        const icons={chicken:'🍗',vodka:'🍺',crate:'📦',bug:'💾',hammer:'🔨',vacation:'💤',bike:'🚲',shield:'🛡️',nuke:'☢️',briefcase:'💼'};
-        ctx.fillText(icons[this.type]||'?',0,0);
+    draw() {
+        let bob = Math.sin((frame + this.bobOffset) / 20) * 5;
+        
+        // --- ANIMIERTER SCHATTEN (Bleibt auf dem Boden) ---
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.beginPath();
+        // Schatten wird kleiner, wenn das Item (bob) nach oben geht
+        ctx.ellipse(this.x, this.y + 18, 12 - bob/2, 5 - bob/4, 0, 0, Math.PI*2);
+        ctx.fill();
+        // --------------------------------------------------
+
+        ctx.save(); ctx.translate(this.x, this.y + bob);
+        if(this.life < 120 && this.life % 10 < 5) ctx.globalAlpha = 0.3;
+        ctx.font = '40px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.shadowColor = "rgba(0,0,0,.8)"; ctx.shadowBlur = 8;
+        const icons = {chicken:'🍗',vodka:'🍺',crate:'📦',bug:'💾',hammer:'🔨',vacation:'💤',bike:'🚲',shield:'🛡️',nuke:'☢️',briefcase:'💼'};
+        ctx.fillText(icons[this.type] || '?', 0, 0);
         ctx.restore();
     }
 }
@@ -1517,4 +1526,5 @@ window.addEventListener('click',()=>{
 </script>
 </body>
 </html>
+
 
