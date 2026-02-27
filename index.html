@@ -647,25 +647,33 @@ function onAssetLoad() {
     if (assetsLoaded >= totalAssets) finishLoading();
 }
 function finishLoading() {
-    setTimeout(()=>{
+    if (finishLoading._done) return; // Kein Doppelaufruf
+    finishLoading._done = true;
+    setTimeout(function(){
         document.getElementById('loadingScreen').style.display = 'none';
         document.getElementById('startScreen').style.display = 'block';
         document.getElementById('startKBAmount').innerText = kaffeebons;
     }, 300);
 }
 
-// Load images
-[wormImgRight,wormImgLeft,martinImgRight,martinImgLeft,chickenImg,coffeeImg,kloskaImg].forEach(img=>{
-    img.onload  = onAssetLoad;
-    img.onerror = onAssetLoad; // count even on error so game doesn't hang
+// Load images — mit Cache-Fix: .complete prüfen NACH dem Setzen des Handlers
+[wormImgRight,wormImgLeft,martinImgRight,martinImgLeft,chickenImg,coffeeImg,kloskaImg].forEach(function(img){
+    if (img.complete) {
+        onAssetLoad(); // Bereits gecacht — sofort zählen
+    } else {
+        img.onload  = onAssetLoad;
+        img.onerror = onAssetLoad;
+    }
 });
 
-// Preload audio via fetch (buffering)
-ASSETS.audio.forEach(src=>{
-    fetch(src)
-        .then(r=>r.arrayBuffer())
-        .then(()=>onAssetLoad())
-        .catch(()=>onAssetLoad()); // count even if file missing
+// Audio: fetch() nur wenn nötig, sonst direkt zählen (GitHub Pages blockt fetch oft)
+ASSETS.audio.forEach(function(src){
+    var audio = new Audio();
+    audio.oncanplaythrough = function(){ audio.oncanplaythrough = null; onAssetLoad(); };
+    audio.onerror = function(){ onAssetLoad(); };
+    audio.src = src;
+    // Fallback: nach 3 Sekunden trotzdem weitermachen
+    setTimeout(function(){ if(assetsLoaded < totalAssets){ onAssetLoad(); } }, 3000);
 });
 
 // ============================================================
