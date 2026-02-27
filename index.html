@@ -669,38 +669,31 @@ const coffeeImg      = new Image(); coffeeImg.src      = 'kaffee.png';
 const kloskaImg      = new Image(); kloskaImg.src      = 'kloska.png';
 const hardwareImg    = new Image(); hardwareImg.src    = 'hardware.png';
 
-// Ladebalken animieren — startet nach kurzer Pause damit alle JS-Variablen bereit sind
-window.addEventListener('DOMContentLoaded', function() {
-    // Kleiner Delay damit const-Deklarationen im selben Script-Block abgeschlossen sind
-    setTimeout(function(){
-        var bar    = document.getElementById('loadBar-inner');
-        var status = document.getElementById('loadStatus');
+// ── PRELOADER: simpelste mögliche Version, hängt nie ──────────
+setTimeout(function(){
+    try {
+        var ls = document.getElementById('loadingScreen');
+        var ss = document.getElementById('startScreen');
+        var kb = document.getElementById('startKBAmount');
+        // Balken kurz animieren
+        var bar = document.getElementById('loadBar-inner');
         var pct = 0;
-        var msgs = ['Kaffee kochen...','Tickets prüfen...','Gegner laden...','Bereit!'];
-        var msgIdx = 0;
         var iv = setInterval(function(){
-            pct += 4;
-            if(bar) bar.style.width = Math.min(pct, 100) + '%';
-            if(pct % 25 === 0 && status && msgIdx < msgs.length){
-                status.innerText = msgs[msgIdx++];
-            }
+            pct += 10;
+            if(bar) bar.style.width = pct + '%';
             if(pct >= 100){
                 clearInterval(iv);
-                try {
-                    var kb = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
-                    document.getElementById('loadingScreen').style.display = 'none';
-                    document.getElementById('startScreen').style.display   = 'block';
-                    var el = document.getElementById('startKBAmount');
-                    if(el) el.innerText = kb;
-                } catch(e) {
-                    // Trotzdem starten
-                    document.getElementById('loadingScreen').style.display = 'none';
-                    document.getElementById('startScreen').style.display   = 'block';
-                }
+                if(ls) ls.style.display = 'none';
+                if(ss) ss.style.display = 'block';
+                if(kb) kb.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
             }
-        }, 40); // 25 Schritte × 40ms = 1 Sekunde
-    }, 50);
-});
+        }, 50); // 10 Schritte × 50ms = 500ms
+    } catch(e) {
+        // Absoluter Fallback
+        document.getElementById('loadingScreen').style.display = 'none';
+        document.getElementById('startScreen').style.display = 'block';
+    }
+}, 100); // 100ms nach Script-Start
 
 // SECTION 5 — AUDIO ENGINE
 // ============================================================
