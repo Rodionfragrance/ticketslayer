@@ -279,7 +279,16 @@ input[type="text"] {
 
 <div id="screens">
     <div id="startScreen" class="panel">
-        <h1>Ticket Slayer<br><span style="font-size:18px;color:#fff;">V18 — DOPAMIN UPDATE</span></h1>
+        <div id="startScreen" class="panel">
+    <h1>Ticket Slayer<br><span style="font-size:18px;color:#fff;">V18 — DOPAMIN UPDATE</span></h1>
+    
+    <div style="margin-bottom:25px; background:rgba(255,255,255,0.05); padding:15px; border:1px solid #333;">
+        <p style="font-size:12px; color:#888; margin-bottom:10px;">PROFIL-IDENTIFIKATION:</p>
+        <input type="text" id="playerName" placeholder="DEIN NAME" maxlength="10"
+               style="background:#000; color:#0f0; border:1px solid #0f0; padding:10px; text-align:center; font-family:monospace; margin-bottom:10px; width:200px;">
+        <br>
+        <button onclick="loadCloudProfile()" style="background:#0f0; color:#000; border:none; padding:8px 15px; cursor:pointer; font-weight:bold; font-size:12px;">LADE CLOUD-SAVE</button>
+    </div>
         <p>WASD + Maus | [B] Azubi | [F] Farm | [SHIFT/R-KLICK] Rolle</p>
         <div id="startKBDisplay" style="color:#00e5ff;font-size:14px;margin:8px 0;">☕ Kaffeebons: <span id="startKBAmount">0</span></div>
         <div class="btn-group">
@@ -434,8 +443,26 @@ function getUpgradeCost(upg) {
     return Math.floor(upg.baseCost * Math.pow(upg.costMult, lvl));
 }
 function saveProgress() {
+    const name = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim();
+    
+    // 1. Lokal speichern (Backup)
     localStorage.setItem('ts_kb', kaffeebons);
     localStorage.setItem('ts_upgrades', JSON.stringify(upgradeProgress));
+    localStorage.setItem('ts_name', name);
+
+    // 2. In Firebase Cloud speichern
+    if (db && name !== "ANONYM") {
+        const stats = {
+            kb: kaffeebons,
+            upgrades: upgradeProgress,
+            prestige: typeof prestigeLevel !== 'undefined' ? prestigeLevel : 0,
+            lastSeen: new Date().toISOString()
+        };
+        
+        db.collection("playerProfiles").doc(name).set(stats, { merge: true })
+        .then(() => console.log("Cloud-Save für " + name + " erfolgreich!"))
+        .catch(e => console.error("Cloud-Save Fehler:", e));
+    }
 }
 function earnKaffeebons(sc) {
     let baseRate = 1 + getUpgradeLevel('kb_rate') * 0.2;
@@ -1728,6 +1755,43 @@ function buyKloskaItem(item, cost) {
         playSound('hit');
     }
 }
+   async function loadCloudProfile() {
+    const name = document.getElementById('playerName').value.toUpperCase().trim();
+    if(!name || name === "ANONYM") { 
+        showToast("NAME ERFORDERLICH", "#f00", "Gib einen Namen ein"); 
+        return; 
+    }
+
+    if(!db) { showToast("FEHLER", "#f00", "Firebase nicht verbunden"); return; }
+
+    try {
+        const doc = await db.collection("playerProfiles").doc(name).get();
+        if (doc.exists) {
+            const data = doc.data();
+            // Daten in globale Variablen laden
+            kaffeebons = data.kb || 0;
+            upgradeProgress = data.upgrades || {};
+            if(data.prestige) prestigeLevel = data.prestige;
+            
+            // UI aktualisieren
+            document.getElementById('startKBAmount').innerText = kaffeebons;
+            showToast("PROFIL GELADEN", "#00e5ff", "Willkommen zurück, " + name);
+            console.log("Daten geladen:", data);
+        } else {
+            showToast("NEUES PROFIL", "#2ecc71", "Erste Schicht? Viel Erfolg!");
+        }
+    } catch (error) {
+        console.error("Fehler beim Laden:", error);
+        showToast("LADEFEHLER", "#f00", "Cloud nicht erreichbar");
+    }
+}
+
+// Automatisches Ausfüllen des Namens beim Start
+window.addEventListener('DOMContentLoaded', () => {
+    const savedName = localStorage.getItem('ts_name');
+    if(savedName) document.getElementById('playerName').value = savedName;
+});
 </script>
 </body>
 </html>
+
