@@ -277,6 +277,20 @@ input[type="text"] {
     <button id="pw-btn" onclick="checkPassword()">EINLOGGEN</button>
     <p id="pw-error"></p>
 </div>
+<script>
+// Sofort prüfen ob Login noch gültig (läuft BEVOR der Haupt-Script-Block)
+(function(){
+    try {
+        var stored = localStorage.getItem('ts_auth');
+        if(stored) {
+            var data = JSON.parse(stored);
+            if(Date.now() < data.expires) {
+                document.getElementById('passwordScreen').style.display = 'none';
+            }
+        }
+    } catch(e) {}
+})();
+</script>
 
 <!-- AUDIO -->
 <audio id="menuMusic" src="main.mp3" loop></audio>
@@ -301,7 +315,7 @@ input[type="text"] {
 <!-- EMAIL OVERLAY -->
 <div id="emailOverlay">
     <div class="email-header">
-        <div class="email-row"><span class="email-label">VON:</span> IT-Leitstand &lt;noreply@ticketslayer.corp&gt;</div>
+        <div class="email-row"><span class="email-label">VON:</span> IT-Leitstand &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6a0405180f1a06132a1e0309010f1e19060b130f18440905181a">[email&#160;protected]</a>&gt;</div>
         <div class="email-row"><span class="email-label">AN:</span> Alle Mitarbeiter</div>
         <div class="email-row email-subject">WICHTIG: Neue Prozessanweisung V17 (Leitstand)</div>
     </div>
@@ -434,7 +448,7 @@ input[type="text"] {
     </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 'use strict';
 // ============================================================
 // SECTION 1 — AUDIO CONFIG (zentral, hier anpassen)
@@ -592,6 +606,7 @@ const martinImgLeft  = new Image(); martinImgLeft.src  = 'maddinl.png';
 const chickenImg     = new Image(); chickenImg.src     = 'bolte.png';
 const coffeeImg      = new Image(); coffeeImg.src      = 'kaffee.png';
 const kloskaImg      = new Image(); kloskaImg.src      = 'kloska.png';
+const hardwareImg    = new Image(); hardwareImg.src    = 'hardware.png'; // Fallback: Placeholder falls Bild fehlt
 
 function onAssetLoad() {
     assetsLoaded++;
@@ -1907,19 +1922,7 @@ const GAME_PASSWORD = 'Vollzeit2025';
 // Wie viele Stunden der Login gespeichert bleibt:
 const SESSION_HOURS = 8;
 
-(function(){
-    const stored = localStorage.getItem('ts_auth');
-    if(stored) {
-        try {
-            const data = JSON.parse(stored);
-            if(Date.now() < data.expires) {
-                document.getElementById('passwordScreen').style.display = 'none';
-                return;
-            }
-        } catch(e) {}
-        localStorage.removeItem('ts_auth');
-    }
-})();
+// Auth-Check wird früh im HTML ausgeführt (vor diesem Script-Block)
 
 function checkPassword() {
     var pwField = document.getElementById('pw-input');
@@ -1936,15 +1939,4 @@ function checkPassword() {
         setTimeout(function(){ pwScreen.style.display = 'none'; }, 400);
         pwField.value = ''; pwError.textContent = '';
     } else {
-        pwError.textContent = 'ZUGANG VERWEIGERT — Falsches Passwort';
-        pwField.value = '';
-        pwField.style.borderColor = '#ff0000';
-        setTimeout(function(){ pwField.style.borderColor = '#333'; }, 1000);
-        pwField.focus();
-    }
-}
-
-</script>
-</body>
-</html>
-
+        pwError.textContent = 'ZUGANG VERWEIGERT — Falsches
