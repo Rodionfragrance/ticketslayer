@@ -453,10 +453,7 @@ var SESSION_HOURS = 8;
             var data = JSON.parse(stored);
             if(Date.now() < data.expires) {
                 document.getElementById('passwordScreen').style.display = 'none';
-                // Session noch gültig → Preloader direkt starten
-                setTimeout(function(){
-                    if (typeof startPreloader === 'function') startPreloader();
-                }, 50);
+                startPreloader(); // Direkt - Funktion ist jetzt im selben Block
             }
         }
     } catch(e) {}
@@ -479,7 +476,7 @@ function checkPassword() {
         pwScreen.style.opacity = '0';
         setTimeout(function(){
             pwScreen.style.display = 'none';
-            if (typeof startPreloader === 'function') startPreloader();
+            startPreloader();
         }, 400);
         pwField.value = '';
         pwError.textContent = '';
@@ -490,6 +487,28 @@ function checkPassword() {
         setTimeout(function(){ pwField.style.borderColor = '#333'; }, 1000);
         pwField.focus();
     }
+}
+
+// ── PRELOADER: hier definiert damit es vor dem Haupt-Script verfügbar ist ──
+function startPreloader() {
+    if (startPreloader._done) return;
+    startPreloader._done = true;
+    var bar = document.getElementById('loadBar-inner');
+    var pct = 0;
+    var iv = setInterval(function(){
+        pct += 10;
+        if (bar) bar.style.width = pct + '%';
+        if (pct >= 100) {
+            clearInterval(iv);
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'block';
+            // kaffeebons ist im Haupt-Script definiert — sicher lesen
+            try {
+                var el = document.getElementById('startKBAmount');
+                if (el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
+            } catch(e) {}
+        }
+    }, 50);
 }
 </script>
 
@@ -676,24 +695,7 @@ const coffeeImg      = new Image(); coffeeImg.src      = 'kaffee.png';
 const kloskaImg      = new Image(); kloskaImg.src      = 'kloska.png';
 const hardwareImg    = new Image(); hardwareImg.src    = 'hardware.png';
 
-// ── PRELOADER: wird explizit nach Passwort gestartet ───────────
-function startPreloader() {
-    if (startPreloader._done) return;
-    startPreloader._done = true;
-    var bar = document.getElementById('loadBar-inner');
-    var pct = 0;
-    var iv = setInterval(function(){
-        pct += 10;
-        if (bar) bar.style.width = pct + '%';
-        if (pct >= 100) {
-            clearInterval(iv);
-            document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('startScreen').style.display = 'block';
-            var el = document.getElementById('startKBAmount');
-            if (el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
-        }
-    }, 50);
-}
+// startPreloader() ist im frühen Script-Block definiert
 
 // SECTION 5 — AUDIO ENGINE
 // ============================================================
@@ -1996,3 +1998,17 @@ function buyKloskaItem(item, cost) {
 
 
 // ============================================================
+</script>
+<script>
+// ABSOLUTER FALLBACK: Falls Preloader nach 3s noch läuft → einfach starten
+setTimeout(function(){
+    var ls = document.getElementById('loadingScreen');
+    if(ls && ls.style.display !== 'none'){
+        ls.style.display = 'none';
+        var ss = document.getElementById('startScreen');
+        if(ss) ss.style.display = 'block';
+    }
+}, 3000);
+</script>
+</body>
+</html>
