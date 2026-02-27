@@ -453,6 +453,10 @@ var SESSION_HOURS = 8;
             var data = JSON.parse(stored);
             if(Date.now() < data.expires) {
                 document.getElementById('passwordScreen').style.display = 'none';
+                // Session noch gültig → Preloader direkt starten
+                setTimeout(function(){
+                    if (typeof startPreloader === 'function') startPreloader();
+                }, 50);
             }
         }
     } catch(e) {}
@@ -473,7 +477,10 @@ function checkPassword() {
         var pwScreen = document.getElementById('passwordScreen');
         pwScreen.style.transition = 'opacity 0.4s';
         pwScreen.style.opacity = '0';
-        setTimeout(function(){ pwScreen.style.display = 'none'; }, 400);
+        setTimeout(function(){
+            pwScreen.style.display = 'none';
+            if (typeof startPreloader === 'function') startPreloader();
+        }, 400);
         pwField.value = '';
         pwError.textContent = '';
     } else {
@@ -669,31 +676,24 @@ const coffeeImg      = new Image(); coffeeImg.src      = 'kaffee.png';
 const kloskaImg      = new Image(); kloskaImg.src      = 'kloska.png';
 const hardwareImg    = new Image(); hardwareImg.src    = 'hardware.png';
 
-// ── PRELOADER: simpelste mögliche Version, hängt nie ──────────
-setTimeout(function(){
-    try {
-        var ls = document.getElementById('loadingScreen');
-        var ss = document.getElementById('startScreen');
-        var kb = document.getElementById('startKBAmount');
-        // Balken kurz animieren
-        var bar = document.getElementById('loadBar-inner');
-        var pct = 0;
-        var iv = setInterval(function(){
-            pct += 10;
-            if(bar) bar.style.width = pct + '%';
-            if(pct >= 100){
-                clearInterval(iv);
-                if(ls) ls.style.display = 'none';
-                if(ss) ss.style.display = 'block';
-                if(kb) kb.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
-            }
-        }, 50); // 10 Schritte × 50ms = 500ms
-    } catch(e) {
-        // Absoluter Fallback
-        document.getElementById('loadingScreen').style.display = 'none';
-        document.getElementById('startScreen').style.display = 'block';
-    }
-}, 100); // 100ms nach Script-Start
+// ── PRELOADER: wird explizit nach Passwort gestartet ───────────
+function startPreloader() {
+    if (startPreloader._done) return;
+    startPreloader._done = true;
+    var bar = document.getElementById('loadBar-inner');
+    var pct = 0;
+    var iv = setInterval(function(){
+        pct += 10;
+        if (bar) bar.style.width = pct + '%';
+        if (pct >= 100) {
+            clearInterval(iv);
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'block';
+            var el = document.getElementById('startKBAmount');
+            if (el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
+        }
+    }, 50);
+}
 
 // SECTION 5 — AUDIO ENGINE
 // ============================================================
