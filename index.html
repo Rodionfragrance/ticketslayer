@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>TICKET SLAYER: V17</title>
+<title>TICKET SLAYER: V18</title>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 <link rel="icon" type="image/png" href="wurml.png">
@@ -227,83 +227,30 @@ input[type="text"] {
     animation:sapFlicker 0.5s infinite;
 }
 @keyframes sapFlicker { 0%,100%{opacity:1} 50%{opacity:0.6} }
-
-/* ============================================================
-   PASSWORD SCREEN
-   ============================================================ */
-#passwordScreen {
-    position:fixed; inset:0; background:#000;
-    display:flex; flex-direction:column;
-    justify-content:center; align-items:center;
-    z-index:9999; gap:18px;
-    font-family:'Courier New',monospace;
-}
-#passwordScreen h2 {
-    color:#f00; font-size:28px; letter-spacing:6px;
-    text-transform:uppercase; margin:0;
-    text-shadow:0 0 20px rgba(255,0,0,0.5);
-}
-#passwordScreen p  { color:#555; font-size:13px; margin:0; }
-#pw-input {
-    background:#0a0a0a; color:#f00; border:2px solid #333;
-    padding:12px 20px; font-size:20px;
-    font-family:'Courier New',monospace;
-    text-align:center; text-transform:uppercase;
-    outline:none; width:280px; letter-spacing:4px;
-    border-radius:2px;
-}
-#pw-input:focus { border-color:#f00; box-shadow:0 0 15px rgba(255,0,0,0.2); }
-#pw-btn {
-    background:#111; color:#f00; border:2px solid #f00;
-    padding:10px 40px; font-size:16px;
-    font-family:'Courier New',monospace; font-weight:bold;
-    text-transform:uppercase; cursor:pointer; letter-spacing:3px;
-    transition:0.2s;
-}
-#pw-btn:hover { background:#f00; color:#000; }
-#pw-error { color:#c0392b; font-size:12px; height:16px; margin:0; }
-#pw-logo  { font-size:60px; }
 </style>
 </head>
 <body>
 
-<!-- PASSWORD SCREEN -->
-<div id="passwordScreen">
-    <div id="pw-logo">🔐</div>
-    <h2>Ticket Slayer V17</h2>
-    <p>Interner Zugang — Authentifizierung erforderlich</p>
-    <input id="pw-input" type="password" placeholder="PASSWORT" maxlength="32"
-           onkeydown="if(event.key==='Enter')checkPassword()">
-    <button id="pw-btn" onclick="checkPassword()">EINLOGGEN</button>
-    <p id="pw-error"></p>
-</div>
-
-<!-- AUDIO -->
 <audio id="menuMusic" src="main.mp3" loop></audio>
 
-<!-- LOADING SCREEN -->
 <div id="loadingScreen">
-    <h2>⚙ Ticket Slayer V17</h2>
+    <h2>⚙ Ticket Slayer V18</h2>
     <p>Systeminitialisierung läuft...</p>
     <div id="loadBar-outer"><div id="loadBar-inner"></div></div>
     <div id="loadStatus">Lade Assets...</div>
 </div>
 
-<!-- SAP DEBUFF OVERLAY -->
 <div id="sapOverlay"></div>
 
-<!-- TOASTS -->
 <div id="toastContainer"></div>
 
-<!-- CANVAS -->
 <canvas id="game"></canvas>
 
-<!-- EMAIL OVERLAY -->
 <div id="emailOverlay">
     <div class="email-header">
-        <div class="email-row"><span class="email-label">VON:</span> IT-Leitstand &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8ce2e3fee9fce0f5ccf8e5efe7e9f8ffe0edf5e9fea2efe3fefc">[email&#160;protected]</a>&gt;</div>
+        <div class="email-row"><span class="email-label">VON:</span> IT-Leitstand &lt;noreply@ticketslayer.corp&gt;</div>
         <div class="email-row"><span class="email-label">AN:</span> Alle Mitarbeiter</div>
-        <div class="email-row email-subject">WICHTIG: Neue Prozessanweisung V17 (Leitstand)</div>
+        <div class="email-row email-subject">WICHTIG: Neue Prozessanweisung V18 (Leitstand)</div>
     </div>
     <div class="email-content">
         <p>Hallo Team,</p>
@@ -312,45 +259,28 @@ input[type="text"] {
         <h3>1. BASIS-STEUERUNG</h3>
         <ul>
             <li><span class="key-hint">WASD</span> + <span class="key-hint">Maus</span>: Bewegung &amp; Ticket-Bearbeitung.</li>
-            <li><span class="key-hint">E</span>: Interaktion (Heilen am Hähnchenwagen / Systemfehler beheben).</li>
-            <li><span class="key-hint">B</span>: <strong>Personal anfordern.</strong> Kostet 5000 Pkt. Platziert einen Azubi (Geschütz).</li>
-            <li><span class="key-hint">G</span>: <strong>Krankmeldung.</strong> (Urlaubstag einlösen).</li>
-            <li><span class="key-hint">F</span>: <strong>Server-Farm aktivieren.</strong> Server in der Nähe als passive Einkommensquelle einrichten.</li>
+            <li><span class="key-hint">SHIFT</span> / <span class="key-hint">RECHTSKLICK</span>: Taktische Hechtrolle (Macht dich kurz unverwundbar).</li>
+            <li><span class="key-hint">E</span>: Interaktion (Heilen / Hardwarelager / Fehler beheben).</li>
+            <li><span class="key-hint">B</span>: <strong>Personal anfordern.</strong> Kostet 5000 Pkt. Platziert einen Azubi.</li>
+            <li><span class="key-hint">F</span>: <strong>Server-Farm aktivieren.</strong> Server generieren Punkte.</li>
         </ul>
-        <h3>2. ALARMSTUFEN</h3>
-        <p>Rotem Pfeil folgen → Terminal mit <span class="key-hint">E</span> reparieren. Zeitfenster: 15 Sekunden.</p>
-        <h3>3. SCHICHT-SYSTEM</h3>
-        <ul>
-            <li><strong>Frühschicht:</strong> Normalbetrieb.</li>
-            <li><strong>Spätschicht (Orange):</strong> Erhöhtes Aufkommen.</li>
-            <li><strong>Nachtschicht (Dunkel):</strong> Sicht eingeschränkt, <span class="h-highlight">DOPPELTE PUNKTE</span>.</li>
-        </ul>
-        <h3>4. NEUE GEGNER V17</h3>
-        <ul>
-            <li><strong>🧑 DER ANWENDER:</strong> Teleportiert sich zufällig. Unberechenbar — Vorsicht!</li>
-            <li><strong>💿 SAP-UPDATE:</strong> Langsam aber verursacht massiven Speed-Debuff bei Berührung. Bildschirm wird blau.</li>
-        </ul>
-        <h3>5. SERVER-FARMEN (NEU)</h3>
-        <p>Steh neben einem Server und drücke <span class="key-hint">F</span>. Der Server generiert dann passiv Punkte. Bis zu 3 Farmen gleichzeitig.</p>
-        <h3>6. KAFFEEBONS (META-WÄHRUNG)</h3>
-        <p>Nach jedem Spiel erhältst du <strong style="color:#00e5ff">Kaffeebons</strong> basierend auf deinem Score. Investiere sie im <strong>UPGRADE-SHOP</strong> für permanente Verbesserungen!</p>
-        <h3>7. MEETING-RÄUME</h3>
-        <p>Blaue Zonen: <span class="key-hint">LEERTASTE</span> hämmern zum Entkommen.</p>
+        <h3>2. NEU: DAS HARDWARELAGER</h3>
+        <p>Auf der Map spawnt zufällig Kloskas Hardwarelager. Wenn du davorstehst, drücke <span class="key-hint">E</span>, um das Spiel zu pausieren und seltene Waffen (Railgun, Flammenwerfer etc.) gegen <strong>Suppe (🥣)</strong> zu tauschen. Suppen droppen zufällig auf der Map.</p>
+        <h3>3. SCHICHT-SYSTEM & ALARM</h3>
+        <p>Folge dem roten Pfeil bei IDOC-Ausfällen oder Kloska-Sabotagen. Wenn du versagst, eskaliert das Spiel!</p>
         <hr class="email-hr">
-        <p>Viel Erfolg.<br><em>Der Leitstand — V17 Patch Notes</em></p>
+        <p>Viel Erfolg.<br><em>Der Leitstand — V18 Patch Notes</em></p>
     </div>
     <div class="close-hint" onclick="hideEmail()">ZURÜCK ZUM HAUPTMENÜ</div>
 </div>
 
-<!-- MEETING UI -->
 <div id="meeting-text">MEETING! HÄMMERE [LEERTASTE]!</div>
 <div id="meeting-bar-container"><div id="meeting-bar"></div></div>
 
-<!-- SCREENS -->
 <div id="screens">
     <div id="startScreen" class="panel">
-        <h1>Ticket Slayer<br><span style="font-size:18px;color:#fff;">V17 — META PROGRESSION</span></h1>
-        <p>WASD + Maus | [B] Azubi | [F] Farm | [SHIFT] Rolle</p>
+        <h1>Ticket Slayer<br><span style="font-size:18px;color:#fff;">V18 — DOPAMIN UPDATE</span></h1>
+        <p>WASD + Maus | [B] Azubi | [F] Farm | [SHIFT/R-KLICK] Rolle</p>
         <div id="startKBDisplay" style="color:#00e5ff;font-size:14px;margin:8px 0;">☕ Kaffeebons: <span id="startKBAmount">0</span></div>
         <div class="btn-group">
             <button class="btn-easy"   onclick="startGame(1)">Praktikant</button>
@@ -358,7 +288,7 @@ input[type="text"] {
             <button class="btn-hard"   onclick="startGame(6)">Burnout</button>
         </div>
         <button class="btn-shop" onclick="openShop()">☕ UPGRADE SHOP</button>
-        <button class="btn-info" onclick="showEmail()">[I] PROZESSANWEISUNG V17</button>
+        <button class="btn-info" onclick="showEmail()">[I] PROZESSANWEISUNG V18</button>
     </div>
     
     <div id="gameOverScreen" class="panel">
@@ -382,13 +312,13 @@ input[type="text"] {
                 <div class="shop-item-icon">⚡</div>
                 <div><div class="shop-item-name">RAILGUN</div><div class="shop-item-price" style="color:#ff9f43;">8 Suppen</div></div>
             </div>
+            <div class="shop-item" onclick="buyKloskaItem('flamer', 5)">
+                <div class="shop-item-icon">🔥</div>
+                <div><div class="shop-item-name">FLAMMENWERFER</div><div class="shop-item-price" style="color:#ff9f43;">5 Suppen</div></div>
+            </div>
             <div class="shop-item" onclick="buyKloskaItem('mouse', 5)">
                 <div class="shop-item-icon">🖱️</div>
                 <div><div class="shop-item-name">ORBIT-MAUS</div><div class="shop-item-price" style="color:#ff9f43;">5 Suppen</div></div>
-            </div>
-            <div class="shop-item" onclick="buyKloskaItem('briefcase', 12)">
-                <div class="shop-item-icon">💼</div>
-                <div><div class="shop-item-name">MAX-HP +50</div><div class="shop-item-price" style="color:#ff9f43;">12 Suppen</div></div>
             </div>
             <div class="shop-item" onclick="buyKloskaItem('chicken', 3)">
                 <div class="shop-item-icon">🍗</div>
@@ -399,7 +329,6 @@ input[type="text"] {
     </div>
 </div>
 
-<!-- UPGRADE SHOP -->
 <div id="shopOverlay">
     <div id="shopInner">
         <h2>☕ Upgrade Shop</h2>
@@ -409,14 +338,11 @@ input[type="text"] {
     </div>
 </div>
 
-<!-- FARM INDICATOR -->
 <div id="farmIndicator"></div>
 
-<!-- MISC HUD -->
 <div id="highscore-overlay">Lade Online Scores...</div>
 <div id="stationInfo">[E] Interagieren | [B] Azubi 5000P | [F] Server-Farm | [Q] Kaffee | [G] Urlaub</div>
 
-<!-- DOOM HUD -->
 <div id="doom-hud">
     <div class="hud-section">
         <div><span class="hud-label">GESUNDHEIT</span><span id="hud-hp" class="hud-value hud-red">100%</span></div>
@@ -434,61 +360,15 @@ input[type="text"] {
     </div>
 </div>
 
-<!-- PASSWORT LOGIK — eigener Script-Block, vor dem Haupt-Script -->
-<script>
-var GAME_PASSWORD = 'Vollzeit2025';
-var SESSION_HOURS = 8;
-
-// Sofort prüfen ob Login noch gültig
-(function(){
-    try {
-        var stored = localStorage.getItem('ts_auth');
-        if(stored) {
-            var data = JSON.parse(stored);
-            if(Date.now() < data.expires) {
-                document.getElementById('passwordScreen').style.display = 'none';
-            }
-        }
-    } catch(e) {}
-})();
-
-function checkPassword() {
-    var pwField = document.getElementById('pw-input');
-    var pwError = document.getElementById('pw-error');
-    if(!pwField || !pwError) return;
-    if(pwField.value === GAME_PASSWORD) {
-        if(SESSION_HOURS > 0) {
-            try {
-                localStorage.setItem('ts_auth', JSON.stringify({
-                    expires: Date.now() + SESSION_HOURS * 3600 * 1000
-                }));
-            } catch(e) {}
-        }
-        var pwScreen = document.getElementById('passwordScreen');
-        pwScreen.style.transition = 'opacity 0.4s';
-        pwScreen.style.opacity = '0';
-        setTimeout(function(){ pwScreen.style.display = 'none'; }, 400);
-        pwField.value = '';
-        pwError.textContent = '';
-    } else {
-        pwError.textContent = 'ZUGANG VERWEIGERT';
-        pwField.value = '';
-        pwField.style.borderColor = '#ff0000';
-        setTimeout(function(){ pwField.style.borderColor = '#333'; }, 1000);
-        pwField.focus();
-    }
-}
-</script>
-
 <script>
 'use strict';
 // ============================================================
-// SECTION 1 — AUDIO CONFIG (zentral, hier anpassen)
+// SECTION 1 — AUDIO CONFIG & KLOSKA SOUND
 // ============================================================
 const AUDIO_CONFIG = {
-    bgMusicVolume:   0.5,   // Ingame-Musik  (0.0–1.0)
-    menuMusicVolume: 0.4,   // Menü-Musik    (0.0–1.0)
-    sfxVolume:       0.25   // Soundeffekte  (0.0–1.0) — wird als gain-Multiplikator genutzt
+    bgMusicVolume:   0.5,   
+    menuMusicVolume: 0.4,   
+    sfxVolume:       0.25   
 };
 
 // ============================================================
@@ -579,7 +459,6 @@ function openShop(fromGameOver=false) {
 }
 function closeShop() {
     document.getElementById('shopOverlay').style.display = 'none';
-    // refresh start screen KB display
     document.getElementById('startKBAmount').innerText = kaffeebons;
 }
 function renderShop() {
@@ -626,7 +505,7 @@ function buyUpgrade(id) {
 // ============================================================
 const ASSETS = {
     images: ['wurmr.png','wurml.png','maddinr.png','maddinl.png','bolte.png','kaffee.png','kloska.png'],
-    audio:  ['main.mp3','track1.mp3','track2.mp3']
+    audio:  ['main.mp3','track1.mp3','track2.mp3', 'what-are-ya-buyin-made-with-Voicemod.mp3']
 };
 let assetsLoaded = 0;
 const totalAssets = ASSETS.images.length + ASSETS.audio.length;
@@ -638,7 +517,7 @@ const martinImgLeft  = new Image(); martinImgLeft.src  = 'maddinl.png';
 const chickenImg     = new Image(); chickenImg.src     = 'bolte.png';
 const coffeeImg      = new Image(); coffeeImg.src      = 'kaffee.png';
 const kloskaImg      = new Image(); kloskaImg.src      = 'kloska.png';
-const hardwareImg    = new Image(); hardwareImg.src    = 'hardware.png';
+const hardwareImg    = new Image(); hardwareImg.src    = 'hardware.png'; // Placeholder
 
 function onAssetLoad() {
     assetsLoaded++;
@@ -647,7 +526,7 @@ function onAssetLoad() {
     if (assetsLoaded >= totalAssets) finishLoading();
 }
 function finishLoading() {
-    if (finishLoading._done) return; // Kein Doppelaufruf
+    if (finishLoading._done) return; 
     finishLoading._done = true;
     setTimeout(function(){
         document.getElementById('loadingScreen').style.display = 'none';
@@ -656,23 +535,22 @@ function finishLoading() {
     }, 300);
 }
 
-// Load images — mit Cache-Fix: .complete prüfen NACH dem Setzen des Handlers
+// Load images 
 [wormImgRight,wormImgLeft,martinImgRight,martinImgLeft,chickenImg,coffeeImg,kloskaImg].forEach(function(img){
     if (img.complete) {
-        onAssetLoad(); // Bereits gecacht — sofort zählen
+        onAssetLoad(); 
     } else {
         img.onload  = onAssetLoad;
         img.onerror = onAssetLoad;
     }
 });
 
-// Audio: fetch() nur wenn nötig, sonst direkt zählen (GitHub Pages blockt fetch oft)
+// Audio 
 ASSETS.audio.forEach(function(src){
     var audio = new Audio();
     audio.oncanplaythrough = function(){ audio.oncanplaythrough = null; onAssetLoad(); };
     audio.onerror = function(){ onAssetLoad(); };
     audio.src = src;
-    // Fallback: nach 3 Sekunden trotzdem weitermachen
     setTimeout(function(){ if(assetsLoaded < totalAssets){ onAssetLoad(); } }, 3000);
 });
 
@@ -685,6 +563,9 @@ bgMusic.volume  = AUDIO_CONFIG.bgMusicVolume;
 
 const menuMusicEl = document.getElementById('menuMusic');
 menuMusicEl.volume = AUDIO_CONFIG.menuMusicVolume;
+
+// Kloska Audio
+const kloskaVoice = new Audio('what-are-ya-buyin-made-with-Voicemod.mp3');
 
 function playNextSong() {
     let src = playlist[Math.floor(Math.random()*playlist.length)];
@@ -742,10 +623,9 @@ let idocEvent=null, meetingZone=null, kloskaEvent=null;
 
 let player=null;
 let bullets=[], enemies=[], particles=[], obstacles=[], stations=[];
-let servers=[], items=[], splatters=[], floatingTexts=[], turrets=[];
-let serverFarms=[];   // {serverRef, ticker}  — idle income
+let servers=[], items=[], splatters=[], floatingTexts=[], turrets=[], shells=[];
+let serverFarms=[];   // idle income
 
-// Boss definitions
 const bosses=[
     {score:5000,  name:"RIAN",        subtitle:"Update!",            hp:1500,  color:'#8e44ad',radius:60, speed:2.5},
     {score:10000, name:"TIM",         subtitle:"Update!",            hp:3000,  color:'#2980b9',radius:70, speed:3.0},
@@ -766,7 +646,6 @@ window.addEventListener('mousedown',e=>{
 });
 window.addEventListener('mouseup',  e=>{ if(e.button === 0) input.mouseDown=false; });
 window.addEventListener('mousemove',e=>{ const r=canvas.getBoundingClientRect(); input.x=e.clientX-r.left; input.y=e.clientY-r.top; });
-// Browser-Rechtsklick-Menü deaktivieren
 window.addEventListener('contextmenu', e => e.preventDefault());
 
 // ============================================================
@@ -799,7 +678,6 @@ function checkWallCollision(x,y,r){
     return false;
 }
 function spawnParticles(x,y,c,n){ for(let i=0;i<n;i++) particles.push(new Particle(x,y,c)); }
-// function triggerNuke(){ screenShake=50;flashScreen=50;playSound('hammer');enemies=[];items=[];splatters=[];floatingTexts.push(new FloatingText(player.x,player.y,"ALLES PLATT!!!","#f00")); }
 function triggerServerExplosion(x,y){ screenShake=30;playSound('hammer');spawnParticles(x,y,'#f00',30);enemies.forEach(e=>{ if(Math.hypot(e.x-x,e.y-y)<300){e.hp-=500;floatingTexts.push(new FloatingText(e.x,e.y,"SERVER DOWN!","#f00"));} }); }
 function checkGameOver(){
     if(player.hp<=0){
@@ -817,7 +695,7 @@ function checkGameOver(){
 }
 
 // ============================================================
-// SECTION 10 — SERVER FARM (IDLE INCOME)
+// SECTION 10 — SERVER FARM
 // ============================================================
 function tryActivateFarm(){
     if(serverFarms.length >= getMaxFarms()){ showToast("MAX FARMEN ERREICHT!", "#ff4400","Upgrade im Shop für mehr Slots"); return; }
@@ -835,27 +713,23 @@ function tryActivateFarm(){
 }
 function updateFarms(){
     serverFarms=serverFarms.filter(f=>servers.includes(f.serverRef));
-    let income = 3 + getUpgradeLevel('damage'); // pts per second per farm
+    let income = 3 + getUpgradeLevel('damage');
     for(let f of serverFarms){
         f.ticker++;
         if(f.ticker>=60){
-            f.ticker=0;
-            score+=income;
+            f.ticker=0; score+=income;
             if(frame%180===0) floatingTexts.push(new FloatingText(f.serverRef.x+f.serverRef.w/2, f.serverRef.y-10, `+${income}`, "#00ff88"));
         }
     }
-    // HUD indicator
     let fi=document.getElementById('farmIndicator');
     if(serverFarms.length>0){
-        fi.style.display='block';
-        fi.innerText=`🖥️ ${serverFarms.length}/${getMaxFarms()} Server-Farmen aktiv`;
+        fi.style.display='block'; fi.innerText=`🖥️ ${serverFarms.length}/${getMaxFarms()} Server-Farmen aktiv`;
     } else { fi.style.display='none'; }
 }
 
 // ============================================================
 // SECTION 11 — CLASSES
 // ============================================================
-
 class FloatingText{
     constructor(x,y,text,color){this.x=x;this.y=y;this.text=text;this.color=color;this.life=90;this.dy=-1;}
     update(){this.y+=this.dy;this.life--;}
@@ -879,6 +753,33 @@ class Turret{
     }
 }
 
+class Shell {
+    constructor(x, y, angle) {
+        this.x = x; this.y = y;
+        let ejectAngle = angle + (Math.PI / 2) + (Math.random() - 0.5) * 0.5;
+        let speed = 3 + Math.random() * 3;
+        this.dx = Math.cos(ejectAngle) * speed;
+        this.dy = Math.sin(ejectAngle) * speed;
+        this.life = 20; 
+        this.settled = false; 
+    }
+    update() {
+        if (!this.settled) {
+            this.x += this.dx; this.y += this.dy;
+            this.dx *= 0.85; this.dy *= 0.85;
+            this.life--;
+            if (this.life <= 0) this.settled = true;
+        }
+    }
+    draw() {
+        ctx.fillStyle = '#f1c40f'; 
+        ctx.save(); ctx.translate(this.x, this.y);
+        if (!this.settled) ctx.rotate(frame * 0.5); 
+        ctx.fillRect(-2, -1, 4, 2);
+        ctx.restore();
+    }
+}
+
 class Player{
     constructor(){
         this.x=WORLD_WIDTH/2; this.y=300;
@@ -898,23 +799,20 @@ class Player{
         this.crateFlashTimer=0;
         this.inMeeting=false; this.meetingProgress=0;
         this.stunned=0;
-        this.sapDebuffTimer=0;   // SAP-Update debuff
+        this.sapDebuffTimer=0;   
         this.azubiCost=5000;
-    this.suppe=0;
+        this.suppe=0;
         this._shiftToastFired=-1;
-      // --- NEU: HECHTROLLE ---
-        this.rollTimer = 0;      // Wie lange die Rolle noch aktiv ist (i-frames)
-        this.rollCooldown = 0;   // Wann man wieder rollen darf
-        this.rollDx = 0;         // Richtung X
-        this.rollDy = 0;         // Richtung Y
+        this.rollTimer = 0;      
+        this.rollCooldown = 0;   
+        this.rollDx = 0;         
+        this.rollDy = 0;         
         applyUpgradesToPlayer(this);
     }
 
     activateVacation(){
         if(this.yellowSlips>0&&this.vacationTimer<=0){
-            this.yellowSlips--;
-            this.vacationTimer=300;
-            playSound('vacation');
+            this.yellowSlips--; this.vacationTimer=300; playSound('vacation');
             floatingTexts.push(new FloatingText(this.x,this.y-50,"KRANKGEMELDET!","#ffff00"));
             showToast("ARBEITSZEITBETRUG!","#ffff00","Minusstunden laufen...");
         }
@@ -924,58 +822,45 @@ class Player{
         if(this.stunned>0){this.stunned--;return;}
         if(this.inMeeting){return;}
 
-       // --- HECHTROLLE COOLDOWN & AKTIVITÄT ---
         if (this.rollCooldown > 0) this.rollCooldown--;
         
         if (this.rollTimer > 0) {
-            // Während der Rolle: Sehr schnell bewegen & Unverwundbar
             this.rollTimer--;
-            let nx = this.x + this.rollDx;
-            let ny = this.y + this.rollDy;
+            let nx = this.x + this.rollDx; let ny = this.y + this.rollDy;
             if(!checkWallCollision(nx, this.y, this.radius)) this.x = Math.max(this.radius, Math.min(WORLD_WIDTH-this.radius, nx));
             if(!checkWallCollision(this.x, ny, this.radius)) this.y = Math.max(this.radius, Math.min(WORLD_HEIGHT-this.radius, ny));
-            
-            // Partikel-Effekt für die Rolle (Staub)
             spawnParticles(this.x, this.y + 20, '#ccc', 1);
-            return; // Beendet update() hier -> kein Schießen/Gehen während der Rolle!
-        }
-
-        // --- HECHTROLLE AUSLÖSEN ---
-        // Auslösen per Rechtsklick (button 2) oder Shift-Taste
-        if ((input.keys['ShiftLeft'] || input.rightClick) && this.rollCooldown <= 0 && this.sapDebuffTimer <= 0) {
-            let angle = Math.atan2(input.worldY - this.y, input.worldX - this.x);
-            this.rollDx = Math.cos(angle) * 15; // Roll-Speed
-            this.rollDy = Math.sin(angle) * 15;
-            this.rollTimer = 15;      // Rolle dauert 15 Frames (0.25 Sek)
-            this.rollCooldown = 120;  // 2 Sekunden Cooldown
-            playSound('delivery');    // "Swoosh" Sound
-            input.rightClick = false; // Reset
             return; 
         }
 
-       // --- NEU: MAUS ROTATION ---
+        if ((input.keys['ShiftLeft'] || input.rightClick) && this.rollCooldown <= 0 && this.sapDebuffTimer <= 0) {
+            let angle = Math.atan2(input.worldY - this.y, input.worldX - this.x);
+            this.rollDx = Math.cos(angle) * 15; 
+            this.rollDy = Math.sin(angle) * 15;
+            this.rollTimer = 15;      
+            this.rollCooldown = 120;  
+            playSound('delivery');    
+            input.rightClick = false; 
+            return; 
+        }
+
         this.orbitAngle = (this.orbitAngle || 0) + 0.15;
 
-        // [B] Azubi
         if(input.keys['KeyB']&&score>=this.azubiCost){
-            turrets.push(new Turret(this.x,this.y));
-            score-=this.azubiCost;
+            turrets.push(new Turret(this.x,this.y)); score-=this.azubiCost;
             floatingTexts.push(new FloatingText(this.x,this.y,"AZUBI EINGESTELLT!","#0f0"));
             showToast("AZUBI EINGESTELLT!","#00ff00",`-${this.azubiCost} Punkte`);
             input.keys['KeyB']=false;
         }
-        // [F] Farm
         if(input.keys['KeyF']){tryActivateFarm();input.keys['KeyF']=false;}
 
-        // Evolution
         if(score>=2500&&!this.isMartin&&!this.promoTriggered) this.triggerEvolution();
 
-        // [E] Interaktion
         if(input.keys['KeyE']){
             for(let s of stations){
                 if(s.type==='hardware_store' && Math.hypot(this.x-s.x-s.w/2, this.y-s.y-s.h/2) < 150){
                     openKloskaShop();
-                    input.keys['KeyE'] = false;
+                    input.keys['KeyE'] = false; 
                 }
                 if(s.type==='chicken_truck'&&Math.hypot(this.x-s.x-s.w/2,this.y-s.y-s.h/2)<150&&this.hp<this.maxHp){
                     this.hp++;
@@ -995,9 +880,8 @@ class Player{
                 showToast("KLOSKA VERJAGT!","#00ff00","Server gerettet! (+1500 Pkt)");
             }
         }
-        // [G] Vacation
+
         if(input.keys['KeyG']&&this.vacationTimer<=0) this.activateVacation();
-        // [Q] Coffee
         if(input.keys['KeyQ']){
             for(let s of stations){
                 if(s.type==='coffee_machine'&&Math.hypot(this.x-s.x-s.w/2,this.y-s.y-s.h/2)<100){
@@ -1007,7 +891,6 @@ class Player{
             }
         }
 
-        // Schichtwechsel Toast (einmalig)
         if(shiftTimer<180&&this._shiftToastFired!==currentShift){
             this._shiftToastFired=currentShift;
             const names=["FRÜHSCHICHT ☀️","SPÄTSCHICHT 🌆","NACHTSCHICHT 🌙"];
@@ -1016,7 +899,6 @@ class Player{
             showToast("SCHICHTWECHSEL",colors[currentShift],names[currentShift]+" — "+subs[currentShift]);
         }
 
-        // Timer ticks
         if(this.vacationTimer>0){this.vacationTimer--;if(frame%60===0&&this.hp<this.maxHp)this.hp+=2;}
         if(this.bikeTimer>0)        this.bikeTimer--;
         if(this.speedBoostTimer>0)  this.speedBoostTimer--;
@@ -1029,7 +911,6 @@ class Player{
         if(this.bossSpawnTimer>0)   this.bossSpawnTimer--;
         if(this.crateFlashTimer>0)  this.crateFlashTimer--;
 
-        // Vodka
         if(this.vodkaTimer>0){
             this.vodkaTimer--;
             if(this.isMartin){
@@ -1039,7 +920,6 @@ class Player{
             if(frame%4===0){this.x+=(Math.random()-.5)*10;this.y+=(Math.random()-.5)*10;}
         }
 
-        // Movement
         let dx=0,dy=0;
         if(input.keys['KeyW'])dy=-1; if(input.keys['KeyS'])dy=1;
         if(input.keys['KeyA'])dx=-1; if(input.keys['KeyD'])dx=1;
@@ -1048,7 +928,7 @@ class Player{
         let spd=this.speed;
         if(this.bikeTimer>0)       spd=10;
         if(this.speedBoostTimer>0) spd+=3;
-        if(this.sapDebuffTimer>0)  spd=Math.max(1, spd-3); // SAP debuff: heavy slow
+        if(this.sapDebuffTimer>0)  spd=Math.max(1, spd-3); 
 
         if(dx!==0||dy!==0){
             let len=Math.sqrt(dx*dx+dy*dy); dx/=len; dy/=len;
@@ -1057,7 +937,6 @@ class Player{
             if(!checkWallCollision(this.x,ny,this.radius)) this.y=Math.max(this.radius,Math.min(WORLD_HEIGHT-this.radius,ny));
         }
 
-        // Shoot
         let canShoot=(this.vodkaTimer<=0)||this.isMartin;
         if((input.mouseDown||(this.weaponType==='uzi'&&this.bikeTimer>0))&&frame-this.lastShot>this.fireRate&&canShoot){this.shoot();this.lastShot=frame;}
     }
@@ -1079,7 +958,7 @@ class Player{
     }
 
     shoot(){
-        if(this.weaponType === 'mouse') return; // Maus schießt nicht, sie kreist!
+        if(this.weaponType === 'mouse') return; 
         
         let offset=this.isMartin?-20:-10;
         let angle=Math.atan2(input.y-(this.y+offset-camera.y), input.x-(this.x-camera.x));
@@ -1087,24 +966,24 @@ class Player{
         
         let dmg=10+this.dmgBonus;
         let recoil = 0;
+        this.muzzleFlash = 3; 
         
-        if(this.weaponType==='shotgun')    {for(let i=-2;i<=2;i++) bullets.push(new Bullet(this.x,this.y+offset,angle+i*0.15,'standard',dmg)); playSound('shoot'); recoil=3;}
-        else if(this.weaponType==='minigun'){bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.4,'standard',dmg)); playSound('shoot');}
-        else if(this.weaponType==='uzi')   {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.1,'standard',dmg)); playSound('shoot');}
-        else if(this.weaponType==='ak47')  {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.05,'standard',dmg)); playSound('shoot'); recoil=1;}
+        if(this.weaponType==='shotgun')    {for(let i=-2;i<=2;i++) bullets.push(new Bullet(this.x,this.y+offset,angle+i*0.15,'standard',dmg)); playSound('shoot'); recoil=3; shells.push(new Shell(this.x, this.y, angle));}
+        else if(this.weaponType==='minigun'){bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.4,'standard',dmg)); playSound('shoot'); recoil=0.5; shells.push(new Shell(this.x, this.y, angle));}
+        else if(this.weaponType==='uzi')   {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.1,'standard',dmg)); playSound('shoot'); shells.push(new Shell(this.x, this.y, angle));}
+        else if(this.weaponType==='ak47')  {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.05,'standard',dmg)); playSound('shoot'); recoil=1; shells.push(new Shell(this.x, this.y, angle));}
         else if(this.weaponType==='rocket'){bullets.push(new Bullet(this.x,this.y+offset,angle,'rocket',dmg)); playSound('shoot'); recoil=5;}
         else if(this.weaponType==='railgun'){
             bullets.push(new Bullet(this.x,this.y+offset,angle,'railgun',dmg*5)); 
-            playSound('boss'); // Dicker Sound
-            recoil = 8; screenShake = 8; // Fetter Rückstoß
+            playSound('boss'); 
+            recoil = 8; screenShake = 8; 
         }
         else if(this.weaponType==='flamer'){
             for(let i=0; i<3; i++) bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.3,'flame',dmg*0.3));
             if(frame%5===0) playSound('shoot'); 
         }
-        else {bullets.push(new Bullet(this.x,this.y+offset,angle,'standard',dmg)); playSound('shoot');}
+        else {bullets.push(new Bullet(this.x,this.y+offset,angle,'standard',dmg)); playSound('shoot'); shells.push(new Shell(this.x, this.y, angle));}
         
-        // Rückstoß anwenden
         this.x -= Math.cos(angle) * recoil;
         this.y -= Math.sin(angle) * recoil;
     }
@@ -1118,32 +997,41 @@ class Player{
         if(this.vacationTimer>0) ctx.globalAlpha=.5;
         if(this.rollTimer > 0) {
             ctx.globalAlpha = 0.5;
-            // Spieler dreht sich visuell bei der Rolle
             ctx.rotate(this.rollTimer * 0.5); 
         }
         let w=60,h=this.isMartin?90:60;
+        
+        ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.ellipse(0, h/2 - 5, w/2 * 0.8, 10, 0, 0, Math.PI*2); ctx.fill();
+
         if(img&&img.complete&&img.naturalHeight!==0){ ctx.drawImage(img,-w/2,-h/2,w,h); }
         else{ ctx.fillStyle=this.isMartin?'gold':'#e67e22'; ctx.fillRect(-w/2,-h/2,w,h); }
+        
         if(this.vodkaTimer>0){ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(255,0,0,.3)';ctx.fillRect(-w/2,-h/2,w,h);ctx.globalCompositeOperation='source-over';}
         if(this.shieldTimer>0){ctx.beginPath();ctx.arc(0,0,50,0,Math.PI*2);ctx.strokeStyle=`rgba(0,255,255,${.5+Math.sin(frame*.2)*.5})`;ctx.lineWidth=3;ctx.stroke();this.shieldTimer--;}
         if(this.sapDebuffTimer>0){ctx.beginPath();ctx.arc(0,0,55,0,Math.PI*2);ctx.strokeStyle=`rgba(31,97,141,${.6+Math.sin(frame*.3)*.4})`;ctx.lineWidth=4;ctx.stroke();}
-        // --- NEU: DIE KREISENDE MAUS ZEICHNEN ---
+        
         if (this.weaponType === 'mouse') {
             let mx = Math.cos(this.orbitAngle) * 90;
             let my = Math.sin(this.orbitAngle) * 90 - 10;
-            
-            // Kabel
             ctx.strokeStyle = '#555'; ctx.lineWidth = 2;
             ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(mx, my); ctx.stroke();
-            
-            // Maus
             ctx.fillStyle = '#ccc';
             ctx.save(); ctx.translate(mx, my); ctx.rotate(this.orbitAngle + Math.PI/2);
-            ctx.fillRect(-6, -10, 12, 20); // Gehäuse
-            ctx.fillStyle = '#f00'; ctx.fillRect(-2, -8, 4, 4); // Roter Laser/Scrollrad
+            ctx.fillRect(-6, -10, 12, 20); 
+            ctx.fillStyle = '#f00'; ctx.fillRect(-2, -8, 4, 4); 
             ctx.restore();
         }
-       ctx.globalAlpha=1; ctx.filter="none"; ctx.restore();
+
+        if (this.muzzleFlash > 0) {
+            let offsetY = this.isMartin ? -20 : -10;
+            let gunX = facingRight ? 35 : -35; 
+            let gunY = offsetY + 10;
+            ctx.fillStyle = '#ffeb3b'; ctx.beginPath(); ctx.arc(gunX, gunY, 15 + Math.random() * 10, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(gunX, gunY, 8 + Math.random() * 5, 0, Math.PI * 2); ctx.fill();
+            this.muzzleFlash--;
+        }
+
+        ctx.globalAlpha=1; ctx.filter="none"; ctx.restore();
     }
 }
 
@@ -1156,20 +1044,12 @@ class Item{
     }
     draw() {
         let bob = Math.sin((frame + this.bobOffset) / 20) * 5;
-        
-        // --- ANIMIERTER SCHATTEN (Bleibt auf dem Boden) ---
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
-        ctx.beginPath();
-        // Schatten wird kleiner, wenn das Item (bob) nach oben geht
-        ctx.ellipse(this.x, this.y + 18, 12 - bob/2, 5 - bob/4, 0, 0, Math.PI*2);
-        ctx.fill();
-        // --------------------------------------------------
-
+        ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(this.x, this.y + 18, 12 - bob/2, 5 - bob/4, 0, 0, Math.PI*2); ctx.fill();
         ctx.save(); ctx.translate(this.x, this.y + bob);
         if(this.life < 120 && this.life % 10 < 5) ctx.globalAlpha = 0.3;
         ctx.font = '40px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.shadowColor = "rgba(0,0,0,.8)"; ctx.shadowBlur = 8;
-        const icons = {chicken:'🍗',vodka:'🍺',crate:'📦',bug:'💾',hammer:'🔨',vacation:'💤',bike:'🚲',shield:'🛡️',nuke:'☢️',briefcase:'💼'};
+        const icons = {chicken:'🍗',vodka:'🍺',crate:'📦',bug:'💾',hammer:'🔨',vacation:'💤',bike:'🚲',shield:'🛡️',nuke:'☢️',briefcase:'💼', suppe:'🥣'};
         ctx.fillText(icons[this.type] || '?', 0, 0);
         ctx.restore();
     }
@@ -1177,29 +1057,21 @@ class Item{
 
 class Bullet {
     constructor(x, y, angle, type, dmg=10) {
-        this.x = x; this.y = y; this.type = type; this.dmg = dmg;
-        this.angle = angle;
-        
+        this.x = x; this.y = y; this.type = type; this.dmg = dmg; this.angle = angle;
         if (type === 'rocket') this.speed = 12;
-        else if (type === 'railgun') this.speed = 35; // Extrem schnell
-        else if (type === 'flame') this.speed = 6 + Math.random() * 3; // Langsame Flammen
+        else if (type === 'railgun') this.speed = 35; 
+        else if (type === 'flame') this.speed = 6 + Math.random() * 3; 
         else this.speed = 18;
         
         this.dx = Math.cos(angle) * this.speed; 
         this.dy = Math.sin(angle) * this.speed;
-        this.life = type === 'flame' ? 25 : 60; // Flammen sterben schneller
+        this.life = type === 'flame' ? 25 : 60; 
         this.size = type === 'flame' ? 5 : 4;
-        
-        this.hitEnemies = []; // Merkt sich, wen die Railgun schon durchschlagen hat
+        this.hitEnemies = []; 
     }
     update() {
         this.x += this.dx; this.y += this.dy; this.life--;
-        // Flamme wird größer und langsamer
-        if (this.type === 'flame') {
-            this.size += 1.5; 
-            this.dx *= 0.85; 
-            this.dy *= 0.85;
-        }
+        if (this.type === 'flame') { this.size += 1.5; this.dx *= 0.85; this.dy *= 0.85; }
     }
     draw() {
         if (this.type === 'rocket') {
@@ -1208,8 +1080,7 @@ class Bullet {
         } else if (this.type === 'railgun') {
             ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
             ctx.fillStyle = '#00ffff'; ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 15;
-            ctx.fillRect(-20, -3, 40, 6); // Dicker blauer Strahl
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(-20, -1, 40, 2); // Weißer Kern
+            ctx.fillRect(-20, -3, 40, 6); ctx.fillStyle = '#ffffff'; ctx.fillRect(-20, -1, 40, 2); 
             ctx.restore();
         } else if (this.type === 'flame') {
             ctx.fillStyle = `rgba(255, ${Math.floor(Math.random()*150)}, 0, ${this.life/25})`;
@@ -1241,12 +1112,11 @@ class Enemy{
             if(!checkWallCollision(this.x,this.y,30)) safe=true;
             att++;
         }
-        // Type selection — includes new V17 types
         let rand=Math.random();
         if     (difficulty>3   &&rand<0.02) this.type=1;
         else if(difficulty>1.5 &&rand<0.08) this.type=2;
-        else if(difficulty>2   &&rand<0.10) this.type=7;   // DER ANWENDER
-        else if(difficulty>1   &&rand<0.13) this.type=8;   // SAP-UPDATE
+        else if(difficulty>2   &&rand<0.10) this.type=7;   
+        else if(difficulty>1   &&rand<0.13) this.type=8;   
         else if(rand<0.25) this.type=3;
         else if(rand<0.45) this.type=4;
         else if(rand<0.50){ const hasLKW=enemies.some(e=>e.type===6); this.type=hasLKW?5:6; }
@@ -1259,7 +1129,6 @@ class Enemy{
             case 3: this.hp=50;   this.maxHp=50;   this.speed=2.0; this.radius=20; this.color='#f1c40f'; this.score=50;   this.label="PRIO3";      this.symbol="⚙";  break;
             case 2: this.hp=120;  this.maxHp=120;  this.speed=1.5; this.radius=26; this.color='#e67e22'; this.score=150;  this.label="PRIO2";      this.symbol="⚡"; break;
             case 1: this.hp=400;  this.maxHp=400;  this.speed=1.0; this.radius=50; this.color='#c0392b'; this.score=300;  this.label="PRIO1";      this.symbol="☠";  break;
-            // V17 NEW ENEMIES
             case 7: this.hp=35;   this.maxHp=35;   this.speed=2.2; this.radius=18; this.color='#9b59b6'; this.score=75;   this.label="DER ANWENDER";this.symbol="🧑"; this.teleportTimer=180+Math.floor(Math.random()*60); break;
             case 8: this.hp=220;  this.maxHp=220;  this.speed=0.6; this.radius=30; this.color='#1f618d'; this.score=200;  this.label="SAP-UPDATE"; this.symbol="💿"; break;
         }
@@ -1267,21 +1136,17 @@ class Enemy{
 
     update(){
         if(this.freezeTimer>0){this.freezeTimer--;return;}
-       // Brandschaden (Flammenwerfer)
+        
         if (this.burnTimer > 0) {
-            this.burnTimer--;
-            this.hp -= 0.5; // Zieht kontinuierlich HP ab
+            this.burnTimer--; this.hp -= 0.5; 
             if (frame % 5 === 0) spawnParticles(this.x, this.y, '#ff6600', 1);
         }
-        // Cooldown für Treffer durch die kreisende Maus
         if (this.mouseCooldown > 0) this.mouseCooldown--;
 
-        // --- DER ANWENDER — random teleport ---
         if(this.type===7){
             this.teleportTimer--;
             if(this.teleportTimer<=0){
-                let a=Math.random()*Math.PI*2;
-                let r=100+Math.random()*300;
+                let a=Math.random()*Math.PI*2; let r=100+Math.random()*300;
                 let nx=Math.max(30,Math.min(WORLD_WIDTH-30,  player.x+Math.cos(a)*r));
                 let ny=Math.max(30,Math.min(WORLD_HEIGHT-30, player.y+Math.sin(a)*r));
                 if(!checkWallCollision(nx,ny,this.radius)){
@@ -1294,13 +1159,11 @@ class Enemy{
             }
         }
 
-        // PETER BAYER specials
         if(this.type===99&&this.label==="PETER BAYER"){
             if(Math.random()<0.005){screenShake=40;player.stunned=60;floatingTexts.push(new FloatingText(this.x,this.y,"STAMPFER!","#f00"));playSound('hammer');}
             if(Math.random()<0.003){floatingTexts.push(new FloatingText(this.x,this.y,"TICKET FLUT!","#f00"));for(let i=0;i<10;i++){let ne=new Enemy();ne.x=this.x;ne.y=this.y;enemies.push(ne);}}
         }
 
-        // Boss laser
         if(this.type===99){
             if(this.laserCooldown>0) this.laserCooldown--;
             else if(this.laserState===0){this.laserState=1;this.laserTimer=120;}
@@ -1319,7 +1182,6 @@ class Enemy{
             }
         }
 
-        // Movement
         let angle;
         if(player.vacationTimer>0&&this.type!==99) angle=Math.sin(frame*0.1+this.x)*Math.PI;
         else angle=Math.atan2(player.y-this.y,player.x-this.x);
@@ -1327,11 +1189,9 @@ class Enemy{
         if(this.type===99||this.type===6||!checkWallCollision(nx,this.y,this.radius)) this.x=nx;
         if(this.type===99||this.type===6||!checkWallCollision(this.x,ny,this.radius)) this.y=ny;
 
-        // Collision with player
-        // Collision with player
         let dist=Math.hypot(player.x-this.x,player.y-this.y);
         if(dist<player.radius+this.radius){
-            if(player.rollTimer > 0) return; // <-- NEU: UNVERWUNDBAR WÄHREND DER ROLLE (i-frames)
+            if(player && player.rollTimer > 0) return; // i-frames
             
             if(this.type===6){
                 screenShake=20;
@@ -1342,15 +1202,11 @@ class Enemy{
                 });
                 this.hp=-1000;
             } else if(this.type===8&&frame%30===0){
-                // SAP-Update: slow debuff
                 if(player.sapDebuffTimer<=0){
-                    player.sapDebuffTimer=300;
-                    document.getElementById('sapOverlay').style.display='block';
-                    playSound('sap'); screenShake=10;
-                    showToast("SAP-UPDATE LÄUFT!","#1f618d","Speed massiv reduziert für 5 Sek");
+                    player.sapDebuffTimer=300; document.getElementById('sapOverlay').style.display='block';
+                    playSound('sap'); screenShake=10; showToast("SAP-UPDATE LÄUFT!","#1f618d","Speed massiv reduziert für 5 Sek");
                 }
-                player.hp-=0.5;
-                spawnParticles(player.x,player.y,'#1f618d',2);
+                player.hp-=0.5; spawnParticles(player.x,player.y,'#1f618d',2);
             } else {
                 if(player.isMartin&&player.vodkaTimer>0){this.x-=Math.cos(angle)*5;this.y-=Math.sin(angle)*5;}
                 else if(player.shieldTimer>0){this.x-=Math.cos(angle)*10;this.y-=Math.sin(angle)*10;}
@@ -1368,19 +1224,16 @@ class Enemy{
     }
 
     draw(){
+        ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.ellipse(this.x, this.y + this.radius - 2, this.radius * 0.8, this.radius * 0.3, 0, 0, Math.PI*2); ctx.fill();
+
         if(this.freezeTimer>0){ctx.globalAlpha=.5;ctx.fillStyle="#0ff";ctx.font="20px Arial";ctx.textAlign="center";ctx.fillText("❄️",this.x,this.y-40);}
 
-        // SAP pulsing aura
         if(this.type===8){
             ctx.beginPath();ctx.arc(this.x,this.y,this.radius+8+Math.sin(frame*0.1)*4,0,Math.PI*2);
             ctx.fillStyle=`rgba(31,97,141,${0.2+Math.sin(frame*0.1)*0.1})`;ctx.fill();
         }
-        // Anwender teleport shimmer
-        if(this.type===7&&this.teleportTimer<30){
-            ctx.globalAlpha=this.teleportTimer/30;
-        }
+        if(this.type===7&&this.teleportTimer<30){ ctx.globalAlpha=this.teleportTimer/30; }
 
-        // Boss laser
         if(this.type===99&&this.laserState>0){
             let atp=Math.atan2(player.y-this.y,player.x-this.x);
             ctx.save();ctx.translate(this.x,this.y);ctx.rotate(atp);
@@ -1389,7 +1242,6 @@ class Enemy{
             ctx.restore();
         }
 
-        // HP bar
         let bw=this.radius*2;
         ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(this.x-this.radius,this.y-this.radius-15,bw,6);
         ctx.fillStyle=this.hp<this.maxHp*.3?'#f00':'#0f0';
@@ -1404,8 +1256,18 @@ class Enemy{
 }
 
 class Splatter{
-    constructor(x,y,color){this.x=x;this.y=y;this.color=color;this.points=[];for(let i=0;i<5;i++)this.points.push({dx:(Math.random()-.5)*20,dy:(Math.random()-.5)*20,s:Math.random()*5+2});}
-    draw(){ctx.fillStyle=this.color;ctx.globalAlpha=.6;this.points.forEach(p=>ctx.fillRect(this.x+p.dx,this.y+p.dy,p.s,p.s));ctx.globalAlpha=1;}
+    constructor(x,y,color){
+        this.x = x; this.y = y; this.points = [];
+        const colors = ['#00ff00', '#00cc00', '#008800', '#33ff33']; 
+        for (let i = 0; i < 8; i++) {
+            this.points.push({ dx: (Math.random() - 0.5) * 35, dy: (Math.random() - 0.5) * 35, s: Math.floor(Math.random() * 4) + 2, c: colors[Math.floor(Math.random() * colors.length)] });
+        }
+    }
+    draw() {
+        ctx.globalAlpha = 0.6;
+        this.points.forEach(p => { ctx.fillStyle = p.c; ctx.fillRect(this.x + p.dx, this.y + p.dy, p.s, p.s); });
+        ctx.globalAlpha = 1.0;
+    }
 }
 class Particle{
     constructor(x,y,color){this.x=x;this.y=y;this.color=color;let a=Math.random()*Math.PI*2,s=Math.random()*4;this.dx=Math.cos(a)*s;this.dy=Math.sin(a)*s;this.life=20+Math.random()*20;}
@@ -1443,23 +1305,20 @@ function generateWorld(){
 function spawnLogic(){
     if(frame%600===0) difficulty+=0.1;
 
-    // Boss
     if(currentBossStage<bosses.length&&score>=bosses[currentBossStage].score&&!activeBoss){
         let bd=bosses[currentBossStage]; activeBoss=new Enemy(bd); enemies.push(activeBoss);
         playSound('boss'); screenShake=30; player.bossSpawnTimer=240; currentBossStage++;
         showToast("⚠ BOSS ERSCHIENEN!","#e74c3c",bd.name+" — "+bd.subtitle);
     }
 
-    // Spawn rate
     let sr=Math.max(15,60-difficulty*4);
     if(activeBoss) sr*=2;
     if(currentShift===2) sr*=0.8;
     if(frame%Math.floor(sr)===0) enemies.push(new Enemy());
 
-    // Items
-    if(Math.random()<0.012){ // Bisschen mehr Drops generieren
+    if(Math.random()<0.012){ 
         let r=Math.random();
-        if     (r<0.30) items.push(new Item('suppe')); // 30% Chance auf Suppe
+        if     (r<0.30) items.push(new Item('suppe')); 
         else if(r<0.40) items.push(new Item('crate')); 
         else if(r<0.50) items.push(new Item('shield'));
         else if(r<0.60) items.push(new Item('vodka'));
@@ -1469,7 +1328,6 @@ function spawnLogic(){
         else if(r<0.99){items.push(new Item('hammer'));playSound('delivery');player.hammerSpawnTimer=180;}
     }
 
-    // IDOC
     if(!idocEvent&&frame%3000===1000){
         let sv=servers[Math.floor(Math.random()*servers.length)];
         if(sv){
@@ -1477,28 +1335,17 @@ function spawnLogic(){
             playSound('alarm');
             showToast("🚨 "+idocEvent.label,"#f00","Rotem Pfeil folgen → [E] drücken! (15 Sek)",true);
         }
-       // KLOSKA EVENT (greift Farmen an)
+    }
+    
     if(!kloskaEvent && serverFarms.length > 0 && frame % 2500 === 1800) {
-        // Wähle eine zufällige aktive Farm
         let farm = serverFarms[Math.floor(Math.random() * serverFarms.length)];
-        kloskaEvent = {
-            serverRef: farm.serverRef,
-            x: farm.serverRef.x - 40, // Er steht links daneben
-            y: farm.serverRef.y + 10,
-            timer: 900 // 15 Sekunden Zeit
-        };
+        kloskaEvent = { serverRef: farm.serverRef, x: farm.serverRef.x - 40, y: farm.serverRef.y + 10, timer: 900 };
         playSound('alarm');
         showToast("⚠️ ALARM!", "#ff00ff", "Kloska ist im Serverraum unterwegs!", true);
     }
-    }
 
-    // Schicht
     if(frame%3600===0){ currentShift=(currentShift+1)%3; shiftTimer=0; playSound('delivery'); }
-
-    // Meeting
-    if(!player.inMeeting&&frame%4500===2000){
-        meetingZone={x:Math.random()*(WORLD_WIDTH-400)+200,y:Math.random()*(WORLD_HEIGHT-400)+200,r:150,active:true};
-    }
+    if(!player.inMeeting&&frame%4500===2000){ meetingZone={x:Math.random()*(WORLD_WIDTH-400)+200,y:Math.random()*(WORLD_HEIGHT-400)+200,r:150,active:true}; }
 }
 
 // ============================================================
@@ -1521,15 +1368,12 @@ function drawWorld(){
 
     splatters.forEach(s=>s.draw());
 
-    // Meeting zone
     if(meetingZone && meetingZone.active){
         ctx.beginPath();ctx.arc(meetingZone.x,meetingZone.y,meetingZone.r,0,Math.PI*2);
-        ctx.fillStyle="rgba(0,0,255,.3)";ctx.fill();
-        ctx.strokeStyle="#00f";ctx.lineWidth=5;ctx.stroke();
+        ctx.fillStyle="rgba(0,0,255,.3)";ctx.fill(); ctx.strokeStyle="#00f";ctx.lineWidth=5;ctx.stroke();
         ctx.fillStyle="#fff";ctx.font="30px Arial";ctx.fillText("MEETING RAUM",meetingZone.x,meetingZone.y);
     }
 
-    // Obstacles
     obstacles.forEach(o=>{
         ctx.fillStyle='rgba(0,0,0,.9)';ctx.fillRect(o.x+8,o.y+8,o.w,o.h);
         if(o.type==='desk'){
@@ -1546,36 +1390,28 @@ function drawWorld(){
         }
     });
 
-    // Servers (with farm indicator)
     servers.forEach(sv=>{
         ctx.fillStyle=sv.isFarm?'#145a32':'#c0392b';ctx.fillRect(sv.x,sv.y,sv.w,sv.h);
         for(let ly=5;ly<70;ly+=10){
             ctx.fillStyle=sv.isFarm?`rgba(0,255,136,${.4+Math.sin(frame*.1+ly)*.3})`:(Math.random()>.5?'#e74c3c':'#2ecc71');
             ctx.fillRect(sv.x+5,sv.y+ly,5,5); ctx.fillRect(sv.x+30,sv.y+ly,5,5);
         }
-        if(sv.isFarm){
-            ctx.fillStyle='#00ff88';ctx.font='bold 11px Courier New';ctx.textAlign='center';
-            ctx.fillText("FARM",sv.x+sv.w/2,sv.y-5);
-        }
+        if(sv.isFarm){ ctx.fillStyle='#00ff88';ctx.font='bold 11px Courier New';ctx.textAlign='center'; ctx.fillText("FARM",sv.x+sv.w/2,sv.y-5); }
     });
 
-    // Stations
     stations.forEach(s=>{
         ctx.shadowColor=s.color;ctx.shadowBlur=20;
         try{ctx.drawImage(s.img,s.x,s.y,s.w,s.h);}catch(e){}
-        ctx.shadowBlur=0;
-        ctx.fillStyle='#fff';ctx.font='bold 16px Courier New';ctx.textAlign='center';
+        ctx.shadowBlur=0; ctx.fillStyle='#fff';ctx.font='bold 16px Courier New';ctx.textAlign='center';
         ctx.shadowColor="black";ctx.shadowBlur=4;ctx.fillText(s.label,s.x+s.w/2,s.y-10);ctx.shadowBlur=0;
     });
 
-    // IDOC marker + arrow
     if(idocEvent){
         ctx.beginPath();ctx.arc(idocEvent.x+20,idocEvent.y+40,60,0,Math.PI*2);
         ctx.strokeStyle="red";ctx.lineWidth=4;ctx.stroke();
         ctx.fillStyle="white";ctx.font="bold 20px Arial";ctx.fillText("!",idocEvent.x+20,idocEvent.y+40);
         let dx=idocEvent.x-player.x,dy=idocEvent.y-player.y;
-        let angle=Math.atan2(dy,dx);
-        let arrowDist=Math.min(Math.hypot(dx,dy)-30,80);
+        let angle=Math.atan2(dy,dx); let arrowDist=Math.min(Math.hypot(dx,dy)-30,80);
         if(arrowDist>20){
             let ax=player.x+Math.cos(angle)*arrowDist,ay=player.y+Math.sin(angle)*arrowDist;
             ctx.save();ctx.translate(ax,ay);ctx.rotate(angle);
@@ -1584,29 +1420,19 @@ function drawWorld(){
             ctx.restore();
         }
     }
-   // KLOSKA marker + arrow
     if(kloskaEvent) {
-        // Kloska zeichnen
         ctx.shadowColor = "#ff00ff"; ctx.shadowBlur = 15;
         if(kloskaImg && kloskaImg.complete && kloskaImg.naturalHeight !== 0) {
             ctx.drawImage(kloskaImg, kloskaEvent.x, kloskaEvent.y, 50, 75);
-        } else {
-            // Platzhalter falls Bild fehlt
-            ctx.fillStyle = "#8e44ad"; ctx.fillRect(kloskaEvent.x, kloskaEvent.y, 40, 70);
-        }
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = "#fff"; ctx.font = "bold 16px Arial"; ctx.textAlign="center";
+        } else { ctx.fillStyle = "#8e44ad"; ctx.fillRect(kloskaEvent.x, kloskaEvent.y, 40, 70); }
+        ctx.shadowBlur = 0; ctx.fillStyle = "#fff"; ctx.font = "bold 16px Arial"; ctx.textAlign="center";
         ctx.fillText("KLOSKA", kloskaEvent.x + 25, kloskaEvent.y - 10);
-
-        // Lila Pfeil zum Spieler
         let dx = kloskaEvent.x - player.x, dy = kloskaEvent.y - player.y;
-        let angle = Math.atan2(dy, dx);
-        let arrowDist = Math.min(Math.hypot(dx, dy) - 30, 80);
+        let angle = Math.atan2(dy, dx); let arrowDist = Math.min(Math.hypot(dx, dy) - 30, 80);
         if(arrowDist > 20) {
             ctx.save(); ctx.translate(player.x + Math.cos(angle)*arrowDist, player.y + Math.sin(angle)*arrowDist); ctx.rotate(angle);
             let sc = 1 + Math.sin(frame * 0.2) * 0.3; ctx.scale(sc, sc);
-            ctx.fillStyle = "#ff00ff"; // Lila Pfeil für Kloska
-            ctx.beginPath(); ctx.moveTo(15, 0); ctx.lineTo(-15, 10); ctx.lineTo(-15, -10); ctx.fill();
+            ctx.fillStyle = "#ff00ff"; ctx.beginPath(); ctx.moveTo(15, 0); ctx.lineTo(-15, 10); ctx.lineTo(-15, -10); ctx.fill();
             ctx.restore();
         }
     }
@@ -1639,12 +1465,7 @@ function updateHUD(){
 // ============================================================
 function loop(){
     if(!gameRunning) return;
-    
-    // --- NEU: SPIEL PAUSIEREN ---
-    if(gamePaused) {
-        requestAnimationFrame(loop);
-        return; // Überspringt jegliche Logik & Rendern!
-    }
+    if(gamePaused) { requestAnimationFrame(loop); return; }
     
     try{
         frame++; shiftTimer++;
@@ -1652,34 +1473,26 @@ function loop(){
         player.update();
         updateFarms();
 
-        // IDOC timeout
         if(idocEvent){
             idocEvent.timer--;
             if(idocEvent.timer<=0){
                 idocEvent=null; removePersistentToast();
                 floatingTexts.push(new FloatingText(player.x,player.y,"BANDSTILLSTAND!","#f00"));
                 showToast("BANDSTILLSTAND!","#ff4400","Gegner-Speed erhöht!");
-                playSound('hammer');
-                enemies.forEach(e=>e.speed+=2);
+                playSound('hammer'); enemies.forEach(e=>e.speed+=2);
             }
         }
-       // KLOSKA timeout
         if(kloskaEvent) {
             kloskaEvent.timer--;
             if(kloskaEvent.timer <= 0) {
-                // Kloska jagt die Farm hoch
                 triggerServerExplosion(kloskaEvent.serverRef.x + 20, kloskaEvent.serverRef.y + 40);
-                // Farm aus Arrays löschen
                 serverFarms = serverFarms.filter(f => f.serverRef !== kloskaEvent.serverRef);
                 servers = servers.filter(s => s !== kloskaEvent.serverRef);
-                kloskaEvent = null;
-                removePersistentToast();
+                kloskaEvent = null; removePersistentToast();
                 floatingTexts.push(new FloatingText(player.x, player.y, "FARM ZERSTÖRT!", "#f00"));
                 showToast("FARM ZERSTÖRT!", "#ff4400", "Kloska hat das Kabel gezogen!");
             }
         }
-
-        // Meeting
         if(meetingZone && meetingZone.active){
             let mt=document.getElementById('meeting-text'),mb=document.getElementById('meeting-bar-container'),mbar=document.getElementById('meeting-bar');
             if(Math.hypot(player.x-meetingZone.x,player.y-meetingZone.y)<meetingZone.r){
@@ -1697,42 +1510,31 @@ function loop(){
 
         for(let t of turrets) t.update();
 
-        // Screen shake
-        // if(screenShake>0){ ctx.translate((Math.random()-.5)*screenShake,(Math.random()-.5)*screenShake); screenShake*=.9; if(screenShake<.5)screenShake=0; }
-
-        // Camera
         camera.x=Math.max(0,Math.min(player.x-canvas.width/2, WORLD_WIDTH-canvas.width));
         camera.y=Math.max(0,Math.min(player.y-canvas.height/2,WORLD_HEIGHT-canvas.height));
         input.worldX=input.x+camera.x; input.worldY=input.y+camera.y;
        
-        // Bullets
         for(let i=bullets.length-1;i>=0;i--){
             let b=bullets[i]; b.update();
             let hit=false;
             for(let k=servers.length-1;k>=0;k--){
                 let sv=servers[k];
                 if(b.x>sv.x&&b.x<sv.x+sv.w&&b.y>sv.y&&b.y<sv.y+sv.h){
-                    if(sv.isFarm) {
-                        hit=true; // Kugel verpufft an der Farm (Schusssicher!)
-                        break;
-                    } else {
+                    if(sv.isFarm) { hit=true; break; } 
+                    else {
                         triggerServerExplosion(sv.x+sv.w/2,sv.y+sv.h/2);
                         serverFarms=serverFarms.filter(f=>f.serverRef!==sv);
-                        servers.splice(k,1);
-                        hit=true;
-                        break;
+                        servers.splice(k,1); hit=true; break;
                     }
                 }
             }
             if(hit||checkWallCollision(b.x,b.y,2)||b.life<=0) bullets.splice(i,1);
         }
 
-        // Enemy vs bullets
         for(let i=enemies.length-1;i>=0;i--){
             let e=enemies[i]; e.update();
             for(let j=bullets.length-1;j>=0;j--){
-                let b=bullets[j];
-                let hr=e.radius+(b.type==='rocket'?20:0);
+                let b=bullets[j]; let hr=e.radius+(b.type==='rocket'?20:0);
                 if(Math.hypot(e.x-b.x,e.y-b.y)<hr){
                     if(e.type===6){if(!player.isMartin||b.type!=='rocket'){bullets.splice(j,1);spawnParticles(e.x,e.y,'#f1c40f',2);playSound('hit');continue;}}
                                         
@@ -1742,59 +1544,42 @@ function loop(){
                         bullets.splice(j,1);
                     } 
                     else if (b.type === 'railgun') {
-                        // Railgun durchschlägt Gegner!
                         if (!b.hitEnemies.includes(e)) {
-                            e.hp -= b.dmg;
-                            b.hitEnemies.push(e); // Gegner als "getroffen" markieren
+                            e.hp -= b.dmg; b.hitEnemies.push(e); 
                             spawnParticles(e.x, e.y, '#00ffff', 5); playSound('hit');
-                            e.x += Math.cos(b.angle) * 10; // Gegner zurückstoßen
-                            e.y += Math.sin(b.angle) * 10;
+                            e.x += Math.cos(b.angle) * 10; e.y += Math.sin(b.angle) * 10;
                         }
                     } 
-                    else if (b.type === 'flame') {
-                        e.burnTimer = 90; // Gegner brennt für 1,5 Sekunden
-                        e.hp -= b.dmg;
-                        bullets.splice(j,1);
-                    }
-                    else { 
-                        e.hp -= b.dmg; 
-                        bullets.splice(j,1);
-                        spawnParticles(e.x,e.y,e.color,3); playSound('hit');
-                    }
+                    else if (b.type === 'flame') { e.burnTimer = 90; e.hp -= b.dmg; bullets.splice(j,1); }
+                    else { e.hp -= b.dmg; bullets.splice(j,1); spawnParticles(e.x,e.y,e.color,3); playSound('hit'); }
+                   
                    if(e.hp<=0){
-                        score+=e.score;
-                        splatters.push(new Splatter(e.x,e.y,e.color));
+                        score+=e.score; splatters.push(new Splatter(e.x,e.y,e.color));
                         if(e.type===99){activeBoss=null;floatingTexts.push(new FloatingText(e.x,e.y,"BEFÖRDERUNG ABGELEHNT!","#ffd700"));screenShake=50;items.push(new Item('briefcase',e.x,e.y));showToast("BOSS BESIEGT!","#ffd700","Beförderung abgelehnt!");}
-                        if(splatters.length>200) splatters.shift();
-                        enemies.splice(i,1);
-                        spawnParticles(e.x,e.y,'#fff',8);
+                        if(splatters.length>1500) splatters.shift();
+                        enemies.splice(i,1); spawnParticles(e.x,e.y,'#fff',8);
                         if(player.isMartin&&Math.random()<.3){let sh=["NOCHMAL!","BEINE WEG!","ALARM!","GEWÜRM!","VOLLE PULLE!"];floatingTexts.push(new FloatingText(e.x,e.y,sh[Math.floor(Math.random()*sh.length)],"#fff"));}
                         break;
                     }
                 }
             }
         }
-       // --- ORBIT-MAUS KOLLISION ---
+        
         if (player.weaponType === 'mouse') {
             let mx = player.x + Math.cos(player.orbitAngle) * 90;
             let my = player.y + Math.sin(player.orbitAngle) * 90 - 10;
             for (let e of enemies) {
                 if (Math.hypot(e.x - mx, e.y - my) < e.radius + 15) {
                     if (e.mouseCooldown <= 0) {
-                        e.hp -= (25 + player.dmgBonus);
-                        e.mouseCooldown = 15; // Verhindert, dass er 60x pro Sekunde Schaden frisst
-                        spawnParticles(e.x, e.y, '#fff', 5);
-                        playSound('hit');
-                        // Knockback
+                        e.hp -= (25 + player.dmgBonus); e.mouseCooldown = 15; 
+                        spawnParticles(e.x, e.y, '#fff', 5); playSound('hit');
                         let a = Math.atan2(e.y - my, e.x - mx);
-                        e.x += Math.cos(a) * 20;
-                        e.y += Math.sin(a) * 20;
+                        e.x += Math.cos(a) * 20; e.y += Math.sin(a) * 20;
                     }
                 }
             }
         }
 
-        // Dead enemy cleanup
         for(let i=enemies.length-1;i>=0;i--){
             if(enemies[i].hp<=0){
                 let e=enemies[i];
@@ -1808,25 +1593,13 @@ function loop(){
             }
         }
 
-        // Items
         for(let i=items.length-1; i>=0; i--){
             let item = items[i];
-            // 1. Absoluter Sicherheits-Check: Gibt es das Item überhaupt?
-            if(!item) {
-                items.splice(i, 1);
-                continue; 
-            }
-            
-            // 2. Lebenszeit prüfen
+            if(!item) { items.splice(i, 1); continue; }
             if(item.life !== Infinity){
                 item.life--;
-                if(item.life <= 0){
-                    items.splice(i, 1);
-                    continue;
-                }
+                if(item.life <= 0){ items.splice(i, 1); continue; }
             }
-            
-            // 3. Kollision mit Spieler
             if(Math.hypot(player.x-item.x, player.y-item.y) < player.radius + item.radius){
                 switch(item.type){
                     case 'suppe': player.suppe++; playSound('powerup'); showToast("SUPPE! 🥣", "#ff9f43", "Zahlungsmittel für Kloska"); floatingTexts.push(new FloatingText(player.x,player.y,"+1 SUPPE","#ff9f43"));break;  
@@ -1836,17 +1609,17 @@ function loop(){
                     case 'shield':  player.shieldTimer=600;playSound('powerup');showToast("SCHUTZSCHILD! 🛡️","#00f","Immunität für 10 Sek");floatingTexts.push(new FloatingText(player.x,player.y,"SCHUTZSCHILD!","#00f"));break;
                     case 'bug':     player.bugTimer=600;playSound('bug');spawnParticles(item.x,item.y,'#f0f',20);showToast("JANSKIS HOTFIX! 💾","#f0f","Steuerung invertiert...");break;
                     case 'hammer':  player.hammerEffectTimer=120;playSound('hammer');screenShake=30;for(let k=enemies.length-1;k>=0;k--){if(enemies[k].type!==99){score+=Math.max(1,Math.floor(enemies[k].score*.1));splatters.push(new Splatter(enemies[k].x,enemies[k].y,enemies[k].color));enemies.splice(k,1);}else enemies[k].hp-=500;}showToast("RAMADAMA! 🔨","#e74c3c","Schleichst eich!");break;
-                    // case 'nuke':    triggerNuke();break;
                     case 'vacation':player.yellowSlips++;playSound('vacation');showToast("+1 URLAUBSTAG! 💤","#ffff00","Minusstunden gespart");floatingTexts.push(new FloatingText(player.x,player.y,"+1 URLAUB!","#ffff00"));break;
                     case 'bike':    player.bikeTimer=600;playSound('powerup');showToast("RADL-RAMBO! 🚲","#0f0","Speed x2 + Autofire");floatingTexts.push(new FloatingText(player.x,player.y,"RADL-RAMBO!","#0f0"));break;
                     case 'briefcase':player.maxHp+=50;player.hp=player.maxHp;playSound('evolve');showToast("GEHALTSERHÖHUNG! 💼","#ffd700","Max-HP +50");floatingTexts.push(new FloatingText(player.x,player.y,"GEHALTSERHÖHUNG!","#ffd700"));spawnParticles(item.x,item.y,'#ffd700',20);break;
                 }
-                // Item nach dem Einsammeln sicher entfernen
                 items.splice(i, 1);
             }
         }
 
-        // Particles & texts
+        for(let i=shells.length-1; i>=0; i--){ shells[i].update(); }
+        if(shells.length > 500) shells.shift();
+
         for(let i=particles.length-1;i>=0;i--){if(!particles[i])continue;particles[i].update();if(particles[i].life<=0)particles.splice(i,1);}
         for(let i=floatingTexts.length-1;i>=0;i--){if(!floatingTexts[i])continue;floatingTexts[i].update();if(floatingTexts[i].life<=0)floatingTexts.splice(i,1);}
         if(particles.length>500) particles.splice(0,100);
@@ -1854,13 +1627,14 @@ function loop(){
         checkGameOver();
         updateHUD();
 
-        // Render
         ctx.setTransform(1,0,0,1,0,0);
         ctx.clearRect(0,0,canvas.width,canvas.height);
         ctx.save();
         if(screenShake>0){ ctx.translate((Math.random()-.5)*screenShake,(Math.random()-.5)*screenShake); screenShake*=.9; if(screenShake<.5)screenShake=0; }
         ctx.translate(-camera.x,-camera.y);
         drawWorld();
+        
+        shells.forEach(s=>s.draw());
         items.forEach(it=>it.draw());
         bullets.forEach(b=>b.draw());
         particles.forEach(p=>p.draw());
@@ -1869,13 +1643,11 @@ function loop(){
         floatingTexts.forEach(ft=>ft.draw());
         player.draw();
 
-        // Night vignette
         if(currentShift===2){
             let g=ctx.createRadialGradient(player.x,player.y,100,player.x,player.y,400);
             g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,0.75)");
             ctx.fillStyle=g;ctx.fillRect(player.x-1000,player.y-1000,2000,2000);
         }
-        // Flash
         if(flashScreen>0){ctx.fillStyle=`rgba(255,255,255,${flashScreen/50})`;ctx.fillRect(player.x-1000,player.y-1000,2000,2000);flashScreen*=.9;if(flashScreen<.1)flashScreen=0;}
         ctx.restore();
 
@@ -1884,7 +1656,7 @@ function loop(){
 }
 
 // ============================================================
-// SECTION 17 — GAME START
+// SECTION 17 — GAME START & SHOP
 // ============================================================
 function startGame(diff=1){
     let mm=document.getElementById('menuMusic');
@@ -1897,14 +1669,14 @@ function startGame(diff=1){
     document.getElementById('shopOverlay').style.display='none';
     document.getElementById('sapOverlay').style.display='none';
 
-    input.keys={};input.mouseDown=false;
+    input.keys={};input.mouseDown=false; input.rightClick=false;
     score=0;frame=0;difficulty=diff;
     currentDiffLabel=diff===1?"PRAKTIKANT":(diff===3?"VOLLZEIT":"BURNOUT");
     lastChosenDifficulty=diff;
     currentBossStage=0;activeBoss=null;
     currentShift=0;shiftTimer=0;
     gamePaused=false;idocEvent=null;meetingZone=null;kloskaEvent=null;
-    enemies=[];bullets=[];particles=[];items=[];splatters=[];floatingTexts=[];turrets=[];serverFarms=[];
+    enemies=[];bullets=[];particles=[];items=[];splatters=[];floatingTexts=[];turrets=[];serverFarms=[];shells=[];
     clearAllToasts();
 
     player=new Player();
@@ -1913,25 +1685,29 @@ function startGame(diff=1){
     loop();
 }
 
-// Menu music on first interaction
 window.addEventListener('click',()=>{
     const mm=document.getElementById('menuMusic');
     if(mm&&mm.paused&&!gameRunning) mm.play().catch(()=>{});
 });
-   // ============================================================
-// KLOSKA SHOP LOGIK
-// ============================================================
+
 function openKloskaShop() {
-    gamePaused = true; // Spiel einfrieren!
+    gamePaused = true; 
     document.getElementById('kloskaShopScreen').style.display = 'block';
     document.getElementById('shopSuppenCount').innerText = player.suppe;
-    playSound('boss'); // Easter Egg Sound (Ersetzbar mit "What are ya buying?")
+    
+    // Background Musik leise machen und Voice Line abspielen
+    bgMusic.volume = AUDIO_CONFIG.bgMusicVolume * 0.15; 
+    kloskaVoice.currentTime = 0;
+    kloskaVoice.play().catch(()=>{});
 }
 
 function closeKloskaShop() {
     document.getElementById('kloskaShopScreen').style.display = 'none';
-    gamePaused = false; // Spiel läuft weiter
-    input.keys = {}; // Tasten leeren, damit er nicht beim Schließen aus Versehen weiterläuft
+    gamePaused = false; 
+    input.keys = {}; 
+    
+    // Background Musik wieder auf normale Lautstärke
+    bgMusic.volume = AUDIO_CONFIG.bgMusicVolume;
 }
 
 function buyKloskaItem(item, cost) {
@@ -1940,8 +1716,8 @@ function buyKloskaItem(item, cost) {
         document.getElementById('shopSuppenCount').innerText = player.suppe;
         playSound('powerup');
         
-        // Item anwenden
         if(item === 'railgun') player.equipWeapon('railgun');
+        if(item === 'flamer') player.equipWeapon('flamer');
         if(item === 'mouse') player.equipWeapon('mouse');
         if(item === 'briefcase') { player.maxHp += 50; player.hp = player.maxHp; }
         if(item === 'chicken') { player.hp = Math.min(player.maxHp, player.hp + 30); }
@@ -1949,8 +1725,9 @@ function buyKloskaItem(item, cost) {
         showToast("DANKE! Komm wieder.", "#9b59b6", item.toUpperCase()+" erhalten");
     } else {
         showToast("ZU WENIG SUPPE!", "#e74c3c", `Brauchst ${cost} 🥣, hast ${player.suppe}`);
+        playSound('hit');
     }
 }
-
-
-// ============================================================
+</script>
+</body>
+</html>
