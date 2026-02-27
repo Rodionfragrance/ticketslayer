@@ -628,12 +628,17 @@ const bosses=[
 // ============================================================
 // SECTION 7 — INPUT
 // ============================================================
-const input={keys:{},mouseDown:false,x:0,y:0,worldX:0,worldY:0};
+const input={keys:{},mouseDown:false,rightClick:false,x:0,y:0,worldX:0,worldY:0};
 window.addEventListener('keydown',e=>{ input.keys[e.code]=true; if(e.code==='Space'&&player&&player.inMeeting) player.meetingProgress+=10; });
 window.addEventListener('keyup',  e=>  input.keys[e.code]=false);
-window.addEventListener('mousedown',()=>input.mouseDown=true);
-window.addEventListener('mouseup',  ()=>input.mouseDown=false);
+window.addEventListener('mousedown',e=>{ 
+    if(e.button === 0) input.mouseDown=true; 
+    if(e.button === 2) input.rightClick=true; 
+});
+window.addEventListener('mouseup',  e=>{ if(e.button === 0) input.mouseDown=false; });
 window.addEventListener('mousemove',e=>{ const r=canvas.getBoundingClientRect(); input.x=e.clientX-r.left; input.y=e.clientY-r.top; });
+// Browser-Rechtsklick-Menü deaktivieren
+window.addEventListener('contextmenu', e => e.preventDefault());
 
 // ============================================================
 // SECTION 8 — TOAST SYSTEM
@@ -767,6 +772,11 @@ class Player{
         this.sapDebuffTimer=0;   // SAP-Update debuff
         this.azubiCost=5000;
         this._shiftToastFired=-1;
+      // --- NEU: HECHTROLLE ---
+        this.rollTimer = 0;      // Wie lange die Rolle noch aktiv ist (i-frames)
+        this.rollCooldown = 0;   // Wann man wieder rollen darf
+        this.rollDx = 0;         // Richtung X
+        this.rollDy = 0;         // Richtung Y
         applyUpgradesToPlayer(this);
     }
 
@@ -783,6 +793,38 @@ class Player{
     update(){
         if(this.stunned>0){this.stunned--;return;}
         if(this.inMeeting){return;}
+
+       // --- HECHTROLLE COOLDOWN & AKTIVITÄT ---
+        if (this.rollCooldown > 0) this.rollCooldown--;
+        
+        if (this.rollTimer > 0) {
+            // Während der Rolle: Sehr schnell bewegen & Unverwundbar
+            this.rollTimer--;
+            let nx = this.x + this.rollDx;
+            let ny = this.y + this.rollDy;
+            if(!checkWallCollision(nx, this.y, this.radius)) this.x = Math.max(this.radius, Math.min(WORLD_WIDTH-this.radius, nx));
+            if(!checkWallCollision(this.x, ny, this.radius)) this.y = Math.max(this.radius, Math.min(WORLD_HEIGHT-this.radius, ny));
+            
+            // Partikel-Effekt für die Rolle (Staub)
+            spawnParticles(this.x, this.y + 20, '#ccc', 1);
+            return; // Beendet update() hier -> kein Schießen/Gehen während der Rolle!
+        }
+
+        // --- HECHTROLLE AUSLÖSEN ---
+        // Auslösen per Rechtsklick (button 2) oder Shift-Taste
+        if ((input.keys['ShiftLeft'] || input.rightClick) && this.rollCooldown <= 0 && this.sapDebuffTimer <= 0) {
+            let angle = Math.atan2(input.worldY - this.y, input.worldX - this.x);
+            this.rollDx = Math.cos(angle) * 15; // Roll-Speed
+            this.rollDy = Math.sin(angle) * 15;
+            this.rollTimer = 15;      // Rolle dauert 15 Frames (0.25 Sek)
+            this.rollCooldown = 120;  // 2 Sekunden Cooldown
+            playSound('delivery');    // "Swoosh" Sound
+            input.rightClick = false; // Reset
+            return; 
+        }
+
+       // --- NEU: MAUS ROTATION ---
+        this.orbitAngle = (this.orbitAngle || 0) + 0.15;
 
         // [B] Azubi
         if(input.keys['KeyB']&&score>=this.azubiCost){
@@ -902,7 +944,7 @@ class Player{
 
     equipWeapon(type){
         this.weaponType=type; this.weaponTimer=1800;
-        let fr={minigun:4,uzi:7,ak47:6,shotgun:40,rocket:60}[type]||20;
+        let fr = {minigun:4, uzi:7, ak47:6, shotgun:40, rocket:60, railgun:50, flamer:3, mouse:999}[type] || 20;
         let upg=getUpgradeLevel('fire_rate');
         this.fireRate=Math.max(2,fr-Math.ceil(fr*0.15*upg));
         this.crateFlashTimer=120; flashScreen=10;
@@ -910,17 +952,34 @@ class Player{
     }
 
     shoot(){
+        if(this.weaponType === 'mouse') return; // Maus schießt nicht, sie kreist!
+        
         let offset=this.isMartin?-20:-10;
         let angle=Math.atan2(input.y-(this.y+offset-camera.y), input.x-(this.x-camera.x));
         if(this.weaponType==='uzi'&&this.bikeTimer>0&&!input.mouseDown) angle=Math.random()*Math.PI*2;
-        playSound('shoot');
+        
         let dmg=10+this.dmgBonus;
-        if(this.weaponType==='shotgun')    {for(let i=-2;i<=2;i++) bullets.push(new Bullet(this.x,this.y+offset,angle+i*0.15,'standard',dmg));}
-        else if(this.weaponType==='minigun'){bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.4,'standard',dmg));}
-        else if(this.weaponType==='uzi')   {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.1,'standard',dmg));}
-        else if(this.weaponType==='ak47')  {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.05,'standard',dmg));}
-        else if(this.weaponType==='rocket'){bullets.push(new Bullet(this.x,this.y+offset,angle,'rocket',dmg));}
-        else                              {bullets.push(new Bullet(this.x,this.y+offset,angle,'standard',dmg));}
+        let recoil = 0;
+        
+        if(this.weaponType==='shotgun')    {for(let i=-2;i<=2;i++) bullets.push(new Bullet(this.x,this.y+offset,angle+i*0.15,'standard',dmg)); playSound('shoot'); recoil=3;}
+        else if(this.weaponType==='minigun'){bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.4,'standard',dmg)); playSound('shoot');}
+        else if(this.weaponType==='uzi')   {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.1,'standard',dmg)); playSound('shoot');}
+        else if(this.weaponType==='ak47')  {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.05,'standard',dmg)); playSound('shoot'); recoil=1;}
+        else if(this.weaponType==='rocket'){bullets.push(new Bullet(this.x,this.y+offset,angle,'rocket',dmg)); playSound('shoot'); recoil=5;}
+        else if(this.weaponType==='railgun'){
+            bullets.push(new Bullet(this.x,this.y+offset,angle,'railgun',dmg*5)); 
+            playSound('boss'); // Dicker Sound
+            recoil = 8; screenShake = 8; // Fetter Rückstoß
+        }
+        else if(this.weaponType==='flamer'){
+            for(let i=0; i<3; i++) bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.3,'flame',dmg*0.3));
+            if(frame%5===0) playSound('shoot'); 
+        }
+        else {bullets.push(new Bullet(this.x,this.y+offset,angle,'standard',dmg)); playSound('shoot');}
+        
+        // Rückstoß anwenden
+        this.x -= Math.cos(angle) * recoil;
+        this.y -= Math.sin(angle) * recoil;
     }
 
     draw(){
@@ -930,13 +989,34 @@ class Player{
         if(this.bikeTimer>0) ctx.translate(0,Math.sin(frame*.5)*3);
         if(this.bugTimer>0){ ctx.translate((Math.random()-.5)*5,(Math.random()-.5)*5); ctx.filter="hue-rotate("+Math.random()*360+"deg)"; }
         if(this.vacationTimer>0) ctx.globalAlpha=.5;
+        if(this.rollTimer > 0) {
+            ctx.globalAlpha = 0.5;
+            // Spieler dreht sich visuell bei der Rolle
+            ctx.rotate(this.rollTimer * 0.5); 
+        }
         let w=60,h=this.isMartin?90:60;
         if(img&&img.complete&&img.naturalHeight!==0){ ctx.drawImage(img,-w/2,-h/2,w,h); }
         else{ ctx.fillStyle=this.isMartin?'gold':'#e67e22'; ctx.fillRect(-w/2,-h/2,w,h); }
         if(this.vodkaTimer>0){ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(255,0,0,.3)';ctx.fillRect(-w/2,-h/2,w,h);ctx.globalCompositeOperation='source-over';}
         if(this.shieldTimer>0){ctx.beginPath();ctx.arc(0,0,50,0,Math.PI*2);ctx.strokeStyle=`rgba(0,255,255,${.5+Math.sin(frame*.2)*.5})`;ctx.lineWidth=3;ctx.stroke();this.shieldTimer--;}
         if(this.sapDebuffTimer>0){ctx.beginPath();ctx.arc(0,0,55,0,Math.PI*2);ctx.strokeStyle=`rgba(31,97,141,${.6+Math.sin(frame*.3)*.4})`;ctx.lineWidth=4;ctx.stroke();}
-        ctx.globalAlpha=1; ctx.filter="none"; ctx.restore();
+        // --- NEU: DIE KREISENDE MAUS ZEICHNEN ---
+        if (this.weaponType === 'mouse') {
+            let mx = Math.cos(this.orbitAngle) * 90;
+            let my = Math.sin(this.orbitAngle) * 90 - 10;
+            
+            // Kabel
+            ctx.strokeStyle = '#555'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(mx, my); ctx.stroke();
+            
+            // Maus
+            ctx.fillStyle = '#ccc';
+            ctx.save(); ctx.translate(mx, my); ctx.rotate(this.orbitAngle + Math.PI/2);
+            ctx.fillRect(-6, -10, 12, 20); // Gehäuse
+            ctx.fillStyle = '#f00'; ctx.fillRect(-2, -8, 4, 4); // Roter Laser/Scrollrad
+            ctx.restore();
+        }
+       ctx.globalAlpha=1; ctx.filter="none"; ctx.restore();
     }
 }
 
@@ -968,23 +1048,54 @@ class Item{
     }
 }
 
-class Bullet{
-    constructor(x,y,angle,type,dmg=10){
-        this.x=x;this.y=y;this.type=type;this.dmg=dmg;
-        this.speed=type==='rocket'?12:18;
-        this.dx=Math.cos(angle)*this.speed; this.dy=Math.sin(angle)*this.speed;
-        this.life=60;
+class Bullet {
+    constructor(x, y, angle, type, dmg=10) {
+        this.x = x; this.y = y; this.type = type; this.dmg = dmg;
+        this.angle = angle;
+        
+        if (type === 'rocket') this.speed = 12;
+        else if (type === 'railgun') this.speed = 35; // Extrem schnell
+        else if (type === 'flame') this.speed = 6 + Math.random() * 3; // Langsame Flammen
+        else this.speed = 18;
+        
+        this.dx = Math.cos(angle) * this.speed; 
+        this.dy = Math.sin(angle) * this.speed;
+        this.life = type === 'flame' ? 25 : 60; // Flammen sterben schneller
+        this.size = type === 'flame' ? 5 : 4;
+        
+        this.hitEnemies = []; // Merkt sich, wen die Railgun schon durchschlagen hat
     }
-    update(){this.x+=this.dx;this.y+=this.dy;this.life--;}
-    draw(){
-        if(this.type==='rocket'){ctx.fillStyle='#ff4444';ctx.beginPath();ctx.arc(this.x,this.y,8,0,Math.PI*2);ctx.fill();spawnParticles(this.x,this.y,'#ffaa00',1);}
-        else{ctx.fillStyle='#ffeb3b';ctx.beginPath();ctx.arc(this.x,this.y,4,0,Math.PI*2);ctx.fill();}
+    update() {
+        this.x += this.dx; this.y += this.dy; this.life--;
+        // Flamme wird größer und langsamer
+        if (this.type === 'flame') {
+            this.size += 1.5; 
+            this.dx *= 0.85; 
+            this.dy *= 0.85;
+        }
+    }
+    draw() {
+        if (this.type === 'rocket') {
+            ctx.fillStyle='#ff4444'; ctx.beginPath(); ctx.arc(this.x,this.y,8,0,Math.PI*2); ctx.fill();
+            spawnParticles(this.x,this.y,'#ffaa00',1);
+        } else if (this.type === 'railgun') {
+            ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
+            ctx.fillStyle = '#00ffff'; ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 15;
+            ctx.fillRect(-20, -3, 40, 6); // Dicker blauer Strahl
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(-20, -1, 40, 2); // Weißer Kern
+            ctx.restore();
+        } else if (this.type === 'flame') {
+            ctx.fillStyle = `rgba(255, ${Math.floor(Math.random()*150)}, 0, ${this.life/25})`;
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
+        } else {
+            ctx.fillStyle='#ffeb3b'; ctx.beginPath(); ctx.arc(this.x,this.y,4,0,Math.PI*2); ctx.fill();
+        }
     }
 }
 
 class Enemy{
     constructor(bossData=null){
-        this.freezeTimer=0; this.laserState=0; this.laserTimer=0;
+        this.freezeTimer=0; this.laserState=0; this.laserTimer=0; this.burnTimer = 0; this.mouseCooldown = 0;
         if(bossData){
             let a=Math.random()*Math.PI*2, d=Math.max(canvas.width,canvas.height)/1.5+150;
             this.x=Math.max(30,Math.min(WORLD_WIDTH-30, player.x+Math.cos(a)*d));
@@ -1029,6 +1140,14 @@ class Enemy{
 
     update(){
         if(this.freezeTimer>0){this.freezeTimer--;return;}
+       // Brandschaden (Flammenwerfer)
+        if (this.burnTimer > 0) {
+            this.burnTimer--;
+            this.hp -= 0.5; // Zieht kontinuierlich HP ab
+            if (frame % 5 === 0) spawnParticles(this.x, this.y, '#ff6600', 1);
+        }
+        // Cooldown für Treffer durch die kreisende Maus
+        if (this.mouseCooldown > 0) this.mouseCooldown--;
 
         // --- DER ANWENDER — random teleport ---
         if(this.type===7){
@@ -1082,8 +1201,11 @@ class Enemy{
         if(this.type===99||this.type===6||!checkWallCollision(this.x,ny,this.radius)) this.y=ny;
 
         // Collision with player
+        // Collision with player
         let dist=Math.hypot(player.x-this.x,player.y-this.y);
         if(dist<player.radius+this.radius){
+            if(player.rollTimer > 0) return; // <-- NEU: UNVERWUNDBAR WÄHREND DER ROLLE (i-frames)
+            
             if(this.type===6){
                 screenShake=20;
                 floatingTexts.push(new FloatingText(player.x,player.y,"CRITICAL UPDATE!","#f00"));
@@ -1477,13 +1599,33 @@ function loop(){
                 let hr=e.radius+(b.type==='rocket'?20:0);
                 if(Math.hypot(e.x-b.x,e.y-b.y)<hr){
                     if(e.type===6){if(!player.isMartin||b.type!=='rocket'){bullets.splice(j,1);spawnParticles(e.x,e.y,'#f1c40f',2);playSound('hit');continue;}}
-                    if(b.type==='rocket'){
+                                        
+                    if(b.type === 'rocket') {
                         screenShake=15;playSound('hammer');spawnParticles(b.x,b.y,'#f00',20);
                         enemies.forEach(oe=>{if(Math.hypot(oe.x-b.x,oe.y-b.y)<150){oe.hp-=100;floatingTexts.push(new FloatingText(oe.x,oe.y,"BOOM","#f00"));}});
-                    } else { e.hp-=b.dmg; }
-                    bullets.splice(j,1);
-                    spawnParticles(e.x,e.y,e.color,3); playSound('hit');
-                    if(e.hp<=0){
+                        bullets.splice(j,1);
+                    } 
+                    else if (b.type === 'railgun') {
+                        // Railgun durchschlägt Gegner!
+                        if (!b.hitEnemies.includes(e)) {
+                            e.hp -= b.dmg;
+                            b.hitEnemies.push(e); // Gegner als "getroffen" markieren
+                            spawnParticles(e.x, e.y, '#00ffff', 5); playSound('hit');
+                            e.x += Math.cos(b.angle) * 10; // Gegner zurückstoßen
+                            e.y += Math.sin(b.angle) * 10;
+                        }
+                    } 
+                    else if (b.type === 'flame') {
+                        e.burnTimer = 90; // Gegner brennt für 1,5 Sekunden
+                        e.hp -= b.dmg;
+                        bullets.splice(j,1);
+                    }
+                    else { 
+                        e.hp -= b.dmg; 
+                        bullets.splice(j,1);
+                        spawnParticles(e.x,e.y,e.color,3); playSound('hit');
+                    }
+                   if(e.hp<=0){
                         score+=e.score;
                         splatters.push(new Splatter(e.x,e.y,e.color));
                         if(e.type===99){activeBoss=null;floatingTexts.push(new FloatingText(e.x,e.y,"BEFÖRDERUNG ABGELEHNT!","#ffd700"));screenShake=50;items.push(new Item('briefcase',e.x,e.y));showToast("BOSS BESIEGT!","#ffd700","Beförderung abgelehnt!");}
@@ -1492,6 +1634,25 @@ function loop(){
                         spawnParticles(e.x,e.y,'#fff',8);
                         if(player.isMartin&&Math.random()<.3){let sh=["NOCHMAL!","BEINE WEG!","ALARM!","GEWÜRM!","VOLLE PULLE!"];floatingTexts.push(new FloatingText(e.x,e.y,sh[Math.floor(Math.random()*sh.length)],"#fff"));}
                         break;
+                    }
+                }
+            }
+        }
+       // --- ORBIT-MAUS KOLLISION ---
+        if (player.weaponType === 'mouse') {
+            let mx = player.x + Math.cos(player.orbitAngle) * 90;
+            let my = player.y + Math.sin(player.orbitAngle) * 90 - 10;
+            for (let e of enemies) {
+                if (Math.hypot(e.x - mx, e.y - my) < e.radius + 15) {
+                    if (e.mouseCooldown <= 0) {
+                        e.hp -= (25 + player.dmgBonus);
+                        e.mouseCooldown = 15; // Verhindert, dass er 60x pro Sekunde Schaden frisst
+                        spawnParticles(e.x, e.y, '#fff', 5);
+                        playSound('hit');
+                        // Knockback
+                        let a = Math.atan2(e.y - my, e.x - mx);
+                        e.x += Math.cos(a) * 20;
+                        e.y += Math.sin(a) * 20;
                     }
                 }
             }
@@ -1534,7 +1695,7 @@ function loop(){
                 switch(item.type){
                     case 'chicken': player.hp=Math.min(player.maxHp,player.hp+30);spawnParticles(item.x,item.y,'#d35400',10);playSound('powerup');showToast("STÄRKUNG! 🍗","#d35400","+30 Gesundheit");break;
                     case 'vodka':   player.vodkaTimer=300;spawnParticles(item.x,item.y,'#0984e3',10);playSound('vodka');showToast(player.isMartin?"PATIENT NULL! 🍺":"WAFFE BLOCKIERT! 🍺",player.isMartin?"#0f0":"#f00",player.isMartin?"Unbesiegbar & giftig!":"KURWA...");break;
-                    case 'crate':   {const w=['minigun','shotgun','rocket','uzi','ak47'];player.equipWeapon(w[Math.floor(Math.random()*w.length)]);spawnParticles(item.x,item.y,'#8e44ad',15);break;}
+                    case 'crate':   const w=['minigun','shotgun','rocket','uzi','ak47', 'railgun', 'flamer', 'mouse'];player.equipWeapon(w[Math.floor(Math.random()*w.length)]);;spawnParticles(item.x,item.y,'#8e44ad',15);break;}
                     case 'shield':  player.shieldTimer=600;playSound('powerup');showToast("SCHUTZSCHILD! 🛡️","#00f","Immunität für 10 Sek");floatingTexts.push(new FloatingText(player.x,player.y,"SCHUTZSCHILD!","#00f"));break;
                     case 'bug':     player.bugTimer=600;playSound('bug');spawnParticles(item.x,item.y,'#f0f',20);showToast("JANSKIS HOTFIX! 💾","#f0f","Steuerung invertiert...");break;
                     case 'hammer':  player.hammerEffectTimer=120;playSound('hammer');screenShake=30;for(let k=enemies.length-1;k>=0;k--){if(enemies[k].type!==99){score+=Math.max(1,Math.floor(enemies[k].score*.1));splatters.push(new Splatter(enemies[k].x,enemies[k].y,enemies[k].color));enemies.splice(k,1);}else enemies[k].hp-=500;}showToast("RAMADAMA! 🔨","#e74c3c","Schleichst eich!");break;
@@ -1621,6 +1782,7 @@ window.addEventListener('click',()=>{
 </script>
 </body>
 </html>
+
 
 
 
