@@ -847,7 +847,14 @@ function checkGameOver(){
         document.getElementById('meeting-text').style.display='none';
         document.getElementById('sapOverlay').style.display='none';
         clearAllToasts();
+        // --- AUDIO FIX: Ingame Musik aus, Main Menü Musik an ---
+        bgMusic.pause(); // Stoppt den Action-Track
+        let mm = document.getElementById('menuMusic');
+        if(mm) {
+            mm.currentTime = 0; // Spult Menü-Musik auf Anfang
+            mm.play().catch(()=>{}); // Startet das Leitstand-Theme
     }
+}
 }
 
 // ============================================================
@@ -934,6 +941,7 @@ class Player{
         this.stunned=0;
         this.sapDebuffTimer=0;   // SAP-Update debuff
         this.azubiCost=5000;
+        this.mouseTimer=0;
     this.suppe=0;
         this._shiftToastFired=-1;
       // --- NEU: HECHTROLLE ---
@@ -1062,6 +1070,7 @@ class Player{
         if(this.hammerEffectTimer>0)this.hammerEffectTimer--;
         if(this.bossSpawnTimer>0)   this.bossSpawnTimer--;
         if(this.crateFlashTimer>0)  this.crateFlashTimer--;
+        if(this.mouseTimer>0) this.mouseTimer--;
 
         // Vodka
         if(this.vodkaTimer>0){
@@ -1104,16 +1113,20 @@ class Player{
     }
 
     equipWeapon(type){
+        if(type === 'mouse') {
+            this.mouseTimer = 1800; // Orbit Maus als Passiv-Buff (30 Sek)
+            showToast("ORBIT-MAUS!", "#0ff", "AKTIVIERT (30 SEK)");
+            return; // Beendet Funktion hier, ersetzt NICHT die Hauptwaffe
+        }
         this.weaponType=type; this.weaponTimer=1800;
-        let fr = {minigun:4, uzi:7, ak47:6, shotgun:40, rocket:60, railgun:50, flamer:3, mouse:999}[type] || 20;
-        let upg=getUpgradeLevel('fire_rate');
-        this.fireRate=Math.max(2,fr-Math.ceil(fr*0.15*upg));
+        let fr={minigun:4,uzi:7,ak47:6,shotgun:40,rocket:60,railgun:50,flamer:3}[type]||20;
+        this.fireRate=Math.max(2,fr-Math.ceil(fr*0.15*getUpgradeLevel('fire_rate')));
         this.crateFlashTimer=120; flashScreen=10;
-        showToast("WAFFE ERHALTEN!","#00ffff",type.toUpperCase());
+        showToast("WAFFE ERHALTEN!", "#0ff", type.toUpperCase());
     }
 
     shoot(){
-        if(this.weaponType === 'mouse') return; // Maus schießt nicht, sie kreist!
+        // if(this.weaponType === 'mouse') return; // Maus schießt nicht, sie kreist!
         
         let offset=this.isMartin?-20:-10;
         let angle=Math.atan2(input.y-(this.y+offset-camera.y), input.x-(this.x-camera.x));
@@ -1162,20 +1175,11 @@ class Player{
         if(this.shieldTimer>0){ctx.beginPath();ctx.arc(0,0,50,0,Math.PI*2);ctx.strokeStyle=`rgba(0,255,255,${.5+Math.sin(frame*.2)*.5})`;ctx.lineWidth=3;ctx.stroke();this.shieldTimer--;}
         if(this.sapDebuffTimer>0){ctx.beginPath();ctx.arc(0,0,55,0,Math.PI*2);ctx.strokeStyle=`rgba(31,97,141,${.6+Math.sin(frame*.3)*.4})`;ctx.lineWidth=4;ctx.stroke();}
         // --- NEU: DIE KREISENDE MAUS ZEICHNEN ---
-        if (this.weaponType === 'mouse') {
-            let mx = Math.cos(this.orbitAngle) * 90;
-            let my = Math.sin(this.orbitAngle) * 90 - 10;
-            
-            // Kabel
-            ctx.strokeStyle = '#555'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(mx, my); ctx.stroke();
-            
-            // Maus
-            ctx.fillStyle = '#ccc';
-            ctx.save(); ctx.translate(mx, my); ctx.rotate(this.orbitAngle + Math.PI/2);
-            ctx.fillRect(-6, -10, 12, 20); // Gehäuse
-            ctx.fillStyle = '#f00'; ctx.fillRect(-2, -8, 4, 4); // Roter Laser/Scrollrad
-            ctx.restore();
+        // --- ORBIT MAUS (Passiv) ---
+        if(this.mouseTimer > 0){
+            let ox=Math.cos(this.orbitAngle)*180, oy=Math.sin(this.orbitAngle)*180-10;
+            ctx.strokeStyle='#555'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(ox,oy); ctx.stroke();
+            ctx.fillStyle='#ccc'; ctx.save(); ctx.translate(ox,oy); ctx.rotate(this.orbitAngle+Math.PI/2); ctx.fillRect(-6,-10,12,20); ctx.fillStyle='#f00'; ctx.fillRect(-2,-8,4,4); ctx.restore();
         }
        ctx.globalAlpha=1; ctx.filter="none"; ctx.restore();
     }
@@ -1832,8 +1836,8 @@ function loop(){
         }
        // --- ORBIT-MAUS KOLLISION ---
         if (player.weaponType === 'mouse') {
-            let mx = player.x + Math.cos(player.orbitAngle) * 90;
-            let my = player.y + Math.sin(player.orbitAngle) * 90 - 10;
+            let mx = player.x + Math.cos(player.orbitAngle) * 180;
+            let my = player.y + Math.sin(player.orbitAngle) * 180 - 10;
             for (let e of enemies) {
                 if (Math.hypot(e.x - mx, e.y - my) < e.radius + 15) {
                     if (e.mouseCooldown <= 0) {
@@ -2031,6 +2035,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
