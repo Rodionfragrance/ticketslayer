@@ -1209,7 +1209,7 @@ class Item{
         if(this.life < 120 && this.life % 10 < 5) ctx.globalAlpha = 0.3;
         ctx.font = '40px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.shadowColor = "rgba(0,0,0,.8)"; ctx.shadowBlur = 8;
-        const icons = {chicken:'🍗',vodka:'🍺',crate:'📦',bug:'💾',hammer:'🔨',vacation:'💤',bike:'🚲',shield:'🛡️',nuke:'☢️',briefcase:'💼'};
+        const icons = {chicken:'🍗',vodka:'🍺',crate:'📦',bug:'💾',hammer:'🔨',vacation:'💤',bike:'🚲',shield:'🛡️',nuke:'☢️',briefcase:'💼',suppe:'🥣'};
         ctx.fillText(icons[this.type] || '?', 0, 0);
         ctx.restore();
     }
@@ -1526,7 +1526,7 @@ function spawnLogic(){
     if(frame%Math.floor(sr)===0) enemies.push(new Enemy());
 
     // Items
-    if(Math.random()<0.02){ // Bisschen mehr Drops generieren
+    if(Math.random()<0.40){ // Bisschen mehr Drops generieren
         let r=Math.random();
         if     (r<0.45) items.push(new Item('suppe')); // 30% Chance auf Suppe
         else if(r<0.55) items.push(new Item('crate')); 
@@ -2074,6 +2074,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
