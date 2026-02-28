@@ -937,11 +937,14 @@ class Player{
         this.x=WORLD_WIDTH/2; this.y=300;
         this.radius=22; this.speed=5;
         this.hp=100; this.maxHp=100;
-        this.lastShot=0; this.fireRate=8;
         this.dmgBonus=0;
         this.isMartin=false; this.promoTriggered=false;
         this.vodkaTimer=0;
-        this.weaponType='standard'; this.weaponTimer=0;
+        
+        // --- NEU: Waffen-Arsenal ---
+        this.activeWeapons = {}; // Speichert alle aktiven Waffen + Timer
+        this.lastShot = {};      // Speichert den letzten Schuss pro Waffe
+        
         this.shieldTimer=0;
         this.bugTimer=0; this.deliveryTimer=0;
         this.hammerSpawnTimer=0; this.hammerEffectTimer=0;
@@ -951,18 +954,17 @@ class Player{
         this.crateFlashTimer=0;
         this.inMeeting=false; this.meetingProgress=0;
         this.stunned=0;
-        this.sapDebuffTimer=0;   // SAP-Update debuff
+        this.sapDebuffTimer=0;   
         this.azubiCost=5000;
         this.mouseTimer=0;
         this.orangeHp = 0;
         this.orangeTimer = 0;
         this.suppe=0;
         this._shiftToastFired=-1;
-      // --- NEU: HECHTROLLE ---
-        this.rollTimer = 0;      // Wie lange die Rolle noch aktiv ist (i-frames)
-        this.rollCooldown = 0;   // Wann man wieder rollen darf
-        this.rollDx = 0;         // Richtung X
-        this.rollDy = 0;         // Richtung Y
+        this.rollTimer = 0;      
+        this.rollCooldown = 0;   
+        this.rollDx = 0;         
+        this.rollDy = 0;         
         applyUpgradesToPlayer(this);
     }
 
@@ -980,39 +982,31 @@ class Player{
         if(this.stunned>0){this.stunned--;return;}
         if(this.inMeeting){return;}
 
-       // --- HECHTROLLE COOLDOWN & AKTIVITÄT ---
         if (this.rollCooldown > 0) this.rollCooldown--;
         
         if (this.rollTimer > 0) {
-            // Während der Rolle: Sehr schnell bewegen & Unverwundbar
             this.rollTimer--;
             let nx = this.x + this.rollDx;
             let ny = this.y + this.rollDy;
             if(!checkWallCollision(nx, this.y, this.radius)) this.x = Math.max(this.radius, Math.min(WORLD_WIDTH-this.radius, nx));
             if(!checkWallCollision(this.x, ny, this.radius)) this.y = Math.max(this.radius, Math.min(WORLD_HEIGHT-this.radius, ny));
-            
-            // Partikel-Effekt für die Rolle (Staub)
             spawnParticles(this.x, this.y + 20, '#ccc', 1);
-            return; // Beendet update() hier -> kein Schießen/Gehen während der Rolle!
-        }
-
-        // --- HECHTROLLE AUSLÖSEN ---
-        // Auslösen per Rechtsklick (button 2) oder Shift-Taste
-        if ((input.keys['ShiftLeft'] || input.rightClick) && this.rollCooldown <= 0 && this.sapDebuffTimer <= 0) {
-            let angle = Math.atan2(input.worldY - this.y, input.worldX - this.x);
-            this.rollDx = Math.cos(angle) * 15; // Roll-Speed
-            this.rollDy = Math.sin(angle) * 15;
-            this.rollTimer = 15;      // Rolle dauert 15 Frames (0.25 Sek)
-            this.rollCooldown = 120;  // 2 Sekunden Cooldown
-            playSound('delivery');    // "Swoosh" Sound
-            input.rightClick = false; // Reset
             return; 
         }
 
-       // --- NEU: MAUS ROTATION ---
+        if ((input.keys['ShiftLeft'] || input.rightClick) && this.rollCooldown <= 0 && this.sapDebuffTimer <= 0) {
+            let angle = Math.atan2(input.worldY - this.y, input.worldX - this.x);
+            this.rollDx = Math.cos(angle) * 15; 
+            this.rollDy = Math.sin(angle) * 15;
+            this.rollTimer = 15;      
+            this.rollCooldown = 120;  
+            playSound('delivery');    
+            input.rightClick = false; 
+            return; 
+        }
+
         this.orbitAngle = (this.orbitAngle || 0) + 0.15;
 
-        // [B] Azubi
         if(input.keys['KeyB']&&score>=this.azubiCost){
             turrets.push(new Turret(this.x,this.y));
             score-=this.azubiCost;
@@ -1020,40 +1014,22 @@ class Player{
             showToast("AZUBI EINGESTELLT!","#00ff00",`-${this.azubiCost} Punkte`);
             input.keys['KeyB']=false;
         }
-        // [F] Farm
         if(input.keys['KeyF']){tryActivateFarm();input.keys['KeyF']=false;}
-
-        // Evolution
         if(score>=2500&&!this.isMartin&&!this.promoTriggered) this.triggerEvolution();
 
-        // [E] Interaktion
         if(input.keys['KeyE']){
             for(let s of stations){
-                if(s.type==='hardware_store' && Math.hypot(this.x-s.x-s.w/2, this.y-s.y-s.h/2) < 150){
-                    openKloskaShop();
-                    input.keys['KeyE'] = false;
-                }
+                if(s.type==='hardware_store' && Math.hypot(this.x-s.x-s.w/2, this.y-s.y-s.h/2) < 150){ openKloskaShop(); input.keys['KeyE'] = false; }
                 if(s.type==='chicken_truck'&&Math.hypot(this.x-s.x-s.w/2,this.y-s.y-s.h/2)<150&&this.hp<this.maxHp){
-                    this.hp++;
-                    if(frame%10===0) spawnParticles(this.x,this.y,'#d35400',1);
+                    this.hp++; if(frame%10===0) spawnParticles(this.x,this.y,'#d35400',1);
                     if(frame%30===0) floatingTexts.push(new FloatingText(this.x,this.y-60,"ABMAHNUNG!","#f00"));
                 }
             }
-            if(idocEvent&&Math.hypot(this.x-idocEvent.x,this.y-idocEvent.y)<100){
-                idocEvent=null; score+=2000; removePersistentToast();
-                floatingTexts.push(new FloatingText(this.x,this.y,"PROBLEM GELÖST!","#0f0"));
-                showToast("PROBLEM GELÖST!","#00ff00","+2000 Punkte — Gegner eingefroren");
-                enemies.forEach(e=>e.freezeTimer=300);
-            }
-            if(kloskaEvent&&Math.hypot(this.x-kloskaEvent.x,this.y-kloskaEvent.y)<120){
-                kloskaEvent=null; score+=1500; removePersistentToast();
-                floatingTexts.push(new FloatingText(this.x,this.y,"KLOSKA VERJAGT!","#0f0"));
-                showToast("KLOSKA VERJAGT!","#00ff00","Server gerettet! (+1500 Pkt)");
-            }
+            if(idocEvent&&Math.hypot(this.x-idocEvent.x,this.y-idocEvent.y)<100){ idocEvent=null; score+=2000; removePersistentToast(); floatingTexts.push(new FloatingText(this.x,this.y,"PROBLEM GELÖST!","#0f0")); showToast("PROBLEM GELÖST!","#00ff00","+2000 Punkte — Gegner eingefroren"); enemies.forEach(e=>e.freezeTimer=300); }
+            if(kloskaEvent&&Math.hypot(this.x-kloskaEvent.x,this.y-kloskaEvent.y)<120){ kloskaEvent=null; score+=1500; removePersistentToast(); floatingTexts.push(new FloatingText(this.x,this.y,"KLOSKA VERJAGT!","#0f0")); showToast("KLOSKA VERJAGT!","#00ff00","Server gerettet! (+1500 Pkt)"); }
         }
-        // [G] Vacation
+        
         if(input.keys['KeyG']&&this.vacationTimer<=0) this.activateVacation();
-        // [Q] Coffee
         if(input.keys['KeyQ']){
             for(let s of stations){
                 if(s.type==='coffee_machine'&&Math.hypot(this.x-s.x-s.w/2,this.y-s.y-s.h/2)<100){
@@ -1063,27 +1039,18 @@ class Player{
             }
         }
 
-        // Schichtwechsel Toast (einmalig)
         if(shiftTimer<180&&this._shiftToastFired!==currentShift){
             this._shiftToastFired=currentShift;
-            const names=["FRÜHSCHICHT ☀️","SPÄTSCHICHT 🌆","NACHTSCHICHT 🌙"];
-            const colors=["#fff","#ff9900","#6699ff"];
-            const subs=["Normalbetrieb","Erhöhtes Aufkommen","Doppelte Punkte! Sicht eingeschränkt."];
+            const names=["FRÜHSCHICHT ☀️","SPÄTSCHICHT 🌆","NACHTSCHICHT 🌙"]; const colors=["#fff","#ff9900","#6699ff"]; const subs=["Normalbetrieb","Erhöhtes Aufkommen","Doppelte Punkte! Sicht eingeschränkt."];
             showToast("SCHICHTWECHSEL",colors[currentShift],names[currentShift]+" — "+subs[currentShift]);
         }
 
-        // Timer ticks
         if(this.vacationTimer>0){this.vacationTimer--;if(frame%60===0&&this.hp<this.maxHp)this.hp+=2;}
         if(this.bikeTimer>0)        this.bikeTimer--;
         if(this.speedBoostTimer>0)  this.speedBoostTimer--;
         if(this.sapDebuffTimer>0){  this.sapDebuffTimer--; if(this.sapDebuffTimer<=0){ document.getElementById('sapOverlay').style.display='none'; showToast("SAP-UPDATE ABGESCHLOSSEN","#1f618d","Speed wiederhergestellt"); } }
-        if(this.weaponTimer>0){     this.weaponTimer--; if(this.weaponTimer<=0){this.weaponType='standard';this.fireRate=8;applyUpgradesToPlayer(this);} }
         if(this.bugTimer>0)         this.bugTimer--;
-        if(this.orangeTimer > 0) {
-    this.orangeTimer--;
-} else {
-    this.orangeHp = 0; // Zeit abgelaufen, Rache-HP verfallen
-}
+        if(this.orangeTimer > 0) { this.orangeTimer--; } else { this.orangeHp = 0; }
         if(this.deliveryTimer>0)    this.deliveryTimer--;
         if(this.hammerSpawnTimer>0) this.hammerSpawnTimer--;
         if(this.hammerEffectTimer>0)this.hammerEffectTimer--;
@@ -1091,7 +1058,12 @@ class Player{
         if(this.crateFlashTimer>0)  this.crateFlashTimer--;
         if(this.mouseTimer>0) this.mouseTimer--;
 
-        // Vodka
+        // --- NEU: Zählt Timer von ALLEN aktiven Waffen runter ---
+        for(let w in this.activeWeapons){
+            this.activeWeapons[w]--;
+            if(this.activeWeapons[w] <= 0) delete this.activeWeapons[w];
+        }
+
         if(this.vodkaTimer>0){
             this.vodkaTimer--;
             if(this.isMartin){
@@ -1101,7 +1073,6 @@ class Player{
             if(frame%4===0){this.x+=(Math.random()-.5)*10;this.y+=(Math.random()-.5)*10;}
         }
 
-        // Movement
         let dx=0,dy=0;
         if(input.keys['KeyW'])dy=-1; if(input.keys['KeyS'])dy=1;
         if(input.keys['KeyA'])dx=-1; if(input.keys['KeyD'])dx=1;
@@ -1110,7 +1081,7 @@ class Player{
         let spd=this.speed;
         if(this.bikeTimer>0)       spd=10;
         if(this.speedBoostTimer>0) spd+=3;
-        if(this.sapDebuffTimer>0)  spd=Math.max(1, spd-3); // SAP debuff: heavy slow
+        if(this.sapDebuffTimer>0)  spd=Math.max(1, spd-3); 
 
         if(dx!==0||dy!==0){
             let len=Math.sqrt(dx*dx+dy*dy); dx/=len; dy/=len;
@@ -1119,9 +1090,31 @@ class Player{
             if(!checkWallCollision(this.x,ny,this.radius)) this.y=Math.max(this.radius,Math.min(WORLD_HEIGHT-this.radius,ny));
         }
 
-        // Shoot
+        // --- NEU: Schießt alle aktiven Waffen gleichzeitig ---
         let canShoot=(this.vodkaTimer<=0)||this.isMartin;
-        if((input.mouseDown||(this.weaponType==='uzi'&&this.bikeTimer>0))&&frame-this.lastShot>this.fireRate&&canShoot){this.shoot();this.lastShot=frame;}
+        let isShooting = input.mouseDown || (this.activeWeapons['uzi'] && this.bikeTimer > 0);
+        
+        if(isShooting && canShoot) {
+            let wepKeys = Object.keys(this.activeWeapons);
+            if(wepKeys.length === 0) {
+                // Nur Standardwaffe
+                let fr = Math.max(2, 20 - Math.ceil(20 * 0.15 * getUpgradeLevel('fire_rate')));
+                if(frame - (this.lastShot['standard']||0) > fr) {
+                    this.shootWeapon('standard');
+                    this.lastShot['standard'] = frame;
+                }
+            } else {
+                // ALLE Waffen im Arsenal feuern (unterschiedliche Feuerraten werden beachtet)
+                for(let w of wepKeys) {
+                    let frBase = {minigun:4,uzi:7,ak47:6,shotgun:40,rocket:60,railgun:50,flamer:3}[w]||20;
+                    let fr = Math.max(2, frBase - Math.ceil(frBase * 0.15 * getUpgradeLevel('fire_rate')));
+                    if(frame - (this.lastShot[w]||0) > fr) {
+                        this.shootWeapon(w);
+                        this.lastShot[w] = frame;
+                    }
+                }
+            }
+        }
     }
 
     triggerEvolution(){
@@ -1133,44 +1126,40 @@ class Player{
 
     equipWeapon(type){
         if(type === 'mouse') {
-            this.mouseTimer = 1800; // Orbit Maus als Passiv-Buff (30 Sek)
+            this.mouseTimer = 1800; 
             showToast("ORBIT-MAUS!", "#0ff", "AKTIVIERT (30 SEK)");
-            return; // Beendet Funktion hier, ersetzt NICHT die Hauptwaffe
+            return; 
         }
-        this.weaponType=type; this.weaponTimer=1800;
-        let fr={minigun:4,uzi:7,ak47:6,shotgun:40,rocket:60,railgun:50,flamer:3}[type]||20;
-        this.fireRate=Math.max(2,fr-Math.ceil(fr*0.15*getUpgradeLevel('fire_rate')));
+        // Waffe wird hinzugefügt oder Timer resettet
+        this.activeWeapons[type] = 1800;
         this.crateFlashTimer=120; flashScreen=10;
-        showToast("WAFFE ERHALTEN!", "#0ff", type.toUpperCase());
+        showToast("ARSENAL ERWEITERT!", "#0ff", type.toUpperCase());
     }
 
-    shoot(){
-        // if(this.weaponType === 'mouse') return; // Maus schießt nicht, sie kreist!
-        
+    shootWeapon(w){
         let offset=this.isMartin?-20:-10;
         let angle=Math.atan2(input.y-(this.y+offset-camera.y), input.x-(this.x-camera.x));
-        if(this.weaponType==='uzi'&&this.bikeTimer>0&&!input.mouseDown) angle=Math.random()*Math.PI*2;
+        if(w==='uzi'&&this.bikeTimer>0&&!input.mouseDown) angle=Math.random()*Math.PI*2;
         
         let dmg=10+this.dmgBonus;
         let recoil = 0;
         
-        if(this.weaponType==='shotgun')    {for(let i=-2;i<=2;i++) bullets.push(new Bullet(this.x,this.y+offset,angle+i*0.15,'standard',dmg)); playSound('shoot'); recoil=3;}
-        else if(this.weaponType==='minigun'){bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.4,'standard',dmg)); playSound('shoot');}
-        else if(this.weaponType==='uzi')   {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.1,'standard',dmg)); playSound('shoot');}
-        else if(this.weaponType==='ak47')  {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.05,'standard',dmg)); playSound('shoot'); recoil=1;}
-        else if(this.weaponType==='rocket'){bullets.push(new Bullet(this.x,this.y+offset,angle,'rocket',dmg)); playSound('shoot'); recoil=5;}
-        else if(this.weaponType==='railgun'){
+        if(w==='shotgun')    {for(let i=-2;i<=2;i++) bullets.push(new Bullet(this.x,this.y+offset,angle+i*0.15,'standard',dmg)); playSound('shoot'); recoil=3;}
+        else if(w==='minigun'){bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.4,'standard',dmg)); playSound('shoot');}
+        else if(w==='uzi')   {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.1,'standard',dmg)); playSound('shoot');}
+        else if(w==='ak47')  {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.05,'standard',dmg)); playSound('shoot'); recoil=1;}
+        else if(w==='rocket'){bullets.push(new Bullet(this.x,this.y+offset,angle,'rocket',dmg)); playSound('shoot'); recoil=5;}
+        else if(w==='railgun'){
             bullets.push(new Bullet(this.x,this.y+offset,angle,'railgun',dmg*5)); 
-            playSound('boss'); // Dicker Sound
-            recoil = 8; screenShake = 8; // Fetter Rückstoß
+            playSound('boss'); 
+            recoil = 8; screenShake = 8; 
         }
-        else if(this.weaponType==='flamer'){
+        else if(w==='flamer'){
             for(let i=0; i<3; i++) bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.3,'flame',dmg*0.3));
             if(frame%5===0) playSound('shoot'); 
         }
         else {bullets.push(new Bullet(this.x,this.y+offset,angle,'standard',dmg)); playSound('shoot');}
         
-        // Rückstoß anwenden
         this.x -= Math.cos(angle) * recoil;
         this.y -= Math.sin(angle) * recoil;
     }
@@ -1182,19 +1171,13 @@ class Player{
         if(this.bikeTimer>0) ctx.translate(0,Math.sin(frame*.5)*3);
         if(this.bugTimer>0){ ctx.translate((Math.random()-.5)*5,(Math.random()-.5)*5); ctx.filter="hue-rotate("+Math.random()*360+"deg)"; }
         if(this.vacationTimer>0) ctx.globalAlpha=.5;
-        if(this.rollTimer > 0) {
-            ctx.globalAlpha = 0.5;
-            // Spieler dreht sich visuell bei der Rolle
-            ctx.rotate(this.rollTimer * 0.5); 
-        }
+        if(this.rollTimer > 0) { ctx.globalAlpha = 0.5; ctx.rotate(this.rollTimer * 0.5); }
         let w=60,h=this.isMartin?90:60;
         if(img&&img.complete&&img.naturalHeight!==0){ ctx.drawImage(img,-w/2,-h/2,w,h); }
         else{ ctx.fillStyle=this.isMartin?'gold':'#e67e22'; ctx.fillRect(-w/2,-h/2,w,h); }
         if(this.vodkaTimer>0){ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(255,0,0,.3)';ctx.fillRect(-w/2,-h/2,w,h);ctx.globalCompositeOperation='source-over';}
         if(this.shieldTimer>0){ctx.beginPath();ctx.arc(0,0,50,0,Math.PI*2);ctx.strokeStyle=`rgba(0,255,255,${.5+Math.sin(frame*.2)*.5})`;ctx.lineWidth=3;ctx.stroke();this.shieldTimer--;}
         if(this.sapDebuffTimer>0){ctx.beginPath();ctx.arc(0,0,55,0,Math.PI*2);ctx.strokeStyle=`rgba(31,97,141,${.6+Math.sin(frame*.3)*.4})`;ctx.lineWidth=4;ctx.stroke();}
-        // --- NEU: DIE KREISENDE MAUS ZEICHNEN ---
-        // --- ORBIT MAUS (Passiv) ---
         if(this.mouseTimer > 0){
             let ox=Math.cos(this.orbitAngle)*180, oy=Math.sin(this.orbitAngle)*180-10;
             ctx.strokeStyle='#555'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(ox,oy); ctx.stroke();
@@ -1704,21 +1687,37 @@ function drawWorld(){
 function updateHUD(){
     let rallyInfo = player.orangeHp > 0 ? ` (+${Math.ceil(player.orangeHp)})` : "";
     document.getElementById('hud-hp').innerText = Math.floor(player.hp) + "%" + rallyInfo;
-    document.getElementById('hud-hp').innerText=Math.floor(player.hp)+"%";
-    document.getElementById('hud-score').innerText=score;
-    document.getElementById('hud-slips').innerText=player.yellowSlips;
-    document.getElementById('hud-suppe').innerText=player.suppe||0;
-    document.getElementById('hud-kb').innerText=kaffeebons;
-    document.getElementById('hud-weapon-name').innerText=player.weaponType.toUpperCase();
-    document.getElementById('hud-shift').innerText=currentShift===0?"FRÜH":(currentShift===1?"SPÄT":"NACHT");
-    let fi=document.getElementById('hud-face');
-    let ts=player.isMartin?"maddinl.png":"wurml.png";
-    if(!fi.src.includes(ts)) fi.src=ts;
-    let wb=document.getElementById('weapon-bar');
-    if(player.weaponType==='standard'){wb.style.width="0%";}
-    else{
-        wb.style.width=((player.weaponTimer/1800)*100)+"%";
-        wb.style.backgroundColor=player.weaponType==='minigun'?'#ff00ff':(player.weaponType==='rocket'?'#ff3333':'#33ccff');
+    
+    document.getElementById('hud-score').innerText = score;
+    document.getElementById('hud-slips').innerText = player.yellowSlips;
+    document.getElementById('hud-suppe').innerText = player.suppe || 0;
+    document.getElementById('hud-kb').innerText = kaffeebons;
+    document.getElementById('hud-shift').innerText = currentShift === 0 ? "FRÜH" : (currentShift === 1 ? "SPÄT" : "NACHT");
+    
+    let fi = document.getElementById('hud-face');
+    let ts = player.isMartin ? "maddinl.png" : "wurml.png";
+    if(fi && !fi.src.includes(ts)) fi.src = ts;
+    
+    // --- HUD LOGIK FÜR DAS WAFFEN ARSENAL ---
+    let wb = document.getElementById('weapon-bar');
+    let wn = document.getElementById('hud-weapon-name');
+    let wepKeys = Object.keys(player.activeWeapons);
+    
+    if(wepKeys.length === 0){
+        wn.innerText = "STANDARD";
+        wb.style.width = "0%";
+    } else if(wepKeys.length === 1){
+        // Nur eine Spezialwaffe aktiv
+        wn.innerText = wepKeys[0].toUpperCase();
+        wb.style.width = ((player.activeWeapons[wepKeys[0]] / 1800) * 100) + "%";
+        wb.style.backgroundColor = wepKeys[0] === 'minigun' ? '#ff00ff' : (wepKeys[0] === 'rocket' ? '#ff3333' : '#33ccff');
+    } else {
+        // Multi-Weapon Mode! (Mehrere aktiv)
+        wn.innerText = "ARSENAL (" + wepKeys.length + "X)";
+        // Der Balken zeigt den Timer der Waffe, die am längsten hält
+        let maxT = Math.max(...Object.values(player.activeWeapons));
+        wb.style.width = ((maxT / 1800) * 100) + "%";
+        wb.style.backgroundColor = '#ffeb3b'; // Leuchtend Gold für Multi-Kill
     }
 }
 
@@ -2075,6 +2074,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
