@@ -737,8 +737,8 @@ function playSound(type) {
         osc.connect(gain); gain.connect(audioCtx.destination);
         const t=audioCtx.currentTime, v=AUDIO_CONFIG.sfxVolume;
         switch(type){
-            case 'shoot':   osc.type='square';   osc.frequency.setValueAtTime(300,t); osc.frequency.exponentialRampToValueAtTime(50,t+0.1); gain.gain.setValueAtTime(0.05*v,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.1); osc.start(t); osc.stop(t+0.1); break;
-            case 'hit':     osc.type='sawtooth'; osc.frequency.setValueAtTime(100,t); osc.frequency.exponentialRampToValueAtTime(0.01,t+0.1); gain.gain.setValueAtTime(0.1*v,t); gain.gain.linearRampToValueAtTime(0,t+0.1); osc.start(t); osc.stop(t+0.1); break;
+            case 'shoot':   osc.type='square';   osc.frequency.setValueAtTime(300,t); osc.frequency.exponentialRampToValueAtTime(50,t+0.1); gain.gain.setValueAtTime(0.25*v,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.1); osc.start(t); osc.stop(t+0.1); break;
+            case 'hit':     osc.type='sawtooth'; osc.frequency.setValueAtTime(100,t); osc.frequency.exponentialRampToValueAtTime(0.01,t+0.1); gain.gain.setValueAtTime(0.2*v,t); gain.gain.linearRampToValueAtTime(0,t+0.1); osc.start(t); osc.stop(t+0.1); break;
             case 'alarm':   osc.type='square';   osc.frequency.setValueAtTime(600,t); osc.frequency.linearRampToValueAtTime(800,t+0.5); gain.gain.setValueAtTime(0.5*v,t); gain.gain.linearRampToValueAtTime(0,t+0.5); osc.start(t); osc.stop(t+0.5); break;
             case 'meeting': osc.type='sawtooth'; osc.frequency.setValueAtTime(200,t); osc.frequency.linearRampToValueAtTime(100,t+1.0); gain.gain.setValueAtTime(0.5*v,t); osc.start(t); osc.stop(t+1.0); break;
             case 'vacation':osc.type='triangle'; osc.frequency.setValueAtTime(300,t); osc.frequency.linearRampToValueAtTime(50,t+1.0); gain.gain.setValueAtTime(0.3*v,t); osc.start(t); osc.stop(t+1.0); break;
@@ -746,7 +746,7 @@ function playSound(type) {
             case 'bug':     osc.type='square';   osc.frequency.setValueAtTime(100,t); osc.frequency.linearRampToValueAtTime(50,t+0.5); gain.gain.setValueAtTime(0.3*v,t); osc.start(t); osc.stop(t+0.5); break;
             case 'hammer':  osc.type='sawtooth'; osc.frequency.setValueAtTime(100,t); gain.gain.setValueAtTime(0.8*v,t); osc.start(t); osc.stop(t+0.2); break;
             case 'delivery':osc.type='sine';     osc.frequency.setValueAtTime(600,t); gain.gain.setValueAtTime(0.3*v,t); osc.start(t); osc.stop(t+0.5); break;
-            case 'boss':    osc.type='sawtooth'; osc.frequency.setValueAtTime(150,t); gain.gain.setValueAtTime(0.3*v,t); osc.start(t); osc.stop(t+1.0); break;
+            case 'boss':    osc.type='sawtooth'; osc.frequency.setValueAtTime(150,t); gain.gain.setValueAtTime(0.15*v,t); osc.start(t); osc.stop(t+1.0); break;
             case 'evolve':  osc.type='square';   osc.frequency.setValueAtTime(200,t); gain.gain.setValueAtTime(0.3*v,t); osc.start(t); osc.stop(t+1.5); break;
             case 'sap':     osc.type='sawtooth'; osc.frequency.setValueAtTime(60,t); osc.frequency.linearRampToValueAtTime(40,t+1.0); gain.gain.setValueAtTime(0.4*v,t); gain.gain.linearRampToValueAtTime(0,t+1.0); osc.start(t); osc.stop(t+1.0); break;
             case 'teleport':osc.type='sine';     osc.frequency.setValueAtTime(800,t); osc.frequency.exponentialRampToValueAtTime(200,t+0.3); gain.gain.setValueAtTime(0.2*v,t); gain.gain.linearRampToValueAtTime(0,t+0.3); osc.start(t); osc.stop(t+0.3); break;
@@ -1693,7 +1693,7 @@ function updateHUD(){
     let rallyInfo = player.orangeHp > 0 ? ` (+${Math.ceil(player.orangeHp)})` : "";
     document.getElementById('hud-hp').innerText = Math.floor(player.hp) + "%" + rallyInfo;
     document.getElementById('hud-hp').innerText=Math.floor(player.hp)+"%";
-    // document.getElementById('hud-score').innerText=score;
+    document.getElementById('hud-score').innerText=score;
     document.getElementById('hud-slips').innerText=player.yellowSlips;
     document.getElementById('hud-suppe').innerText=player.suppe||0;
     document.getElementById('hud-kb').innerText=kaffeebons;
@@ -2063,6 +2063,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
