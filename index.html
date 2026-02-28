@@ -31,27 +31,36 @@ canvas { display:block; cursor:crosshair; }
 #loadStatus    { color:#666; font-size:12px; font-family:'Courier New',monospace; }
 
 /* ============================================================
-   TOAST NOTIFICATIONS
+   TOAST NOTIFICATIONS (Zentriert & Ersetzend)
    ============================================================ */
 #toastContainer {
-    position:absolute; top:20px; right:20px;
-    width:500px; z-index:2000;
-    display:flex; flex-direction:column; gap:12px;
+    position:absolute; 
+    bottom:110px; /* Direkt über dem HUD (HUD ist 85px hoch) */
+    left:50%; 
+    transform:translateX(-50%);
+    width:500px; 
+    z-index:2000;
+    display:flex; flex-direction:column; gap:12px; 
     pointer-events:none;
 }
 .toast {
-    background:rgba(0,0,0,0.95); border-left:8px solid #f00;
-    padding:18px 26px; color:#fff;
-    font-family:'Courier New',monospace; font-size:26px; font-weight:bold;
+    background:rgba(0,0,0,0.95); 
+    border-left:8px solid #f00; 
+    padding:18px 26px; 
+    color:#fff;
+    font-family:'Courier New',monospace; 
+    font-size:26px; 
+    font-weight:bold;
     border-radius:4px; text-transform:uppercase;
-    animation:toastIn 0.18s ease, toastOut 0.4s ease 10.2s forwards;
+    animation:toastIn 0.2s ease, toastOut 0.4s ease 2.2s forwards;
     box-shadow:0 4px 24px rgba(0,0,0,0.8);
+    text-align:center; /* Zentrierter Text sieht unten besser aus */
 }
 .toast.persistent { animation:toastIn 0.2s ease; }
-.toast .toast-title { display:block; font-size:26px; }
-.toast .toast-sub   { display:block; font-size:22px; color:#aaa; margin-top:6px; font-weight:normal; }
-@keyframes toastIn  { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
-@keyframes toastOut { to  {transform:translateX(110%);opacity:0} }
+.toast .toast-title { display:block; font-size:26px; } 
+.toast .toast-sub   { display:block; font-size:22px; color:#aaa; margin-top:6px; font-weight:normal; } 
+@keyframes toastIn  { from{transform:translateY(40px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes toastOut { to  {transform:translateY(40px);opacity:0} }
 
 /* ============================================================
    EMAIL OVERLAY
@@ -794,14 +803,18 @@ window.addEventListener('contextmenu', e => e.preventDefault());
 // SECTION 8 — TOAST SYSTEM
 // ============================================================
 let persistentToastEl=null;
-function showToast(text, color='#f00', subtitle='', persistent=false){
-    const container=document.getElementById('toastContainer');
-    const toast=document.createElement('div');
-    toast.className='toast'+(persistent?' persistent':'');
-    toast.style.borderLeftColor=color;
-    toast.innerHTML=`<span class="toast-title" style="color:${color}">${text}</span>${subtitle?`<span class="toast-sub">${subtitle}</span>`:''}`;
-    if(persistent){ removePersistentToast(); persistentToastEl=toast; container.insertBefore(toast,container.firstChild); }
-    else           { container.appendChild(toast); setTimeout(()=>toast.parentNode&&toast.parentNode.removeChild(toast),2700); }
+function showToast(text, color='#f00', subtitle='') {
+    const c = document.getElementById('toastContainer');
+    c.innerHTML = ''; // ALTE MELDUNG SOFORT ABLÖSEN
+    
+    const t = document.createElement('div'); 
+    t.className = 'toast'; 
+    t.style.borderLeftColor = color;
+    
+    t.innerHTML = `<span style="color:${color}; display:block; font-size:26px; font-weight:bold;">${text}</span>${subtitle ? `<span style="color:#aaa; font-size:22px; display:block; margin-top:6px; font-weight:normal;">${subtitle}</span>` : ''}`;
+    
+    c.appendChild(t); 
+    setTimeout(()=> { if(t.parentNode) t.parentNode.removeChild(t); }, 2700);
 }
 function removePersistentToast(){ if(persistentToastEl && persistentToastEl.parentNode) persistentToastEl.parentNode.removeChild(persistentToastEl); persistentToastEl=null; }
 function clearAllToasts(){ document.getElementById('toastContainer').innerHTML=''; persistentToastEl=null; }
@@ -2018,6 +2031,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
