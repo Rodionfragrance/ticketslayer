@@ -1500,25 +1500,25 @@ function spawnLogic(){
     if(frame%Math.floor(sr)===0) enemies.push(new Enemy());
 
     // Items
-    if(Math.random()<0.012){ // Bisschen mehr Drops generieren
+    if(Math.random()<0.02){ // Bisschen mehr Drops generieren
         let r=Math.random();
-        if     (r<0.30) items.push(new Item('suppe')); // 30% Chance auf Suppe
-        else if(r<0.40) items.push(new Item('crate')); 
-        else if(r<0.50) items.push(new Item('shield'));
-        else if(r<0.60) items.push(new Item('vodka'));
-        else if(r<0.75) items.push(new Item('chicken'));
-        else if(r<0.90) items.push(new Item('vacation'));
-        else if(r<0.96){if(player.isMartin)items.push(new Item('bike'));else items.push(new Item('bug'));}
-        else if(r<0.99){items.push(new Item('hammer'));playSound('delivery');player.hammerSpawnTimer=180;}
+        if     (r<0.45) items.push(new Item('suppe')); // 30% Chance auf Suppe
+        else if(r<0.55) items.push(new Item('crate')); 
+        else if(r<0.65) items.push(new Item('shield'));
+        else if(r<0.75) items.push(new Item('vodka'));
+        else if(r<0.85) items.push(new Item('chicken'));
+        else if(r<0.93) items.push(new Item('vacation'));
+        else if(r<0.98){if(player.isMartin)items.push(new Item('bike'));else items.push(new Item('bug'));}
+        else if{items.push(new Item('hammer'));playSound('delivery');player.hammerSpawnTimer=180;}
     }
 
     // IDOC
     if(!idocEvent&&frame%3000===1000){
         let sv=servers[Math.floor(Math.random()*servers.length)];
         if(sv){
-            idocEvent={x:sv.x,y:sv.y,label:Math.random()>.5?"PROZESSAUSFALL!":"AUFTRAGSFREIGABE!",timer:900};
+            idocEvent={x:sv.x,y:sv.y,label:Math.random()>.5?"PROZESSAUSFALL!":"AUFTRAGSFREIGABE!",timer:1800};
             playSound('alarm');
-            showToast("🚨 "+idocEvent.label,"#f00","Rotem Pfeil folgen → [E] drücken! (15 Sek)",true);
+            showToast("🚨 "+idocEvent.label,"#f00","Rotem Pfeil folgen → [E] drücken! (30 Sek)",true);
         }
        // KLOSKA EVENT (greift Farmen an)
     if(!kloskaEvent && serverFarms.length > 0 && frame % 2500 === 1800) {
@@ -1528,7 +1528,7 @@ function spawnLogic(){
             serverRef: farm.serverRef,
             x: farm.serverRef.x - 40, // Er steht links daneben
             y: farm.serverRef.y + 10,
-            timer: 900 // 15 Sekunden Zeit
+            timer: 1800 // 30 Sekunden Zeit
         };
         playSound('alarm');
         showToast("⚠️ ALARM!", "#ff00ff", "Kloska ist im Serverraum unterwegs!", true);
@@ -1846,8 +1846,14 @@ function loop(){
                 if(currentShift===2) score+=Math.floor(e.score*.5);
                 splatters.push(new Splatter(e.x,e.y,e.color));
                 if(e.type===99){activeBoss=null;floatingTexts.push(new FloatingText(e.x,e.y,"GIFTIGES ARBEITSKLIMA!","#ffd700"));screenShake=50;items.push(new Item('briefcase',e.x,e.y));showToast("BOSS BESIEGT!","#ffd700","Giftiges Arbeitsklima beseitigt!");}
-                if(Math.random()<.2){let l=Math.random();if(l<.4)items.push(new Item('crate',e.x,e.y));else if(l<.7)items.push(new Item('chicken',e.x,e.y));else items.push(new Item('vodka',e.x,e.y));}
-                enemies.splice(i,1); spawnParticles(e.x,e.y,'#0f0',5);
+                // Gegner droppen jetzt zu 25% etwas. Die Hälfte davon ist Suppe!
+                if(Math.random() < 0.25){
+                    let l=Math.random();
+                    if     (l < 0.50) items.push(new Item('suppe', e.x, e.y)); 
+                    else if(l < 0.70) items.push(new Item('crate', e.x, e.y));
+                    else if(l < 0.90) items.push(new Item('chicken', e.x, e.y));
+                    else              items.push(new Item('vodka', e.x, e.y));
+                }                enemies.splice(i,1); spawnParticles(e.x,e.y,'#0f0',5);
             }
         }
 
@@ -2012,3 +2018,4 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
