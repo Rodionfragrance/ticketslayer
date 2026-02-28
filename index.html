@@ -1526,7 +1526,7 @@ function spawnLogic(){
     if(frame%Math.floor(sr)===0) enemies.push(new Enemy());
 
     // Items
-    if(Math.random()<0.40){ // Bisschen mehr Drops generieren
+    if(Math.random()<0.02){ // Bisschen mehr Drops generieren
         let r=Math.random();
         if     (r<0.45) items.push(new Item('suppe')); // 30% Chance auf Suppe
         else if(r<0.55) items.push(new Item('crate')); 
@@ -1903,7 +1903,7 @@ function loop(){
                 splatters.push(new Splatter(e.x,e.y,e.color));
                 if(e.type===99){activeBoss=null;floatingTexts.push(new FloatingText(e.x,e.y,"GIFTIGES ARBEITSKLIMA!","#ffd700"));screenShake=50;items.push(new Item('briefcase',e.x,e.y));showToast("BOSS BESIEGT!","#ffd700","Giftiges Arbeitsklima beseitigt!");}
                 // Gegner droppen jetzt zu 25% etwas. Die Hälfte davon ist Suppe!
-                if(Math.random() < 0.30){
+                if(Math.random() < 0.40){
                     let l=Math.random();
                     if     (l < 0.50) items.push(new Item('suppe', e.x, e.y)); 
                     else if(l < 0.70) items.push(new Item('crate', e.x, e.y));
@@ -2074,6 +2074,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
