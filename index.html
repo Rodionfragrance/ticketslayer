@@ -1192,7 +1192,7 @@ class Item{
         if(x!==undefined&&y!==undefined){this.x=x;this.y=y;this.radius=15;}
         else{let safe=false,att=0;while(!safe&&att<50){this.x=Math.random()*(WORLD_WIDTH-100)+50;this.y=Math.random()*(WORLD_HEIGHT-100)+50;this.radius=15;if(!checkWallCollision(this.x,this.y,this.radius+10))safe=true;att++;}}
         this.type=type; this.bobOffset=Math.random()*100;
-        this.life=(this.type==='bug'||this.type==='briefcase')?Infinity:1000;
+        this.life=(this.type==='bug'||this.type==='briefcase'||this.type==='suppe')?Infinity:1000;
     }
     draw() {
         let bob = Math.sin((frame + this.bobOffset) / 20) * 5;
@@ -1903,7 +1903,7 @@ function loop(){
                 splatters.push(new Splatter(e.x,e.y,e.color));
                 if(e.type===99){activeBoss=null;floatingTexts.push(new FloatingText(e.x,e.y,"GIFTIGES ARBEITSKLIMA!","#ffd700"));screenShake=50;items.push(new Item('briefcase',e.x,e.y));showToast("BOSS BESIEGT!","#ffd700","Giftiges Arbeitsklima beseitigt!");}
                 // Gegner droppen jetzt zu 25% etwas. Die Hälfte davon ist Suppe!
-                if(Math.random() < 0.25){
+                if(Math.random() < 0.40){
                     let l=Math.random();
                     if     (l < 0.50) items.push(new Item('suppe', e.x, e.y)); 
                     else if(l < 0.70) items.push(new Item('crate', e.x, e.y));
@@ -2074,6 +2074,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
