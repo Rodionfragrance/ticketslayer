@@ -1226,24 +1226,23 @@ class Bullet {
         this.angle = angle;
         
         if (type === 'rocket') this.speed = 12;
-        else if (type === 'railgun') this.speed = 35; // Extrem schnell
-        else if (type === 'flame') this.speed = 6 + Math.random() * 3; // Langsame Flammen
+        else if (type === 'railgun') this.speed = 35;
+        else if (type === 'flame') this.speed = 10 + Math.random() * 4; // Deutlich schnellerer Start
         else this.speed = 18;
         
         this.dx = Math.cos(angle) * this.speed; 
         this.dy = Math.sin(angle) * this.speed;
-        this.life = type === 'flame' ? 25 : 60; // Flammen sterben schneller
-        this.size = type === 'flame' ? 5 : 4;
+        this.life = type === 'flame' ? 45 : 60; // Leben von 25 auf 45 Frames erhöht (mehr Reichweite)
+        this.size = type === 'flame' ? 6 : 4;
         
-        this.hitEnemies = []; // Merkt sich, wen die Railgun schon durchschlagen hat
+        this.hitEnemies = [];
     }
     update() {
         this.x += this.dx; this.y += this.dy; this.life--;
-        // Flamme wird größer und langsamer
         if (this.type === 'flame') {
-            this.size += 1.5; 
-            this.dx *= 0.85; 
-            this.dy *= 0.85;
+            this.size += 1.8; // Wird breiter
+            this.dx *= 0.96; // Bremst viel weicher ab (vorher 0.85 = Wand)
+            this.dy *= 0.96;
         }
     }
     draw() {
@@ -1253,11 +1252,11 @@ class Bullet {
         } else if (this.type === 'railgun') {
             ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
             ctx.fillStyle = '#00ffff'; ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 15;
-            ctx.fillRect(-20, -3, 40, 6); // Dicker blauer Strahl
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(-20, -1, 40, 2); // Weißer Kern
+            ctx.fillRect(-20, -3, 40, 6); 
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(-20, -1, 40, 2); 
             ctx.restore();
         } else if (this.type === 'flame') {
-            ctx.fillStyle = `rgba(255, ${Math.floor(Math.random()*150)}, 0, ${this.life/25})`;
+            ctx.fillStyle = `rgba(255, ${Math.floor(Math.random()*150)}, 0, ${this.life/45})`;
             ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
         } else {
             ctx.fillStyle='#ffeb3b'; ctx.beginPath(); ctx.arc(this.x,this.y,4,0,Math.PI*2); ctx.fill();
@@ -1357,7 +1356,7 @@ class Enemy{
                 enemies.forEach(oe=>{
                     if(oe!==this&&oe.type!==1&&oe.type!==99&&oe.type!==6){
                         if(Math.hypot(oe.x-this.x,oe.y-this.y)<800&&Math.abs(Math.atan2(oe.y-this.y,oe.x-this.x)-atp)<0.2){
-                            oe.type=2;oe.color='#e67e22';oe.hp=120;oe.label="PRIO2";oe.symbol="⚡";
+                            oe.type=2;oe.color='#e67e22';oe.hp=120;oe.maxHp=120;oe.label="PRIO2";oe.symbol="⚡";
                         }
                     }
                 });
@@ -1852,20 +1851,21 @@ function loop(){
             }
         }
        // --- ORBIT-MAUS KOLLISION ---
-        if (player.weaponType === 'mouse') {
+        if (player.mouseTimer > 0) {
             let mx = player.x + Math.cos(player.orbitAngle) * 180;
             let my = player.y + Math.sin(player.orbitAngle) * 180 - 10;
             for (let e of enemies) {
-                if (Math.hypot(e.x - mx, e.y - my) < e.radius + 15) {
+                // Hitbox von 15 auf 35 vergrößert, damit sie bei hohem Speed trifft
+                if (Math.hypot(e.x - mx, e.y - my) < e.radius + 35) {
                     if (e.mouseCooldown <= 0) {
-                        e.hp -= (25 + player.dmgBonus);
-                        e.mouseCooldown = 15; // Verhindert, dass er 60x pro Sekunde Schaden frisst
-                        spawnParticles(e.x, e.y, '#fff', 5);
+                        e.hp -= (50 + player.dmgBonus); // Schaden von 25 auf 50 verdoppelt!
+                        e.mouseCooldown = 15; 
+                        spawnParticles(e.x, e.y, '#f00', 8); // Rotes Blutspritzen für besseres Treffer-Feedback
                         playSound('hit');
-                        // Knockback
+                        // Brutaler Knockback
                         let a = Math.atan2(e.y - my, e.x - mx);
-                        e.x += Math.cos(a) * 20;
-                        e.y += Math.sin(a) * 20;
+                        e.x += Math.cos(a) * 40;
+                        e.y += Math.sin(a) * 40;
                     }
                 }
             }
@@ -2063,6 +2063,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
