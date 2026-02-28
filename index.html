@@ -564,12 +564,30 @@ function loadHighscores() {
     });
 }
 function saveHighscoreAndRestart() {
-    let name=(document.getElementById('playerName').value||"ANONYM").toUpperCase().substring(0,10);
-    if(db && score>0){
-        db.collection("highscores").add({name,score,difficulty:currentDiffLabel,date:firebase.firestore.FieldValue.serverTimestamp()})
-          .then(()=>{ loadHighscores(); startGame(lastChosenDifficulty); })
-          .catch(()=>startGame(lastChosenDifficulty));
-    } else { startGame(lastChosenDifficulty); }
+    // 1. Zuerst das Profil speichern (Kaffeebons sichern!)
+    saveProgress(); 
+    
+    let name = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim().substring(0,10);
+    
+    if(db && score > 0) {
+        // 2. Highscore in die Datenbank schreiben (mit robustem Datums-Format)
+        db.collection("highscores").add({
+            name: name, 
+            score: score, 
+            difficulty: currentDiffLabel, 
+            date: new Date().toISOString()
+        })
+        .then(() => { 
+            loadHighscores(); // Top 5 sofort aktualisieren
+            startGame(lastChosenDifficulty); 
+        })
+        .catch((e) => { 
+            console.error("FIREBASE HIGHSCORE ERROR:", e); // Falls was blockiert, sehen wir es in F12
+            startGame(lastChosenDifficulty); 
+        });
+    } else { 
+        startGame(lastChosenDifficulty); 
+    }
 }
 
 // ============================================================
@@ -2063,6 +2081,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
