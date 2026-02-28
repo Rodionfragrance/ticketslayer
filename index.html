@@ -1509,7 +1509,7 @@ function spawnLogic(){
         else if(r<0.85) items.push(new Item('chicken'));
         else if(r<0.93) items.push(new Item('vacation'));
         else if(r<0.98){if(player.isMartin)items.push(new Item('bike'));else items.push(new Item('bug'));}
-        else if{items.push(new Item('hammer'));playSound('delivery');player.hammerSpawnTimer=180;}
+        else if(r<0.99){items.push(new Item('hammer'));playSound('delivery');player.hammerSpawnTimer=180;}
     }
 
     // IDOC
@@ -2018,4 +2018,5 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
