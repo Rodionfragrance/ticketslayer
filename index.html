@@ -610,6 +610,7 @@ function saveHighscoreAndRestart() {
             name: name, 
             score: score, 
             difficulty: currentDiffLabel, 
+            collapseTime: systemCollapse ? (collapseTimer / 60).toFixed(1) : 0,
             date: new Date().toISOString()
         })
         .then(() => { 
@@ -834,6 +835,8 @@ let player=null;
 let bullets=[], enemies=[], particles=[], obstacles=[], stations=[];
 let servers=[], items=[], splatters=[], floatingTexts=[], turrets=[], shells=[];
 let serverFarms=[];   // {serverRef, ticker}  — idle income
+let systemCollapse = false;
+let collapseTimer = 0;
 
 // Boss definitions
 const bosses=[
@@ -898,6 +901,14 @@ function triggerServerExplosion(x,y){ screenShake=30;playSound('hammer');spawnPa
 function checkGameOver(){
     if(player.hp<=0){
         gameRunning=false;
+       if(systemCollapse) {
+            document.getElementById('goTitle').innerText = "SYSTEM TOTALAUSFALL";
+            document.getElementById('goTitle').style.color = "#f00";
+            showToast("KOLLAPS BEENDET", "#f00", `Du hieltst ${(collapseTimer/60).toFixed(1)}s stand!`);
+        } else {
+            document.getElementById('goTitle').innerText = "ARBEITSUNFALL";
+            document.getElementById('goTitle').style.color = "#f00";
+        }
         let earned=earnKaffeebons(score);
         document.getElementById('finalScore').innerText=score;
         document.getElementById('goEarnedKB').innerText=earned;
@@ -1676,6 +1687,19 @@ function generateWorld(){
 // SECTION 13 — SPAWN & EVENT LOGIC
 // ============================================================
 function spawnLogic(){
+   if(systemCollapse) {
+        collapseTimer++;
+        // Spawnt nur noch Prio 1 Gegner, wird alle paar Sekunden schneller
+        let rate = Math.max(15, 120 - Math.floor(collapseTimer / 300));
+        if(frame % rate === 0) {
+            let p1 = new Enemy();
+            p1.type = 1; p1.color = '#c0392b'; p1.hp = 450; p1.maxHp = 450;
+            p1.speed = 1.2 + (collapseTimer / 1800); // Werden schleichend schneller
+            p1.radius = 50; p1.label = "TOTALAUSFALL"; p1.symbol = "☠";
+            enemies.push(p1);
+        }
+        return; // Verhindert, dass normale Gegner oder Bosse spawnen
+    }
     if(frame%600===0) difficulty+=0.1;
 
     // Boss
@@ -2008,14 +2032,26 @@ function loop(){
                         bullets.splice(j,1);
                     }
                     else { 
-                        e.hp -= b.dmg; 
-                        bullets.splice(j,1);
-                        spawnParticles(e.x,e.y,e.color,3); playSound('hit');
+                        // Verhindert, dass dieselbe Kugel einen Gegner im selben Frame 2x trifft
+                        if (!b.hitEnemies.includes(e)) {
+                            e.hp -= b.dmg; 
+                            b.hitEnemies.push(e);
+                            spawnParticles(e.x, e.y, e.color, 3); 
+                            playSound('hit');
+                            
+                            // MOD: Brand-Munition (Gegner fackelt 3 Sekunden lang)
+                            if(player.hasFireMod) e.burnTimer = 180; 
+                            
+                            // MOD: Durchschuss (Kugel wird erst nach 2 Treffern gelöscht)
+                            if(!player.hasPierceMod || b.hitEnemies.length >= 2) {
+                                bullets.splice(j, 1);
+                            }
+                        }
                     }
                    if(e.hp<=0){
                         score+=e.score;
                         splatters.push(new Splatter(e.x,e.y,e.color));
-                        if(e.type===99){activeBoss=null;floatingTexts.push(new FloatingText(e.x,e.y,"BEFÖRDERUNG ABGELEHNT!","#ffd700"));screenShake=50;items.push(new Item('briefcase',e.x,e.y));showToast("BOSS BESIEGT!","#ffd700","Beförderung abgelehnt!");}
+                        // if(e.type===99){activeBoss=null;floatingTexts.push(new FloatingText(e.x,e.y,"BEFÖRDERUNG ABGELEHNT!","#ffd700"));screenShake=50;items.push(new Item('briefcase',e.x,e.y));showToast("BOSS BESIEGT!","#ffd700","Beförderung abgelehnt!");}
                         if(splatters.length>200) splatters.shift();
                         enemies.splice(i,1);
                         spawnParticles(e.x,e.y,'#fff',8);
@@ -2065,8 +2101,24 @@ function loop(){
                 score+=e.score;
                 if(currentShift===2) score+=Math.floor(e.score*.5);
                 splatters.push(new Splatter(e.x,e.y,e.color));
-                if(e.type===99){activeBoss=null;floatingTexts.push(new FloatingText(e.x,e.y,"GIFTIGES ARBEITSKLIMA!","#ffd700"));screenShake=50;items.push(new Item('briefcase',e.x,e.y));showToast("BOSS BESIEGT!","#ffd700","Giftiges Arbeitsklima beseitigt!");}
-                // Gegner droppen jetzt zu 25% etwas. Die Hälfte davon ist Suppe!
+                //if(e.type===99){activeBoss=null;floatingTexts.push(new FloatingText(e.x,e.y,"GIFTIGES ARBEITSKLIMA!","#ffd700"));screenShake=50;items.push(new Item('briefcase',e.x,e.y));showToast("BOSS BESIEGT!","#ffd700","Giftiges Arbeitsklima beseitigt!");}
+                if(e.type===99){
+                    activeBoss = null;
+                    if(e.label === "PETER BAYER") {
+                        systemCollapse = true;
+                        collapseTimer = 0;
+                        enemies = []; // Alle normalen Tickets löschen
+                        flashScreen = 100; 
+                        playSound('alarm');
+                        showToast("SYSTEM-KOLLAPS!", "#f00", "ÜBERLEBE DAS CHAOS!");
+                    } else {
+                        floatingTexts.push(new FloatingText(e.x,e.y,"PROJEKT ABGESCHLOSSEN!","#ffd700"));
+                        screenShake = 50;
+                        items.push(new Item('briefcase',e.x,e.y));
+                        showToast("BOSS BESIEGT!","#ffd700","Projekt abgeschlossen!");
+                    }
+                }
+               // Gegner droppen jetzt zu 25% etwas. Die Hälfte davon ist Suppe!
                 if(Math.random() < 0.10){
                     let l=Math.random();
                     if     (l < 0.20) items.push(new Item('suppe', e.x, e.y));   // Nur noch 20% Suppe
@@ -2147,7 +2199,13 @@ function loop(){
         }
         // Flash
         if(flashScreen>0){ctx.fillStyle=`rgba(255,255,255,${flashScreen/50})`;ctx.fillRect(player.x-1000,player.y-1000,2000,2000);flashScreen*=.9;if(flashScreen<.1)flashScreen=0;}
-        ctx.restore();
+       if(systemCollapse) {
+            ctx.fillStyle = `rgba(255, 0, 0, ${0.1 + Math.sin(frame * 0.1) * 0.1})`;
+            ctx.fillRect(player.x - 2000, player.y - 2000, 4000, 4000);
+            ctx.fillStyle = "#f00"; ctx.font = "bold 40px Courier New"; ctx.textAlign = "center";
+            ctx.fillText(`KOLLAPS-STATUS: ${(collapseTimer/60).toFixed(1)}s`, player.x, player.y - 150);
+        } 
+       ctx.restore();
 
         requestAnimationFrame(loop);
     } catch(err){ alert("ERROR: "+err.message); console.error(err); gameRunning=false; }
@@ -2174,6 +2232,7 @@ function startGame(diff=1){
     currentBossStage=0;activeBoss=null;
     currentShift=0;shiftTimer=0;
     gamePaused=false;idocEvent=null;meetingZone=null;kloskaEvent=null;
+    systemCollapse = false; collapseTimer = 0;
     enemies=[];bullets=[];particles=[];items=[];splatters=[];floatingTexts=[];turrets=[];shells=[];serverFarms=[];
     clearAllToasts();
 
@@ -2260,6 +2319,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
