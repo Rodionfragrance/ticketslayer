@@ -594,6 +594,11 @@ function loadHighscores() {
     });
 }
 function saveHighscoreAndRestart() {
+   // Allzeit-Highscore für Shop-Unlocks sichern
+    let currentBest = parseInt(localStorage.getItem('ts_best_score') || '0');
+    if (score > currentBest) {
+        localStorage.setItem('ts_best_score', score);
+    }
     // 1. Zuerst das Profil speichern (Kaffeebons sichern!)
     saveProgress(); 
     
@@ -624,14 +629,16 @@ function saveHighscoreAndRestart() {
 // SECTION 3 — META-PROGRESSION (Kaffeebons + Upgrades)
 // ============================================================
 const UPGRADES_DEF = [
-    { id:'max_hp',      name:'Eiserner Magen',   icon:'❤️',  desc:'Start-HP +25',              baseCost:80,  costMult:1.5, maxLevel:5, apply:(p,lvl)=>{ p.maxHp+=25*lvl; p.hp=p.maxHp; } },
-    { id:'speed',       name:'Laufschuhe',        icon:'👟',  desc:'Grundspeed +0.5',            baseCost:120, costMult:1.6, maxLevel:4, apply:(p,lvl)=>{ p.speed+=0.5*lvl; } },
-    { id:'fire_rate',   name:'Trigger-Finger',    icon:'🔫',  desc:'Feuerrate +15%',             baseCost:150, costMult:1.7, maxLevel:4, apply:(p,lvl)=>{ p.fireRate=Math.max(2, p.fireRate - Math.ceil(p.fireRate*0.15*lvl)); } },
-    { id:'damage',      name:'Überstunden-Wut',   icon:'💢',  desc:'Schaden +5 pro Schuss',      baseCost:200, costMult:1.8, maxLevel:4, apply:(p,lvl)=>{ p.dmgBonus+=5*lvl; } },
-    { id:'vacation',    name:'Resturlaub',         icon:'🏖️',  desc:'Start-Urlaubstage +1',       baseCost:100, costMult:2.0, maxLevel:3, apply:(p,lvl)=>{ p.yellowSlips+=lvl; } },
-    { id:'azubi_cost',  name:'HR-Kontakte',        icon:'👷',  desc:'Azubi kostet -1000 Pkt',     baseCost:180, costMult:2.2, maxLevel:3, apply:(p,lvl)=>{ p.azubiCost=Math.max(1000,5000-1000*lvl); } },
-    { id:'farm_slots',  name:'Server-Optimierung', icon:'🖥️',  desc:'Max. Server-Farmen +1',      baseCost:250, costMult:2.0, maxLevel:3, apply:()=>{} },
-    { id:'kb_rate',     name:'Kaffee-Effizenz',    icon:'☕',  desc:'Kaffeebons-Ertrag +20%',     baseCost:300, costMult:2.5, maxLevel:3, apply:()=>{} },
+    { id:'max_hp',      name:'Eiserner Magen',   icon:'❤️',  desc:'Start-HP +25',              baseCost:80,  costMult:1.5, apply:(p,lvl)=>{ p.maxHp+=25*lvl; p.hp=p.maxHp; } },
+    { id:'speed',       name:'Laufschuhe',        icon:'👟',  desc:'Grundspeed +0.5',            baseCost:120, costMult:1.6, apply:(p,lvl)=>{ p.speed+=0.5*lvl; } },
+    { id:'fire_rate',   name:'Trigger-Finger',    icon:'🔫',  desc:'Feuerrate +15%',             baseCost:150, costMult:1.7, apply:(p,lvl)=>{ p.fireRate=Math.max(2, p.fireRate - Math.ceil(p.fireRate*0.15*lvl)); } },
+    { id:'damage',      name:'Überstunden-Wut',   icon:'💢',  desc:'Schaden +5 pro Schuss',      baseCost:200, costMult:1.8, apply:(p,lvl)=>{ p.dmgBonus+=5*lvl; } },
+    { id:'vacation',    name:'Resturlaub',         icon:'🏖️',  desc:'Start-Urlaubstage +1',       baseCost:100, costMult:2.0, apply:(p,lvl)=>{ p.yellowSlips+=lvl; } },
+    { id:'azubi_cost',  name:'HR-Kontakte',        icon:'👷',  desc:'Azubi kostet -1000 Pkt',     baseCost:180, costMult:2.2, apply:(p,lvl)=>{ p.azubiCost=Math.max(1000,5000-1000*lvl); } },
+    { id:'farm_slots',  name:'Server-Optimierung', icon:'🖥️',  desc:'Max. Server-Farmen +1',      baseCost:250, costMult:2.0, apply:()=>{} },
+    { id:'kb_rate',     name:'Kaffee-Effizenz',    icon:'☕',  desc:'Kaffeebons-Ertrag +20%',     baseCost:300, costMult:2.5, apply:()=>{} },
+    { id:'mod_fire',    name:'Brand-Munition',   icon:'🔥',  desc:'Gegner brennen (Ab 30k)',   baseCost:1000, costMult:3.0, minScore:30000, apply:(p,lvl)=>{ p.hasFireMod=true; } },
+    { id:'mod_pierce',  name:'Durchschuss',      icon:'🎯',  desc:'Kugeln durchschlagen (Ab 50k)',baseCost:1500, costMult:3.5, minScore:50000, apply:(p,lvl)=>{ p.hasPierceMod=true; } }
 ];
 
 let kaffeebons       = parseInt(localStorage.getItem('ts_kb') || '0');
@@ -702,25 +709,29 @@ function renderShop() {
     document.getElementById('shopKBAmount').innerText = kaffeebons;
     let grid = document.getElementById('shopGrid');
     grid.innerHTML = '';
+    
+    // Hol den besten Score
+    let best = parseInt(localStorage.getItem('ts_best_score') || '0');
+
     UPGRADES_DEF.forEach(upg => {
+        // Verstecke Mods, wenn Score zu niedrig
+        if (upg.minScore && best < upg.minScore) return;
+
         let lvl   = getUpgradeLevel(upg.id);
         let cost  = getUpgradeCost(upg);
-        let maxed = lvl >= upg.maxLevel;
-        let cantAfford = !maxed && kaffeebons < cost;
-        let cls = 'shop-item' + (maxed?' maxed':'') + (cantAfford?' cant-afford':'');
-        let priceHTML = maxed
-            ? '<span style="color:#0f0">✔ MAX</span>'
-            : `<span class="toast-icon">☕</span>${cost} KB`;
-        let stars = '';
-        for(let i=0; i<upg.maxLevel; i++) stars += `<span style="color:${i<lvl?'#00e5ff':'#333'}">${i<lvl?'★':'☆'}</span>`;
+        let cantAfford = kaffeebons < cost;
+        
+        let cls = 'shop-item' + (cantAfford?' cant-afford':'');
+        let levelDisplay = `<span style="color:#00e5ff">Stufe ${lvl}</span>`;
+        
         grid.innerHTML += `
             <div class="${cls}" onclick="buyUpgrade('${upg.id}')">
-                <div class="shop-item-level">${stars}</div>
+                <div class="shop-item-level">${levelDisplay}</div>
                 <div class="shop-item-icon">${upg.icon}</div>
                 <div>
                     <div class="shop-item-name">${upg.name}</div>
                     <div class="shop-item-desc">${upg.desc}</div>
-                    <div class="shop-item-price">${priceHTML}</div>
+                    <div class="shop-item-price"><span class="toast-icon">☕</span>${cost} KB</div>
                 </div>
             </div>`;
     });
@@ -729,8 +740,9 @@ function buyUpgrade(id) {
     let upg  = UPGRADES_DEF.find(u=>u.id===id);
     let lvl  = getUpgradeLevel(id);
     let cost = getUpgradeCost(upg);
-    if (lvl >= upg.maxLevel) return;
-    if (kaffeebons < cost) return;
+    
+    if (kaffeebons < cost) return; // Nur noch prüfen, ob man es sich leisten kann
+    
     kaffeebons -= cost;
     upgradeProgress[id] = lvl + 1;
     saveProgress();
@@ -2248,6 +2260,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
