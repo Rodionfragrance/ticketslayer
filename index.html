@@ -304,9 +304,9 @@ input[type="text"] {
 <!-- EMAIL OVERLAY -->
 <div id="emailOverlay">
     <div class="email-header">
-        <div class="email-row"><span class="email-label">VON:</span> IT-Leitstand &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8ce2e3fee9fce0f5ccf8e5efe7e9f8ffe0edf5e9fea2efe3fefc">[email&#160;protected]</a>&gt;</div>
+        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;admin@wurmzentrale.de&gt;</div>
         <div class="email-row"><span class="email-label">AN:</span> Alle Mitarbeiter</div>
-        <div class="email-row email-subject">WICHTIG: Neue Prozessanweisung V17 (Leitstand)</div>
+        <div class="email-row email-subject">WICHTIG: Neue Prozessanweisung V18 (Dopamin-Update)</div>
     </div>
     <div class="email-content">
         <p>Hallo Team,</p>
@@ -315,32 +315,46 @@ input[type="text"] {
         <h3>1. BASIS-STEUERUNG</h3>
         <ul>
             <li><span class="key-hint">WASD</span> + <span class="key-hint">Maus</span>: Bewegung &amp; Ticket-Bearbeitung.</li>
-            <li><span class="key-hint">E</span>: Interaktion (Heilen am Hähnchenwagen / Systemfehler beheben).</li>
-            <li><span class="key-hint">B</span>: <strong>Personal anfordern.</strong> Kostet 5000 Pkt. Platziert einen Azubi (Geschütz).</li>
+            <li><span class="key-hint">SHIFT</span> (Oder Rechtsklick): Hechtrolle. (Kurzzeitige Unverwundbarkeit).</li>
+            <li><span class="key-hint">E</span>: Interaktion (Heilen / IDOC fixen / Hardwarelager öffnen).</li>
+            <li><span class="key-hint">B</span>: <strong>Personal anfordern.</strong> Kostet 5000 Pkt. Platziert einen Azubi.</li>
+            <li><span class="key-hint">F</span>: <strong>Server-Farm aktivieren.</strong> Generiert passiv Punkte.</li>
             <li><span class="key-hint">G</span>: <strong>Krankmeldung.</strong> (Urlaubstag einlösen).</li>
-            <li><span class="key-hint">F</span>: <strong>Server-Farm aktivieren.</strong> Server in der Nähe als passive Einkommensquelle einrichten.</li>
         </ul>
-        <h3>2. ALARMSTUFEN</h3>
-        <p>Rotem Pfeil folgen → Terminal mit <span class="key-hint">E</span> reparieren. Zeitfenster: 15 Sekunden.</p>
-        <h3>3. SCHICHT-SYSTEM</h3>
+
+        <h3>2. NEUES WAFFEN-ARSENAL</h3>
+        <p>Waffen überschreiben sich nicht mehr. Eingesammelte Spezialwaffen werden gestapelt. Der Spieler feuert <strong>ALLE aktiven Waffen gleichzeitig</strong> ab, solange deren jeweiliger Timer läuft.</p>
+
+        <h3>3. RACHE-SYSTEM (ARBEITSZEITERFASSUNG)</h3>
+        <p>Erlittener Schaden wird im HUD orange markiert. Wird innerhalb von 2 Sekunden ein Ticket geschlossen (Kill), wird die orange markierte Gesundheit wiederhergestellt.</p>
+
+        <h3>4. V18 GEFAHREN & SABOTAGE</h3>
         <ul>
-            <li><strong>Frühschicht:</strong> Normalbetrieb.</li>
-            <li><strong>Spätschicht (Orange):</strong> Erhöhtes Aufkommen.</li>
-            <li><strong>Nachtschicht (Dunkel):</strong> Sicht eingeschränkt, <span class="h-highlight">DOPPELTE PUNKTE</span>.</li>
+            <li><strong>🧑 DER ANWENDER:</strong> Teleportiert sich zufällig auf der Fläche.</li>
+            <li><strong>💿 SAP-UPDATE:</strong> Reduziert bei Berührung das Lauftempo für 5 Sekunden massiv.</li>
+            <li><strong>KLOSKA SABOTAGE:</strong> Kloska greift gelegentlich Server-Farmen an. Er muss innerhalb von 30 Sekunden vertrieben werden, sonst wird der Server endgültig zerstört.</li>
+            <li><strong>PETER BAYER:</strong> Führt alle 5 Sekunden einen Flächenangriff (Stampfer) aus. Sichtbar durch roten Radius.</li>
         </ul>
-        <h3>4. NEUE GEGNER V17</h3>
+
+        <h3>5. HARDWARELAGER (KLOSKA SHOP)</h3>
+        <p>Das Hardwarelager kann auf der Karte mit <span class="key-hint">E</span> betreten werden. Zahlungsmittel ist Suppe (🥣). Das Sortiment umfasst:</p>
         <ul>
-            <li><strong>🧑 DER ANWENDER:</strong> Teleportiert sich zufällig. Unberechenbar — Vorsicht!</li>
-            <li><strong>💿 SAP-UPDATE:</strong> Langsam aber verursacht massiven Speed-Debuff bei Berührung. Bildschirm wird blau.</li>
+            <li>Orbit-Maus (Permanent) [10 🥣]</li>
+            <li>Defekter ThinClient (Stoppt IDOC-Alarme) [12 🥣]</li>
+            <li>Azubi-Armee (Spawnt 3 Geschütze) [8 🥣]</li>
+            <li>System-Reboot (Löscht alle Gegner) [20 🥣]</li>
         </ul>
-        <h3>5. SERVER-FARMEN (NEU)</h3>
-        <p>Steh neben einem Server und drücke <span class="key-hint">F</span>. Der Server generiert dann passiv Punkte. Bis zu 3 Farmen gleichzeitig.</p>
-        <h3>6. KAFFEEBONS (META-WÄHRUNG)</h3>
-        <p>Nach jedem Spiel erhältst du <strong style="color:#00e5ff">Kaffeebons</strong> basierend auf deinem Score. Investiere sie im <strong>UPGRADE-SHOP</strong> für permanente Verbesserungen!</p>
-        <h3>7. MEETING-RÄUME</h3>
-        <p>Blaue Zonen: <span class="key-hint">LEERTASTE</span> hämmern zum Entkommen.</p>
+
         <hr class="email-hr">
-        <p>Viel Erfolg.<br><em>Der Leitstand — V17 Patch Notes</em></p>
+        
+        <div style="margin-top: 25px; padding: 15px; background: #e8e8e8; border: 1px solid #ccc; font-size: 11px; color: #555; line-height: 1.4; text-align: justify;">
+            <strong>* INOFFIZIELLE LEITSTAND-NOTIZEN / SURVIVAL-TIPPS (NUR FÜR INTERNEN GEBRAUCH):</strong><br>
+            <i>(1) Bayers Stampfer ausnutzen:</i> Peter Bayer vernichtet bei seinem Sprungangriff alle Tickets in seinem roten Radius. Ziehe eine Horde Gegner in den Kreis, warte bis er springt und drücke im exakten Moment des Einschlags SHIFT (Hechtrolle). Du nimmst durch die i-Frames keinen Schaden, er tötet seine eigenen Leute und du kassierst +1000 Punkte für perfektes Ausweichen.<br>
+            <i>(2) Suppen-Wirtschaft:</i> Anders als Waffen-Kisten oder Wodka despawnt Suppe NIEMALS. Lass sie im Eifer des Gefechts ruhig liegen und sammle sie erst auf, wenn der Kloska-Shop in der Nähe ist oder die Welle abflacht.<br>
+            <i>(3) ThinClient vs. Reboot:</i> Wenn du 12 Suppen hast, kauf sofort den defekten ThinClient. Er schaltet die nervigen roten IDOC-Pfeile für den Rest des Runs komplett ab. Spar dir den "System-Reboot" (20 Suppen) zwingend als Panik-Button auf, wenn du komplett umzingelt bist oder ein Boss eskaliert.<br>
+            <i>(4) Arsenal-Eskalation:</i> Wenn du die Permanente Orbit-Maus hast, fahre durch die Gegnergruppen. Die Maus schlägt Gegner zurück, was das Einsammeln weiterer Kisten erleichtert. Kombiniere Raketenwerfer und Flammenwerfer, da der Rückstoß der Raketen dich automatisch aus der Gefahrenzone schiebt, während die Flammen den Bereich vor dir abschirmen.<br>
+            <i>(5) Aggressives Heilen:</i> Wenn du vom SAP-Update verlangsamt wurdest, renn nicht weg. Schieß sofort alles ab, was sich bewegt. Das Rache-System heilt dich, und du kannst die 5 langsamen Sekunden durch rohe Gewalt überleben.
+        </div>
     </div>
     <div class="close-hint" onclick="hideEmail()">ZURÜCK ZUM HAUPTMENÜ</div>
 </div>
@@ -2175,6 +2189,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
