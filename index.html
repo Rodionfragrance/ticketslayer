@@ -1982,10 +1982,10 @@ function loop(){
                 // Gegner droppen jetzt zu 25% etwas. Die Hälfte davon ist Suppe!
                 if(Math.random() < 0.10){
                     let l=Math.random();
-                    if     (l < 0.50) items.push(new Item('suppe', e.x, e.y)); 
-                    else if(l < 0.70) items.push(new Item('crate', e.x, e.y));
-                    else if(l < 0.90) items.push(new Item('chicken', e.x, e.y));
-                    else              items.push(new Item('vodka', e.x, e.y));
+                    if     (l < 0.20) items.push(new Item('suppe', e.x, e.y));   // Nur noch 20% Suppe
+                    else if(l < 0.60) items.push(new Item('crate', e.x, e.y));   // 40% Waffen-Kisten
+                    else if(l < 0.90) items.push(new Item('chicken', e.x, e.y)); // 30% Hähnchen
+                    else              items.push(new Item('vodka', e.x, e.y));   // 10% Vodka
                 }                enemies.splice(i,1); spawnParticles(e.x,e.y,'#0f0',5);
             }
         }
@@ -2173,5 +2173,6 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
