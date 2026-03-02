@@ -1601,7 +1601,7 @@ function spawnLogic(){
     if(frame%Math.floor(sr)===0) enemies.push(new Enemy());
 
     // Items
-    if(Math.random()<0.002){ // Bisschen mehr Drops generieren
+    if(Math.random()<0.01){ // Bisschen mehr Drops generieren
         let r=Math.random();
         if     (r<0.30) items.push(new Item('suppe')); // 30% Chance auf Suppe
         else if(r<0.55) items.push(new Item('crate')); 
@@ -2173,4 +2173,5 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
