@@ -382,29 +382,32 @@ input[type="text"] {
         <button class="btn-shop" onclick="openShop()" style="margin-top:10px;">☕ UPGRADE SHOP</button>
     </div>
     
-    <div id="kloskaShopScreen" class="panel" style="z-index:300;">
-        <h1 style="color:#9b59b6;">HARDWARELAGER</h1>
-        <p style="color:#fff; font-size:20px; font-style:italic;">"What are ya buying?"</p>
+    <div id="kloskaShopScreen" class="panel" style="z-index:300; background:#111; border-color:#9b59b6; width:600px;">
+        <div style="width:100%; height:180px; background:url('hardwarelager.png') center/cover; border:2px solid #555; margin-bottom:15px;"></div>
+        
+        <h1 style="color:#9b59b6; margin-bottom:5px;">HARDWARELAGER</h1>
+        <p style="color:#ccc; font-size:16px; font-style:italic; margin-top:0;">"What are ya buying?"</p>
         <p style="color:#ff9f43; font-weight:bold; font-size:24px;">Deine Suppen: <span id="shopSuppenCount">0</span> 🥣</p>
-        <div class="shop-grid" style="margin-top:20px;">
-            <div class="shop-item" onclick="buyKloskaItem('railgun', 8)">
-                <div class="shop-item-icon">⚡</div>
-                <div><div class="shop-item-name">RAILGUN</div><div class="shop-item-price" style="color:#ff9f43;">8 Suppen</div></div>
-            </div>
-            <div class="shop-item" onclick="buyKloskaItem('mouse', 5)">
+        
+        <div class="shop-grid" style="margin-top:20px; grid-template-columns: 1fr 1fr;">
+            <div class="shop-item" onclick="buyKloskaItem('perm_mouse', 10)" style="border-color:#9b59b6;">
                 <div class="shop-item-icon">🖱️</div>
-                <div><div class="shop-item-name">ORBIT-MAUS</div><div class="shop-item-price" style="color:#ff9f43;">5 Suppen</div></div>
+                <div><div class="shop-item-name">ORBIT-MAUS (PERMANENT)</div><div class="shop-item-desc">Kreist bis zum Ende des Runs.</div><div class="shop-item-price" style="color:#ff9f43;">10 Suppen</div></div>
             </div>
-            <div class="shop-item" onclick="buyKloskaItem('briefcase', 12)">
-                <div class="shop-item-icon">💼</div>
-                <div><div class="shop-item-name">MAX-HP +50</div><div class="shop-item-price" style="color:#ff9f43;">12 Suppen</div></div>
+            <div class="shop-item" onclick="buyKloskaItem('thinclient', 12)" style="border-color:#9b59b6;">
+                <div class="shop-item-icon">🖥️</div>
+                <div><div class="shop-item-name">DEFEKTER THINCLIENT</div><div class="shop-item-desc">Blockiert alle IDOC-Ausfälle.</div><div class="shop-item-price" style="color:#ff9f43;">12 Suppen</div></div>
             </div>
-            <div class="shop-item" onclick="buyKloskaItem('chicken', 3)">
-                <div class="shop-item-icon">🍗</div>
-                <div><div class="shop-item-name">HEILUNG (+30 HP)</div><div class="shop-item-price" style="color:#ff9f43;">3 Suppen</div></div>
+            <div class="shop-item" onclick="buyKloskaItem('azubi_army', 8)" style="border-color:#9b59b6;">
+                <div class="shop-item-icon">👷</div>
+                <div><div class="shop-item-name">AZUBI-ARMEE</div><div class="shop-item-desc">Spawnt sofort 3 Geschütze.</div><div class="shop-item-price" style="color:#ff9f43;">8 Suppen</div></div>
+            </div>
+            <div class="shop-item" onclick="buyKloskaItem('nuke', 20)" style="border-color:#f00;">
+                <div class="shop-item-icon">☢️</div>
+                <div><div class="shop-item-name" style="color:#f00;">SYSTEM-REBOOT</div><div class="shop-item-desc">Löscht ALLE Gegner auf der Map.</div><div class="shop-item-price" style="color:#ff9f43;">20 Suppen</div></div>
             </div>
         </div>
-        <button class="btn-easy" onclick="closeKloskaShop()" style="margin-top:20px; width:100%;">LAGER VERLASSEN</button>
+        <button class="btn-easy" onclick="closeKloskaShop()" style="margin-top:20px; width:100%; background:#222; border-color:#9b59b6; color:#9b59b6;">LAGER VERLASSEN</button>
     </div>
 </div>
 
@@ -940,6 +943,7 @@ class Player{
         this.dmgBonus=0;
         this.isMartin=false; this.promoTriggered=false;
         this.vodkaTimer=0;
+        this.idocBlocker = false;
         
         // --- NEU: Waffen-Arsenal ---
         this.activeWeapons = {}; // Speichert alle aktiven Waffen + Timer
@@ -985,11 +989,16 @@ class Player{
         if (this.rollCooldown > 0) this.rollCooldown--;
         
         if (this.rollTimer > 0) {
+            // Während der Rolle: Sehr schnell bewegen & Unverwundbar
             this.rollTimer--;
             let nx = this.x + this.rollDx;
             let ny = this.y + this.rollDy;
-            if(!checkWallCollision(nx, this.y, this.radius)) this.x = Math.max(this.radius, Math.min(WORLD_WIDTH-this.radius, nx));
-            if(!checkWallCollision(this.x, ny, this.radius)) this.y = Math.max(this.radius, Math.min(WORLD_HEIGHT-this.radius, ny));
+            
+            // --- ANTI STUCK ---
+            let isStuck = checkWallCollision(this.x, this.y, this.radius);
+            if(isStuck || !checkWallCollision(nx, this.y, this.radius)) this.x = Math.max(this.radius, Math.min(WORLD_WIDTH-this.radius, nx));
+            if(isStuck || !checkWallCollision(this.x, ny, this.radius)) this.y = Math.max(this.radius, Math.min(WORLD_HEIGHT-this.radius, ny));
+            
             spawnParticles(this.x, this.y + 20, '#ccc', 1);
             return; 
         }
@@ -1086,8 +1095,11 @@ class Player{
         if(dx!==0||dy!==0){
             let len=Math.sqrt(dx*dx+dy*dy); dx/=len; dy/=len;
             let nx=this.x+dx*spd, ny=this.y+dy*spd;
-            if(!checkWallCollision(nx,this.y,this.radius)) this.x=Math.max(this.radius,Math.min(WORLD_WIDTH-this.radius,nx));
-            if(!checkWallCollision(this.x,ny,this.radius)) this.y=Math.max(this.radius,Math.min(WORLD_HEIGHT-this.radius,ny));
+            
+            // --- ANTI STUCK ---
+            let isStuck = checkWallCollision(this.x, this.y, this.radius);
+            if(isStuck || !checkWallCollision(nx,this.y,this.radius)) this.x=Math.max(this.radius,Math.min(WORLD_WIDTH-this.radius,nx));
+            if(isStuck || !checkWallCollision(this.x,ny,this.radius)) this.y=Math.max(this.radius,Math.min(WORLD_HEIGHT-this.radius,ny));
         }
 
         // --- NEU: Schießt alle aktiven Waffen gleichzeitig ---
@@ -1333,10 +1345,54 @@ class Enemy{
             }
         }
 
-        // PETER BAYER specials
-        if(this.type===99&&this.label==="PETER BAYER"){
-            if(Math.random()<0.005){screenShake=40;player.stunned=60;floatingTexts.push(new FloatingText(this.x,this.y,"STAMPFER!","#f00"));playSound('hammer');}
-            if(Math.random()<0.003){floatingTexts.push(new FloatingText(this.x,this.y,"TICKET FLUT!","#f00"));for(let i=0;i<10;i++){let ne=new Enemy();ne.x=this.x;ne.y=this.y;enemies.push(ne);}}
+        // --- PETER BAYER SPECIALS (Reworked) ---
+        if(this.type===99 && this.label==="PETER BAYER"){
+            this.stampfCooldown = (this.stampfCooldown === undefined) ? 300 : this.stampfCooldown - 1;
+            this.flutCooldown = (this.flutCooldown || 0) - 1;
+
+            // 1 Sekunde vorher: Warnung abspielen
+            if (this.stampfCooldown === 60) {
+                playSound('alarm');
+            }
+
+            // Der eigentliche Stampfer
+            if(this.stampfCooldown <= 0){
+                screenShake = 60; 
+                playSound('hammer');
+                floatingTexts.push(new FloatingText(this.x, this.y, "STAMPFER!", "#f00"));
+                
+                // 1. Alle kleinen Tickets im Radius zerschmettern
+                enemies.forEach(oe => {
+                    if(oe !== this && Math.hypot(oe.x - this.x, oe.y - this.y) < 250) {
+                        oe.hp = -1000; // Insta-Kill
+                        spawnParticles(oe.x, oe.y, '#f00', 8);
+                    }
+                });
+
+                // 2. Spieler im Radius treffen
+                if(Math.hypot(player.x - this.x, player.y - this.y) < 250) {
+                    if(player.rollTimer <= 0) { // KEINE Hechtrolle aktiv -> Voll in die Fresse
+                        player.hp -= 40; 
+                        player.orangeHp += 40; // Geht in den Bloodborne-Speicher
+                        player.orangeTimer = 120;
+                        player.stunned = 45;
+                        spawnParticles(player.x, player.y, '#f00', 15);
+                        showToast("VOM CHEF ZERSTAMPFT!", "#f00", "Shift für Hechtrolle nutzen!");
+                    } else { // Perfekter Dodge
+                        floatingTexts.push(new FloatingText(player.x, player.y - 40, "PERFEKT AUSGEWICHEN!", "#0f0"));
+                        score += 1000; // Harte Typen werden belohnt
+                    }
+                }
+
+                this.stampfCooldown = 300; // Reset auf exakt 5 Sekunden
+            }
+
+            // Ticket Flut (weniger oft)
+            if(this.flutCooldown <= 0 && Math.random()<0.02){
+                floatingTexts.push(new FloatingText(this.x, this.y, "TICKET FLUT!", "#f00"));
+                for(let i=0; i<8; i++){ let ne = new Enemy(); ne.x = this.x + (Math.random()-.5)*100; ne.y = this.y + (Math.random()-.5)*100; enemies.push(ne); }
+                this.flutCooldown = 400; 
+            }
         }
 
         // Boss laser
@@ -1436,16 +1492,33 @@ class Enemy{
             ctx.restore();
         }
 
-        // HP bar
+        // --- PETER BAYER JUMP ANIMATION & DANGER ZONE ---
+        let drawY = this.y;
+        if(this.type === 99 && this.label === "PETER BAYER" && this.stampfCooldown <= 60 && this.stampfCooldown > 0) {
+            let progress = 1 - (this.stampfCooldown / 60); // Geht von 0 bis 1
+            drawY = this.y - Math.sin(progress * Math.PI) * 150; // Springt 150px hoch
+
+            // Rote Gefahrenzone auf dem Boden
+            ctx.beginPath(); ctx.arc(this.x, this.y, 250, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 0, 0, ${0.1 + progress * 0.3})`; ctx.fill();
+            ctx.strokeStyle = `rgba(255, 0, 0, ${progress})`; ctx.lineWidth = 3; ctx.stroke();
+
+            // Blinken (alle paar Frames in der Luft)
+            if(this.stampfCooldown % 10 < 5) ctx.filter = 'brightness(2) sepia(1) hue-rotate(-50deg) saturate(5)';
+        }
+
+        // HP bar (passt sich an drawY an, damit sie mitspringt)
         let bw=this.radius*2;
-        ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(this.x-this.radius,this.y-this.radius-15,bw,6);
+        ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(this.x-this.radius,drawY-this.radius-15,bw,6);
         ctx.fillStyle=this.hp<this.maxHp*.3?'#f00':'#0f0';
-        ctx.fillRect(this.x-this.radius,this.y-this.radius-15,bw*(Math.max(0,this.hp)/this.maxHp),6);
+        ctx.fillRect(this.x-this.radius,drawY-this.radius-15,bw*(Math.max(0,this.hp)/this.maxHp),6);
 
         ctx.font=(this.radius*1.8)+'px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.shadowColor="black";ctx.shadowBlur=5;ctx.fillText(this.symbol,this.x,this.y);ctx.shadowBlur=0;
+        ctx.shadowColor="black";ctx.shadowBlur=5;ctx.fillText(this.symbol,this.x,drawY);ctx.shadowBlur=0;
+        ctx.filter = 'none'; // Filter zwingend zurücksetzen!
+        
         ctx.fillStyle='#fff';ctx.font='bold 13px Courier New';ctx.textAlign='center';ctx.textBaseline='top';
-        ctx.fillText(this.label,this.x,this.y+this.radius);
+        ctx.fillText(this.label,this.x,drawY+this.radius);
         ctx.globalAlpha=1;
     }
 }
@@ -1528,7 +1601,7 @@ function spawnLogic(){
     // Items
     if(Math.random()<0.02){ // Bisschen mehr Drops generieren
         let r=Math.random();
-        if     (r<0.45) items.push(new Item('suppe')); // 30% Chance auf Suppe
+        if     (r<0.30) items.push(new Item('suppe')); // 30% Chance auf Suppe
         else if(r<0.55) items.push(new Item('crate')); 
         else if(r<0.65) items.push(new Item('shield'));
         else if(r<0.75) items.push(new Item('vodka'));
@@ -1539,7 +1612,7 @@ function spawnLogic(){
     }
 
     // IDOC
-    if(!idocEvent&&frame%3000===1000){
+    if(!idocEvent && !player.idocBlocker && frame%3000===1000){
         let sv=servers[Math.floor(Math.random()*servers.length)];
         if(sv){
             idocEvent={x:sv.x,y:sv.y,label:Math.random()>.5?"PROZESSAUSFALL!":"AUFTRAGSFREIGABE!",timer:1800};
@@ -1653,29 +1726,31 @@ function drawWorld(){
             ctx.restore();
         }
     }
-   // KLOSKA marker + arrow
+   // KLOSKA marker + arrow (Hüpfend animiert)
     if(kloskaEvent) {
-        // Kloska zeichnen
-        ctx.shadowColor = "#ff00ff"; ctx.shadowBlur = 15;
-        if(kloskaImg && kloskaImg.complete && kloskaImg.naturalHeight !== 0) {
-            ctx.drawImage(kloskaImg, kloskaEvent.x, kloskaEvent.y, 50, 75);
-        } else {
-            // Platzhalter falls Bild fehlt
-            ctx.fillStyle = "#8e44ad"; ctx.fillRect(kloskaEvent.x, kloskaEvent.y, 40, 70);
+        let bounce = Math.abs(Math.sin(frame * 0.1)) * 20; // Lässt ihn auf und ab springen
+        
+        ctx.shadowColor = "#ff00ff"; ctx.shadowBlur = 20;
+        // Zwingt ihn, das Bild zu zeichnen
+        try {
+            ctx.drawImage(kloskaImg, kloskaEvent.x, kloskaEvent.y - bounce, 60, 90);
+        } catch(e) {
+            ctx.fillStyle = "#8e44ad"; ctx.fillRect(kloskaEvent.x, kloskaEvent.y - bounce, 40, 70);
         }
         ctx.shadowBlur = 0;
-        ctx.fillStyle = "#fff"; ctx.font = "bold 16px Arial"; ctx.textAlign="center";
-        ctx.fillText("KLOSKA", kloskaEvent.x + 25, kloskaEvent.y - 10);
+        
+        ctx.fillStyle = "#fff"; ctx.font = "bold 18px Arial"; ctx.textAlign="center";
+        ctx.fillText("SABOTAGE!", kloskaEvent.x + 30, kloskaEvent.y - bounce - 10);
 
         // Lila Pfeil zum Spieler
         let dx = kloskaEvent.x - player.x, dy = kloskaEvent.y - player.y;
         let angle = Math.atan2(dy, dx);
-        let arrowDist = Math.min(Math.hypot(dx, dy) - 30, 80);
-        if(arrowDist > 20) {
+        let arrowDist = Math.min(Math.hypot(dx, dy) - 40, 100);
+        if(arrowDist > 30) {
             ctx.save(); ctx.translate(player.x + Math.cos(angle)*arrowDist, player.y + Math.sin(angle)*arrowDist); ctx.rotate(angle);
             let sc = 1 + Math.sin(frame * 0.2) * 0.3; ctx.scale(sc, sc);
-            ctx.fillStyle = "#ff00ff"; // Lila Pfeil für Kloska
-            ctx.beginPath(); ctx.moveTo(15, 0); ctx.lineTo(-15, 10); ctx.lineTo(-15, -10); ctx.fill();
+            ctx.fillStyle = "#ff00ff";
+            ctx.beginPath(); ctx.moveTo(20, 0); ctx.lineTo(-20, 15); ctx.lineTo(-20, -15); ctx.fill();
             ctx.restore();
         }
     }
@@ -1903,7 +1978,7 @@ function loop(){
                 splatters.push(new Splatter(e.x,e.y,e.color));
                 if(e.type===99){activeBoss=null;floatingTexts.push(new FloatingText(e.x,e.y,"GIFTIGES ARBEITSKLIMA!","#ffd700"));screenShake=50;items.push(new Item('briefcase',e.x,e.y));showToast("BOSS BESIEGT!","#ffd700","Giftiges Arbeitsklima beseitigt!");}
                 // Gegner droppen jetzt zu 25% etwas. Die Hälfte davon ist Suppe!
-                if(Math.random() < 0.40){
+                if(Math.random() < 0.10){
                     let l=Math.random();
                     if     (l < 0.50) items.push(new Item('suppe', e.x, e.y)); 
                     else if(l < 0.70) items.push(new Item('crate', e.x, e.y));
@@ -2046,15 +2121,37 @@ function buyKloskaItem(item, cost) {
         document.getElementById('shopSuppenCount').innerText = player.suppe;
         playSound('powerup');
         
-        // Item anwenden
-        if(item === 'railgun') player.equipWeapon('railgun');
-        if(item === 'mouse') player.equipWeapon('mouse');
-        if(item === 'briefcase') { player.maxHp += 50; player.hp = player.maxHp; }
-        if(item === 'chicken') { player.hp = Math.min(player.maxHp, player.hp + 30); }
-        
-        showToast("DANKE! Komm wieder.", "#9b59b6", item.toUpperCase()+" erhalten");
+        // --- NEUE ITEMS ANWENDEN ---
+        if(item === 'perm_mouse') { 
+            player.mouseTimer = Infinity; // Hält für immer!
+            showToast("GEKAUFT!", "#0ff", "PERMANENTE ORBIT MAUS");
+        }
+        if(item === 'thinclient') { 
+            player.idocBlocker = true; // Neues Flag im Player
+            showToast("GEKAUFT!", "#0ff", "KEINE PROZESSAUSFÄLLE MEHR");
+        }
+        if(item === 'azubi_army') { 
+            turrets.push(new Turret(player.x - 50, player.y + 50));
+            turrets.push(new Turret(player.x + 50, player.y + 50));
+            turrets.push(new Turret(player.x, player.y - 60));
+            showToast("GEKAUFT!", "#0f0", "AZUBI-ARMEE EINGETROFFEN");
+        }
+        if(item === 'nuke') { 
+            screenShake = 50; flashScreen = 50; playSound('hammer');
+            for(let i=enemies.length-1; i>=0; i--) {
+                if(enemies[i].type !== 99) { // Boss überlebt!
+                    score += enemies[i].score;
+                    splatters.push(new Splatter(enemies[i].x, enemies[i].y, enemies[i].color));
+                    enemies.splice(i, 1);
+                } else {
+                    enemies[i].hp -= 1500; // Boss kriegt nur krassen Schaden
+                }
+            }
+            showToast("STRG+ALT+ENTF", "#f00", "SYSTEM NEUGESTARTET");
+        }
     } else {
         showToast("ZU WENIG SUPPE!", "#e74c3c", `Brauchst ${cost} 🥣, hast ${player.suppe}`);
+        playSound('hit');
     }
 }
 
@@ -2074,21 +2171,3 @@ setTimeout(function(){
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
