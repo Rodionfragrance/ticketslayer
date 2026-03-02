@@ -1138,8 +1138,10 @@ class Player{
 
     equipWeapon(type){
         if(type === 'mouse') {
-            this.mouseTimer = 1800; 
-            showToast("ORBIT-MAUS!", "#0ff", "AKTIVIERT (30 SEK)");
+            if(this.mouseTimer !== Infinity) { // <--- SCHÜTZT DEINE PERMANENTE MAUS!
+                this.mouseTimer = 1800; 
+                showToast("ORBIT-MAUS!", "#0ff", "AKTIVIERT (30 SEK)");
+            }
             return; 
         }
         // Waffe wird hinzugefügt oder Timer resettet
@@ -1599,7 +1601,7 @@ function spawnLogic(){
     if(frame%Math.floor(sr)===0) enemies.push(new Enemy());
 
     // Items
-    if(Math.random()<0.02){ // Bisschen mehr Drops generieren
+    if(Math.random()<0.002){ // Bisschen mehr Drops generieren
         let r=Math.random();
         if     (r<0.30) items.push(new Item('suppe')); // 30% Chance auf Suppe
         else if(r<0.55) items.push(new Item('crate')); 
@@ -2171,3 +2173,4 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
