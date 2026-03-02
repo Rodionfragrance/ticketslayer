@@ -283,6 +283,13 @@ input[type="text"] {
 </head>
 <body>
 
+<!-- SERVER FARM -->
+   <div id="hackingOverlay">
+    <div style="font-weight:bold; margin-bottom:10px;">ROOT ACCESS REQUIRED</div>
+    <div id="hackOptions"></div>
+    <div id="hackTimer" style="margin-top:10px; color:red;"></div>
+</div>
+
 <!-- PASSWORD SCREEN -->
 <div id="passwordScreen">
     <div id="pw-logo">🔐</div>
@@ -375,13 +382,6 @@ input[type="text"] {
 <!-- MEETING UI -->
 <div id="meeting-text">MEETING! HÄMMERE [LEERTASTE]!</div>
 <div id="meeting-bar-container"><div id="meeting-bar"></div></div>
-
-<!-- SERVER FARM -->
-   <div id="hackingOverlay">
-    <div style="font-weight:bold; margin-bottom:10px;">ROOT ACCESS REQUIRED</div>
-    <div id="hackOptions"></div>
-    <div id="hackTimer" style="margin-top:10px; color:red;"></div>
-</div>
 
 <!-- SCREENS -->
 <div id="screens">
@@ -906,7 +906,7 @@ function checkGameOver(){
 }
 
 // ============================================================
-// SECTION 10 — SERVER FARM (IDLE INCOME)
+// SECTION 10 — SERVER FARM (IDLE INCOME & HACKING)
 // ============================================================
 let currentHackingServer = null;
 let hackingTimer = 0;
@@ -917,33 +917,60 @@ function tryActivateFarm() {
     for(let sv of servers){
         if(Math.hypot(player.x-sv.x-sv.w/2, player.y-sv.y-sv.h/2) < 120){
             if(serverFarms.some(f=>f.serverRef===sv)){ showToast("SERVER BEREITS AKTIV", "#888"); return; }
-            
-            // Starte das Rätsel
             startHackingPuzzle(sv);
             return;
         }
     }
 }
 
+function updateFarms(){
+    // --- HACKING TIMER LOGIK ---
+    if(currentHackingServer) {
+        hackingTimer--;
+        let tEl = document.getElementById('hackTimer');
+        if(tEl) tEl.innerText = `SYSTEM-LOCKDOWN IN: ${(hackingTimer/60).toFixed(1)}s`;
+        if(hackingTimer <= 0) {
+            showToast("ZEIT ABGELAUFEN! 🔒", "#f00");
+            closeHacking();
+        }
+    }
+
+    // --- PASSIVES EINKOMMEN LOGIK ---
+    serverFarms=serverFarms.filter(f=>servers.includes(f.serverRef));
+    let income = 3 + getUpgradeLevel('damage'); 
+    for(let f of serverFarms){
+        f.ticker++;
+        if(f.ticker>=60){
+            f.ticker=0;
+            score+=income;
+            if(frame%180===0) floatingTexts.push(new FloatingText(f.serverRef.x+f.serverRef.w/2, f.serverRef.y-10, `+${income}`, "#00ff88"));
+        }
+    }
+    let fi=document.getElementById('farmIndicator');
+    if(serverFarms.length>0){
+        fi.style.display='block';
+        fi.innerText=`🖥️ ${serverFarms.length}/${getMaxFarms()} Server-Farmen aktiv`;
+    } else { fi.style.display='none'; }
+}
+
 function startHackingPuzzle(server) {
     currentHackingServer = server;
-    hackingTimer = 300; // 5 Sekunden Zeit (60 FPS * 5)
+    hackingTimer = 300; // 5 Sekunden Zeitdruck
     document.getElementById('hackingOverlay').style.display = 'block';
     
-    // Generiere 4 Optionen, eine ist der "Eindringling"
+    // Die Fallstrick-Optionen (Einer fängt nicht mit 192 an)
     let options = ["192.168.0.10", "192.168.0.11", "192.168.0.12", "172.16.0.10"]; 
     options.sort(() => Math.random() - 0.5);
     
     let html = "";
     options.forEach(opt => {
-        // Die 172... Adresse ist hier das falsche Muster (Fallout-Style)
         html += `<div class="hack-option" onclick="checkHack('${opt}')">${opt}</div>`;
     });
     document.getElementById('hackOptions').innerHTML = html;
 }
 
 function checkHack(selected) {
-    if(selected.startsWith("172")) { // Erfolg!
+    if(selected.startsWith("172")) { 
         serverFarms.push({serverRef: currentHackingServer, ticker:0});
         currentHackingServer.isFarm = true;
         showToast("HACK ERFOLGREICH! 🔓", "#00ff88");
@@ -959,6 +986,7 @@ function closeHacking() {
     document.getElementById('hackingOverlay').style.display = 'none';
     currentHackingServer = null;
 }
+   
 // ============================================================
 // SECTION 11 — CLASSES
 // ============================================================
@@ -2220,6 +2248,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
