@@ -387,7 +387,7 @@ input[type="text"] {
 <!-- EMAIL OVERLAY -->
 <div id="emailOverlay">
     <div class="email-header">
-        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;admin@wurmzentrale.de&gt;</div>
+        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fa9b9e979394ba8d8f8897809f948e889b969fd49e9f">[email&#160;protected]</a>&gt;</div>
         <div class="email-row"><span class="email-label">AN:</span> Alle Mitarbeiter</div>
         <div class="email-row email-subject">WICHTIG: Neue Prozessanweisung V18 (Dopamin-Update)</div>
     </div>
@@ -557,7 +557,7 @@ input[type="text"] {
 </div>
 
 <!-- PASSWORT LOGIK — eigener Script-Block, vor dem Haupt-Script -->
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 var GAME_PASSWORD = 'Vollzeit2025';
 var SESSION_HOURS = 8;
 
@@ -731,14 +731,17 @@ function saveHighscoreAndRestart() {
             date: new Date().toISOString()
         })
         .then(() => { 
-            loadHighscores(); // Top 5 sofort aktualisieren
+            loadHighscores();
+            if(lastChosenDifficulty === 9) isWegflexenMode = true; // WEGFLEXEN bleibt WEGFLEXEN
             startGame(lastChosenDifficulty); 
         })
         .catch((e) => { 
-            console.error("FIREBASE HIGHSCORE ERROR:", e); // Falls was blockiert, sehen wir es in F12
+            console.error("FIREBASE HIGHSCORE ERROR:", e);
+            if(lastChosenDifficulty === 9) isWegflexenMode = true;
             startGame(lastChosenDifficulty); 
         });
     } else { 
+        if(lastChosenDifficulty === 9) isWegflexenMode = true;
         startGame(lastChosenDifficulty); 
     }
 }
@@ -1742,12 +1745,16 @@ class Enemy{
                 // 2. Spieler im Radius treffen
                 if(Math.hypot(player.x - this.x, player.y - this.y) < 250) {
                     if(player.rollTimer <= 0) { // KEINE Hechtrolle aktiv -> Voll in die Fresse
-                        player.hp -= 40; 
-                        player.orangeHp += 40; // Geht in den Bloodborne-Speicher
-                        player.orangeTimer = 120;
+                        if(isWegflexenMode) {
+                            player.hp = 0; // One-Hit-Kill im WEGFLEXEN
+                        } else {
+                            player.hp -= 40; 
+                            player.orangeHp += 40;
+                            player.orangeTimer = 120;
+                        }
                         player.stunned = 45;
                         spawnParticles(player.x, player.y, '#f00', 15);
-                        showToast("VOM CHEF ZERSTAMPFT!", "#f00", "Shift für Hechtrolle nutzen!");
+                        showToast("VOM CHEF ZERSTAMPFT!", "#f00", isWegflexenMode ? "WEGGEFLEXT!" : "Shift für Hechtrolle nutzen!");
                     } else { // Perfekter Dodge
                         unlockTrophy('perfect_dodge');
                         floatingTexts.push(new FloatingText(player.x, player.y - 40, "PERFEKT AUSGEWICHEN!", "#0f0"));
@@ -1815,9 +1822,8 @@ class Enemy{
                     playSound('sap'); screenShake=10;
                     showToast("SAP-UPDATE LÄUFT!","#1f618d","Speed massiv reduziert für 5 Sek");
                 }
-                if(isWegflexenMode) player.hp = 0; else player.hp -= dmg;
-               player.orangeHp += 0.5; 
-                player.orangeTimer = 120;
+                if(isWegflexenMode) { player.hp = 0; } 
+                else { player.hp -= dmg; player.orangeHp += 0.5; player.orangeTimer = 120; }
                 spawnParticles(player.x,player.y,'#1f618d',2);
             } else {
                 if(player.isMartin&&player.vodkaTimer>0){this.x-=Math.cos(angle)*5;this.y-=Math.sin(angle)*5;}
@@ -1826,12 +1832,13 @@ class Enemy{
                     let dmg=0.5;
                     if(this.type===4)dmg=1.0; if(this.type===3)dmg=1.5; if(this.type===2)dmg=2.0;
                     if(this.type===1)dmg=2.5;  if(this.type===99)dmg=3.5; if(this.type===7)dmg=1.2;
-                    if(isWegflexenMode) player.hp = 0; else player.hp -= 0.5;
-
-                    // --- DER FEHLENDE SCHRITT 2 ---
-                    player.orangeHp += dmg;   // Markiert den Schaden als heilbar
-                    player.orangeTimer = 120; // Setzt das 2-Sekunden-Fenster
-                    // ------------------------------
+                    if(isWegflexenMode) {
+                        player.hp = 0; // One-Hit-Kill
+                    } else {
+                        player.hp -= dmg;
+                        player.orangeHp += dmg;   // Rache-Heilung nur außerhalb WEGFLEXEN
+                        player.orangeTimer = 120;
+                    }
 
                     spawnParticles(player.x,player.y,'#f00',1);
                     this.x-=Math.cos(angle)*5; this.y-=Math.sin(angle)*5;
@@ -2197,7 +2204,7 @@ function updateHUD(){
         addStatus("🖱️ ORBIT-MAUS", player.mouseTimer, "#0ff");
         addStatus("💿 SAP-SLOW", player.sapDebuffTimer, "#1f618d");
         addStatus("💾 BUG (INVERT)", player.bugTimer, "#f0f");
-        if(isWegflexenMode) addStatus("⚠️ FLEX-TIMER", wegflexenTimer, "#f00");
+        if(isWegflexenMode) addStatus("⚠️ FLEX-TIMER", Math.ceil(wegflexenTimer/60)+"s", "#f00");
         
         // Waffen-Rausch Anzeige (wenn mehrere Waffen aktiv sind)
         let wepKeys = Object.keys(player.activeWeapons);
@@ -2713,13 +2720,4 @@ function buyKloskaItem(item, cost) {
 <script>
 // ABSOLUTER FALLBACK: Falls Preloader nach 3s noch läuft → einfach starten
 setTimeout(function(){
-    var ls = document.getElementById('loadingScreen');
-    if(ls && ls.style.display !== 'none'){
-        ls.style.display = 'none';
-        var ss = document.getElementById('startScreen');
-        if(ss) ss.style.display = 'block';
-    }
-}, 3000);
-</script>
-</body>
-</html>
+    var ls = document.getElementById('loadingScreen')
