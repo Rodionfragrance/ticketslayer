@@ -1431,10 +1431,12 @@ class Player{
     }
 
     triggerEvolution(){
-        this.isMartin=true; this.promoTriggered=true; this.hp=this.maxHp;
-        playSound('evolve'); screenShake=20;
+        this.isMartin = true; 
+        this.promoTriggered = true; 
+        if(currentDiffLabel !== "SURVIVAL") this.hp = this.maxHp; 
+        playSound('evolve'); screenShake = 20;
         showToast("PIKO BELLO!","gold","Du bist jetzt MADDIN.");
-        setTimeout(()=>{this.promoTriggered=false;},3000);
+        setTimeout(()=>{this.promoTriggered = false;}, 3000);
     }
 
     equipWeapon(type){
@@ -2282,6 +2284,7 @@ function loop(){
     let e=enemies[i];
     
     // --- RACHE-HEILUNG ---
+    // --- RACHE-HEILUNG ---
     if(player.orangeHp > 0) {
         let heal = 2; // Wert pro Kill (anpassbar)
         if(heal > player.orangeHp) heal = player.orangeHp;
@@ -2370,8 +2373,17 @@ function loop(){
                         floatingTexts.push(new FloatingText(player.x,player.y,"+1 SUPPE","#ff9f43"));
                         break;  
                     // case 'suppe': player.suppe++; playSound('powerup'); showToast("SUPPE! 🥣", "#ff9f43", "Zahlungsmittel für Kloska"); floatingTexts.push(new FloatingText(player.x,player.y,"+1 SUPPE","#ff9f43"));break;  
-                    case 'chicken': player.hp=Math.min(player.maxHp,player.hp+30);spawnParticles(item.x,item.y,'#d35400',10);playSound('powerup');showToast("STÄRKUNG! 🍗","#d35400","+30 Gesundheit");break;
-                    case 'vodka':   player.vodkaTimer=300;spawnParticles(item.x,item.y,'#0984e3',10);playSound('vodka');showToast(player.isMartin?"PATIENT NULL! 🍺":"WAFFE BLOCKIERT! 🍺",player.isMartin?"#0f0":"#f00",player.isMartin?"Unbesiegbar & giftig!":"KURWA...");break;
+                    // case 'chicken': player.hp=Math.min(player.maxHp,player.hp+30);spawnParticles(item.x,item.y,'#d35400',10);playSound('powerup');showToast("STÄRKUNG! 🍗","#d35400","+30 Gesundheit");break;
+                    case 'chicken': 
+                        if(currentDiffLabel === "SURVIVAL") {
+                            showToast("VERDORBEN! 🍗", "#555", "Keine Heilung im Survival!");
+                        } else {
+                            player.hp = Math.min(player.maxHp, player.hp + 30);
+                            showToast("STÄRKUNG! 🍗","#d35400","+30 Gesundheit");
+                        }
+                        spawnParticles(item.x,item.y,'#d35400',10); playSound('powerup');
+                        break; 
+                   case 'vodka':   player.vodkaTimer=300;spawnParticles(item.x,item.y,'#0984e3',10);playSound('vodka');showToast(player.isMartin?"PATIENT NULL! 🍺":"WAFFE BLOCKIERT! 🍺",player.isMartin?"#0f0":"#f00",player.isMartin?"Unbesiegbar & giftig!":"KURWA...");break;
                     case 'crate':   {const w=['minigun','shotgun','rocket','uzi','ak47', 'railgun', 'flamer', 'mouse'];player.equipWeapon(w[Math.floor(Math.random()*w.length)]);spawnParticles(item.x,item.y,'#8e44ad',15);break;}
                     case 'shield':  player.shieldTimer=600;playSound('powerup');showToast("SCHUTZSCHILD! 🛡️","#00f","Immunität für 10 Sek");floatingTexts.push(new FloatingText(player.x,player.y,"SCHUTZSCHILD!","#00f"));break;
                     case 'bug':     player.bugTimer=600;playSound('bug');spawnParticles(item.x,item.y,'#f0f',20);showToast("JANSKIS HOTFIX! 💾","#f0f","Steuerung invertiert...");break;
@@ -2385,7 +2397,14 @@ function loop(){
                         break;  
                     // case 'vacation':player.yellowSlips++;playSound('vacation');showToast("+1 URLAUBSTAG! 💤","#ffff00","Minusstunden gespart");floatingTexts.push(new FloatingText(player.x,player.y,"+1 URLAUB!","#ffff00"));break;
                     case 'bike':    player.bikeTimer=600;playSound('powerup');showToast("RADL-RAMBO! 🚲","#0f0","Speed x2 + Autofire");floatingTexts.push(new FloatingText(player.x,player.y,"RADL-RAMBO!","#0f0"));break;
-                    case 'briefcase':player.maxHp+=50;player.hp=player.maxHp;playSound('evolve');showToast("GEHALTSERHÖHUNG! 💼","#ffd700","Max-HP +50");floatingTexts.push(new FloatingText(player.x,player.y,"GEHALTSERHÖHUNG!","#ffd700"));spawnParticles(item.x,item.y,'#ffd700',20);break;
+                    case 'briefcase':
+                        player.maxHp += 50;
+                        if(currentDiffLabel !== "SURVIVAL") player.hp = player.maxHp;
+                        playSound('evolve'); showToast("GEHALTSERHÖHUNG! 💼","#ffd700","Max-HP +50");
+                        floatingTexts.push(new FloatingText(player.x,player.y,"GEHALTSERHÖHUNG!","#ffd700"));
+                        spawnParticles(item.x,item.y,'#ffd700',20);
+                        break;
+                      // case 'briefcase':player.maxHp+=50;player.hp=player.maxHp;playSound('evolve');showToast("GEHALTSERHÖHUNG! 💼","#ffd700","Max-HP +50");floatingTexts.push(new FloatingText(player.x,player.y,"GEHALTSERHÖHUNG!","#ffd700"));spawnParticles(item.x,item.y,'#ffd700',20);break;
                 }
                 // Item nach dem Einsammeln sicher entfernen
                 items.splice(i, 1);
@@ -2551,6 +2570,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
