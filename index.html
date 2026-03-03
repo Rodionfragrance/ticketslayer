@@ -649,12 +649,13 @@ function loadHighscores() {
         snap.forEach(doc => {
             let d = doc.data();
             let diff = d.difficulty || "PRAKTIKANT"; // Fallback für alte Einträge
-            if(scores[diff] && scores[diff].length < 3) { // Top 3 pro Liga reicht für die Anzeige
+            if(scores[diff] && scores[diff].length < 5) { // <-- HIER: Von 3 auf 5 erhöht!
                 scores[diff].push(d);
             }
         });
 
-        let html = "<span style='color:#fff;text-decoration:underline;font-size:14px;font-weight:bold;'>🏆 LIGEN TOP 3:</span><br>";
+        // <-- HIER: Überschrift auf TOP 5 angepasst
+        let html = "<span style='color:#fff;text-decoration:underline;font-size:14px;font-weight:bold;'>🏆 LIGEN TOP 5:</span><br>"; 
         
         ["SURVIVAL", "BURNOUT", "VOLLZEIT", "PRAKTIKANT"].forEach(mode => {
             if(scores[mode].length > 0) {
@@ -662,7 +663,8 @@ function loadHighscores() {
                 html += `<div style="color:${color}; font-weight:bold; margin-top:6px; font-size:12px;">[${mode}]</div>`;
                 scores[mode].forEach((d, i) => {
                     let rank = i + 1;
-                    let c = rank===1?'gold':(rank===2?'silver':'#cd7f32');
+                    // <-- HIER: Platz 4 und 5 bekommen Grau (#aaa), Gold/Silber/Bronze bleiben exklusiv
+                    let c = rank===1?'gold':(rank===2?'silver':(rank===3?'#cd7f32':'#aaa'));
                     let coll = d.collapseTime > 0 ? ` [🔥${d.collapseTime}s]` : "";
                     html += `<div style="color:${c}; font-size:11px; margin-left:5px;">${rank}. ${d.name.substring(0,8)}: ${d.score}${coll}</div>`;
                 });
@@ -2570,6 +2572,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
