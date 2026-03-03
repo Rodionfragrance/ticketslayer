@@ -77,7 +77,7 @@ canvas { display:block; cursor:crosshair; }
 .h-highlight   { background:#ffeb3b; padding:0 2px; }
 .close-hint    { text-align:center; background:#c0392b; color:#fff; padding:15px; font-family:monospace; cursor:pointer; font-weight:bold; border-top:2px solid #a93226; }
 .close-hint:hover { background:#e74c3c; }
-
+   
 /* ============================================================
    DOOM HUD (Generell vergrößert)
    ============================================================ */
@@ -223,6 +223,46 @@ input[type="text"] {
     text-transform:uppercase; letter-spacing:2px;
 }
 #shopClose:hover { background:#e74c3c; }
+
+/* ============================================================
+   TROPHY ROOM
+   ============================================================ */
+#trophyOverlay {
+    display:none; position:absolute; inset:0;
+    background:rgba(0,0,0,0.92);
+    z-index:600; overflow-y:auto;
+    font-family:'Courier New',monospace;
+}
+#trophyInner {
+    max-width:800px; margin:40px auto; padding:30px;
+    border:3px solid #f1c40f; background:#111;
+    border-radius:4px; box-shadow:0 0 60px rgba(241,196,15,0.15);
+}
+#trophyInner h2 { color:#f1c40f; font-size:28px; letter-spacing:4px; margin:0 0 5px; text-transform:uppercase; text-align:center;}
+#trophyInner p { text-align:center; color:#aaa; margin-bottom:25px;}
+.trophy-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.trophy-item {
+    background:#1a1a1a; border:2px solid #333; padding:16px;
+    border-radius:3px; text-align:left; position:relative;
+    display:flex; align-items:center; gap:15px; opacity:0.5; filter:grayscale(100%);
+    transition:0.3s;
+}
+.trophy-item.unlocked {
+    border-color:#f1c40f; opacity:1; filter:grayscale(0%); background:#222;
+}
+.trophy-icon { font-size:40px; line-height:1; }
+.trophy-info { flex-grow: 1; }
+.trophy-name { color:#fff; font-size:16px; font-weight:bold; text-transform:uppercase; margin-bottom:4px; }
+.trophy-desc { color:#888; font-size:11px; margin-bottom:6px; }
+.trophy-perk { color:#2ecc71; font-size:12px; font-weight:bold; }
+#trophyClose {
+    display:block; width:100%; margin-top:25px;
+    background:#c0392b; color:#fff; border:none;
+    padding:14px; font-size:16px; cursor:pointer;
+    font-family:'Courier New',monospace; font-weight:bold;
+    text-transform:uppercase; letter-spacing:2px;
+}
+#trophyClose:hover { background:#e74c3c; }   
 
 /* ============================================================
    IDLE FARM INDICATOR
@@ -402,7 +442,8 @@ input[type="text"] {
             <button id="btn-survival" onclick="startGame(9)" style="display:none; background:#111; color:#9b59b6; border:2px solid #9b59b6; padding:12px 18px; font-size:16px; cursor:pointer; font-weight:bold; text-transform:uppercase; font-family:'Courier New',monospace; min-width:130px; transition:0.2s;">Survival</button>
         </div>
         <button class="btn-shop" onclick="openShop()" style="width:100%;margin-top:10px;">&#9749; UPGRADE SHOP</button>
-        <button class="btn-info" onclick="showEmail()" style="width:100%;margin-top:6px;">[I] PROZESSANWEISUNG</button>
+        <button class="btn-shop" onclick="openTrophies()" style="width:100%;margin-top:6px; border-color:#f1c40f; color:#f1c40f;">🏆 TROPHÄENSCHRANK</button>
+       <button class="btn-info" onclick="showEmail()" style="width:100%;margin-top:6px;">[I] PROZESSANWEISUNG</button>
     </div>
     
     <div id="gameOverScreen" class="panel">
@@ -446,6 +487,15 @@ input[type="text"] {
     </div>
 </div>
 
+<div id="trophyOverlay">
+    <div id="trophyInner">
+        <h2>🏆 Hall of Fame</h2>
+        <p>Deine Legacy. Freigeschaltete Trophäen gewähren permanente Perks.</p>
+        <div class="trophy-grid" id="trophyGrid"></div>
+        <button id="trophyClose" onclick="closeTrophies()">← ZURÜCK</button>
+    </div>
+</div>
+   
 <!-- UPGRADE SHOP -->
 <div id="shopOverlay">
     <div id="shopInner">
@@ -715,6 +765,57 @@ let kaffeebons       = parseInt(localStorage.getItem('ts_kb') || '0');
 let upgradeProgress  = JSON.parse(localStorage.getItem('ts_upgrades') || '{}');
 let prestigeLevel    = parseInt(localStorage.getItem('ts_prestige') || '0');
 
+// --- TROPHY SYSTEM ---
+const TROPHIES_DEF = [
+    { id:'first_game', icon:'👶', name:'Willkommen in der Hölle', desc:'Schließe dein erstes Spiel ab.', perk:'Koffein-Resistenz: Start-HP +5' },
+    { id:'soup_king', icon:'🥣', name:'Suppenkasper', desc:'Sammle 15 Suppen in einem Run.', perk:'Stammkunde: Du startest mit 1 Suppe gratis' },
+    { id:'meeting_survivor', icon:'🤝', name:'Bullshit-Bingo', desc:'Überlebe ein Meeting.', perk:'Protokollant: Meetings geben 4000 statt 3000 Pkt' },
+    { id:'admin_hacker', icon:'🖥️', name:'Netzwerk-Admin', desc:'Hacke 3 Server in einem Run.', perk:'Krypto-Miner: Farmen geben +2 Punkte mehr' },
+    { id:'idoc_savior', icon:'🚨', name:'Prozess-Retter', desc:'Löse einen IDOC-Alarm.', perk:'Adrenalin: 10% mehr Speed während Alarmen' },
+    { id:'vacation_hoarder', icon:'💤', name:'Betriebsrat', desc:'Sammle 5 Urlaubstage auf einmal.', perk:'Gleitzeit: G-Heilung wirkt 20% schneller' },
+    { id:'perfect_dodge', icon:'💃', name:'Tanz auf dem Vulkan', desc:'Perfektes Ausweichen bei Peter Bayer.', perk:'Leichtfüßig: Hechtrolle-Cooldown sinkt auf 1.5s' },
+    { id:'bloodlust', icon:'🩸', name:'Blutrausch', desc:'Heile 100 HP durch Rache in einem Run.', perk:'Rachsüchtig: Rache-Zeitfenster steigt auf 3s' },
+    { id:'pacifist', icon:'🕊️', name:'Pazifist', desc:'Überlebe 60s ohne einen Schuss.', perk:'Fluchttier: Grund-Speed +0.2' },
+    { id:'boss_killer', icon:'👑', name:'Vorstandswechsel', desc:'Besiege Peter Bayer.', perk:'Chef-Aura: 10s Schutzschild beim Start' },
+    { id:'collapse_survivor', icon:'🔥', name:'Feuerprobe', desc:'Überlebe 60s im System-Kollaps.', perk:'Arsenal-Experte: Spezialwaffen halten 25% länger' },
+    { id:'survival_master', icon:'💀', name:'Der wahre Kern', desc:'Erreiche 50k Punkte im Survival-Modus.', perk:'Gnadenlos: Basis-Schaden dauerhaft +2' }
+];
+
+let unlockedTrophies = JSON.parse(localStorage.getItem('ts_trophies') || '[]');
+
+function hasTrophy(id) { return unlockedTrophies.includes(id); }
+
+function unlockTrophy(id) {
+    if(!hasTrophy(id)) {
+        unlockedTrophies.push(id);
+        saveProgress();
+        let t = TROPHIES_DEF.find(x=>x.id===id);
+        showToast("🏆 TROPHÄE ERHALTEN!", "#f1c40f", t.name);
+        playSound('evolve'); 
+    }
+}
+
+function openTrophies() {
+    let grid = document.getElementById('trophyGrid');
+    grid.innerHTML = '';
+    TROPHIES_DEF.forEach(t => {
+        let unlocked = hasTrophy(t.id);
+        let cls = 'trophy-item' + (unlocked ? ' unlocked' : '');
+        grid.innerHTML += `
+            <div class="${cls}">
+                <div class="trophy-icon">${t.icon}</div>
+                <div class="trophy-info">
+                    <div class="trophy-name">${t.name}</div>
+                    <div class="trophy-desc">${t.desc}</div>
+                    <div class="trophy-perk">PERK: ${t.perk}</div>
+                </div>
+            </div>`;
+    });
+    document.getElementById('trophyOverlay').style.display = 'block';
+}
+function closeTrophies() { document.getElementById('trophyOverlay').style.display = 'none'; }
+// ---------------------   
+
 function getUpgradeLevel(id) { return upgradeProgress[id] || 0; }
 function getUpgradeCost(upg) {
     let lvl = getUpgradeLevel(upg.id);
@@ -727,10 +828,11 @@ function saveProgress() {
     localStorage.setItem('ts_upgrades', JSON.stringify(upgradeProgress));
     localStorage.setItem('ts_prestige', prestigeLevel);
     localStorage.setItem('ts_name', _name);
+    localStorage.setItem('ts_trophies', JSON.stringify(unlockedTrophies)); // Trophäen lokal speichern
     if(db && _name !== 'ANONYM') {
         db.collection('playerProfiles').doc(_name).set({
             kb: kaffeebons, upgrades: upgradeProgress,
-            prestige: prestigeLevel, lastSeen: new Date().toISOString()
+            prestige: prestigeLevel, trophies: unlockedTrophies, lastSeen: new Date().toISOString() // Trophäen in die Cloud schieben!
         }, {merge:true}).catch(function(){});
     }
 }
@@ -744,6 +846,8 @@ async function loadCloudProfile() {
         if(doc.exists){
             var d = doc.data();
             kaffeebons = d.kb||0; upgradeProgress = d.upgrades||{}; prestigeLevel = d.prestige||0;
+            unlockedTrophies = d.trophies || [];
+            localStorage.setItem('ts_trophies', JSON.stringify(unlockedTrophies));
             var el2 = document.getElementById('startKBAmount');
             if(el2) el2.innerText = kaffeebons;
             showToast('PROFIL GELADEN','#00e5ff','Willkommen zurück, '+name+'!');
@@ -976,6 +1080,7 @@ function triggerServerExplosion(x,y){ screenShake=30;playSound('hammer');spawnPa
 function checkGameOver(){
     if(player.hp<=0){
         gameRunning=false;
+       unlockTrophy('first_game'); // Schaltet sich beim ersten Tod automatisch frei
        if(systemCollapse) {
             document.getElementById('goTitle').innerText = "SYSTEM TOTALAUSFALL";
             document.getElementById('goTitle').style.color = "#f00";
@@ -1147,6 +1252,21 @@ class Player{
         this.rollDx = 0;         
         this.rollDy = 0;         
         applyUpgradesToPlayer(this);
+
+        // --- TROPHY PERKS AKTIVIEREN ---
+        if(hasTrophy('first_game')) this.maxHp += 5;
+        if(hasTrophy('soup_king')) this.suppe += 1;
+        if(hasTrophy('pacifist')) this.speed += 0.2;
+        if(hasTrophy('boss_killer')) this.shieldTimer = 600; // 10s Schutzschild am Start
+        if(hasTrophy('survival_master')) this.dmgBonus += 2;
+
+        this.hp = this.maxHp; // Passt die HP an die neuen Max-HP an
+
+        // --- RUN TRACKER (Für Trophäen-Bedingungen) ---
+        this.runSuppen = 0;
+        this.runHacks = 0;
+        this.runRacheHeal = 0;
+        this.shotsFired = 0;
     }
 
     activateVacation(){
@@ -1212,7 +1332,7 @@ class Player{
                     if(frame%30===0) floatingTexts.push(new FloatingText(this.x,this.y-60,"ABMAHNUNG!","#f00"));
                 }
             }
-            if(idocEvent&&Math.hypot(this.x-idocEvent.x,this.y-idocEvent.y)<100){ idocEvent=null; score+=2000; removePersistentToast(); floatingTexts.push(new FloatingText(this.x,this.y,"PROBLEM GELÖST!","#0f0")); showToast("PROBLEM GELÖST!","#00ff00","+2000 Punkte — Gegner eingefroren"); enemies.forEach(e=>e.freezeTimer=300); }
+            if(idocEvent&&Math.hypot(this.x-idocEvent.x,this.y-idocEvent.y)<100){ idocEvent=null;unlockTrophy('idoc_savior'); score+=2000; removePersistentToast(); floatingTexts.push(new FloatingText(this.x,this.y,"PROBLEM GELÖST!","#0f0")); showToast("PROBLEM GELÖST!","#00ff00","+2000 Punkte — Gegner eingefroren"); enemies.forEach(e=>e.freezeTimer=300); }
             if(kloskaEvent&&Math.hypot(this.x-kloskaEvent.x,this.y-kloskaEvent.y)<120){ kloskaEvent=null; score+=1500; removePersistentToast(); floatingTexts.push(new FloatingText(this.x,this.y,"KLOSKA VERJAGT!","#0f0")); showToast("KLOSKA VERJAGT!","#00ff00","Server gerettet! (+1500 Pkt)"); }
         }
         
@@ -1267,6 +1387,7 @@ class Player{
         if(this.bugTimer>0){dx=-dx;dy=-dy;}
 
         let spd=this.speed;
+        if(idocEvent && hasTrophy('idoc_savior')) spd *= 1.1; // 10% mehr Speed
         if(this.bikeTimer>0)       spd=10;
         if(this.speedBoostTimer>0) spd+=3;
         if(this.sapDebuffTimer>0)  spd=Math.max(1, spd-3); 
@@ -2042,6 +2163,8 @@ function loop(){
                     mt.style.display='none'; mb.style.display='none';
                     score+=3000; player.meetingProgress=0;
                     floatingTexts.push(new FloatingText(player.x,player.y,"MEETING ÜBERLEBT!","#0f0"));
+                   unlockTrophy('meeting_survivor');
+                    if(hasTrophy('meeting_survivor')) score += 1000; // Perk: +1000 Extra-Punkte
                     showToast("MEETING ÜBERLEBT!","#00ff00","+3000 Punkte");
                 }
             }
@@ -2175,6 +2298,7 @@ function loop(){
                     activeBoss = null;
                     if(e.label === "PETER BAYER") {
                         systemCollapse = true;
+                        unlockTrophy('boss_killer');
                         collapseTimer = 0;
                         // --- ALLES LÖSCHEN (Die leere Arena des Todes) ---
                         enemies = [];       // Alle kleinen Tickets weg
@@ -2403,3 +2527,4 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
