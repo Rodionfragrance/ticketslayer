@@ -31,31 +31,37 @@ canvas { display:block; cursor:crosshair; }
 #loadStatus    { color:#666; font-size:12px; font-family:'Courier New',monospace; }
 
 /* ============================================================
-   TOAST NOTIFICATIONS (Im HUD integriert)
+   TOAST NOTIFICATIONS & STATUS (Rechts)
    ============================================================ */
 #toastContainer {
     position:absolute; 
-    bottom: 25px;      /* Direkt im HUD platziert */
-    left: 36%;         /* Genau links neben das Gesicht geschoben */
-    transform:translateX(-50%);
+    top: 250px; /* Sitzt unter den Cooldowns */
+    right: 20px;
     width: 450px; 
     z-index:2000;
     display:flex; flex-direction:column; gap:4px; 
     pointer-events:none;
+    align-items: flex-end; /* Richtet die Popups rechtsbündig aus */
 }
 .toast {
-    background: transparent; /* Box entfernt, wirkt jetzt wie ein Hologramm */
+    background: transparent; 
     border: none; 
     padding: 0; 
-    text-align:center; 
+    text-align: right; /* Text nach rechts */
     animation:toastIn 0.2s ease, toastOut 0.4s ease 2.2s forwards;
 }
 .toast.persistent { animation:toastIn 0.2s ease; }
 .toast .toast-title { display:block; font-size:24px; font-weight:bold; text-shadow: 2px 2px 0 #000; text-transform:uppercase; } 
 .toast .toast-sub   { display:block; font-size:16px; color:#ffeb3b; margin-top:2px; font-weight:bold; text-shadow: 1px 1px 0 #000; text-transform:uppercase; } 
-@keyframes toastIn  { from{transform:translateY(15px);opacity:0} to{transform:translateY(0);opacity:1} }
-@keyframes toastOut { to  {transform:translateY(-15px);opacity:0} }
+@keyframes toastIn  { from{transform:translateX(30px);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes toastOut { to  {transform:translateX(30px);opacity:0} }
 
+#status-overlay {
+    position:absolute; top:10px; right:10px;
+    font-size:13px; color:rgba(255,255,255,0.8);
+    pointer-events:none; z-index:50; text-shadow:1px 1px 0 #000;
+    text-align: right; font-family: 'Courier New', monospace;
+}
 /* ============================================================
    EMAIL OVERLAY
    ============================================================ */
@@ -113,7 +119,12 @@ canvas { display:block; cursor:crosshair; }
     font-size:12px; color:#888; z-index:5;
     pointer-events:none; text-shadow:1px 1px 0 #000;
 }
-
+#status-overlay {
+    position:absolute; top:10px; right:10px;
+    font-size:13px; color:rgba(255,255,255,0.8);
+    pointer-events:none; z-index:50; text-shadow:1px 1px 0 #000;
+    text-align: right; font-family: 'Courier New', monospace;
+}
 /* ============================================================
    MEETING UI
    ============================================================ */
@@ -511,6 +522,7 @@ input[type="text"] {
 
 <!-- MISC HUD -->
 <div id="highscore-overlay">Lade Online Scores...</div>
+<div id="status-overlay"></div>
 <div id="stationInfo">[E] Interagieren | [B] Azubi 5000P | [F] Server-Farm | [Q] Kaffee | [G] Urlaub</div>
 
 <!-- DOOM HUD -->
@@ -2145,6 +2157,52 @@ function updateHUD(){
         wb.style.width = ((maxT / 1800) * 100) + "%";
         wb.style.backgroundColor = '#ffeb3b'; // Leuchtend Gold für Multi-Kill
     }
+   // --- STATUS & COOLDOWN OVERLAY (OBEN RECHTS) ---
+    let statusHtml = "<span style='color:#fff;text-decoration:underline;font-size:14px;font-weight:bold;'>📡 LEITSTAND-SYSTEME:</span><br>";
+    let hasStatus = false;
+
+    function addStatus(label, timer, color) {
+        if (timer > 0 && timer !== Infinity) {
+            hasStatus = true;
+            statusHtml += `<div style="color:${color}; margin-top:4px; font-weight:bold;">${label}: ${(timer/60).toFixed(1)}s</div>`;
+        } else if (timer === Infinity) {
+            hasStatus = true;
+            statusHtml += `<div style="color:${color}; margin-top:4px; font-weight:bold;">${label}: ∞</div>`;
+        }
+    }
+
+    if(player) {
+        // Spieler Buffs & Debuffs
+        if(player.rollCooldown > 0) addStatus("HECHTROLLE CD", player.rollCooldown, "#aaa");
+        addStatus("🛡️ SCHUTZSCHILD", player.shieldTimer, "#00f");
+        addStatus("🍺 VODKA (IMMUN)", player.vodkaTimer, "#0984e3");
+        addStatus("🚲 RADL-RAMBO", player.bikeTimer, "#0f0");
+        addStatus("🖱️ ORBIT-MAUS", player.mouseTimer, "#0ff");
+        addStatus("💿 SAP-SLOW", player.sapDebuffTimer, "#1f618d");
+        addStatus("💾 BUG (INVERT)", player.bugTimer, "#f0f");
+        
+        // Waffen-Rausch Anzeige (wenn mehrere Waffen aktiv sind)
+        let wepKeys = Object.keys(player.activeWeapons);
+        if(wepKeys.length > 0) {
+            let maxT = Math.max(...Object.values(player.activeWeapons));
+            addStatus("🔫 WAFFEN-ARSENAL", maxT, "#ffeb3b");
+        }
+    }
+
+    // Event Timer
+    if(idocEvent) addStatus("🚨 IDOC ALARM", idocEvent.timer, "#f00");
+    if(kloskaEvent) addStatus("⚠️ KLOSKA SABOTAGE", kloskaEvent.timer, "#ff00ff");
+    if(currentHackingServer) addStatus("🔒 HACKING TIMER", hackingTimer, "#ff4400");
+    
+    // System Kollaps
+    if(systemCollapse) {
+        hasStatus = true;
+        statusHtml += `<div style="color:#f00; margin-top:6px; font-weight:bold; font-size: 14px; text-shadow: 0 0 5px #f00;">🔥 KOLLAPS: ${(collapseTimer/60).toFixed(1)}s</div>`;
+    }
+
+    if(!hasStatus) statusHtml += `<div style="color:#555; margin-top:4px; font-style:italic;">Keine Systeme aktiv</div>`;
+    
+    document.getElementById('status-overlay').innerHTML = statusHtml;
 }
 
 // ============================================================
@@ -2614,6 +2672,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
