@@ -817,7 +817,7 @@ const TROPHIES_DEF = [
     { id:'pacifist', icon:'🕊️', name:'Pazifist', desc:'Überlebe 3 Minuten ohne einen Schuss.', perk:'Fluchttier: Grund-Speed +0.2' },
     { id:'boss_killer', icon:'👑', name:'Vorstandswechsel', desc:'Besiege Peter Bayer im Burnout/Survival.', perk:'Chef-Aura: 10s Schutzschild beim Start' },
     { id:'collapse_survivor', icon:'🔥', name:'Feuerprobe', desc:'Überlebe 3 Minuten im System-Kollaps.', perk:'Arsenal-Experte: Spezialwaffen halten 25% länger' },
-    { id:'survival_master', icon:'💀', name:'Der wahre Kern', desc:'Erreiche 250k Punkte im Survival-Modus.', perk:'Gnadenlos: Basis-Schaden dauerhaft +2' }
+    { id:'survival_master', icon:'💀', name:'Der wahre Kern', desc:'Erreiche 250k Punkte im Survival-Modus.', perk:'Gnadenlos: Basis-Schaden dauerhaft +2' },
     { id:'god_of_leitstand', icon:'🌌', name:'Gott des Leitstands', desc:'Besiege Peter Bayer im Wegflexen-Modus.', perk:'Omnipotenz: Alle Waffen halten 50% länger' }
 ];
 
@@ -925,7 +925,7 @@ function renderShop() {
     grid.innerHTML = '';
 
     // Hol den besten Score
-    let best = parseInt(localStorage.getItem('ts_best_score') || '0');
+    // let best = parseInt(localStorage.getItem('ts_best_score') || '0');
     
     // Survival Unlock prüfen (Einheitlich auf 50.000 gesetzt)
     if(best >= 50000) {
@@ -2722,6 +2722,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
