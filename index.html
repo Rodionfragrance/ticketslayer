@@ -2410,12 +2410,11 @@ function loop(){
             if(enemies[i].hp<=0){
     let e=enemies[i];
     
-    // --- RACHE-HEILUNG ---
-    // --- RACHE-HEILUNG ---
+        // --- RACHE-HEILUNG ---
     if(player.orangeHp > 0) {
         let heal = 2; // Wert pro Kill (anpassbar)
         if(heal > player.orangeHp) heal = player.orangeHp;
-        if(currentDiffLabel !== "SURVIVAL") {
+        if(currentDiffLabel !== "SURVIVAL" && !isWegflexenMode) { 
             player.hp = Math.min(player.maxHp, player.hp + heal);
             player.runRacheHeal += heal;
             if(player.runRacheHeal >= 1000) unlockTrophy('bloodlust');
@@ -2503,7 +2502,7 @@ function loop(){
                     // case 'suppe': player.suppe++; playSound('powerup'); showToast("SUPPE! 🥣", "#ff9f43", "Zahlungsmittel für Kloska"); floatingTexts.push(new FloatingText(player.x,player.y,"+1 SUPPE","#ff9f43"));break;  
                     // case 'chicken': player.hp=Math.min(player.maxHp,player.hp+30);spawnParticles(item.x,item.y,'#d35400',10);playSound('powerup');showToast("STÄRKUNG! 🍗","#d35400","+30 Gesundheit");break;
                     case 'chicken': 
-                        if(currentDiffLabel === "SURVIVAL") {
+                        if(currentDiffLabel === "SURVIVAL" || isWegflexenMode) {
                             showToast("VERDORBEN! 🍗", "#555", "Keine Heilung im Survival!");
                         } else {
                             player.hp = Math.min(player.maxHp, player.hp + 30);
@@ -2621,8 +2620,8 @@ function startGame(diff=1){
     if(diff !== 10) isWegflexenMode = false; 
 
     if(isWegflexenMode) {
-        player.hp = 1;
-        player.maxHp = 1;
+        player.maxHp = 100; // Basis bleibt 100
+        player.hp = 1;      // Aber wir starten mit exakt 1 HP (1%)
         wegflexenTimer = 300; 
         showToast("MODUS: WEGFLEXEN", "#f00", "1 HP | 5S KILL-TIMER | 10X PUNKTE");
     }
@@ -2708,6 +2707,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
