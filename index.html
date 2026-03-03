@@ -884,14 +884,14 @@ function renderShop() {
     let grid = document.getElementById('shopGrid');
     grid.innerHTML = '';
 
-   // Survival Unlock prüfen
+    // Hol den besten Score (NUR EINMAL DEKLARIEREN!)
     let best = parseInt(localStorage.getItem('ts_best_score') || '0');
-    if(best >= 100000) {
-        document.getElementById('btn-survival').style.display = 'inline-block';
-    }
     
-    // Hol den besten Score
-    let best = parseInt(localStorage.getItem('ts_best_score') || '0');
+    // Survival Unlock prüfen
+    if(best >= 100000) {
+        let survBtn = document.getElementById('btn-survival');
+        if(survBtn) survBtn.style.display = 'inline-block';
+    }
 
     UPGRADES_DEF.forEach(upg => {
         // Verstecke Mods, wenn Score zu niedrig
@@ -2551,6 +2551,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
