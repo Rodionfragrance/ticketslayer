@@ -925,7 +925,7 @@ function renderShop() {
     grid.innerHTML = '';
 
     // Hol den besten Score
-    // let best = parseInt(localStorage.getItem('ts_best_score') || '0');
+    let best = parseInt(localStorage.getItem('ts_best_score') || '0');
     
     // Survival Unlock prüfen (Einheitlich auf 50.000 gesetzt)
     if(best >= 50000) {
@@ -1815,7 +1815,7 @@ class Enemy{
                     playSound('sap'); screenShake=10;
                     showToast("SAP-UPDATE LÄUFT!","#1f618d","Speed massiv reduziert für 5 Sek");
                 }
-                if(isWegflexenMode) player.hp = 0; else player.hp -= 0.5;
+                if(isWegflexenMode) player.hp = 0; else player.hp -= dmg;
                player.orangeHp += 0.5; 
                 player.orangeTimer = 120;
                 spawnParticles(player.x,player.y,'#1f618d',2);
@@ -1826,7 +1826,7 @@ class Enemy{
                     let dmg=0.5;
                     if(this.type===4)dmg=1.0; if(this.type===3)dmg=1.5; if(this.type===2)dmg=2.0;
                     if(this.type===1)dmg=2.5;  if(this.type===99)dmg=3.5; if(this.type===7)dmg=1.2;
-                    if(isWegflexenMode) player.hp = 0; else player.hp -= dmg;
+                    if(isWegflexenMode) player.hp = 0; else player.hp -= 0.5;
 
                     // --- DER FEHLENDE SCHRITT 2 ---
                     player.orangeHp += dmg;   // Markiert den Schaden als heilbar
@@ -2630,13 +2630,14 @@ function startGame(diff=1){
     enemies=[];bullets=[];particles=[];items=[];splatters=[];floatingTexts=[];turrets=[];shells=[];serverFarms=[];
     clearAllToasts();
 
-    player=new Player();
-    // Falls ein normaler Modus gestartet wird, Wegflexen deaktivieren
-    if(diff !== 10) isWegflexenMode = false; 
+    player = new Player();
+    
+    // Korrektur: Erlaubt Schwierigkeit 9 (Survival-Level) für Wegflexen
+    if(diff !== 9 && diff !== 10) isWegflexenMode = false; 
 
     if(isWegflexenMode) {
-        player.maxHp = 100; // Basis bleibt 100
-        player.hp = 1;      // Aber wir starten mit exakt 1 HP (1%)
+        player.maxHp = 100; // Basis bleibt 100%
+        player.hp = 1;      // Felix startet mit 1% (DNA des Schmerzes)
         wegflexenTimer = 300; 
         showToast("MODUS: WEGFLEXEN", "#f00", "1 HP | 5S KILL-TIMER | 10X PUNKTE");
     }
@@ -2722,6 +2723,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
