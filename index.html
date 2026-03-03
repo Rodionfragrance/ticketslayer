@@ -103,29 +103,7 @@ canvas { display:block; cursor:crosshair; }
     color:#ff8888; font-size:11px; margin-top:3px; font-family:'Courier New',monospace;
 }
 
-/* ============================================================
-   COMBO DISPLAY
-   ============================================================ */
-#comboDisplay {
-    position:absolute; top:50%; left:50%; 
-    transform:translate(-50%, -80px);
-    pointer-events:none; z-index:160;
-    display:none; text-align:center;
-}
-#comboText {
-    font-size:48px; font-weight:bold; font-family:'Courier New',monospace;
-    text-shadow: 3px 3px 0 #000, 0 0 20px currentColor;
-    animation: comboPop 0.2s ease;
-}
-#comboSub {
-    font-size:16px; color:#ffeb3b; font-weight:bold; letter-spacing:2px;
-    text-shadow: 1px 1px 0 #000;
-}
-@keyframes comboPop {
-    0%   { transform: scale(0.5); opacity:0; }
-    60%  { transform: scale(1.2); }
-    100% { transform: scale(1.0); opacity:1; }
-}
+
 
 /* ============================================================
    PAUSE OVERLAY
@@ -379,46 +357,7 @@ input[type="text"] {
     z-index:50; text-shadow:1px 1px 0 #000; text-align:right;
     display:none;
 }
-/* ============================================================
-   WEGFLEX TIMER
-   ============================================================ */
-#wegflexTimer {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    z-index: 150;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-}
-#wegflexTimerBar {
-    width: 280px;
-    height: 12px;
-    background: #300;
-    border: 2px solid #f00;
-    border-radius: 2px;
-    overflow: hidden;
-}
-#wegflexTimerFill {
-    height: 100%;
-    background: #f00;
-    transition: width 0.1s linear;
-}
-#wegflexTimerLabel {
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-    color: #f00;
-    letter-spacing: 3px;
-    text-shadow: 0 0 8px #f00;
-}
-@keyframes timerPulse {
-    0%,100% { transform: translate(-50%,-50%) scale(1); }
-    50%      { transform: translate(-50%,-50%) scale(1.06); opacity:0.7; }
-}
-#wegflexTimer.danger { animation: timerPulse 0.4s infinite; }
+
 
 /* ============================================================
    SAP SLOW OVERLAY
@@ -501,11 +440,7 @@ input[type="text"] {
 <!-- SAP DEBUFF OVERLAY -->
 <div id="sapOverlay"></div>
 
-<!-- Wegflex timer -->
-<div id="wegflexTimer">
-    <div id="wegflexTimerLabel">⚠ KILL-TIMER</div>
-    <div id="wegflexTimerBar"><div id="wegflexTimerFill"></div></div>
-</div>
+
 
 <!-- BOSS HP BAR (oben Mitte) -->
 <div id="bossHpContainer">
@@ -514,11 +449,7 @@ input[type="text"] {
     <div id="bossHpPercent">100%</div>
 </div>
 
-<!-- COMBO DISPLAY -->
-<div id="comboDisplay">
-    <div id="comboText">×2</div>
-    <div id="comboSub">COMBO!</div>
-</div>
+
 
 <!-- TOASTS -->
 <div id="toastContainer"></div>
@@ -785,6 +716,7 @@ input[type="text"] {
         <div><span class="hud-label">GESUNDHEIT</span><span id="hud-hp" class="hud-value hud-red">100%</span></div>
         <div><span class="hud-label">TICKETS</span><span id="hud-score" class="hud-value hud-gold">0</span></div>
         <div><span class="hud-label">SCHICHT</span><span id="hud-shift" class="hud-value" style="color:#aaa;font-size:18px;">FRÜH</span></div>
+        <div><span class="hud-label">MODUS</span><span id="hud-mode" class="hud-value" style="font-size:15px;">–</span></div>
     </div>
     <div class="hud-section hud-center">
         <div id="hud-face-frame"><img id="hud-face" src="wurmr.png" alt="Face"></div>
@@ -857,6 +789,12 @@ function startPreloader() {
             clearInterval(iv);
             document.getElementById('loadingScreen').style.display = 'none';
             document.getElementById('startScreen').style.display = 'block';
+
+            // Menü-Musik starten (klappt da vorher User-Interaktion via Login-Klick stattfand)
+            try {
+                var mm = document.getElementById('menuMusic');
+                if(mm) { mm.currentTime = 0; mm.play().catch(function(){}); }
+            } catch(e) {}
             
             try {
                 var el = document.getElementById('startKBAmount');
@@ -1229,13 +1167,13 @@ let combo = 0;           // Aktuelle Kill-Streak
 let comboTimer = 0;      // Frames bis Combo verfällt (180 = 3 Sek)
 let comboMult = 1;       // Aktueller Multiplikator (1, 2, 3 oder 5)
 let bestComboThisRun = 1;
-let comboDisplayTimer = 0; // Wie lange das Combo-UI sichtbar bleibt
+
 
 function updateCombo(kill=true) {
     if(!kill) {
         // Combo ist ausgelaufen
         combo = 0; comboMult = 1; comboTimer = 0;
-        document.getElementById('comboDisplay').style.display = 'none';
+        
         return;
     }
     combo++;
@@ -1256,18 +1194,6 @@ function updateCombo(kill=true) {
         let c = colors[comboMult] || '#fff';
         showToast(`×${comboMult} COMBO!`, c, `${combo} Kills — Score ×${comboMult}`);
         playSound('combo'+comboMult);
-        // Combo-Display zeigen
-        let display = document.getElementById('comboDisplay');
-        let text = document.getElementById('comboText');
-        let sub = document.getElementById('comboSub');
-        display.style.display = 'block';
-        text.style.color = c;
-        text.textContent = `×${comboMult}`;
-        sub.textContent = `${combo} KILLS COMBO!`;
-        // Neu-Animieren durch class toggle
-        text.style.animation = 'none';
-        void text.offsetWidth; // reflow
-        text.style.animation = 'comboPop 0.2s ease';
     }
 }
 
@@ -1335,7 +1261,7 @@ function quitToMenu() {
     if(kbDisplay) kbDisplay.innerText = kaffeebons;
     // Boss-Bar ausblenden
     document.getElementById('bossHpContainer').style.display = 'none';
-    document.getElementById('comboDisplay').style.display = 'none';
+    
 }
 
 // ============================================================
@@ -1398,7 +1324,7 @@ function checkGameOver(){
         document.getElementById('meeting-text').style.display='none';
         document.getElementById('sapOverlay').style.display='none';
         document.getElementById('bossHpContainer').style.display='none';
-        document.getElementById('comboDisplay').style.display='none';
+        
         clearAllToasts();
         bgMusic.pause();
         let mm = document.getElementById('menuMusic');
@@ -2251,7 +2177,7 @@ function updateHUD(){
         if(currentDiffLabel === "WEGFLEXEN") modeEl.style.textShadow = "0 0 8px #f00";
         else modeEl.style.textShadow = "2px 2px 0 #000";
     }
-   
+    
     let fi = document.getElementById('hud-face');
     let ts = player.isMartin ? "maddinl.png" : "wurml.png";
     if(fi && !fi.src.includes(ts)) fi.src = ts;
@@ -2317,29 +2243,10 @@ function updateHUD(){
     if(systemCollapse) { hasStatus = true; statusHtml += `<div style="color:#f00; margin-top:6px; font-weight:bold; font-size: 14px; text-shadow: 0 0 5px #f00;">🔥 KOLLAPS: ${(collapseTimer/60).toFixed(1)}s</div>`; }
     if(!hasStatus) statusHtml += `<div style="color:#555; margin-top:4px; font-style:italic;">Keine Systeme aktiv</div>`;
     
-    updateWegflexTimer();
     document.getElementById('status-overlay').innerHTML = statusHtml;
 }
 
-function updateWegflexTimer() {
-    var el  = document.getElementById('wegflexTimer');
-    var bar = document.getElementById('wegflexTimerFill');
-    var lbl = document.getElementById('wegflexTimerLabel');
-    if (!el) return;
-    if (isWegflexenMode && gameRunning && !gamePaused) {
-        el.style.display = 'flex';
-        var pct  = Math.max(0, (wegflexenTimer / 300) * 100);
-        var secs = Math.ceil(wegflexenTimer / 60);
-        bar.style.width = pct + '%';
-        if (pct > 60) { bar.style.background = '#2ecc71'; el.classList.remove('danger'); }
-        else if (pct > 30) { bar.style.background = '#f1c40f'; el.classList.remove('danger'); }
-        else { bar.style.background = '#e74c3c'; el.classList.add('danger'); }
-        lbl.innerText = '⚠ KILL-TIMER  ' + secs + 's';
-    } else {
-        el.style.display = 'none';
-        el.classList.remove('danger');
-    }
-}
+
 
 // ============================================================
 // SECTION 16 — MAIN LOOP
@@ -2659,7 +2566,7 @@ function startGame(diff=1){
     document.getElementById('sapOverlay').style.display='none';
     document.getElementById('pauseOverlay').classList.remove('active');
     document.getElementById('bossHpContainer').style.display='none';
-    document.getElementById('comboDisplay').style.display='none';
+    
 
     input.keys={};input.mouseDown=false;
     score=0;frame=0;difficulty=diff;
@@ -2749,4 +2656,3 @@ setTimeout(function(){
             if(el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
         } catch(e) {}
         var best = parseInt(localStorag
-
