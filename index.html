@@ -602,7 +602,7 @@ function startPreloader() {
             
             // Survival Unlock prüfen
             let best = parseInt(localStorage.getItem('ts_best_score') || '0');
-            if(best >= 100000) {
+            if(best >= 50000) {
                 let survBtn = document.getElementById('btn-survival');
                 if(survBtn) survBtn.style.display = 'inline-block';
             }
@@ -2598,6 +2598,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
