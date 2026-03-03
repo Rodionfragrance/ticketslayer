@@ -399,6 +399,7 @@ input[type="text"] {
             <button class="btn-easy"   onclick="startGame(1)">Praktikant</button>
             <button class="btn-normal" onclick="startGame(3)">Vollzeit</button>
             <button class="btn-hard"   onclick="startGame(6)">Burnout</button>
+            <button id="btn-survival" onclick="startGame(9)" style="display:none; background:#111; color:#9b59b6; border:2px solid #9b59b6; padding:12px 18px; font-size:16px; cursor:pointer; font-weight:bold; text-transform:uppercase; font-family:'Courier New',monospace; min-width:130px; transition:0.2s;">Survival</button>
         </div>
         <button class="btn-shop" onclick="openShop()" style="width:100%;margin-top:10px;">&#9749; UPGRADE SHOP</button>
         <button class="btn-info" onclick="showEmail()" style="width:100%;margin-top:6px;">[I] PROZESSANWEISUNG</button>
@@ -542,11 +543,19 @@ function startPreloader() {
             clearInterval(iv);
             document.getElementById('loadingScreen').style.display = 'none';
             document.getElementById('startScreen').style.display = 'block';
-            // kaffeebons ist im Haupt-Script definiert — sicher lesen
+            
+            // Kaffeebons laden
             try {
                 var el = document.getElementById('startKBAmount');
                 if (el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
             } catch(e) {}
+            
+            // Survival Unlock prüfen
+            let best = parseInt(localStorage.getItem('ts_best_score') || '0');
+            if(best >= 100000) {
+                let survBtn = document.getElementById('btn-survival');
+                if(survBtn) survBtn.style.display = 'inline-block';
+            }
         }
     }, 50);
 }
@@ -581,18 +590,36 @@ try {
 
 function loadHighscores() {
     if (!db) return;
-    db.collection("highscores").orderBy("score","desc").limit(5).get().then(snap=>{
-        let html = "<span style='color:#fff;text-decoration:underline'>GLOBALE TOP 5:</span><br>";
-        let rank = 1;
-        snap.forEach(doc=>{
-            let d=doc.data();
-            let c=rank===1?'gold':(rank===2?'silver':(rank===3?'#cd7f32':'#aaa'));
-            let diff=d.difficulty?` [${d.difficulty}]`:"";
-            html+=`<span style="color:${c}">${rank}. ${d.name}${diff}: ${d.score}</span><br>`;
-            rank++;
+    document.getElementById('highscore-overlay').innerHTML = "Lade Ligen...";
+    
+    // Wir holen die Top 100 und sortieren sie lokal, um Firebase-Index-Fehler zu vermeiden
+    db.collection("highscores").orderBy("score","desc").limit(100).get().then(snap=>{
+        let scores = { "SURVIVAL": [], "BURNOUT": [], "VOLLZEIT": [], "PRAKTIKANT": [] };
+        
+        snap.forEach(doc => {
+            let d = doc.data();
+            let diff = d.difficulty || "PRAKTIKANT"; // Fallback für alte Einträge
+            if(scores[diff] && scores[diff].length < 3) { // Top 3 pro Liga reicht für die Anzeige
+                scores[diff].push(d);
+            }
         });
-        document.getElementById('highscore-overlay').innerHTML=html;
-    });
+
+        let html = "<span style='color:#fff;text-decoration:underline;font-size:14px;font-weight:bold;'>🏆 LIGEN TOP 3:</span><br>";
+        
+        ["SURVIVAL", "BURNOUT", "VOLLZEIT", "PRAKTIKANT"].forEach(mode => {
+            if(scores[mode].length > 0) {
+                let color = mode === 'SURVIVAL' ? '#8e44ad' : (mode === 'BURNOUT' ? '#c0392b' : (mode === 'VOLLZEIT' ? '#f1c40f' : '#2ecc71'));
+                html += `<div style="color:${color}; font-weight:bold; margin-top:6px; font-size:12px;">[${mode}]</div>`;
+                scores[mode].forEach((d, i) => {
+                    let rank = i + 1;
+                    let c = rank===1?'gold':(rank===2?'silver':'#cd7f32');
+                    let coll = d.collapseTime > 0 ? ` [🔥${d.collapseTime}s]` : "";
+                    html += `<div style="color:${c}; font-size:11px; margin-left:5px;">${rank}. ${d.name.substring(0,8)}: ${d.score}${coll}</div>`;
+                });
+            }
+        });
+        document.getElementById('highscore-overlay').innerHTML = html;
+    }).catch(e => console.error(e));
 }
 function saveHighscoreAndRestart() {
    // Allzeit-Highscore für Shop-Unlocks sichern
@@ -752,6 +779,12 @@ function renderShop() {
     document.getElementById('shopKBAmount').innerText = kaffeebons;
     let grid = document.getElementById('shopGrid');
     grid.innerHTML = '';
+
+   // Survival Unlock prüfen
+    let best = parseInt(localStorage.getItem('ts_best_score') || '0');
+    if(best >= 100000) {
+        document.getElementById('btn-survival').style.display = 'inline-block';
+    }
     
     // Hol den besten Score
     let best = parseInt(localStorage.getItem('ts_best_score') || '0');
@@ -1173,8 +1206,9 @@ class Player{
         if(input.keys['KeyE']){
             for(let s of stations){
                 if(s.type==='hardware_store' && Math.hypot(this.x-s.x-s.w/2, this.y-s.y-s.h/2) < 150){ openKloskaShop(); input.keys['KeyE'] = false; }
-                if(s.type==='chicken_truck'&&Math.hypot(this.x-s.x-s.w/2,this.y-s.y-s.h/2)<150&&this.hp<this.maxHp){
-                    this.hp++; if(frame%10===0) spawnParticles(this.x,this.y,'#d35400',1);
+                //if(s.type==='chicken_truck'&&Math.hypot(this.x-s.x-s.w/2,this.y-s.y-s.h/2)<150&&this.hp<this.maxHp){
+                if(s.type==='chicken_truck'&&Math.hypot(this.x-s.x-s.w/2,this.y-s.y-s.h/2)<150&&this.hp<this.maxHp && currentDiffLabel !== "SURVIVAL"){
+               this.hp++; if(frame%10===0) spawnParticles(this.x,this.y,'#d35400',1);
                     if(frame%30===0) floatingTexts.push(new FloatingText(this.x,this.y-60,"ABMAHNUNG!","#f00"));
                 }
             }
@@ -1198,7 +1232,8 @@ class Player{
             showToast("SCHICHTWECHSEL",colors[currentShift],names[currentShift]+" — "+subs[currentShift]);
         }
 
-        if(this.vacationTimer>0){this.vacationTimer--;if(frame%60===0&&this.hp<this.maxHp)this.hp+=2;}
+        // if(this.vacationTimer>0){this.vacationTimer--;if(frame%60===0&&this.hp<this.maxHp)this.hp+=2;}
+        if(this.vacationTimer>0){this.vacationTimer--;if(frame%60===0&&this.hp<this.maxHp && currentDiffLabel !== "SURVIVAL")this.hp+=2;}
         if(this.bikeTimer>0)        this.bikeTimer--;
         if(this.speedBoostTimer>0)  this.speedBoostTimer--;
         if(this.sapDebuffTimer>0){  this.sapDebuffTimer--; if(this.sapDebuffTimer<=0){ document.getElementById('sapOverlay').style.display='none'; showToast("SAP-UPDATE ABGESCHLOSSEN","#1f618d","Speed wiederhergestellt"); } }
@@ -2124,7 +2159,8 @@ function loop(){
     if(player.orangeHp > 0) {
         let heal = 2; // Wert pro Kill (anpassbar)
         if(heal > player.orangeHp) heal = player.orangeHp;
-        player.hp = Math.min(player.maxHp, player.hp + heal);
+        // player.hp = Math.min(player.maxHp, player.hp + heal);
+        if(currentDiffLabel !== "SURVIVAL") player.hp = Math.min(player.maxHp, player.hp + heal);
         player.orangeHp -= heal;
         floatingTexts.push(new FloatingText(player.x, player.y, "+RACHE", "#ff6600"));
     }
@@ -2274,7 +2310,8 @@ function startGame(diff=1){
 
     input.keys={};input.mouseDown=false;
     score=0;frame=0;difficulty=diff;
-    currentDiffLabel=diff===1?"PRAKTIKANT":(diff===3?"VOLLZEIT":"BURNOUT");
+    // currentDiffLabel=diff===1?"PRAKTIKANT":(diff===3?"VOLLZEIT":"BURNOUT");
+    currentDiffLabel = diff===1 ? "PRAKTIKANT" : (diff===3 ? "VOLLZEIT" : (diff===6 ? "BURNOUT" : "SURVIVAL"));
     lastChosenDifficulty=diff;
     currentBossStage=0;activeBoss=null;
     currentShift=0;shiftTimer=0;
@@ -2366,8 +2403,3 @@ setTimeout(function(){
 </script>
 </body>
 </html>
-
-
-
-
-
