@@ -463,7 +463,7 @@ input[type="text"] {
             <button class="btn-normal" onclick="startGame(3)">Vollzeit</button>
             <button class="btn-hard"   onclick="startGame(6)">Burnout</button>
             <button id="btn-survival" onclick="startGame(9)" style="display:none; background:#111; color:#9b59b6; border:2px solid #9b59b6; padding:12px 18px; font-size:16px; cursor:pointer; font-weight:bold; text-transform:uppercase; font-family:'Courier New',monospace; min-width:130px; transition:0.2s;">Survival</button>
-            <button class="btn-flex" onclick="isWegflexenMode=true; startGame(10)" style="background: linear-gradient(45deg, #000, #600); color: #f00; border: 2px solid #f00; box-shadow: 0 0 15px #f00; margin-left: 10px; font-weight: bold;">WEGFLEXEN</button>
+            <button class="btn-flex" onclick="isWegflexenMode=true; startGame(9)" style="...">WEGFLEXEN</button>
         </div>
         <button class="btn-shop" onclick="openShop()" style="width:100%;margin-top:10px;">&#9749; UPGRADE SHOP</button>
         <button class="btn-shop" onclick="openTrophies()" style="width:100%;margin-top:6px; border-color:#f1c40f; color:#f1c40f;">🏆 TROPHÄENSCHRANK</button>
@@ -669,40 +669,36 @@ function loadHighscores() {
     
     // Wir holen die besten 300 nach Punkten als Basis-Pool
     db.collection("highscores").orderBy("score","desc").limit(300).get().then(snap=>{
-        let scores = { "SURVIVAL": [], "BURNOUT": [], "VOLLZEIT": [], "PRAKTIKANT": [] };
+        // "WEGFLEXEN" als neue Kategorie hinzugefügt
+        let scores = { "WEGFLEXEN": [], "SURVIVAL": [], "BURNOUT": [], "VOLLZEIT": [], "PRAKTIKANT": [] };
         
         snap.forEach(doc => {
             let d = doc.data();
             let diff = d.difficulty || "PRAKTIKANT"; 
             if(scores[diff]) {
-                scores[diff].push(d); // Erstmal alle in die jeweilige Liga werfen
+                scores[diff].push(d); 
             }
         });
 
         let html = "<span style='color:#fff;text-decoration:underline;font-size:14px;font-weight:bold;'>🏆 LIGEN TOP 5:</span><br>"; 
         
-        ["SURVIVAL", "BURNOUT", "VOLLZEIT", "PRAKTIKANT"].forEach(mode => {
+        // "WEGFLEXEN" ganz oben in der Liste
+        ["WEGFLEXEN", "SURVIVAL", "BURNOUT", "VOLLZEIT", "PRAKTIKANT"].forEach(mode => {
             if(scores[mode].length > 0) {
+                // Farbe für WEGFLEXEN: Tiefrot (#f00)
+                let color = mode === 'WEGFLEXEN' ? '#f00' : (mode === 'SURVIVAL' ? '#8e44ad' : (mode === 'BURNOUT' ? '#c0392b' : (mode === 'VOLLZEIT' ? '#f1c40f' : '#2ecc71')));
                 
-                // --- NEU: Die gnadenlose 2-Stufen-Sortierung ---
+                html += `<div style="color:${color}; font-weight:bold; margin-top:6px; font-size:12px;">[${mode}]</div>`;
+                
+                // Sortierung (Collapse vor Score)
                 scores[mode].sort((a, b) => {
                     let collA = parseFloat(a.collapseTime) || 0;
                     let collB = parseFloat(b.collapseTime) || 0;
-
-                    // 1. Priorität: Kollaps-Zeit (Höher = Besser)
-                    if (collA !== collB) {
-                        return collB - collA; 
-                    }
-                    // 2. Priorität: Wenn beide gleiche Kollaps-Zeit haben (z.B. beide 0), entscheidet der Score
+                    if (collA !== collB) return collB - collA; 
                     return b.score - a.score;
                 });
 
-                // Jetzt schneiden wir uns exakt die besten 5 aus der sortierten Liste ab
                 let top5 = scores[mode].slice(0, 5);
-
-                let color = mode === 'SURVIVAL' ? '#8e44ad' : (mode === 'BURNOUT' ? '#c0392b' : (mode === 'VOLLZEIT' ? '#f1c40f' : '#2ecc71'));
-                html += `<div style="color:${color}; font-weight:bold; margin-top:6px; font-size:12px;">[${mode}]</div>`;
-                
                 top5.forEach((d, i) => {
                     let rank = i + 1;
                     let c = rank===1?'gold':(rank===2?'silver':(rank===3?'#cd7f32':'#aaa'));
@@ -2611,7 +2607,7 @@ function startGame(diff=1){
     input.keys={};input.mouseDown=false;
     score=0;frame=0;difficulty=diff;
     // currentDiffLabel=diff===1?"PRAKTIKANT":(diff===3?"VOLLZEIT":"BURNOUT");
-    currentDiffLabel = diff===1 ? "PRAKTIKANT" : (diff===3 ? "VOLLZEIT" : (diff===6 ? "BURNOUT" : "SURVIVAL"));
+    currentDiffLabel = isWegflexenMode ? "WEGFLEXEN" : (diff===1 ? "PRAKTIKANT" : (diff===3 ? "VOLLZEIT" : (diff===6 ? "BURNOUT" : "SURVIVAL")));
     lastChosenDifficulty=diff;
     currentBossStage=0;activeBoss=null;
     currentShift=0;shiftTimer=0;
@@ -2712,6 +2708,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
