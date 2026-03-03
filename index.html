@@ -818,6 +818,7 @@ const TROPHIES_DEF = [
     { id:'boss_killer', icon:'👑', name:'Vorstandswechsel', desc:'Besiege Peter Bayer im Burnout/Survival.', perk:'Chef-Aura: 10s Schutzschild beim Start' },
     { id:'collapse_survivor', icon:'🔥', name:'Feuerprobe', desc:'Überlebe 3 Minuten im System-Kollaps.', perk:'Arsenal-Experte: Spezialwaffen halten 25% länger' },
     { id:'survival_master', icon:'💀', name:'Der wahre Kern', desc:'Erreiche 250k Punkte im Survival-Modus.', perk:'Gnadenlos: Basis-Schaden dauerhaft +2' }
+    { id:'god_of_leitstand', icon:'🌌', name:'Gott des Leitstands', desc:'Besiege Peter Bayer im Wegflexen-Modus.', perk:'Omnipotenz: Alle Waffen halten 50% länger' }
 ];
 
 let unlockedTrophies = JSON.parse(localStorage.getItem('ts_trophies') || '[]');
@@ -1485,7 +1486,7 @@ class Player{
     triggerEvolution(){
         this.isMartin = true; 
         this.promoTriggered = true; 
-        if(currentDiffLabel !== "SURVIVAL") this.hp = this.maxHp; 
+        if(currentDiffLabel !== "SURVIVAL" && !isWegflexenMode) this.hp = this.maxHp; 
         playSound('evolve'); screenShake = 20;
         showToast("PIKO BELLO!","gold","Du bist jetzt MADDIN.");
         setTimeout(()=>{this.promoTriggered = false;}, 3000);
@@ -1814,7 +1815,7 @@ class Enemy{
                     playSound('sap'); screenShake=10;
                     showToast("SAP-UPDATE LÄUFT!","#1f618d","Speed massiv reduziert für 5 Sek");
                 }
-                player.hp-=0.5;
+                if(isWegflexenMode) player.hp = 0; else player.hp -= 0.5;
                player.orangeHp += 0.5; 
                 player.orangeTimer = 120;
                 spawnParticles(player.x,player.y,'#1f618d',2);
@@ -1825,7 +1826,7 @@ class Enemy{
                     let dmg=0.5;
                     if(this.type===4)dmg=1.0; if(this.type===3)dmg=1.5; if(this.type===2)dmg=2.0;
                     if(this.type===1)dmg=2.5;  if(this.type===99)dmg=3.5; if(this.type===7)dmg=1.2;
-                    player.hp-=dmg;
+                    if(isWegflexenMode) player.hp = 0; else player.hp -= dmg;
 
                     // --- DER FEHLENDE SCHRITT 2 ---
                     player.orangeHp += dmg;   // Markiert den Schaden als heilbar
@@ -2435,6 +2436,8 @@ function loop(){
                     if(e.label === "PETER BAYER") {
                         systemCollapse = true;
                         if(currentDiffLabel === "BURNOUT" || currentDiffLabel === "SURVIVAL") unlockTrophy('boss_killer');
+                        // --- NEU: DIE GÖTTER-PRÜFUNG ---
+                        if(isWegflexenMode) unlockTrophy('god_of_leitstand'); 
                         collapseTimer = 0;
                         // --- ALLES LÖSCHEN (Die leere Arena des Todes) ---
                         enemies = [];       // Alle kleinen Tickets weg
@@ -2512,8 +2515,18 @@ function loop(){
                         break; 
                    case 'vodka':   player.vodkaTimer=300;spawnParticles(item.x,item.y,'#0984e3',10);playSound('vodka');showToast(player.isMartin?"PATIENT NULL! 🍺":"WAFFE BLOCKIERT! 🍺",player.isMartin?"#0f0":"#f00",player.isMartin?"Unbesiegbar & giftig!":"KURWA...");break;
                     case 'crate':   {const w=['minigun','shotgun','rocket','uzi','ak47', 'railgun', 'flamer', 'mouse'];player.equipWeapon(w[Math.floor(Math.random()*w.length)]);spawnParticles(item.x,item.y,'#8e44ad',15);break;}
-                    case 'shield':  player.shieldTimer=600;playSound('powerup');showToast("SCHUTZSCHILD! 🛡️","#00f","Immunität für 10 Sek");floatingTexts.push(new FloatingText(player.x,player.y,"SCHUTZSCHILD!","#00f"));break;
-                    case 'bug':     player.bugTimer=600;playSound('bug');spawnParticles(item.x,item.y,'#f0f',20);showToast("JANSKIS HOTFIX! 💾","#f0f","Steuerung invertiert...");break;
+                    // case 'shield':  player.shieldTimer=600;playSound('powerup');showToast("SCHUTZSCHILD! 🛡️","#00f","Immunität für 10 Sek");floatingTexts.push(new FloatingText(player.x,player.y,"SCHUTZSCHILD!","#00f"));break;
+                    case 'shield':  
+                        if(isWegflexenMode) { 
+                            showToast("KEINE HILFE!", "#f00", "Götter brauchen keine Schilde!"); 
+                            break; 
+                        }
+                        player.shieldTimer=600;
+                        playSound('powerup');
+                        showToast("SCHUTZSCHILD! 🛡️","#00f","Immunität für 10 Sek");
+                        floatingTexts.push(new FloatingText(player.x,player.y,"SCHUTZSCHILD!","#00f"));
+                        break; // <-- DIESES BREAK HAT GEFEHLT!
+                   case 'bug':     player.bugTimer=600;playSound('bug');spawnParticles(item.x,item.y,'#f0f',20);showToast("JANSKIS HOTFIX! 💾","#f0f","Steuerung invertiert...");break;
                     case 'hammer':  player.hammerEffectTimer=120;playSound('hammer');screenShake=30;for(let k=enemies.length-1;k>=0;k--){if(enemies[k].type!==99){score+=Math.max(1,Math.floor(enemies[k].score*.1));splatters.push(new Splatter(enemies[k].x,enemies[k].y,enemies[k].color));enemies.splice(k,1);}else enemies[k].hp-=500;}showToast("RAMADAMA! 🔨","#e74c3c","Schleichst eich!");break;
                     // case 'nuke':    triggerNuke();break;
                     case 'vacation':
@@ -2526,8 +2539,10 @@ function loop(){
                     case 'bike':    player.bikeTimer=600;playSound('powerup');showToast("RADL-RAMBO! 🚲","#0f0","Speed x2 + Autofire");floatingTexts.push(new FloatingText(player.x,player.y,"RADL-RAMBO!","#0f0"));break;
                     case 'briefcase':
                         player.maxHp += 50;
-                        if(currentDiffLabel !== "SURVIVAL") player.hp = player.maxHp;
-                        playSound('evolve'); showToast("GEHALTSERHÖHUNG! 💼","#ffd700","Max-HP +50");
+                        // Nur heilen, wenn weder Survival noch Wegflexen aktiv ist
+                        if(currentDiffLabel !== "SURVIVAL" && !isWegflexenMode) player.hp = player.maxHp;
+                        playSound('evolve'); 
+                        showToast("GEHALTSERHÖHUNG! 💼","#ffd700","Max-HP +50");
                         floatingTexts.push(new FloatingText(player.x,player.y,"GEHALTSERHÖHUNG!","#ffd700"));
                         spawnParticles(item.x,item.y,'#ffd700',20);
                         break;
@@ -2707,6 +2722,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
