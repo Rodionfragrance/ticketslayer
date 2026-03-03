@@ -62,6 +62,18 @@ canvas { display:block; cursor:crosshair; }
     pointer-events:none; z-index:50; text-shadow:1px 1px 0 #000;
     text-align: right; font-family: 'Courier New', monospace;
 }
+   .btn-flex {
+    background: linear-gradient(45deg, #000, #600) !important;
+    color: #ff0000 !important;
+    border: 2px solid #ff0000 !important;
+    box-shadow: 0 0 15px #f00;
+    margin-left: 10px;
+}
+.btn-flex:hover {
+    background: #f00 !important;
+    color: #000 !important;
+    box-shadow: 0 0 30px #f00;
+}
 /* ============================================================
    EMAIL OVERLAY
    ============================================================ */
@@ -451,6 +463,7 @@ input[type="text"] {
             <button class="btn-normal" onclick="startGame(3)">Vollzeit</button>
             <button class="btn-hard"   onclick="startGame(6)">Burnout</button>
             <button id="btn-survival" onclick="startGame(9)" style="display:none; background:#111; color:#9b59b6; border:2px solid #9b59b6; padding:12px 18px; font-size:16px; cursor:pointer; font-weight:bold; text-transform:uppercase; font-family:'Courier New',monospace; min-width:130px; transition:0.2s;">Survival</button>
+            <button class="btn-flex" onclick="isWegflexenMode=true; startGame(10)" style="background: linear-gradient(45deg, #000, #600); color: #f00; border: 2px solid #f00; box-shadow: 0 0 15px #f00; margin-left: 10px; font-weight: bold;">WEGFLEXEN</button>
         </div>
         <button class="btn-shop" onclick="openShop()" style="width:100%;margin-top:10px;">&#9749; UPGRADE SHOP</button>
         <button class="btn-shop" onclick="openTrophies()" style="width:100%;margin-top:6px; border-color:#f1c40f; color:#f1c40f;">🏆 TROPHÄENSCHRANK</button>
@@ -716,7 +729,7 @@ function saveHighscoreAndRestart() {
         // 2. Highscore in die Datenbank schreiben (mit robustem Datums-Format)
         db.collection("highscores").add({
             name: name, 
-            score: score, 
+            score: isWegflexenMode ? score * 10 : score, 
             difficulty: currentDiffLabel, 
             collapseTime: systemCollapse ? (collapseTimer / 60).toFixed(1) : 0,
             date: new Date().toISOString()
@@ -748,7 +761,7 @@ function saveHighscoreAndRestart() {
     if(db && score > 0) {
         db.collection("highscores").add({
             name: name, 
-            score: score, 
+            score: isWegflexenMode ? score * 10 : score, 
             difficulty: currentDiffLabel, 
             collapseTime: systemCollapse ? (collapseTimer / 60).toFixed(1) : 0,
             date: new Date().toISOString()
@@ -914,12 +927,17 @@ function renderShop() {
     let grid = document.getElementById('shopGrid');
     grid.innerHTML = '';
 
-    // Hol den besten Score (NUR EINMAL DEKLARIEREN!)
+    // Hol den besten Score
     let best = parseInt(localStorage.getItem('ts_best_score') || '0');
     
-    // Survival Unlock prüfen
-    if(best >= 100000) {
+    // Survival Unlock prüfen (Einheitlich auf 50.000 gesetzt)
+    if(best >= 50000) {
         let survBtn = document.getElementById('btn-survival');
+        if(survBtn) survBtn.style.display = 'inline-block';
+    }
+    // Wegflexen Unlock prüfen (Einheitlich auf 100.000 gesetzt)
+    if(best >= 100000) {
+        let survBtn = document.getElementById('btn-wegflexen');
         if(survBtn) survBtn.style.display = 'inline-block';
     }
 
@@ -1045,6 +1063,8 @@ let bullets=[], enemies=[], particles=[], obstacles=[], stations=[];
 let servers=[], items=[], splatters=[], floatingTexts=[], turrets=[], shells=[];
 let serverFarms=[];   // {serverRef, ticker}  — idle income
 let systemCollapse = false;
+let isWegflexenMode = false;
+let wegflexenTimer = 300;   
 let collapseTimer = 0;
 
 // Boss definitions
@@ -2180,6 +2200,7 @@ function updateHUD(){
         addStatus("🖱️ ORBIT-MAUS", player.mouseTimer, "#0ff");
         addStatus("💿 SAP-SLOW", player.sapDebuffTimer, "#1f618d");
         addStatus("💾 BUG (INVERT)", player.bugTimer, "#f0f");
+        if(isWegflexenMode) addStatus("⚠️ FLEX-TIMER", wegflexenTimer, "#f00");
         
         // Waffen-Rausch Anzeige (wenn mehrere Waffen aktiv sind)
         let wepKeys = Object.keys(player.activeWeapons);
@@ -2221,6 +2242,14 @@ function loop(){
         frame++; shiftTimer++;
         spawnLogic();
         player.update();
+        // --- WEGFLEXEN ÜBERWACHUNG ---
+        if(isWegflexenMode && gameRunning && !gamePaused) {
+            wegflexenTimer--;
+            if(wegflexenTimer <= 0) {
+                player.hp = 0; 
+                showToast("ZU LANGSAM!", "#f00", "DU WURDEST WEGGEFLEXT!");
+            }
+        }
         updateFarms();
 
         // IDOC timeout
@@ -2402,6 +2431,7 @@ function loop(){
 
     if(e.hp===-1000){enemies.splice(i,1);continue;}
                 score+=e.score;
+                if(isWegflexenMode) wegflexenTimer = 300; // Setzt den 5-Sekunden-Timer bei jedem Kill zurück
                 if(currentShift===2) score+=Math.floor(e.score*.5);
                 splatters.push(new Splatter(e.x,e.y,e.color));
                 //if(e.type===99){activeBoss=null;floatingTexts.push(new FloatingText(e.x,e.y,"GIFTIGES ARBEITSKLIMA!","#ffd700"));screenShake=50;items.push(new Item('briefcase',e.x,e.y));showToast("BOSS BESIEGT!","#ffd700","Giftiges Arbeitsklima beseitigt!");}
@@ -2561,6 +2591,7 @@ function loop(){
 
         requestAnimationFrame(loop);
     } catch(err){ alert("ERROR: "+err.message); console.error(err); gameRunning=false; }
+
 }
 
 // ============================================================
@@ -2590,6 +2621,15 @@ function startGame(diff=1){
     clearAllToasts();
 
     player=new Player();
+    // Falls ein normaler Modus gestartet wird, Wegflexen deaktivieren
+    if(diff !== 10) isWegflexenMode = false; 
+
+    if(isWegflexenMode) {
+        player.hp = 1;
+        player.maxHp = 1;
+        wegflexenTimer = 300; 
+        showToast("MODUS: WEGFLEXEN", "#f00", "1 HP | 5S KILL-TIMER | 10X PUNKTE");
+    }
     generateWorld();
     gameRunning=true;
     loop();
@@ -2672,6 +2712,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
