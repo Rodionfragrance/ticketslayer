@@ -296,6 +296,47 @@ input[type="text"] {
     z-index:50; text-shadow:1px 1px 0 #000; text-align:right;
     display:none;
 }
+/* ============================================================
+   WEGFLEX TIMER
+   ============================================================ */
+
+   #wegflexTimer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 150;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+#wegflexTimerBar {
+    width: 280px;
+    height: 12px;
+    background: #300;
+    border: 2px solid #f00;
+    border-radius: 2px;
+    overflow: hidden;
+}
+#wegflexTimerFill {
+    height: 100%;
+    background: #f00;
+    transition: width 0.1s linear;
+}
+#wegflexTimerLabel {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #f00;
+    letter-spacing: 3px;
+    text-shadow: 0 0 8px #f00;
+}
+@keyframes timerPulse {
+    0%,100% { transform: translate(-50%,-50%) scale(1); }
+    50%      { transform: translate(-50%,-50%) scale(1.06); opacity:0.7; }
+}
+#wegflexTimer.danger { animation: timerPulse 0.4s infinite; }
 
 /* ============================================================
    SAP SLOW OVERLAY
@@ -377,6 +418,12 @@ input[type="text"] {
 
 <!-- SAP DEBUFF OVERLAY -->
 <div id="sapOverlay"></div>
+
+   <!-- Wegflex timer -->
+   <div id="wegflexTimer">
+    <div id="wegflexTimerLabel">⚠ KILL-TIMER</div>
+    <div id="wegflexTimerBar"><div id="wegflexTimerFill"></div></div>
+</div>
 
 <!-- TOASTS -->
 <div id="toastContainer"></div>
@@ -2227,12 +2274,12 @@ function updateHUD(){
     if(player) {
         // Spieler Buffs & Debuffs
         if(player.rollCooldown > 0) addStatus("HECHTROLLE CD", player.rollCooldown, "#aaa");
-        addStatus("🛡️ SCHUTZSCHILD", player.shieldTimer, "#00f");
+        addStatus("🛡️ SCHUTZSCHILD", player.shieldTimer, "#FFFFFF");
         addStatus("🍺 VODKA (IMMUN)", player.vodkaTimer, "#0984e3");
-        addStatus("🚲 RADL-RAMBO", player.bikeTimer, "#0f0");
-        addStatus("🖱️ ORBIT-MAUS", player.mouseTimer, "#0ff");
+        addStatus("🚲 RADL-RAMBO", player.bikeTimer, "#FFFFFF");
+        addStatus("🖱️ ORBIT-MAUS", player.mouseTimer, "#FFFFFF");
         addStatus("💿 SAP-SLOW", player.sapDebuffTimer, "#1f618d");
-        addStatus("💾 BUG (INVERT)", player.bugTimer, "#f0f");
+        addStatus("💾 BUG (INVERT)", player.bugTimer, "#FFFFFF");
         if(isWegflexenMode) addStatus("⚠️ FLEX-TIMER", Math.ceil(wegflexenTimer/60)+"s", "#f00");
         
         // Waffen-Rausch Anzeige (wenn mehrere Waffen aktiv sind)
@@ -2255,8 +2302,38 @@ function updateHUD(){
     }
 
     if(!hasStatus) statusHtml += `<div style="color:#555; margin-top:4px; font-style:italic;">Keine Systeme aktiv</div>`;
-    
+    updateWegflexTimer();
     document.getElementById('status-overlay').innerHTML = statusHtml;
+}
+    function updateWegflexTimer() {
+    var el  = document.getElementById('wegflexTimer');
+    var bar = document.getElementById('wegflexTimerFill');
+    var lbl = document.getElementById('wegflexTimerLabel');
+    if (!el) return;
+
+    if (isWegflexenMode && gameRunning && !gamePaused) {
+        el.style.display = 'flex';
+        var pct  = Math.max(0, (wegflexenTimer / 300) * 100);
+        var secs = Math.ceil(wegflexenTimer / 60);
+        bar.style.width = pct + '%';
+
+        if (pct > 60) {
+            bar.style.background = '#2ecc71';
+            el.classList.remove('danger');
+        } else if (pct > 30) {
+            bar.style.background = '#f1c40f';
+            el.classList.remove('danger');
+        } else {
+            bar.style.background = '#e74c3c';
+            el.classList.add('danger');
+        }
+
+        lbl.innerText = '⚠ KILL-TIMER  ' + secs + 's';
+    } else {
+        el.style.display = 'none';
+        el.classList.remove('danger');
+    }
+
 }
 
 // ============================================================
@@ -2750,3 +2827,4 @@ function buyKloskaItem(item, cost) {
 // ABSOLUTER FALLBACK: Falls Preloader nach 3s noch läuft → einfach starten
 setTimeout(function(){
     var ls = document.getElementById('loadingScreen')
+
