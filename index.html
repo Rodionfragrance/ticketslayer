@@ -35,19 +35,19 @@ canvas { display:block; cursor:crosshair; }
    ============================================================ */
 #toastContainer {
     position:absolute; 
-    top: 250px; /* Sitzt unter den Cooldowns */
+    top: 250px;
     right: 20px;
     width: 450px; 
     z-index:2000;
     display:flex; flex-direction:column; gap:4px; 
     pointer-events:none;
-    align-items: flex-end; /* Richtet die Popups rechtsbündig aus */
+    align-items: flex-end;
 }
 .toast {
     background: transparent; 
     border: none; 
     padding: 0; 
-    text-align: right; /* Text nach rechts */
+    text-align: right;
     animation:toastIn 0.2s ease, toastOut 0.4s ease 2.2s forwards;
 }
 .toast.persistent { animation:toastIn 0.2s ease; }
@@ -62,7 +62,7 @@ canvas { display:block; cursor:crosshair; }
     pointer-events:none; z-index:50; text-shadow:1px 1px 0 #000;
     text-align: right; font-family: 'Courier New', monospace;
 }
-   .btn-flex {
+.btn-flex {
     background: linear-gradient(45deg, #000, #600) !important;
     color: #ff0000 !important;
     border: 2px solid #ff0000 !important;
@@ -74,6 +74,95 @@ canvas { display:block; cursor:crosshair; }
     color: #000 !important;
     box-shadow: 0 0 30px #f00;
 }
+
+/* ============================================================
+   BOSS HP BAR (oben Mitte, dramatisch)
+   ============================================================ */
+#bossHpContainer {
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:600px; display:none; z-index:150; text-align:center;
+    padding:8px 20px 12px; background:rgba(0,0,0,0.85);
+    border-bottom:3px solid #c0392b;
+    border-left:2px solid #555; border-right:2px solid #555;
+    border-radius:0 0 8px 8px;
+}
+#bossHpName {
+    color:#f00; font-size:16px; font-weight:bold; letter-spacing:3px;
+    text-transform:uppercase; text-shadow:0 0 10px #f00; margin-bottom:5px;
+}
+#bossHpBarOuter {
+    width:100%; height:18px; background:#1a0000; border:2px solid #c0392b;
+    border-radius:2px; overflow:hidden;
+}
+#bossHpBarInner {
+    height:100%; background: linear-gradient(90deg, #c0392b, #e74c3c, #ff6b6b);
+    transition:width 0.15s ease;
+    box-shadow: 0 0 8px rgba(255,50,50,0.6);
+}
+#bossHpPercent {
+    color:#ff8888; font-size:11px; margin-top:3px; font-family:'Courier New',monospace;
+}
+
+/* ============================================================
+   COMBO DISPLAY
+   ============================================================ */
+#comboDisplay {
+    position:absolute; top:50%; left:50%; 
+    transform:translate(-50%, -80px);
+    pointer-events:none; z-index:160;
+    display:none; text-align:center;
+}
+#comboText {
+    font-size:48px; font-weight:bold; font-family:'Courier New',monospace;
+    text-shadow: 3px 3px 0 #000, 0 0 20px currentColor;
+    animation: comboPop 0.2s ease;
+}
+#comboSub {
+    font-size:16px; color:#ffeb3b; font-weight:bold; letter-spacing:2px;
+    text-shadow: 1px 1px 0 #000;
+}
+@keyframes comboPop {
+    0%   { transform: scale(0.5); opacity:0; }
+    60%  { transform: scale(1.2); }
+    100% { transform: scale(1.0); opacity:1; }
+}
+
+/* ============================================================
+   PAUSE OVERLAY
+   ============================================================ */
+#pauseOverlay {
+    display:none; position:absolute; inset:0;
+    background:rgba(0,0,0,0.85); z-index:800;
+    justify-content:center; align-items:center; flex-direction:column;
+    gap:20px; font-family:'Courier New',monospace;
+}
+#pauseOverlay.active { display:flex; }
+#pauseOverlay h2 {
+    color:#f00; font-size:48px; letter-spacing:8px; margin:0;
+    text-transform:uppercase; text-shadow:0 0 30px rgba(255,0,0,0.6);
+    animation: pausePulse 1.5s ease-in-out infinite;
+}
+@keyframes pausePulse {
+    0%,100%{opacity:1} 50%{opacity:0.6}
+}
+#pauseOverlay p { color:#888; font-size:14px; margin:0; letter-spacing:2px; }
+.pause-btn {
+    background:#111; color:#fff; border:2px solid #555;
+    padding:12px 40px; font-size:16px; cursor:pointer;
+    font-weight:bold; text-transform:uppercase;
+    font-family:'Courier New',monospace; letter-spacing:2px;
+    transition:0.2s; min-width:240px; text-align:center;
+}
+.pause-btn:hover { border-color:#fff; transform:scale(1.04); }
+.pause-btn-quit { border-color:#c0392b; color:#c0392b; }
+.pause-btn-quit:hover { background:#c0392b; color:#fff; border-color:#c0392b; }
+.pause-controls {
+    margin-top:10px; color:#555; font-size:12px; text-align:left;
+    line-height:1.8; border:1px solid #222; padding:10px 20px;
+    min-width:300px;
+}
+.pause-controls span { color:#aaa; }
+
 /* ============================================================
    EMAIL OVERLAY
    ============================================================ */
@@ -97,24 +186,24 @@ canvas { display:block; cursor:crosshair; }
 .close-hint:hover { background:#e74c3c; }
    
 /* ============================================================
-   DOOM HUD (Generell vergrößert)
+   DOOM HUD
    ============================================================ */
 #doom-hud {
-    position:absolute; bottom:0; left:0; width:100%; height:110px; /* Von 85px auf 110px vergrößert */
+    position:absolute; bottom:0; left:0; width:100%; height:110px;
     background:#222; border-top:4px solid #555;
     display:flex; align-items:center; justify-content:space-between;
-    z-index:100; padding:0 30px; /* Breiterer Rand */
+    z-index:100; padding:0 30px;
 }
 .hud-section { display:flex; align-items:center; gap:30px; width:33%; }
 .hud-center  { justify-content:center; }
 .hud-right   { justify-content:flex-end; text-align:right; }
-.hud-label   { color:#aaa; font-size:14px; display:block; margin-bottom:4px; font-weight:bold; letter-spacing:1px; } /* Größer */
-.hud-value   { font-size:36px; font-weight:bold; color:#fff; text-shadow:2px 2px 0 #000; } /* Deutlich größer */
+.hud-label   { color:#aaa; font-size:14px; display:block; margin-bottom:4px; font-weight:bold; letter-spacing:1px; }
+.hud-value   { font-size:36px; font-weight:bold; color:#fff; text-shadow:2px 2px 0 #000; }
 .hud-red     { color:#ff3333; }
 .hud-gold    { color:#ffd700; }
-.hud-kb      { color:#00e5ff; font-size:26px; } /* Größer */
-#hud-face-frame { width:90px; height:90px; background:#000; border:4px solid #777; display:flex; justify-content:center; align-items:center; overflow:hidden; } /* Größerer Rahmen */
-#hud-face       { width:80px; height:80px; object-fit:contain; } /* Größeres Bild */
+.hud-kb      { color:#00e5ff; font-size:26px; }
+#hud-face-frame { width:90px; height:90px; background:#000; border:4px solid #777; display:flex; justify-content:center; align-items:center; overflow:hidden; }
+#hud-face       { width:80px; height:80px; object-fit:contain; }
 #weapon-bar-container { width:150px; height:12px; background:#000; border:2px solid #555; margin-top:6px; }
 #weapon-bar { width:0%; height:100%; background:#33ccff; transition:width 0.1s linear; }
 
@@ -131,12 +220,6 @@ canvas { display:block; cursor:crosshair; }
     font-size:12px; color:#888; z-index:5;
     pointer-events:none; text-shadow:1px 1px 0 #000;
 }
-#status-overlay {
-    position:absolute; top:10px; right:10px;
-    font-size:13px; color:rgba(255,255,255,0.8);
-    pointer-events:none; z-index:50; text-shadow:1px 1px 0 #000;
-    text-align: right; font-family: 'Courier New', monospace;
-}
 /* ============================================================
    MEETING UI
    ============================================================ */
@@ -152,10 +235,10 @@ canvas { display:block; cursor:crosshair; }
     display:none; z-index:60; text-shadow:2px 2px 0 #000;
 }
 
-   /* ============================================================
+/* ============================================================
    SERVER FARM
    ============================================================ */
-   #hackingOverlay {
+#hackingOverlay {
     display:none; position:absolute; top:40%; left:50%;
     transform:translate(-50%,-50%);
     background:rgba(0,40,0,0.9); border:2px solid #0f0;
@@ -299,8 +382,7 @@ input[type="text"] {
 /* ============================================================
    WEGFLEX TIMER
    ============================================================ */
-
-   #wegflexTimer {
+#wegflexTimer {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -388,7 +470,7 @@ input[type="text"] {
 <body>
 
 <!-- SERVER FARM -->
-   <div id="hackingOverlay">
+<div id="hackingOverlay">
     <div style="font-weight:bold; margin-bottom:10px;">ROOT ACCESS REQUIRED</div>
     <div id="hackOptions"></div>
     <div id="hackTimer" style="margin-top:10px; color:red;"></div>
@@ -397,7 +479,7 @@ input[type="text"] {
 <!-- PASSWORD SCREEN -->
 <div id="passwordScreen">
     <div id="pw-logo">🔐</div>
-    <h2>Ticket Slayer V17</h2>
+    <h2>Ticket Slayer V20</h2>
     <p>Interner Zugang — Authentifizierung erforderlich</p>
     <input id="pw-input" type="password" placeholder="PASSWORT" maxlength="32"
            onkeydown="if(event.key==='Enter')checkPassword()">
@@ -410,7 +492,7 @@ input[type="text"] {
 
 <!-- LOADING SCREEN -->
 <div id="loadingScreen">
-    <h2>⚙ TICKET SLAYER V19</h2>
+    <h2>⚙ TICKET SLAYER V20</h2>
     <p>Systeminitialisierung läuft...</p>
     <div id="loadBar-outer"><div id="loadBar-inner"></div></div>
     <div id="loadStatus">Initialisiere...</div>
@@ -419,14 +501,45 @@ input[type="text"] {
 <!-- SAP DEBUFF OVERLAY -->
 <div id="sapOverlay"></div>
 
-   <!-- Wegflex timer -->
-   <div id="wegflexTimer">
+<!-- Wegflex timer -->
+<div id="wegflexTimer">
     <div id="wegflexTimerLabel">⚠ KILL-TIMER</div>
     <div id="wegflexTimerBar"><div id="wegflexTimerFill"></div></div>
 </div>
 
+<!-- BOSS HP BAR (oben Mitte) -->
+<div id="bossHpContainer">
+    <div id="bossHpName">BOSS</div>
+    <div id="bossHpBarOuter"><div id="bossHpBarInner" style="width:100%"></div></div>
+    <div id="bossHpPercent">100%</div>
+</div>
+
+<!-- COMBO DISPLAY -->
+<div id="comboDisplay">
+    <div id="comboText">×2</div>
+    <div id="comboSub">COMBO!</div>
+</div>
+
 <!-- TOASTS -->
 <div id="toastContainer"></div>
+
+<!-- PAUSE OVERLAY -->
+<div id="pauseOverlay">
+    <h2>⏸ PAUSE</h2>
+    <p style="letter-spacing:3px; color:#666;">[ESC] UM FORTZUFAHREN</p>
+    <button class="pause-btn" onclick="togglePause()">▶ WEITERSPIELEN</button>
+    <button class="pause-btn pause-btn-quit" onclick="quitToMenu()">✖ AUFGEBEN</button>
+    <div class="pause-controls">
+        <div><span>WASD</span> — Bewegen</div>
+        <div><span>MAUS</span> — Zielen &amp; Schießen</div>
+        <div><span>SHIFT / RMB</span> — Hechtrolle (i-Frames)</div>
+        <div><span>E</span> — Interagieren (Heilen/IDOC/Shop)</div>
+        <div><span>B</span> — Azubi einsetzen (5000 Pkt)</div>
+        <div><span>F</span> — Server-Farm aktivieren</div>
+        <div><span>G</span> — Urlaub einlösen (Heilung)</div>
+        <div><span>ESC</span> — Pause</div>
+    </div>
+</div>
 
 <!-- CANVAS -->
 <canvas id="game"></canvas>
@@ -434,85 +547,137 @@ input[type="text"] {
 <!-- EMAIL OVERLAY -->
 <div id="emailOverlay">
     <div class="email-header">
-        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;leitstand@zls-hamm.de&gt;</div>
+        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="98f4fdf1ecebecf9f6fcd8e2f4ebb5f0f9f5f5b6fcfd">[email&#160;protected]</a>&gt;</div>
         <div class="email-row"><span class="email-label">AN:</span> Alle Mitarbeiter</div>
-        <div class="email-row email-subject">PFLICHTLEKTÜRE: Neue Prozessanweisung V19 (Wegflexen-Update)</div>
+        <div class="email-row email-subject">PFLICHTLEKTÜRE: Neue Prozessanweisung V20 (Wegflexen-Update)</div>
     </div>
     <div class="email-content">
         <p>Hallo Team,</p>
-        <p><strong>WARNUNG:</strong> Sobald die Schicht beginnt, gibt es keine Pausen mehr. Wer nicht flexen kann, wird weggeflext.</p>
+        <p><strong>WARNUNG:</strong> Sobald die Schicht beginnt, gibt es keine Pausen mehr. Wer nicht flexen kann, wird weggeflext. Diese Prozessanweisung ist <span class="h-highlight">Pflichtlektüre</span> — Unkenntnis schützt nicht vor Wegflexen.</p>
         <hr class="email-hr">
 
         <h3>1. BASIS-STEUERUNG</h3>
         <ul>
-            <li><span class="key-hint">WASD</span> + <span class="key-hint">Maus</span>: Bewegung &amp; Ticket-Bearbeitung.</li>
-            <li><span class="key-hint">SHIFT</span> / Rechtsklick: Hechtrolle — kurzzeitige Unverwundbarkeit (i-Frames). Pflicht bei Boss-Angriffen.</li>
-            <li><span class="key-hint">E</span>: Interaktion — Heilen an Witwe Bolte / IDOC fixen / Hardwarelager betreten.</li>
-            <li><span class="key-hint">B</span>: <strong>Personal anfordern.</strong> Kostet Punkte. Platziert einen Azubi-Geschützturm.</li>
-            <li><span class="key-hint">F</span>: <strong>Server-Farm aktivieren.</strong> Generiert passiv Punkte bis Kloska sie sabotiert.</li>
-            <li><span class="key-hint">G</span>: <strong>Krankmeldung</strong> — Urlaubstag einlösen für sofortige Heilung.</li>
+            <li><span class="key-hint">WASD</span> + <span class="key-hint">Maus</span>: Bewegung &amp; Ticket-Bearbeitung. Diagonalbewegung ist schneller — immer zwei Tasten gleichzeitig halten.</li>
+            <li><span class="key-hint">SHIFT</span> / <span class="key-hint">Rechtsklick</span>: Hechtrolle — kurzzeitige Unverwundbarkeit (i-Frames). Richtung = Mauszeiger. <strong>Pflicht bei Boss-Angriffen.</strong></li>
+            <li><span class="key-hint">E</span>: Interaktion — Heilen an Witwe Bolte / IDOC-Alarm fixen / Hardwarelager betreten / Kloska verjagen.</li>
+            <li><span class="key-hint">B</span>: <strong>Azubi einsetzen.</strong> Kostet 5.000 Punkte (reduzierbar im Shop). Platziert einen Geschützturm der automatisch schießt.</li>
+            <li><span class="key-hint">F</span>: <strong>Server-Farm aktivieren</strong> — Hacking-Puzzle lösen → passives Einkommen bis Kloska sabotiert.</li>
+            <li><span class="key-hint">G</span>: <strong>Krankmeldung einlösen</strong> — Urlaubstag verbrauchen für langsame Heilung über 5 Sekunden.</li>
+            <li><span class="key-hint">Q</span>: <strong>Kaffee zapfen</strong> — an der Kaffeemaschine stehen für temporären Speed-Boost.</li>
+            <li><span class="key-hint">ESC</span>: <strong>Pause</strong> — Spiel einfrieren, Steuerung nachlesen, aufgeben.</li>
         </ul>
 
         <h3>2. SCHWIERIGKEITSGRADE</h3>
         <ul>
-            <li><strong style="color:#2ecc71;">PRAKTIKANT</strong> — Einarbeitung. Für Quereinsteiger.</li>
-            <li><strong style="color:#f1c40f;">VOLLZEIT</strong> — Normalbetrieb. Schichtarbeit inklusive.</li>
-            <li><strong style="color:#c0392b;">BURNOUT</strong> — Überstunden ohne Ende. Gegner eskalieren schneller.</li>
-            <li><strong style="color:#8e44ad;">SURVIVAL</strong> — Endlosmodus. Kein Rache-Heilen. Kein Gnadenschuss. (Ab 50.000 Tickets)</li>
-            <li><strong style="color:#f00;">☠ WEGFLEXEN</strong> — Gott-Modus. 1 HP. One-Hit-Kill. 5-Sekunden Kill-Timer. 10× Score. (Ab 100.000 Tickets)</li>
+            <li><strong style="color:#2ecc71;">PRAKTIKANT</strong> — Einarbeitung. Gegner schwach, Spawns langsam. Ideal zum Kennenlernen der Karte und Waffen.</li>
+            <li><strong style="color:#f1c40f;">VOLLZEIT</strong> — Normalbetrieb. Schichtarbeit inklusive. Empfohlener Einstieg für erfahrene Mitarbeiter.</li>
+            <li><strong style="color:#c0392b;">BURNOUT</strong> — Überstunden ohne Ende. Gegner eskalieren schneller, Bosse haben mehr HP. Kein Erbarmen.</li>
+            <li><strong style="color:#8e44ad;">SURVIVAL</strong> — Endlosmodus. Kein Rache-Heilen. Keine Heilung durch Hähnchen. Witwe Bolte verweigert den Dienst.</li>
+            <li><strong style="color:#f00;">☠ WEGFLEXEN</strong> — 1 HP. One-Hit-Kill durch alles. 5-Sekunden Kill-Timer der bei Kills zurückgesetzt wird. SAP = sofortiger Tod. 10× Score-Multiplikator.</li>
         </ul>
 
-        <h3>3. WAFFEN-ARSENAL</h3>
-        <p>Eingesammelte Spezialwaffen werden <strong>gestapelt</strong> — alle aktiven Waffen feuern gleichzeitig, solange ihr Timer läuft. Waffenkisten droppen zufällig vom Boden oder aus besiegten Gegnern.</p>
+        <h3>3. COMBO-SYSTEM (NEU V20)</h3>
+        <p>Mehrere Kills in schneller Folge aktivieren einen Score-Multiplikator. Das Fenster beträgt <strong>3 Sekunden</strong> — wer aufhört zu töten, verliert den Combo.</p>
         <ul>
-            <li>🔫 <strong>Standard</strong> — Immer aktiv. Solider Allrounder.</li>
-            <li>🌀 <strong>Minigun</strong> — Hohe Feuerrate, leichter Streuung.</li>
-            <li>💥 <strong>Schrotflinte</strong> — Fächerschuss. Ideal für enge Gassen.</li>
-            <li>🚀 <strong>Raketenwerfer</strong> — Rückstoß schiebt dich automatisch zurück. Kombinierbar mit Flamme.</li>
-            <li>⚡ <strong>Railgun</strong> — Durchdringt mehrere Gegner. Perfekt für Linien-Pulls.</li>
-            <li>🔥 <strong>Flammenwerfer</strong> — Setzt Gegner in Brand (DoT). Synergiert mit Brand-Munition-Upgrade.</li>
-            <li>🖱️ <strong>Orbit-Maus</strong> — Kreist um dich, knockt zurück. Im Hardwarelager permanent kaufbar.</li>
+            <li><strong style="color:#f1c40f;">×2 COMBO</strong> — ab 5 Kills hintereinander. Score pro Kill verdoppelt.</li>
+            <li><strong style="color:#e67e22;">×3 COMBO</strong> — ab 10 Kills. Dreifacher Score.</li>
+            <li><strong style="color:#e74c3c;">×5 COMBO</strong> — ab 20 Kills. Fünffacher Score. Bester Weg für Highscores.</li>
         </ul>
 
-        <h3>4. RACHE-SYSTEM (ARBEITSZEITERFASSUNG)</h3>
-        <p>Erlittener Schaden wird im HUD <strong>orange markiert</strong>. Töte innerhalb von 2 Sekunden einen Gegner → orange HP wird wiederhergestellt. <em>Deaktiviert im Survival- und Wegflexen-Modus.</em></p>
-
-        <h3>5. GEGNER &amp; GEFAHREN</h3>
+        <h3>4. WAFFEN-ARSENAL</h3>
+        <p>Eingesammelte Spezialwaffen werden <strong>gestapelt</strong> — alle aktiven Waffen feuern gleichzeitig, solange ihr Timer läuft. Waffenkisten droppen vom Boden oder aus besiegten Gegnern.</p>
         <ul>
-            <li><strong>🪱 PRIO 5–3</strong> — Standardtickets. Klein, mittel, groß. Schaden skaliert mit Typ.</li>
-            <li><strong>☠ PRIO 1–2</strong> — Tanks. Langsam aber zäh. Nicht unterschätzen.</li>
-            <li><strong>🧑 DER ANWENDER</strong> — Teleportiert sich alle 3 Sekunden zufällig. Immer in Bewegung halten.</li>
-            <li><strong>💿 SAP-UPDATE</strong> — Massiver Speed-Debuff bei Berührung für 5 Sekunden. Im Wegflexen sofortiger Tod.</li>
-            <li><strong>KLOSKA-SABOTAGE</strong> — Kloska greift Server-Farmen an. 30 Sekunden Zeit ihn zu vertreiben, sonst Farm dauerhaft zerstört.</li>
-            <li><strong>👔 PETER BAYER (BOSS)</strong> — Stampfer-Angriff alle 5 Sek (roter Radius sichtbar). Spawnt Ticket-Fluten. Löst bei Tod den <em>System-Kollaps</em> aus. Im Wegflexen: One-Hit-Kill durch Stampfer.</li>
+            <li>🔫 <strong>Standard</strong> — Immer aktiv. Solider Allrounder. Kein Timer.</li>
+            <li>🌀 <strong>Minigun</strong> — Sehr hohe Feuerrate, leichte Streuung. Gut für dichte Gruppen.</li>
+            <li>💥 <strong>Schrotflinte</strong> — 5-Pellet Fächerschuss. Brutal auf kurze Distanz. Ideal für enge Korridore.</li>
+            <li>🚀 <strong>Raketenwerfer</strong> — Splash-Damage 150px Radius. Rückstoß schiebt dich zurück. Tötet versehentlich eigene Azubis.</li>
+            <li>⚡ <strong>Railgun</strong> — Durchdringt mehrere Gegner in einer Linie. Perfekt für Reihen. Starker Rückstoß + Screenshake.</li>
+            <li>🔥 <strong>Flammenwerfer</strong> — Setzt Gegner in Brand (DoT 1.5 Sek). Synergiert mit Brand-Munitions-Upgrade. Kurze Reichweite.</li>
+            <li>🖱️ <strong>Orbit-Maus</strong> — Kreist automatisch um dich, knockt zurück (50 Schaden + 40px Push). Permanent kaufbar im Hardwarelager.</li>
         </ul>
 
-        <h3>6. SYSTEM-KOLLAPS</h3>
-        <p>Nach Bayers Tod: Arena wird geleert. Du stehst allein. Timer läuft. Überlebe 3 Minuten im Kollaps → Trophäe <em>„Feuerprobe"</em> + Perk.</p>
+        <h3>5. RACHE-SYSTEM (ARBEITSZEITERFASSUNG)</h3>
+        <p>Erlittener Schaden wird im HUD <strong>orange markiert</strong> (erscheint hinter dem HP-Wert als <em>+XX</em>). Töte innerhalb von 2 Sekunden einen Gegner → orange HP wird anteilig wiederhergestellt. <em>Deaktiviert im Survival- und Wegflexen-Modus.</em></p>
 
-        <h3>7. HARDWARELAGER (KLOSKA SHOP)</h3>
-        <p>Betritt das Lager auf der Karte mit <span class="key-hint">E</span>. Zahlungsmittel: Suppe (🥣).</p>
+        <h3>6. GEGNER &amp; GEFAHREN</h3>
         <ul>
-            <li>🖱️ <strong>Orbit-Maus (Permanent)</strong> — Kreist bis Rundenende. [10 🥣]</li>
+            <li><strong>🪱 PRIO 5–3</strong> — Standardtickets. Klein (10 HP), mittel (25 HP), groß (50 HP). Massenmaterial für Combos.</li>
+            <li><strong>⚡ PRIO 2 / ☠ PRIO 1</strong> — Tanks. Langsam aber zäh (120 / 400 HP). Boss-Laser upgrades Prio5 zu Prio2.</li>
+            <li><strong>🧑 DER ANWENDER</strong> — Teleportiert sich alle 3 Sek zufällig in deiner Nähe. Immer in Bewegung halten, nicht nachlaufen.</li>
+            <li><strong>💿 SAP-UPDATE</strong> — Massiver Speed-Debuff bei Berührung für 5 Sekunden. Im Wegflexen sofortiger Tod. Aus der Distanz eliminieren.</li>
+            <li><strong>👻 TEICHMANN</strong> — Einmaliger Spezial-Gegner. Bei Berührung: alle normalen Gegner werden zu Prio1. Sofort töten oder meiden.</li>
+            <li><strong>KLOSKA-SABOTAGE</strong> — Kloska greift aktive Server-Farmen an. 30 Sekunden Zeit ihn mit <span class="key-hint">E</span> zu verjagen, sonst Farm dauerhaft zerstört.</li>
+            <li><strong>👔 PETER BAYER (BOSS)</strong> — Stampfer-Angriff alle 5 Sek (roter Radius + Sprung-Animation sichtbar). Spawnt Ticket-Fluten. Löst bei Tod den <em>System-Kollaps</em> aus.</li>
+        </ul>
+
+        <h3>7. SYSTEM-KOLLAPS</h3>
+        <p>Nach Bayers Tod: Arena wird vollständig geleert (Gegner, Obstacles, Stationen, Azubis — alles weg). Du stehst allein. Nur noch Prio1-Totalausfälle spawnen, werden mit der Zeit schneller. Überlebe 3 Minuten → Trophäe <em>„Feuerprobe"</em> + dauerhafter Arsenal-Experte-Perk.</p>
+
+        <h3>8. SERVER-FARM &amp; HACKING</h3>
+        <p>Steh nah an einem Server und drücke <span class="key-hint">F</span>. Ein Hacking-Puzzle erscheint: Wähle die korrekte IP-Adresse (Tipp: sie beginnt nicht mit 192). Du hast <strong>5 Sekunden</strong>. Erfolg → passives Einkommen +3 Punkte/Sek. Max. 3 Farmen gleichzeitig (erweiterbar im Shop).</p>
+
+        <h3>9. HARDWARELAGER (KLOSKA SHOP)</h3>
+        <p>Betritt das Lager auf der Karte mit <span class="key-hint">E</span>. Spiel pausiert automatisch. Zahlungsmittel: Suppe (🥣).</p>
+        <ul>
+            <li>🖱️ <strong>Orbit-Maus (Permanent)</strong> — Kreist bis Rundenende. Kein Timer. [10 🥣]</li>
             <li>🖥️ <strong>Defekter ThinClient</strong> — Blockiert alle IDOC-Alarme für den Rest des Runs. [12 🥣]</li>
-            <li>👷 <strong>Azubi-Armee</strong> — Spawnt sofort 3 Geschütze. [8 🥣]</li>
-            <li>☢️ <strong>System-Reboot</strong> — Löscht ALLE Gegner auf der Map. Panik-Button. [20 🥣]</li>
+            <li>👷 <strong>Azubi-Armee</strong> — Spawnt sofort 3 Geschütze direkt um dich. [8 🥣]</li>
+            <li>☢️ <strong>System-Reboot</strong> — Löscht ALLE normalen Gegner auf der Map. Boss verliert nur 1500 HP. [20 🥣]</li>
         </ul>
 
-        <h3>8. META-PROGRESSION</h3>
-        <p><strong>☕ Upgrade-Shop</strong> (Kaffeebons): Permanente Verbesserungen zwischen den Runs — mehr HP, Speed, Feuerrate, Schaden, Urlaubstage u.v.m. Freischaltbare Endgame-Upgrades ab 30k/50k Punkte.</p>
+        <h3>10. META-PROGRESSION</h3>
+        <p><strong>☕ Upgrade-Shop</strong> (Kaffeebons): Permanente Verbesserungen zwischen den Runs. Kaffeebons = Score ÷ 100. Upgrades bleiben rundenübergreifend erhalten. Freischaltbare Endgame-Upgrades ab 30k / 50k Allzeit-Score.</p>
         <p><strong>🏆 Trophäenschrank</strong>: 13 Trophäen mit passiven Perks. Jede Trophäe gibt einen dauerhaften Vorteil für alle zukünftigen Runs. Höchste Trophäe: <em>„Gott des Leitstands"</em> — Besiege Peter Bayer im Wegflexen-Modus.</p>
+        <p><strong>☁️ Cloud-Profile</strong>: Namen eingeben → „Lade Profil" drücken. Kaffeebons, Upgrades und Trophäen werden Firebase-gesichert und auf jedem Gerät geladen.</p>
 
         <hr class="email-hr">
 
-        <div style="margin-top:25px; padding:15px; background:#e8e8e8; border:1px solid #ccc; font-size:11px; color:#555; line-height:1.5; text-align:justify;">
-            <strong>* INOFFIZIELLE LEITSTAND-NOTIZEN / SURVIVAL-TIPPS (NUR FÜR INTERNEN GEBRAUCH):</strong><br><br>
-            <i>(1) Bayers Stampfer als Massenvernichtungswaffe:</i> Peter Bayer vernichtet bei seinem Sprung ALLE Tickets in seinem roten Radius. Zieh eine Horde rein, warte auf den Einschlag, drück im exakten Moment SHIFT. Du nimmst durch i-Frames keinen Schaden, er killt seine eigenen Leute, du kassierst +1000 Punkte Bonus.<br><br>
-            <i>(2) Suppe despawnt nie:</i> Anders als Waffenkisten oder Wodka liegen Suppen ewig. Lass sie in heißen Phasen ruhig liegen und sammel sie erst ein wenn du kurz vorm Hardwarelager bist oder die Welle abflacht.<br><br>
-            <i>(3) ThinClient kaufen, Reboot sparen:</i> Mit 12 Suppen sofort den ThinClient kaufen — er schaltet IDOC-Alarme für den gesamten Rest des Runs ab. Den System-Reboot (20 Suppen) als Panik-Taste aufheben für den Moment wo du komplett eingekreist bist oder der Boss eskaliert.<br><br>
-            <i>(4) Wegflexen-Strategie:</i> Im Wegflexen-Modus tickt immer ein 5-Sekunden Kill-Timer. Stehst du still, stirbst du. Kein Schild, kein Heilen, kein SAP überleben. Bewegung ist Leben. Kreise Gegnergruppen ein, nutze die Orbit-Maus für sicheren Abstand und schieß ohne Pause. Der einzige Weg Peter Bayer zu besiegen: Stampfer mit perfekter Hechtrolle kontern.<br><br>
-            <i>(5) Arsenal-Eskalation:</i> Raketenwerfer + Flammenwerfer kombinieren — der Rückstoß der Raketen schiebt dich automatisch aus der Gefahrenzone, während die Flammen den Bereich vor dir abbrennen. Mit Brand-Munition-Upgrade (30k Score) brennt danach alles von selbst.<br><br>
-            <i>(6) Aggressiv heilen statt flüchten:</i> Wenn dich das SAP-Update verlangsamt hat: nicht wegrennen. Sofort alles abschießen. Das Rache-System heilt dich durch die Kills und du überlebst die 5 langsamen Sekunden durch rohe Gewalt. Außer im Wegflexen. Da bist du einfach tot.
+        <div style="margin-top:25px; padding:18px; background:#e8e8e8; border:1px solid #ccc; font-size:10.5px; color:#555; line-height:1.7; text-align:justify;">
+            <strong style="font-size:12px;">★ INOFFIZIELLE LEITSTAND-NOTIZEN — NUR FÜR INTERNEN GEBRAUCH ★</strong>
+            <br><em style="font-size:10px; color:#888;">Gesammelte Erfahrungswerte aus 847 dokumentierten Schichtausfällen. Kein Ersatz für eigenverantwortliches Sterben.</em>
+            <br><br>
+
+            <strong>(1) Bayers Stampfer als Massenvernichtungswaffe:</strong><br>
+            Peter Bayer vernichtet bei seinem Sprung ALLE Tickets in seinem roten 250px-Radius — inklusive seiner eigenen Ticket-Flut-Spawns. Die optimale Strategie: Eine große Horde hinter dir sammeln, sie in den Stampfer-Radius locken, im exakten Einschlagsmoment <span class="key-hint">SHIFT</span> drücken. Du nimmst durch i-Frames keinen Schaden, er killt 8–15 Gegner auf einmal, du kassierst den vollen Combo-Multiplikator. Bei ×5-Combo und 15 Prio3-Kills = +3.750 Punkte in einem Frame.
+            <br><br>
+
+            <strong>(2) Combo-Maximierung — die 3 besten Setups:</strong><br>
+            <em>Setup A (Flächenkontrolle):</em> Orbit-Maus (permanent) + Flammenwerfer. Die Maus knockt Gegner kontinuierlich zurück, der Flammenwerfer zieht DoT. Kills passieren halbautomatisch — ×5-Combo ist mit dieser Kombo Normalzustand.<br>
+            <em>Setup B (Einzel-Burst):</em> Railgun + Schrotflinte. Railgun für Linien, Schrotflinte für Nahkampfgruppen. Alternierend feuern = keine Feuerpause = Combo hält.<br>
+            <em>Setup C (Chaos-Run):</em> Minigun + Raketenwerfer. Minigun hält den Combo am Leben, Raketen räumen Cluster. Achtung: Rückstoß kombiniert mit Minigun-Recoil kann dich in Gegner schieben.
+            <br><br>
+
+            <strong>(3) Suppe nie verschwenden — Timing ist alles:</strong><br>
+            Suppen despawnen nie (anders als Waffenkisten oder Wodka). Lass sie in heißen Phasen ruhig liegen. Erst einsammeln wenn du ohnehin in Richtung Hardwarelager läufst oder die Welle abflacht. Priorität: ThinClient (12🥣) vor allem anderen kaufen — er schaltet IDOC-Alarme für den gesamten Rest des Runs ab. Den System-Reboot (20🥣) als absoluten Panik-Knopf aufheben für den Moment wo du vollständig eingekreist bist oder Peter Bayer seine Ticket-Flut spammt.
+            <br><br>
+
+            <strong>(4) IDOC-Alarm — Adrenalin-Perk ausnutzen:</strong><br>
+            Mit der Trophäe „Prozess-Retter" bekommst du +10% Speed während aktiver IDOC-Alarme. Das klingt wenig, ist aber der entscheidende Vorteil gegen SAP-Update-Gegner: Normaler Speed − SAP-Debuff + Adrenalin-Perk = du kannst dem SAP-Gegner noch knapp entkommen. Ohne Perk bist du bei SAP praktisch eingefroren.
+            <br><br>
+
+            <strong>(5) Azubi-Turrets intelligent platzieren:</strong><br>
+            Azubis schießen auf den nächsten Gegner in 800px Radius. Platziere sie <em>nicht</em> direkt neben dir — dort überschneiden sie mit deinem eigenen Feuer und verschwenden Schüsse auf bereits sterbende Gegner. Optimal: 200–300px vor dir in Laufrichtung platzieren, damit sie die Nachhut übernehmen während du nach vorne drückst. Im System-Kollaps: Azubis vom Kloska-Shop sofort nach dem Boss kaufen — sie sind die einzige Feuerhilfe wenn alle Stationen weg sind.
+            <br><br>
+
+            <strong>(6) Wegflexen-Strategie — Bewegung ist Leben:</strong><br>
+            Der 5-Sekunden Kill-Timer wird bei JEDEM Kill zurückgesetzt — also auch durch Azubi-Kills, Orbit-Maus-Kills und Brand-DoT-Kills. Das bedeutet: Einmal die Orbit-Maus aktiv + Gegner in der Nähe = Timer läuft quasi nie ab. Das eigentliche Problem ist Peter Bayer: Im Wegflexen-Modus ist sein Stampfer ein One-Hit-Kill. Die einzige Lösung ist die <strong>perfekte Hechtrolle</strong> im exakten Einschlagsmoment. Die Gefahrenzone (roter Kreis) erscheint 1 Sekunde vorher — das ist dein Zeitfenster. Übe den Dodge-Timing vorher in Burnout.
+            <br><br>
+
+            <strong>(7) Arsenal-Eskalation für den Endscore:</strong><br>
+            Raketenwerfer + Flammenwerfer kombinieren: Der Rückstoß der Raketen schiebt dich automatisch aus der Gefahrenzone, während die Flammen den Bereich vor dir abbrennen. Mit dem Brand-Munitions-Upgrade (ab 30k Score im Shop) brennt danach alles von selbst — du musst nur noch die Richtung vorgeben. Railgun dazu = eine Kugel trifft 4 Gegner in einer Linie, alle brennen, alle sterben im Combo-Fenster. Maximaler theoretischer Multiplier: ×5 Combo × Nachtschicht-Bonus (+50%) = ×7.5 effektiver Score.
+            <br><br>
+
+            <strong>(8) Aggressiv heilen statt flüchten (außer Wegflexen):</strong><br>
+            Wenn das SAP-Update dich verlangsamt hat: nicht wegrennen — das funktioniert sowieso nicht. Sofort alle Waffen auf die nächsten Gegner, das Rache-System heilt dich durch die Kills und du überlebst die 5 langsamen Sekunden durch rohe Gewalt. Gleiches Prinzip bei Prio1-Umzingelung: Nicht die Lücke suchen, sondern in die Masse schießen und durch Rache-Kills die HP zurückholen.
+            <br><br>
+
+            <strong>(9) Nachtschicht-Farming für Highscores:</strong><br>
+            Nachtschicht gibt +50% Score auf alle Kills UND reduziert die Sichtweite. Nutze die eingeschränkte Sicht als <em>Vorteil</em>: Gegner kommen näher ran bevor sie sichtbar werden → kürzere Reaktionszeit nötig → höhere Kill-Dichte im Nahkampf → leichterer ×5-Combo. Mit Flammenwerfer in der Nachtschicht ist der Score-Output pro Minute maximal.
+            <br><br>
+
+            <strong>(10) Meeting-Punkte skalieren mit Trophäe:</strong><br>
+            Ein Meeting gibt 3.000 Punkte — mit der „Bullshit-Bingo"-Trophäe (3 Meetings in einem Run) sogar 4.000. Drei Meetings pro Run = 12.000 gratis Punkte, die keinerlei Risiko bedeuten außer 10 Sekunden Stillstand. In BURNOUT und SURVIVAL: Meeting-Zone aufsuchen sobald sie erscheint, kurz abstehen, Punkte kassieren, weiter. Die Gegner warten.
         </div>
     </div>
     <div class="close-hint" onclick="hideEmail()">ZURÜCK ZUM HAUPTMENÜ</div>
@@ -525,7 +690,7 @@ input[type="text"] {
 <!-- SCREENS -->
 <div id="screens">
     <div id="startScreen" class="panel">
-        <h1>TICKET SLAYER<br><span style="font-size:18px;color:#aaa;">V19</span></h1>
+        <h1>TICKET SLAYER<br><span style="font-size:18px;color:#aaa;">V20</span></h1>
         <div style="margin:10px 0 16px;background:rgba(0,255,0,0.05);padding:14px;border:1px solid #1a3a1a;border-radius:3px;">
             <p style="font-size:11px;color:#666;margin:0 0 8px;text-transform:uppercase;letter-spacing:2px;">Identifikation erforderlich:</p>
             <input type="text" id="playerName" placeholder="NAME" maxlength="10"
@@ -538,22 +703,22 @@ input[type="text"] {
             <button class="btn-easy"   onclick="startGame(1)">Praktikant</button>
             <button class="btn-normal" onclick="startGame(3)">Vollzeit</button>
             <button class="btn-hard"   onclick="startGame(6)">Burnout</button>
-            <button id="btn-survival" onclick="startGame(9)" style="display:none; background:#111; color:#9b59b6; border:2px solid #9b59b6; padding:12px 18px; font-size:16px; cursor:pointer; font-weight:bold; text-transform:uppercase; font-family:'Courier New',monospace; min-width:130px; transition:0.2s;">Survival</button>
-            <button class="btn-flex" onclick="isWegflexenMode=true; startGame(9)" style="...">WEGFLEXEN</button>
+            <button id="btn-survival" onclick="startGame(9)" style="background:#111; color:#9b59b6; border:2px solid #9b59b6; padding:12px 18px; font-size:16px; cursor:pointer; font-weight:bold; text-transform:uppercase; font-family:'Courier New',monospace; min-width:130px; transition:0.2s;">Survival</button>
+            <button class="btn-flex" onclick="isWegflexenMode=true; startGame(9)">WEGFLEXEN</button>
         </div>
         <button class="btn-shop" onclick="openShop()" style="width:100%;margin-top:10px;">&#9749; UPGRADE SHOP</button>
         <button class="btn-shop" onclick="openTrophies()" style="width:100%;margin-top:6px; border-color:#f1c40f; color:#f1c40f;">🏆 TROPHÄENSCHRANK</button>
-       <button class="btn-info" onclick="showEmail()" style="width:100%;margin-top:6px;">[I] PROZESSANWEISUNG</button>
+        <button class="btn-info" onclick="showEmail()" style="width:100%;margin-top:6px;">[I] PROZESSANWEISUNG</button>
     </div>
     
     <div id="gameOverScreen" class="panel">
         <h1 id="goTitle">ARBEITSUNFALL</h1>
         <p>Score: <span id="finalScore" style="color:#fff;font-weight:bold;">0</span></p>
         <p>+<span id="goEarnedKB">0</span> Kaffeebons verdient</p>
+        <p id="goBestCombo" style="color:#f1c40f; display:none;">Bester Combo: <span id="goComboVal">×1</span></p>
         <div id="highscoreInputArea" style="margin-top:15px;">
             <p style="color:gold;font-weight:bold;">PROFIL SICHERN &amp; HIGHSCORE</p>
             <button onclick="saveHighscoreAndRestart()" style="width:100%;padding:13px;background:#c0392b;color:#fff;font-weight:bold;cursor:pointer;border:2px solid #e74c3c;font-family:'Courier New',monospace;font-size:14px;text-transform:uppercase;margin-top:6px;">SICHERN &amp; NEUSTART</button>
-            <!-- playerName wird aus dem Startscreen gelesen -->
         </div>
         <button class="btn-shop" onclick="openShop()" style="margin-top:10px;">☕ UPGRADE SHOP</button>
         <button class="btn-info" onclick="saveHighscoreAndMainMenu()" style="margin-top:10px;">🏠 FEIERABEND!</button>
@@ -612,7 +777,7 @@ input[type="text"] {
 <!-- MISC HUD -->
 <div id="highscore-overlay">Lade Online Scores...</div>
 <div id="status-overlay"></div>
-<div id="stationInfo">[E] Interagieren | [B] Azubi 5000P | [F] Server-Farm | [Q] Kaffee | [G] Urlaub</div>
+<div id="stationInfo">[E] Interagieren | [B] Azubi 5000P | [F] Server-Farm | [Q] Kaffee | [G] Urlaub | [ESC] Pause</div>
 
 <!-- DOOM HUD -->
 <div id="doom-hud">
@@ -632,12 +797,11 @@ input[type="text"] {
     </div>
 </div>
 
-<!-- PASSWORT LOGIK — eigener Script-Block, vor dem Haupt-Script -->
+<!-- PASSWORT LOGIK -->
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 var GAME_PASSWORD = 'Vollzeit2025';
 var SESSION_HOURS = 8;
 
-// Sofort prüfen ob Login noch gültig
 (function(){
     try {
         var stored = sessionStorage.getItem('ts_auth');
@@ -645,7 +809,7 @@ var SESSION_HOURS = 8;
             var data = JSON.parse(stored);
             if(Date.now() < data.expires) {
                 document.getElementById('passwordScreen').style.display = 'none';
-                startPreloader(); // Direkt - Funktion ist jetzt im selben Block
+                startPreloader();
             }
         }
     } catch(e) {}
@@ -681,7 +845,6 @@ function checkPassword() {
     }
 }
 
-// ── PRELOADER: hier definiert damit es vor dem Haupt-Script verfügbar ist ──
 function startPreloader() {
     if (startPreloader._done) return;
     startPreloader._done = true;
@@ -695,13 +858,11 @@ function startPreloader() {
             document.getElementById('loadingScreen').style.display = 'none';
             document.getElementById('startScreen').style.display = 'block';
             
-            // Kaffeebons laden
             try {
                 var el = document.getElementById('startKBAmount');
                 if (el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
             } catch(e) {}
             
-            // Survival Unlock prüfen
             let best = parseInt(localStorage.getItem('ts_best_score') || '0');
             if(best >= 50000) {
                 let survBtn = document.getElementById('btn-survival');
@@ -715,12 +876,12 @@ function startPreloader() {
 <script>
 'use strict';
 // ============================================================
-// SECTION 1 — AUDIO CONFIG (zentral, hier anpassen)
+// SECTION 1 — AUDIO CONFIG
 // ============================================================
 const AUDIO_CONFIG = {
-    bgMusicVolume:   0.5,   // Ingame-Musik  (0.0–1.0)
-    menuMusicVolume: 0.4,   // Menü-Musik    (0.0–1.0)
-    sfxVolume:       0.25   // Soundeffekte  (0.0–1.0) — wird als gain-Multiplikator genutzt
+    bgMusicVolume:   0.5,
+    menuMusicVolume: 0.4,
+    sfxVolume:       0.25
 };
 
 // ============================================================
@@ -742,38 +903,24 @@ try {
 function loadHighscores() {
     if (!db) return;
     document.getElementById('highscore-overlay').innerHTML = "Lade Ligen...";
-    
-    // Wir holen die besten 300 nach Punkten als Basis-Pool
     db.collection("highscores").orderBy("score","desc").limit(300).get().then(snap=>{
-        // "WEGFLEXEN" als neue Kategorie hinzugefügt
         let scores = { "WEGFLEXEN": [], "SURVIVAL": [], "BURNOUT": [], "VOLLZEIT": [], "PRAKTIKANT": [] };
-        
         snap.forEach(doc => {
             let d = doc.data();
             let diff = d.difficulty || "PRAKTIKANT"; 
-            if(scores[diff]) {
-                scores[diff].push(d); 
-            }
+            if(scores[diff]) scores[diff].push(d); 
         });
-
         let html = "<span style='color:#fff;text-decoration:underline;font-size:14px;font-weight:bold;'>🏆 LIGEN TOP 5:</span><br>"; 
-        
-        // "WEGFLEXEN" ganz oben in der Liste
         ["WEGFLEXEN", "SURVIVAL", "BURNOUT", "VOLLZEIT", "PRAKTIKANT"].forEach(mode => {
             if(scores[mode].length > 0) {
-                // Farbe für WEGFLEXEN: Tiefrot (#f00)
                 let color = mode === 'WEGFLEXEN' ? '#f00' : (mode === 'SURVIVAL' ? '#8e44ad' : (mode === 'BURNOUT' ? '#c0392b' : (mode === 'VOLLZEIT' ? '#f1c40f' : '#2ecc71')));
-                
                 html += `<div style="color:${color}; font-weight:bold; margin-top:6px; font-size:12px;">[${mode}]</div>`;
-                
-                // Sortierung (Collapse vor Score)
                 scores[mode].sort((a, b) => {
                     let collA = parseFloat(a.collapseTime) || 0;
                     let collB = parseFloat(b.collapseTime) || 0;
                     if (collA !== collB) return collB - collA; 
                     return b.score - a.score;
                 });
-
                 let top5 = scores[mode].slice(0, 5);
                 top5.forEach((d, i) => {
                     let rank = i + 1;
@@ -786,32 +933,24 @@ function loadHighscores() {
         document.getElementById('highscore-overlay').innerHTML = html;
     }).catch(e => console.error(e));
 }
+
 function saveHighscoreAndRestart() {
-   // Allzeit-Highscore für Shop-Unlocks sichern
     let currentBest = parseInt(localStorage.getItem('ts_best_score') || '0');
-    if (score > currentBest) {
-        localStorage.setItem('ts_best_score', score);
-    }
-    // 1. Zuerst das Profil speichern (Kaffeebons sichern!)
+    if (score > currentBest) localStorage.setItem('ts_best_score', score);
     saveProgress(); 
-    
     let name = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim().substring(0,10);
-    
     if(db && score > 0) {
-        // 2. Highscore in die Datenbank schreiben (mit robustem Datums-Format)
         db.collection("highscores").add({
             name: name, 
             score: isWegflexenMode ? score * 10 : score, 
             difficulty: currentDiffLabel, 
             collapseTime: systemCollapse ? (collapseTimer / 60).toFixed(1) : 0,
             date: new Date().toISOString()
-        })
-        .then(() => { 
+        }).then(() => { 
             loadHighscores();
-            if(lastChosenDifficulty === 9) isWegflexenMode = true; // WEGFLEXEN bleibt WEGFLEXEN
+            if(lastChosenDifficulty === 9) isWegflexenMode = true;
             startGame(lastChosenDifficulty); 
-        })
-        .catch((e) => { 
+        }).catch((e) => { 
             console.error("FIREBASE HIGHSCORE ERROR:", e);
             if(lastChosenDifficulty === 9) isWegflexenMode = true;
             startGame(lastChosenDifficulty); 
@@ -821,18 +960,12 @@ function saveHighscoreAndRestart() {
         startGame(lastChosenDifficulty); 
     }
 }
-   function saveHighscoreAndMainMenu() {
-    // 1. Allzeit-Highscore sichern
+
+function saveHighscoreAndMainMenu() {
     let currentBest = parseInt(localStorage.getItem('ts_best_score') || '0');
-    if (score > currentBest) {
-        localStorage.setItem('ts_best_score', score);
-    }
-    // 2. Kaffeebons & Profil sichern
+    if (score > currentBest) localStorage.setItem('ts_best_score', score);
     saveProgress(); 
-    
     let name = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim().substring(0,10);
-    
-    // 3. Online-Highscore eintragen und dann ins Menü wechseln
     if(db && score > 0) {
         db.collection("highscores").add({
             name: name, 
@@ -840,15 +973,8 @@ function saveHighscoreAndRestart() {
             difficulty: currentDiffLabel, 
             collapseTime: systemCollapse ? (collapseTimer / 60).toFixed(1) : 0,
             date: new Date().toISOString()
-        })
-        .then(() => { 
-            loadHighscores(); 
-            returnToMainMenu(); 
-        })
-        .catch((e) => { 
-            console.error("FIREBASE HIGHSCORE ERROR:", e);
-            returnToMainMenu(); 
-        });
+        }).then(() => { loadHighscores(); returnToMainMenu(); })
+          .catch((e) => { console.error("FIREBASE HIGHSCORE ERROR:", e); returnToMainMenu(); });
     } else { 
         returnToMainMenu(); 
     }
@@ -857,14 +983,12 @@ function saveHighscoreAndRestart() {
 function returnToMainMenu() {
     document.getElementById('gameOverScreen').style.display = 'none';
     document.getElementById('startScreen').style.display = 'block';
-    
-    // Anzeige der Kaffeebons im Startbildschirm direkt aktualisieren
     let kbDisplay = document.getElementById('startKBAmount');
     if(kbDisplay) kbDisplay.innerText = kaffeebons;
 }
 
 // ============================================================
-// SECTION 3 — META-PROGRESSION (Kaffeebons + Upgrades)
+// SECTION 3 — META-PROGRESSION
 // ============================================================
 const UPGRADES_DEF = [
     { id:'max_hp',      name:'Eiserner Magen',   icon:'❤️',  desc:'Start-HP +25',              baseCost:80,  costMult:1.5, apply:(p,lvl)=>{ p.maxHp+=25*lvl; p.hp=p.maxHp; } },
@@ -903,7 +1027,6 @@ const TROPHIES_DEF = [
 let unlockedTrophies = JSON.parse(localStorage.getItem('ts_trophies') || '[]');
 
 function hasTrophy(id) { return unlockedTrophies.includes(id); }
-
 function unlockTrophy(id) {
     if(!hasTrophy(id)) {
         unlockedTrophies.push(id);
@@ -913,27 +1036,17 @@ function unlockTrophy(id) {
         playSound('evolve'); 
     }
 }
-
 function openTrophies() {
     let grid = document.getElementById('trophyGrid');
     grid.innerHTML = '';
     TROPHIES_DEF.forEach(t => {
         let unlocked = hasTrophy(t.id);
         let cls = 'trophy-item' + (unlocked ? ' unlocked' : '');
-        grid.innerHTML += `
-            <div class="${cls}">
-                <div class="trophy-icon">${t.icon}</div>
-                <div class="trophy-info">
-                    <div class="trophy-name">${t.name}</div>
-                    <div class="trophy-desc">${t.desc}</div>
-                    <div class="trophy-perk">PERK: ${t.perk}</div>
-                </div>
-            </div>`;
+        grid.innerHTML += `<div class="${cls}"><div class="trophy-icon">${t.icon}</div><div class="trophy-info"><div class="trophy-name">${t.name}</div><div class="trophy-desc">${t.desc}</div><div class="trophy-perk">PERK: ${t.perk}</div></div></div>`;
     });
     document.getElementById('trophyOverlay').style.display = 'block';
 }
 function closeTrophies() { document.getElementById('trophyOverlay').style.display = 'none'; }
-// ---------------------   
 
 function getUpgradeLevel(id) { return upgradeProgress[id] || 0; }
 function getUpgradeCost(upg) {
@@ -947,11 +1060,11 @@ function saveProgress() {
     localStorage.setItem('ts_upgrades', JSON.stringify(upgradeProgress));
     localStorage.setItem('ts_prestige', prestigeLevel);
     localStorage.setItem('ts_name', _name);
-    localStorage.setItem('ts_trophies', JSON.stringify(unlockedTrophies)); // Trophäen lokal speichern
+    localStorage.setItem('ts_trophies', JSON.stringify(unlockedTrophies));
     if(db && _name !== 'ANONYM') {
         db.collection('playerProfiles').doc(_name).set({
             kb: kaffeebons, upgrades: upgradeProgress,
-            prestige: prestigeLevel, trophies: unlockedTrophies, lastSeen: new Date().toISOString() // Trophäen in die Cloud schieben!
+            prestige: prestigeLevel, trophies: unlockedTrophies, lastSeen: new Date().toISOString()
         }, {merge:true}).catch(function(){});
     }
 }
@@ -988,65 +1101,29 @@ function applyUpgradesToPlayer(p) {
     p.azubiCost = p.azubiCost || 5000;
 }
 function getMaxFarms() { return 3 + getUpgradeLevel('farm_slots'); }
-
-function openShop(fromGameOver=false) {
-    renderShop();
-    document.getElementById('shopOverlay').style.display = 'block';
-}
-function closeShop() {
-    document.getElementById('shopOverlay').style.display = 'none';
-    // refresh start screen KB display
-    document.getElementById('startKBAmount').innerText = kaffeebons;
-}
+function openShop(fromGameOver=false) { renderShop(); document.getElementById('shopOverlay').style.display = 'block'; }
+function closeShop() { document.getElementById('shopOverlay').style.display = 'none'; document.getElementById('startKBAmount').innerText = kaffeebons; }
 function renderShop() {
     document.getElementById('shopKBAmount').innerText = kaffeebons;
     let grid = document.getElementById('shopGrid');
     grid.innerHTML = '';
-
-    // Hol den besten Score
     let best = parseInt(localStorage.getItem('ts_best_score') || '0');
-    
-    // Survival Unlock prüfen (Einheitlich auf 50.000 gesetzt)
-    if(best >= 50000) {
-        let survBtn = document.getElementById('btn-survival');
-        if(survBtn) survBtn.style.display = 'inline-block';
-    }
-    // Wegflexen Unlock prüfen (Einheitlich auf 100.000 gesetzt)
-    if(best >= 100000) {
-        let survBtn = document.getElementById('btn-wegflexen');
-        if(survBtn) survBtn.style.display = 'inline-block';
-    }
-
+    if(best >= 50000) { let s = document.getElementById('btn-survival'); if(s) s.style.display = 'inline-block'; }
     UPGRADES_DEF.forEach(upg => {
-        // Verstecke Mods, wenn Score zu niedrig
         if (upg.minScore && best < upg.minScore) return;
-
         let lvl   = getUpgradeLevel(upg.id);
         let cost  = getUpgradeCost(upg);
         let cantAfford = kaffeebons < cost;
-        
         let cls = 'shop-item' + (cantAfford?' cant-afford':'');
         let levelDisplay = `<span style="color:#00e5ff">Stufe ${lvl}</span>`;
-        
-        grid.innerHTML += `
-            <div class="${cls}" onclick="buyUpgrade('${upg.id}')">
-                <div class="shop-item-level">${levelDisplay}</div>
-                <div class="shop-item-icon">${upg.icon}</div>
-                <div>
-                    <div class="shop-item-name">${upg.name}</div>
-                    <div class="shop-item-desc">${upg.desc}</div>
-                    <div class="shop-item-price"><span class="toast-icon">☕</span>${cost} KB</div>
-                </div>
-            </div>`;
+        grid.innerHTML += `<div class="${cls}" onclick="buyUpgrade('${upg.id}')"><div class="shop-item-level">${levelDisplay}</div><div class="shop-item-icon">${upg.icon}</div><div><div class="shop-item-name">${upg.name}</div><div class="shop-item-desc">${upg.desc}</div><div class="shop-item-price"><span class="toast-icon">☕</span>${cost} KB</div></div></div>`;
     });
 }
 function buyUpgrade(id) {
     let upg  = UPGRADES_DEF.find(u=>u.id===id);
     let lvl  = getUpgradeLevel(id);
     let cost = getUpgradeCost(upg);
-    
-    if (kaffeebons < cost) return; // Nur noch prüfen, ob man es sich leisten kann
-    
+    if (kaffeebons < cost) return;
     kaffeebons -= cost;
     upgradeProgress[id] = lvl + 1;
     saveProgress();
@@ -1055,9 +1132,6 @@ function buyUpgrade(id) {
 
 // ============================================================
 // SECTION 4 — ASSET PRELOADER
-// ============================================================
-// ============================================================
-// SECTION 4 — ASSET PRELOADER (robust, kein Hänger möglich)
 // ============================================================
 const wormImgRight   = new Image(); wormImgRight.src   = 'wurmr.png';
 const wormImgLeft    = new Image(); wormImgLeft.src    = 'wurml.png';
@@ -1068,8 +1142,7 @@ const coffeeImg      = new Image(); coffeeImg.src      = 'kaffee.png';
 const kloskaImg      = new Image(); kloskaImg.src      = 'kloska.png';
 const hardwareImg    = new Image(); hardwareImg.src    = 'hardware.png';
 
-// startPreloader() ist im frühen Script-Block definiert
-
+// ============================================================
 // SECTION 5 — AUDIO ENGINE
 // ============================================================
 const playlist = ['track1.mp3','track2.mp3'];
@@ -1106,6 +1179,8 @@ function playSound(type) {
             case 'alarm':   osc.type='square';   osc.frequency.setValueAtTime(600,t); osc.frequency.linearRampToValueAtTime(800,t+0.5); gain.gain.setValueAtTime(0.5*v,t); gain.gain.linearRampToValueAtTime(0,t+0.5); osc.start(t); osc.stop(t+0.5); break;
             case 'meeting': osc.type='sawtooth'; osc.frequency.setValueAtTime(200,t); osc.frequency.linearRampToValueAtTime(100,t+1.0); gain.gain.setValueAtTime(0.5*v,t); osc.start(t); osc.stop(t+1.0); break;
             case 'vacation':osc.type='triangle'; osc.frequency.setValueAtTime(300,t); osc.frequency.linearRampToValueAtTime(50,t+1.0); gain.gain.setValueAtTime(0.3*v,t); osc.start(t); osc.stop(t+1.0); break;
+            // FIX: vodka hatte keinen eigenen Sound-Case
+            case 'vodka':   osc.type='sine';     osc.frequency.setValueAtTime(500,t); osc.frequency.linearRampToValueAtTime(800,t+0.1); osc.frequency.linearRampToValueAtTime(300,t+0.4); gain.gain.setValueAtTime(0.4*v,t); gain.gain.linearRampToValueAtTime(0,t+0.4); osc.start(t); osc.stop(t+0.4); break;
             case 'powerup': osc.type='sine';     osc.frequency.setValueAtTime(400,t); osc.frequency.linearRampToValueAtTime(800,t+0.3); gain.gain.setValueAtTime(0.3*v,t); osc.start(t); osc.stop(t+0.3); break;
             case 'bug':     osc.type='square';   osc.frequency.setValueAtTime(100,t); osc.frequency.linearRampToValueAtTime(50,t+0.5); gain.gain.setValueAtTime(0.3*v,t); osc.start(t); osc.stop(t+0.5); break;
             case 'hammer':  osc.type='sawtooth'; osc.frequency.setValueAtTime(100,t); gain.gain.setValueAtTime(0.8*v,t); osc.start(t); osc.stop(t+0.2); break;
@@ -1114,6 +1189,10 @@ function playSound(type) {
             case 'evolve':  osc.type='square';   osc.frequency.setValueAtTime(200,t); gain.gain.setValueAtTime(0.3*v,t); osc.start(t); osc.stop(t+1.5); break;
             case 'sap':     osc.type='sawtooth'; osc.frequency.setValueAtTime(60,t); osc.frequency.linearRampToValueAtTime(40,t+1.0); gain.gain.setValueAtTime(0.4*v,t); gain.gain.linearRampToValueAtTime(0,t+1.0); osc.start(t); osc.stop(t+1.0); break;
             case 'teleport':osc.type='sine';     osc.frequency.setValueAtTime(800,t); osc.frequency.exponentialRampToValueAtTime(200,t+0.3); gain.gain.setValueAtTime(0.2*v,t); gain.gain.linearRampToValueAtTime(0,t+0.3); osc.start(t); osc.stop(t+0.3); break;
+            // Combo-Sounds
+            case 'combo2':  osc.type='square';   osc.frequency.setValueAtTime(600,t); osc.frequency.linearRampToValueAtTime(900,t+0.15); gain.gain.setValueAtTime(0.3*v,t); gain.gain.linearRampToValueAtTime(0,t+0.15); osc.start(t); osc.stop(t+0.15); break;
+            case 'combo3':  osc.type='square';   osc.frequency.setValueAtTime(700,t); osc.frequency.linearRampToValueAtTime(1100,t+0.2); gain.gain.setValueAtTime(0.4*v,t); gain.gain.linearRampToValueAtTime(0,t+0.2); osc.start(t); osc.stop(t+0.2); break;
+            case 'combo5':  osc.type='square';   osc.frequency.setValueAtTime(900,t); osc.frequency.linearRampToValueAtTime(1400,t+0.3); gain.gain.setValueAtTime(0.5*v,t); gain.gain.linearRampToValueAtTime(0,t+0.3); osc.start(t); osc.stop(t+0.3); break;
             default:        osc.type='sine';     osc.frequency.setValueAtTime(440,t); gain.gain.setValueAtTime(0.1*v,t); osc.start(t); osc.stop(t+0.1);
         }
     } catch(e){}
@@ -1137,11 +1216,60 @@ let idocEvent=null, meetingZone=null, kloskaEvent=null;
 let player=null;
 let bullets=[], enemies=[], particles=[], obstacles=[], stations=[];
 let servers=[], items=[], splatters=[], floatingTexts=[], turrets=[], shells=[];
-let serverFarms=[];   // {serverRef, ticker}  — idle income
+let serverFarms=[];
 let systemCollapse = false;
 let isWegflexenMode = false;
 let wegflexenTimer = 300;   
 let collapseTimer = 0;
+
+// ============================================================
+// COMBO SYSTEM — NEU in V20
+// ============================================================
+let combo = 0;           // Aktuelle Kill-Streak
+let comboTimer = 0;      // Frames bis Combo verfällt (180 = 3 Sek)
+let comboMult = 1;       // Aktueller Multiplikator (1, 2, 3 oder 5)
+let bestComboThisRun = 1;
+let comboDisplayTimer = 0; // Wie lange das Combo-UI sichtbar bleibt
+
+function updateCombo(kill=true) {
+    if(!kill) {
+        // Combo ist ausgelaufen
+        combo = 0; comboMult = 1; comboTimer = 0;
+        document.getElementById('comboDisplay').style.display = 'none';
+        return;
+    }
+    combo++;
+    comboTimer = 180; // Reset auf 3 Sekunden
+
+    let oldMult = comboMult;
+    // Multiplikator-Stufen
+    if      (combo >= 20) comboMult = 5;
+    else if (combo >= 10) comboMult = 3;
+    else if (combo >= 5)  comboMult = 2;
+    else                  comboMult = 1;
+
+    if(comboMult > bestComboThisRun) bestComboThisRun = comboMult;
+
+    // Wenn Multiplikator gestiegen → Toast + Sound
+    if(comboMult > oldMult) {
+        let colors = {2:'#f1c40f', 3:'#e67e22', 5:'#e74c3c'};
+        let c = colors[comboMult] || '#fff';
+        showToast(`×${comboMult} COMBO!`, c, `${combo} Kills — Score ×${comboMult}`);
+        playSound('combo'+comboMult);
+        // Combo-Display zeigen
+        let display = document.getElementById('comboDisplay');
+        let text = document.getElementById('comboText');
+        let sub = document.getElementById('comboSub');
+        display.style.display = 'block';
+        text.style.color = c;
+        text.textContent = `×${comboMult}`;
+        sub.textContent = `${combo} KILLS COMBO!`;
+        // Neu-Animieren durch class toggle
+        text.style.animation = 'none';
+        void text.offsetWidth; // reflow
+        text.style.animation = 'comboPop 0.2s ease';
+    }
+}
 
 // Boss definitions
 const bosses=[
@@ -1156,7 +1284,17 @@ const bosses=[
 // SECTION 7 — INPUT
 // ============================================================
 const input={keys:{},mouseDown:false,rightClick:false,x:0,y:0,worldX:0,worldY:0};
-window.addEventListener('keydown',e=>{ input.keys[e.code]=true; if(e.code==='Space'&&player&&player.inMeeting) player.meetingProgress+=10; });
+window.addEventListener('keydown',e=>{ 
+    input.keys[e.code]=true; 
+    if(e.code==='Space'&&player&&player.inMeeting) player.meetingProgress+=10; 
+    // ESC: Pause togglen (nur ingame, nicht in Overlays)
+    if(e.code==='Escape' && gameRunning) {
+        // Overlays schließen falls offen
+        if(document.getElementById('hackingOverlay').style.display === 'block') { closeHacking(); return; }
+        if(document.getElementById('kloskaShopScreen').style.display === 'block') { closeKloskaShop(); return; }
+        togglePause();
+    }
+});
 window.addEventListener('keyup',  e=>  input.keys[e.code]=false);
 window.addEventListener('mousedown',e=>{ 
     if(e.button === 0) input.mouseDown=true; 
@@ -1164,8 +1302,41 @@ window.addEventListener('mousedown',e=>{
 });
 window.addEventListener('mouseup',  e=>{ if(e.button === 0) input.mouseDown=false; });
 window.addEventListener('mousemove',e=>{ const r=canvas.getBoundingClientRect(); input.x=e.clientX-r.left; input.y=e.clientY-r.top; });
-// Browser-Rechtsklick-Menü deaktivieren
 window.addEventListener('contextmenu', e => e.preventDefault());
+
+// ============================================================
+// PAUSE FUNKTIONEN — NEU in V20
+// ============================================================
+function togglePause() {
+    if(!gameRunning) return;
+    gamePaused = !gamePaused;
+    let overlay = document.getElementById('pauseOverlay');
+    if(gamePaused) {
+        overlay.classList.add('active');
+        bgMusic.pause();
+    } else {
+        overlay.classList.remove('active');
+        bgMusic.play().catch(()=>{});
+        input.keys = {}; input.mouseDown = false; // Tasten-Reset beim Fortsetzen
+    }
+}
+
+function quitToMenu() {
+    gamePaused = false;
+    gameRunning = false;
+    document.getElementById('pauseOverlay').classList.remove('active');
+    bgMusic.pause();
+    let mm = document.getElementById('menuMusic');
+    if(mm) { mm.currentTime = 0; mm.play().catch(()=>{}); }
+    // Direkt ins Menü (kein Highscore da freiwillig aufgegeben)
+    document.getElementById('gameOverScreen').style.display = 'none';
+    document.getElementById('startScreen').style.display = 'block';
+    let kbDisplay = document.getElementById('startKBAmount');
+    if(kbDisplay) kbDisplay.innerText = kaffeebons;
+    // Boss-Bar ausblenden
+    document.getElementById('bossHpContainer').style.display = 'none';
+    document.getElementById('comboDisplay').style.display = 'none';
+}
 
 // ============================================================
 // SECTION 8 — TOAST SYSTEM
@@ -1173,14 +1344,10 @@ window.addEventListener('contextmenu', e => e.preventDefault());
 let persistentToastEl=null;
 function showToast(text, color='#f00', subtitle='') {
     const c = document.getElementById('toastContainer');
-    c.innerHTML = ''; // ALTE MELDUNG SOFORT ABLÖSEN
-    
+    c.innerHTML = '';
     const t = document.createElement('div'); 
     t.className = 'toast'; 
-    
-    // Zieht sich jetzt die korrekten Größen aus dem neuen CSS
     t.innerHTML = `<span class="toast-title" style="color:${color};">${text}</span>${subtitle ? `<span class="toast-sub">${subtitle}</span>` : ''}`;
-    
     c.appendChild(t); 
     setTimeout(()=> { if(t.parentNode) t.parentNode.removeChild(t); }, 2700);
 }
@@ -1190,7 +1357,8 @@ function clearAllToasts(){ document.getElementById('toastContainer').innerHTML='
 // ============================================================
 // SECTION 9 — UTILITY
 // ============================================================
-function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight-85; }
+// FIX: canvas.height war auf -85px, HUD ist 110px
+function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight-110; }
 window.addEventListener('resize',resize); resize();
 function showEmail(){ document.getElementById('startScreen').style.display='none'; document.getElementById('emailOverlay').style.display='block'; }
 function hideEmail(){ document.getElementById('emailOverlay').style.display='none'; document.getElementById('startScreen').style.display='block'; }
@@ -1201,13 +1369,12 @@ function checkWallCollision(x,y,r){
     return false;
 }
 function spawnParticles(x,y,c,n){ for(let i=0;i<n;i++) particles.push(new Particle(x,y,c)); }
-// function triggerNuke(){ screenShake=50;flashScreen=50;playSound('hammer');enemies=[];items=[];splatters=[];floatingTexts.push(new FloatingText(player.x,player.y,"ALLES PLATT!!!","#f00")); }
 function triggerServerExplosion(x,y){ screenShake=30;playSound('hammer');spawnParticles(x,y,'#f00',30);enemies.forEach(e=>{ if(Math.hypot(e.x-x,e.y-y)<300){e.hp-=500;floatingTexts.push(new FloatingText(e.x,e.y,"SERVER DOWN!","#f00"));} }); }
 function checkGameOver(){
     if(player.hp<=0){
         gameRunning=false;
-       unlockTrophy('first_game'); // Schaltet sich beim ersten Tod automatisch frei
-       if(systemCollapse) {
+        unlockTrophy('first_game');
+        if(systemCollapse) {
             document.getElementById('goTitle').innerText = "SYSTEM TOTALAUSFALL";
             document.getElementById('goTitle').style.color = "#f00";
             showToast("KOLLAPS BEENDET", "#f00", `Du hieltst ${(collapseTimer/60).toFixed(1)}s stand!`);
@@ -1218,31 +1385,35 @@ function checkGameOver(){
         let earned=earnKaffeebons(score);
         document.getElementById('finalScore').innerText=score;
         document.getElementById('goEarnedKB').innerText=earned;
+        // Besten Combo anzeigen
+        if(bestComboThisRun >= 2) {
+            document.getElementById('goBestCombo').style.display = 'block';
+            document.getElementById('goComboVal').innerText = '×' + bestComboThisRun;
+        } else {
+            document.getElementById('goBestCombo').style.display = 'none';
+        }
         document.getElementById('gameOverScreen').style.display='block';
         document.getElementById('highscoreInputArea').style.display='block';
         document.getElementById('meeting-bar-container').style.display='none';
         document.getElementById('meeting-text').style.display='none';
         document.getElementById('sapOverlay').style.display='none';
+        document.getElementById('bossHpContainer').style.display='none';
+        document.getElementById('comboDisplay').style.display='none';
         clearAllToasts();
-        // --- AUDIO FIX: Ingame Musik aus, Main Menü Musik an ---
-        bgMusic.pause(); // Stoppt den Action-Track
+        bgMusic.pause();
         let mm = document.getElementById('menuMusic');
-        if(mm) {
-            mm.currentTime = 0; // Spult Menü-Musik auf Anfang
-            mm.play().catch(()=>{}); // Startet das Leitstand-Theme
+        if(mm) { mm.currentTime = 0; mm.play().catch(()=>{}); }
     }
-}
 }
 
 // ============================================================
-// SECTION 10 — SERVER FARM (IDLE INCOME & HACKING)
+// SECTION 10 — SERVER FARM
 // ============================================================
 let currentHackingServer = null;
 let hackingTimer = 0;
 
 function tryActivateFarm() {
     if(serverFarms.length >= getMaxFarms()){ showToast("MAX FARMEN ERREICHT!", "#ff4400"); return; }
-    
     for(let sv of servers){
         if(Math.hypot(player.x-sv.x-sv.w/2, player.y-sv.y-sv.h/2) < 120){
             if(serverFarms.some(f=>f.serverRef===sv)){ showToast("SERVER BEREITS AKTIV", "#888"); return; }
@@ -1253,48 +1424,34 @@ function tryActivateFarm() {
 }
 
 function updateFarms(){
-    // --- HACKING TIMER LOGIK ---
     if(currentHackingServer) {
         hackingTimer--;
         let tEl = document.getElementById('hackTimer');
         if(tEl) tEl.innerText = `SYSTEM-LOCKDOWN IN: ${(hackingTimer/60).toFixed(1)}s`;
-        if(hackingTimer <= 0) {
-            showToast("ZEIT ABGELAUFEN! 🔒", "#f00");
-            closeHacking();
-        }
+        if(hackingTimer <= 0) { showToast("ZEIT ABGELAUFEN! 🔒", "#f00"); closeHacking(); }
     }
-
-    // --- PASSIVES EINKOMMEN LOGIK ---
     serverFarms=serverFarms.filter(f=>servers.includes(f.serverRef));
     let income = 3 + getUpgradeLevel('damage') + (hasTrophy('admin_hacker') ? 2 : 0);
     for(let f of serverFarms){
         f.ticker++;
         if(f.ticker>=60){
-            f.ticker=0;
-            score+=income;
+            f.ticker=0; score+=income;
             if(frame%180===0) floatingTexts.push(new FloatingText(f.serverRef.x+f.serverRef.w/2, f.serverRef.y-10, `+${income}`, "#00ff88"));
         }
     }
     let fi=document.getElementById('farmIndicator');
-    if(serverFarms.length>0){
-        fi.style.display='block';
-        fi.innerText=`🖥️ ${serverFarms.length}/${getMaxFarms()} Server-Farmen aktiv`;
-    } else { fi.style.display='none'; }
+    if(serverFarms.length>0){ fi.style.display='block'; fi.innerText=`🖥️ ${serverFarms.length}/${getMaxFarms()} Server-Farmen aktiv`; } 
+    else { fi.style.display='none'; }
 }
 
 function startHackingPuzzle(server) {
     currentHackingServer = server;
-    hackingTimer = 300; // 5 Sekunden Zeitdruck
+    hackingTimer = 300;
     document.getElementById('hackingOverlay').style.display = 'block';
-    
-    // Die Fallstrick-Optionen (Einer fängt nicht mit 192 an)
     let options = ["192.168.0.10", "192.168.0.11", "192.168.0.12", "172.16.0.10"]; 
     options.sort(() => Math.random() - 0.5);
-    
     let html = "";
-    options.forEach(opt => {
-        html += `<div class="hack-option" onclick="checkHack('${opt}')">${opt}</div>`;
-    });
+    options.forEach(opt => { html += `<div class="hack-option" onclick="checkHack('${opt}')">${opt}</div>`; });
     document.getElementById('hackOptions').innerHTML = html;
 }
 
@@ -1316,11 +1473,10 @@ function closeHacking() {
     document.getElementById('hackingOverlay').style.display = 'none';
     currentHackingServer = null;
 }
-   
+
 // ============================================================
 // SECTION 11 — CLASSES
 // ============================================================
-
 class FloatingText{
     constructor(x,y,text,color){this.x=x;this.y=y;this.text=text;this.color=color;this.life=90;this.dy=-1;}
     update(){this.y+=this.dy;this.life--;}
@@ -1353,11 +1509,8 @@ class Player{
         this.isMartin=false; this.promoTriggered=false;
         this.vodkaTimer=0;
         this.idocBlocker = false;
-        
-        // --- NEU: Waffen-Arsenal ---
-        this.activeWeapons = {}; // Speichert alle aktiven Waffen + Timer
-        this.lastShot = {};      // Speichert den letzten Schuss pro Waffe
-        
+        this.activeWeapons = {};
+        this.lastShot = {};
         this.shieldTimer=0;
         this.bugTimer=0; this.deliveryTimer=0;
         this.hammerSpawnTimer=0; this.hammerEffectTimer=0;
@@ -1379,23 +1532,18 @@ class Player{
         this.rollDx = 0;         
         this.rollDy = 0;         
         applyUpgradesToPlayer(this);
-
-        // --- TROPHY PERKS AKTIVIEREN ---
         if(hasTrophy('first_game')) this.maxHp += 5;
         if(hasTrophy('soup_king')) this.suppe += 1;
         if(hasTrophy('pacifist')) this.speed += 0.2;
-        if(hasTrophy('boss_killer')) this.shieldTimer = 600; // 10s Schutzschild am Start
+        if(hasTrophy('boss_killer')) this.shieldTimer = 600;
         if(hasTrophy('survival_master')) this.dmgBonus += 2;
-
-        this.hp = this.maxHp; // Passt die HP an die neuen Max-HP an
-
-        // --- RUN TRACKER (Für Trophäen-Bedingungen) ---
+        this.hp = this.maxHp;
         this.runSuppen = 0;
         this.runHacks = 0;
         this.runRacheHeal = 0;
         this.shotsFired = 0;
-        this.runMeetings = 0; // NEU
-        this.runIdocs = 0;    // NEU
+        this.runMeetings = 0;
+        this.runIdocs = 0;
     }
 
     activateVacation(){
@@ -1411,20 +1559,15 @@ class Player{
     update(){
         if(this.stunned>0){this.stunned--;return;}
         if(this.inMeeting){return;}
-
         if (this.rollCooldown > 0) this.rollCooldown--;
         
         if (this.rollTimer > 0) {
-            // Während der Rolle: Sehr schnell bewegen & Unverwundbar
             this.rollTimer--;
             let nx = this.x + this.rollDx;
             let ny = this.y + this.rollDy;
-            
-            // --- ANTI STUCK ---
             let isStuck = checkWallCollision(this.x, this.y, this.radius);
             if(isStuck || !checkWallCollision(nx, this.y, this.radius)) this.x = Math.max(this.radius, Math.min(WORLD_WIDTH-this.radius, nx));
             if(isStuck || !checkWallCollision(this.x, ny, this.radius)) this.y = Math.max(this.radius, Math.min(WORLD_HEIGHT-this.radius, ny));
-            
             spawnParticles(this.x, this.y + 20, '#ccc', 1);
             return; 
         }
@@ -1455,9 +1598,8 @@ class Player{
         if(input.keys['KeyE']){
             for(let s of stations){
                 if(s.type==='hardware_store' && Math.hypot(this.x-s.x-s.w/2, this.y-s.y-s.h/2) < 150){ openKloskaShop(); input.keys['KeyE'] = false; }
-                //if(s.type==='chicken_truck'&&Math.hypot(this.x-s.x-s.w/2,this.y-s.y-s.h/2)<150&&this.hp<this.maxHp){
                 if(s.type==='chicken_truck'&&Math.hypot(this.x-s.x-s.w/2,this.y-s.y-s.h/2)<150&&this.hp<this.maxHp && currentDiffLabel !== "SURVIVAL"){
-               this.hp++; if(frame%10===0) spawnParticles(this.x,this.y,'#d35400',1);
+                    this.hp++; if(frame%10===0) spawnParticles(this.x,this.y,'#d35400',1);
                     if(frame%30===0) floatingTexts.push(new FloatingText(this.x,this.y-60,"ABMAHNUNG!","#f00"));
                 }
             }
@@ -1485,7 +1627,6 @@ class Player{
             showToast("SCHICHTWECHSEL",colors[currentShift],names[currentShift]+" — "+subs[currentShift]);
         }
 
-        // if(this.vacationTimer>0){this.vacationTimer--;if(frame%60===0&&this.hp<this.maxHp)this.hp+=2;}
         if(this.vacationTimer>0){this.vacationTimer--;if(frame%(hasTrophy('vacation_hoarder') ? 48 : 60)===0&&this.hp<this.maxHp && currentDiffLabel !== "SURVIVAL")this.hp+=2;}
         if(this.bikeTimer>0)        this.bikeTimer--;
         if(this.speedBoostTimer>0)  this.speedBoostTimer--;
@@ -1497,9 +1638,8 @@ class Player{
         if(this.hammerEffectTimer>0)this.hammerEffectTimer--;
         if(this.bossSpawnTimer>0)   this.bossSpawnTimer--;
         if(this.crateFlashTimer>0)  this.crateFlashTimer--;
-        if(this.mouseTimer>0) this.mouseTimer--;
+        if(this.mouseTimer>0 && this.mouseTimer !== Infinity) this.mouseTimer--;
 
-        // --- NEU: Zählt Timer von ALLEN aktiven Waffen runter ---
         for(let w in this.activeWeapons){
             this.activeWeapons[w]--;
             if(this.activeWeapons[w] <= 0) delete this.activeWeapons[w];
@@ -1520,7 +1660,7 @@ class Player{
         if(this.bugTimer>0){dx=-dx;dy=-dy;}
 
         let spd=this.speed;
-        if(idocEvent && hasTrophy('idoc_savior')) spd *= 1.1; // 10% mehr Speed
+        if(idocEvent && hasTrophy('idoc_savior')) spd *= 1.1;
         if(this.bikeTimer>0)       spd=10;
         if(this.speedBoostTimer>0) spd+=3;
         if(this.sapDebuffTimer>0)  spd=Math.max(1, spd-3); 
@@ -1528,43 +1668,31 @@ class Player{
         if(dx!==0||dy!==0){
             let len=Math.sqrt(dx*dx+dy*dy); dx/=len; dy/=len;
             let nx=this.x+dx*spd, ny=this.y+dy*spd;
-            
-            // --- ANTI STUCK ---
             let isStuck = checkWallCollision(this.x, this.y, this.radius);
             if(isStuck || !checkWallCollision(nx,this.y,this.radius)) this.x=Math.max(this.radius,Math.min(WORLD_WIDTH-this.radius,nx));
             if(isStuck || !checkWallCollision(this.x,ny,this.radius)) this.y=Math.max(this.radius,Math.min(WORLD_HEIGHT-this.radius,ny));
         }
 
-        // --- NEU: Schießt alle aktiven Waffen gleichzeitig ---
         let canShoot=(this.vodkaTimer<=0)||this.isMartin;
         let isShooting = input.mouseDown || (this.activeWeapons['uzi'] && this.bikeTimer > 0);
         
         if(isShooting && canShoot) {
             let wepKeys = Object.keys(this.activeWeapons);
             if(wepKeys.length === 0) {
-                // Nur Standardwaffe
                 let fr = Math.max(2, 20 - Math.ceil(20 * 0.15 * getUpgradeLevel('fire_rate')));
-                if(frame - (this.lastShot['standard']||0) > fr) {
-                    this.shootWeapon('standard');
-                    this.lastShot['standard'] = frame;
-                }
+                if(frame - (this.lastShot['standard']||0) > fr) { this.shootWeapon('standard'); this.lastShot['standard'] = frame; }
             } else {
-                // ALLE Waffen im Arsenal feuern (unterschiedliche Feuerraten werden beachtet)
                 for(let w of wepKeys) {
                     let frBase = {minigun:4,uzi:7,ak47:6,shotgun:40,rocket:60,railgun:50,flamer:3}[w]||20;
                     let fr = Math.max(2, frBase - Math.ceil(frBase * 0.15 * getUpgradeLevel('fire_rate')));
-                    if(frame - (this.lastShot[w]||0) > fr) {
-                        this.shootWeapon(w);
-                        this.lastShot[w] = frame;
-                    }
+                    if(frame - (this.lastShot[w]||0) > fr) { this.shootWeapon(w); this.lastShot[w] = frame; }
                 }
             }
         }
     }
 
     triggerEvolution(){
-        this.isMartin = true; 
-        this.promoTriggered = true; 
+        this.isMartin = true; this.promoTriggered = true; 
         if(currentDiffLabel !== "SURVIVAL" && !isWegflexenMode) this.hp = this.maxHp; 
         playSound('evolve'); screenShake = 20;
         showToast("PIKO BELLO!","gold","Du bist jetzt MADDIN.");
@@ -1573,43 +1701,29 @@ class Player{
 
     equipWeapon(type){
         if(type === 'mouse') {
-            if(this.mouseTimer !== Infinity) { // <--- SCHÜTZT DEINE PERMANENTE MAUS!
-                this.mouseTimer = 1800; 
-                showToast("ORBIT-MAUS!", "#0ff", "AKTIVIERT (30 SEK)");
-            }
+            if(this.mouseTimer !== Infinity) { this.mouseTimer = 1800; showToast("ORBIT-MAUS!", "#0ff", "AKTIVIERT (30 SEK)"); }
             return; 
         }
-        // Waffe wird hinzugefügt oder Timer resettet
         this.activeWeapons[type] = hasTrophy('collapse_survivor') ? 2250 : 1800;
         this.crateFlashTimer=120; flashScreen=10;
         showToast("ARSENAL ERWEITERT!", "#0ff", type.toUpperCase());
     }
 
     shootWeapon(w){
-        this.shotsFired++; // Tracker für Pazifist
+        this.shotsFired++;
         let offset=this.isMartin?-20:-10;
         let angle=Math.atan2(input.y-(this.y+offset-camera.y), input.x-(this.x-camera.x));
         if(w==='uzi'&&this.bikeTimer>0&&!input.mouseDown) angle=Math.random()*Math.PI*2;
-        
         let dmg=10+this.dmgBonus;
         let recoil = 0;
-        
         if(w==='shotgun')    {for(let i=-2;i<=2;i++) bullets.push(new Bullet(this.x,this.y+offset,angle+i*0.15,'standard',dmg)); playSound('shoot'); recoil=3;}
         else if(w==='minigun'){bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.4,'standard',dmg)); playSound('shoot');}
         else if(w==='uzi')   {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.1,'standard',dmg)); playSound('shoot');}
         else if(w==='ak47')  {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.05,'standard',dmg)); playSound('shoot'); recoil=1;}
         else if(w==='rocket'){bullets.push(new Bullet(this.x,this.y+offset,angle,'rocket',dmg)); playSound('shoot'); recoil=5;}
-        else if(w==='railgun'){
-            bullets.push(new Bullet(this.x,this.y+offset,angle,'railgun',dmg*5)); 
-            playSound('boss'); 
-            recoil = 8; screenShake = 8; 
-        }
-        else if(w==='flamer'){
-            for(let i=0; i<3; i++) bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.3,'flame',dmg*0.3));
-            if(frame%5===0) playSound('shoot'); 
-        }
+        else if(w==='railgun'){bullets.push(new Bullet(this.x,this.y+offset,angle,'railgun',dmg*5)); playSound('boss'); recoil = 8; screenShake = 8;}
+        else if(w==='flamer'){for(let i=0; i<3; i++) bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.3,'flame',dmg*0.3)); if(frame%5===0) playSound('shoot');}
         else {bullets.push(new Bullet(this.x,this.y+offset,angle,'standard',dmg)); playSound('shoot');}
-        
         this.x -= Math.cos(angle) * recoil;
         this.y -= Math.sin(angle) * recoil;
     }
@@ -1633,7 +1747,7 @@ class Player{
             ctx.strokeStyle='#555'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(ox,oy); ctx.stroke();
             ctx.fillStyle='#ccc'; ctx.save(); ctx.translate(ox,oy); ctx.rotate(this.orbitAngle+Math.PI/2); ctx.fillRect(-6,-10,12,20); ctx.fillStyle='#f00'; ctx.fillRect(-2,-8,4,4); ctx.restore();
         }
-       ctx.globalAlpha=1; ctx.filter="none"; ctx.restore();
+        ctx.globalAlpha=1; ctx.filter="none"; ctx.restore();
     }
 }
 
@@ -1646,15 +1760,10 @@ class Item{
     }
     draw() {
         let bob = Math.sin((frame + this.bobOffset) / 20) * 5;
-        
-        // --- ANIMIERTER SCHATTEN (Bleibt auf dem Boden) ---
         ctx.fillStyle = 'rgba(0,0,0,0.4)';
         ctx.beginPath();
-        // Schatten wird kleiner, wenn das Item (bob) nach oben geht
         ctx.ellipse(this.x, this.y + 18, 12 - bob/2, 5 - bob/4, 0, 0, Math.PI*2);
         ctx.fill();
-        // --------------------------------------------------
-
         ctx.save(); ctx.translate(this.x, this.y + bob);
         if(this.life < 120 && this.life % 10 < 5) ctx.globalAlpha = 0.3;
         ctx.font = '40px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -1669,26 +1778,19 @@ class Bullet {
     constructor(x, y, angle, type, dmg=10) {
         this.x = x; this.y = y; this.type = type; this.dmg = dmg;
         this.angle = angle;
-        
         if (type === 'rocket') this.speed = 12;
         else if (type === 'railgun') this.speed = 35;
-        else if (type === 'flame') this.speed = 10 + Math.random() * 4; // Deutlich schnellerer Start
+        else if (type === 'flame') this.speed = 10 + Math.random() * 4;
         else this.speed = 18;
-        
         this.dx = Math.cos(angle) * this.speed; 
         this.dy = Math.sin(angle) * this.speed;
-        this.life = type === 'flame' ? 45 : 60; // Leben von 25 auf 45 Frames erhöht (mehr Reichweite)
+        this.life = type === 'flame' ? 45 : 60;
         this.size = type === 'flame' ? 6 : 4;
-        
         this.hitEnemies = [];
     }
     update() {
         this.x += this.dx; this.y += this.dy; this.life--;
-        if (this.type === 'flame') {
-            this.size += 1.8; // Wird breiter
-            this.dx *= 0.96; // Bremst viel weicher ab (vorher 0.85 = Wand)
-            this.dy *= 0.96;
-        }
+        if (this.type === 'flame') { this.size += 1.8; this.dx *= 0.96; this.dy *= 0.96; }
     }
     draw() {
         if (this.type === 'rocket') {
@@ -1717,19 +1819,14 @@ class Enemy{
             this.x=Math.max(30,Math.min(WORLD_WIDTH-30, player.x+Math.cos(a)*d));
             this.y=Math.max(30,Math.min(WORLD_HEIGHT-30,player.y+Math.sin(a)*d));
             this.type=99; 
-            
-            // --- DYNAMISCHES BOSS BALANCING ---
-            // lastChosenDifficulty ist 1 (Praktikant), 3 (Vollzeit), 6 (Burnout) oder 9 (Survival)
             let hpMult = lastChosenDifficulty; 
-            let spdBonus = lastChosenDifficulty * 0.2; // Speed sanft erhöhen, sonst unspielbar
-
+            let spdBonus = lastChosenDifficulty * 0.2;
             this.hp = bossData.hp * hpMult; 
             this.maxHp = bossData.hp * hpMult;
             this.speed = bossData.speed + spdBonus; 
-            
             this.radius=bossData.radius;
             this.color=bossData.color; 
-            this.score = 5000 * hpMult; // Boss gibt auf höheren Stufen auch entsprechend mehr Punkte!
+            this.score = 5000 * hpMult;
             this.label=bossData.name; this.symbol="☠"; this.laserCooldown=300;
             return;
         }
@@ -1741,12 +1838,11 @@ class Enemy{
             if(!checkWallCollision(this.x,this.y,30)) safe=true;
             att++;
         }
-        // Type selection — includes new V17 types
         let rand=Math.random();
         if     (difficulty>3   &&rand<0.02) this.type=1;
         else if(difficulty>1.5 &&rand<0.08) this.type=2;
-        else if(difficulty>2   &&rand<0.10) this.type=7;   // DER ANWENDER
-        else if(difficulty>1   &&rand<0.13) this.type=8;   // SAP-UPDATE
+        else if(difficulty>2   &&rand<0.10) this.type=7;
+        else if(difficulty>1   &&rand<0.13) this.type=8;
         else if(rand<0.25) this.type=3;
         else if(rand<0.45) this.type=4;
         else if(rand<0.50){ const hasLKW=enemies.some(e=>e.type===6); this.type=hasLKW?5:6; }
@@ -1759,7 +1855,6 @@ class Enemy{
             case 3: this.hp=50;   this.maxHp=50;   this.speed=2.0; this.radius=20; this.color='#f1c40f'; this.score=50;   this.label="PRIO3";      this.symbol="⚙";  break;
             case 2: this.hp=120;  this.maxHp=120;  this.speed=1.5; this.radius=26; this.color='#e67e22'; this.score=150;  this.label="PRIO2";      this.symbol="⚡"; break;
             case 1: this.hp=400;  this.maxHp=400;  this.speed=1.0; this.radius=50; this.color='#c0392b'; this.score=300;  this.label="PRIO1";      this.symbol="☠";  break;
-            // V17 NEW ENEMIES
             case 7: this.hp=35;   this.maxHp=35;   this.speed=2.2; this.radius=18; this.color='#9b59b6'; this.score=75;   this.label="DER ANWENDER";this.symbol="🧑"; this.teleportTimer=180+Math.floor(Math.random()*60); break;
             case 8: this.hp=220;  this.maxHp=220;  this.speed=0.6; this.radius=30; this.color='#1f618d'; this.score=200;  this.label="SAP-UPDATE"; this.symbol="💿"; break;
         }
@@ -1767,21 +1862,13 @@ class Enemy{
 
     update(){
         if(this.freezeTimer>0){this.freezeTimer--;return;}
-       // Brandschaden (Flammenwerfer)
-        if (this.burnTimer > 0) {
-            this.burnTimer--;
-            this.hp -= 0.5; // Zieht kontinuierlich HP ab
-            if (frame % 5 === 0) spawnParticles(this.x, this.y, '#ff6600', 1);
-        }
-        // Cooldown für Treffer durch die kreisende Maus
+        if (this.burnTimer > 0) { this.burnTimer--; this.hp -= 0.5; if (frame % 5 === 0) spawnParticles(this.x, this.y, '#ff6600', 1); }
         if (this.mouseCooldown > 0) this.mouseCooldown--;
 
-        // --- DER ANWENDER — random teleport ---
         if(this.type===7){
             this.teleportTimer--;
             if(this.teleportTimer<=0){
-                let a=Math.random()*Math.PI*2;
-                let r=100+Math.random()*300;
+                let a=Math.random()*Math.PI*2, r=100+Math.random()*300;
                 let nx=Math.max(30,Math.min(WORLD_WIDTH-30,  player.x+Math.cos(a)*r));
                 let ny=Math.max(30,Math.min(WORLD_HEIGHT-30, player.y+Math.sin(a)*r));
                 if(!checkWallCollision(nx,ny,this.radius)){
@@ -1794,54 +1881,31 @@ class Enemy{
             }
         }
 
-        // --- PETER BAYER SPECIALS (Reworked) ---
         if(this.type===99 && this.label==="PETER BAYER"){
             this.stampfCooldown = (this.stampfCooldown === undefined) ? 300 : this.stampfCooldown - 1;
             this.flutCooldown = (this.flutCooldown || 0) - 1;
-
-            // 1 Sekunde vorher: Warnung abspielen
-            if (this.stampfCooldown === 60) {
-                playSound('alarm');
-            }
-
-            // Der eigentliche Stampfer
+            if (this.stampfCooldown === 60) { playSound('alarm'); }
             if(this.stampfCooldown <= 0){
-                screenShake = 60; 
-                playSound('hammer');
+                screenShake = 60; playSound('hammer');
                 floatingTexts.push(new FloatingText(this.x, this.y, "STAMPFER!", "#f00"));
-                
-                // 1. Alle kleinen Tickets im Radius zerschmettern
                 enemies.forEach(oe => {
-                    if(oe !== this && Math.hypot(oe.x - this.x, oe.y - this.y) < 250) {
-                        oe.hp = -1000; // Insta-Kill
-                        spawnParticles(oe.x, oe.y, '#f00', 8);
-                    }
+                    if(oe !== this && Math.hypot(oe.x - this.x, oe.y - this.y) < 250) { oe.hp = -1000; spawnParticles(oe.x, oe.y, '#f00', 8); }
                 });
-
-                // 2. Spieler im Radius treffen
                 if(Math.hypot(player.x - this.x, player.y - this.y) < 250) {
-                    if(player.rollTimer <= 0) { // KEINE Hechtrolle aktiv -> Voll in die Fresse
-                        if(isWegflexenMode) {
-                            player.hp = 0; // One-Hit-Kill im WEGFLEXEN
-                        } else {
-                            player.hp -= 40; 
-                            player.orangeHp += 40;
-                            player.orangeTimer = 120;
-                        }
+                    if(player.rollTimer <= 0) {
+                        if(isWegflexenMode) { player.hp = 0; }
+                        else { player.hp -= 40; player.orangeHp += 40; player.orangeTimer = 120; }
                         player.stunned = 45;
                         spawnParticles(player.x, player.y, '#f00', 15);
                         showToast("VOM CHEF ZERSTAMPFT!", "#f00", isWegflexenMode ? "WEGGEFLEXT!" : "Shift für Hechtrolle nutzen!");
-                    } else { // Perfekter Dodge
+                    } else {
                         unlockTrophy('perfect_dodge');
                         floatingTexts.push(new FloatingText(player.x, player.y - 40, "PERFEKT AUSGEWICHEN!", "#0f0"));
-                        score += 1000; // Harte Typen werden belohnt
+                        score += 1000;
                     }
                 }
-
-                this.stampfCooldown = 300; // Reset auf exakt 5 Sekunden
+                this.stampfCooldown = 300;
             }
-
-            // Ticket Flut (weniger oft)
             if(this.flutCooldown <= 0 && Math.random()<0.02){
                 floatingTexts.push(new FloatingText(this.x, this.y, "TICKET FLUT!", "#f00"));
                 for(let i=0; i<8; i++){ let ne = new Enemy(); ne.x = this.x + (Math.random()-.5)*100; ne.y = this.y + (Math.random()-.5)*100; enemies.push(ne); }
@@ -1849,7 +1913,6 @@ class Enemy{
             }
         }
 
-        // Boss laser
         if(this.type===99){
             if(this.laserCooldown>0) this.laserCooldown--;
             else if(this.laserState===0){this.laserState=1;this.laserTimer=120;}
@@ -1868,7 +1931,6 @@ class Enemy{
             }
         }
 
-        // Movement
         let angle;
         if(player.vacationTimer>0&&this.type!==99) angle=Math.sin(frame*0.1+this.x)*Math.PI;
         else angle=Math.atan2(player.y-this.y,player.x-this.x);
@@ -1876,12 +1938,9 @@ class Enemy{
         if(this.type===99||this.type===6||!checkWallCollision(nx,this.y,this.radius)) this.x=nx;
         if(this.type===99||this.type===6||!checkWallCollision(this.x,ny,this.radius)) this.y=ny;
 
-        // Collision with player
-        // Collision with player
         let dist=Math.hypot(player.x-this.x,player.y-this.y);
         if(dist<player.radius+this.radius){
-            if(player.rollTimer > 0) return; // <-- NEU: UNVERWUNDBAR WÄHREND DER ROLLE (i-frames)
-            
+            if(player.rollTimer > 0) return;
             if(this.type===6){
                 screenShake=20;
                 floatingTexts.push(new FloatingText(player.x,player.y,"CRITICAL UPDATE!","#f00"));
@@ -1891,7 +1950,8 @@ class Enemy{
                 });
                 this.hp=-1000;
             } else if(this.type===8&&frame%30===0){
-                // SAP-Update: slow debuff
+                // FIX V20: dmg war undeclared → ReferenceError in production
+                let dmg = 0.5;
                 if(player.sapDebuffTimer<=0){
                     player.sapDebuffTimer=300;
                     document.getElementById('sapOverlay').style.display='block';
@@ -1908,14 +1968,8 @@ class Enemy{
                     let dmg=0.5;
                     if(this.type===4)dmg=1.0; if(this.type===3)dmg=1.5; if(this.type===2)dmg=2.0;
                     if(this.type===1)dmg=2.5;  if(this.type===99)dmg=3.5; if(this.type===7)dmg=1.2;
-                    if(isWegflexenMode) {
-                        player.hp = 0; // One-Hit-Kill
-                    } else {
-                        player.hp -= dmg;
-                        player.orangeHp += dmg;   // Rache-Heilung nur außerhalb WEGFLEXEN
-                        player.orangeTimer = 120;
-                    }
-
+                    if(isWegflexenMode) { player.hp = 0; }
+                    else { player.hp -= dmg; player.orangeHp += dmg; player.orangeTimer = 120; }
                     spawnParticles(player.x,player.y,'#f00',1);
                     this.x-=Math.cos(angle)*5; this.y-=Math.sin(angle)*5;
                     screenShake=5;
@@ -1926,18 +1980,11 @@ class Enemy{
 
     draw(){
         if(this.freezeTimer>0){ctx.globalAlpha=.5;ctx.fillStyle="#0ff";ctx.font="20px Arial";ctx.textAlign="center";ctx.fillText("❄️",this.x,this.y-40);}
-
-        // SAP pulsing aura
         if(this.type===8){
             ctx.beginPath();ctx.arc(this.x,this.y,this.radius+8+Math.sin(frame*0.1)*4,0,Math.PI*2);
             ctx.fillStyle=`rgba(31,97,141,${0.2+Math.sin(frame*0.1)*0.1})`;ctx.fill();
         }
-        // Anwender teleport shimmer
-        if(this.type===7&&this.teleportTimer<30){
-            ctx.globalAlpha=this.teleportTimer/30;
-        }
-
-        // Boss laser
+        if(this.type===7&&this.teleportTimer<30){ ctx.globalAlpha=this.teleportTimer/30; }
         if(this.type===99&&this.laserState>0){
             let atp=Math.atan2(player.y-this.y,player.x-this.x);
             ctx.save();ctx.translate(this.x,this.y);ctx.rotate(atp);
@@ -1945,32 +1992,22 @@ class Enemy{
             else{ctx.strokeStyle='#f00';ctx.lineWidth=10+Math.random()*5;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(1000,0);ctx.stroke();}
             ctx.restore();
         }
-
-        // --- PETER BAYER JUMP ANIMATION & DANGER ZONE ---
         let drawY = this.y;
         if(this.type === 99 && this.label === "PETER BAYER" && this.stampfCooldown <= 60 && this.stampfCooldown > 0) {
-            let progress = 1 - (this.stampfCooldown / 60); // Geht von 0 bis 1
-            drawY = this.y - Math.sin(progress * Math.PI) * 150; // Springt 150px hoch
-
-            // Rote Gefahrenzone auf dem Boden
+            let progress = 1 - (this.stampfCooldown / 60);
+            drawY = this.y - Math.sin(progress * Math.PI) * 150;
             ctx.beginPath(); ctx.arc(this.x, this.y, 250, 0, Math.PI * 2);
             ctx.fillStyle = `rgba(255, 0, 0, ${0.1 + progress * 0.3})`; ctx.fill();
             ctx.strokeStyle = `rgba(255, 0, 0, ${progress})`; ctx.lineWidth = 3; ctx.stroke();
-
-            // Blinken (alle paar Frames in der Luft)
             if(this.stampfCooldown % 10 < 5) ctx.filter = 'brightness(2) sepia(1) hue-rotate(-50deg) saturate(5)';
         }
-
-        // HP bar (passt sich an drawY an, damit sie mitspringt)
         let bw=this.radius*2;
         ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(this.x-this.radius,drawY-this.radius-15,bw,6);
         ctx.fillStyle=this.hp<this.maxHp*.3?'#f00':'#0f0';
         ctx.fillRect(this.x-this.radius,drawY-this.radius-15,bw*(Math.max(0,this.hp)/this.maxHp),6);
-
         ctx.font=(this.radius*1.8)+'px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
         ctx.shadowColor="black";ctx.shadowBlur=5;ctx.fillText(this.symbol,this.x,drawY);ctx.shadowBlur=0;
-        ctx.filter = 'none'; // Filter zwingend zurücksetzen!
-        
+        ctx.filter = 'none';
         ctx.fillStyle='#fff';ctx.font='bold 13px Courier New';ctx.textAlign='center';ctx.textBaseline='top';
         ctx.fillText(this.label,this.x,drawY+this.radius);
         ctx.globalAlpha=1;
@@ -1990,15 +2027,10 @@ class Shell{
         this.life=20; this.settled=false;
     }
     update(){
-        if(!this.settled){
-            this.x+=this.dx; this.y+=this.dy;
-            this.dx*=.85; this.dy*=.85;
-            this.life--; if(this.life<=0)this.settled=true;
-        }
+        if(!this.settled){ this.x+=this.dx; this.y+=this.dy; this.dx*=.85; this.dy*=.85; this.life--; if(this.life<=0)this.settled=true; }
     }
     draw(){
-        ctx.fillStyle='#f1c40f'; ctx.save();
-        ctx.translate(this.x,this.y);
+        ctx.fillStyle='#f1c40f'; ctx.save(); ctx.translate(this.x,this.y);
         if(!this.settled) ctx.rotate(frame*0.5);
         ctx.fillRect(-2,-1,4,2); ctx.restore();
     }
@@ -2037,38 +2069,35 @@ function generateWorld(){
 // SECTION 13 — SPAWN & EVENT LOGIC
 // ============================================================
 function spawnLogic(){
-   if(systemCollapse) {
+    if(systemCollapse) {
         collapseTimer++;
-        // Spawnt nur noch Prio 1 Gegner, wird alle paar Sekunden schneller
         let rate = Math.max(4, 25 - Math.floor(collapseTimer / 60));
         if(frame % rate === 0) {
             let p1 = new Enemy();
             p1.type = 1; p1.color = '#c0392b'; p1.hp = 450; p1.maxHp = 450;
-            p1.speed = 1.2 + (collapseTimer / 1800); // Werden schleichend schneller
+            p1.speed = 1.2 + (collapseTimer / 1800);
             p1.radius = 50; p1.label = "TOTALAUSFALL"; p1.symbol = "☠";
             enemies.push(p1);
         }
-        return; // Verhindert, dass normale Gegner oder Bosse spawnen
+        return;
     }
     if(frame%600===0) difficulty+=0.1;
 
-    // Boss
     if(currentBossStage<bosses.length&&score>=bosses[currentBossStage].score&&!activeBoss){
         let bd=bosses[currentBossStage]; activeBoss=new Enemy(bd); enemies.push(activeBoss);
         playSound('boss'); screenShake=30; player.bossSpawnTimer=240; currentBossStage++;
         showToast("⚠ BOSS ERSCHIENEN!","#e74c3c",bd.name+" — "+bd.subtitle);
+        document.getElementById('bossHpContainer').style.display = 'block';
     }
 
-    // Spawn rate
     let sr=Math.max(15,60-difficulty*4);
     if(activeBoss) sr*=2;
     if(currentShift===2) sr*=0.8;
     if(frame%Math.floor(sr)===0) enemies.push(new Enemy());
 
-    // Items
-    if(Math.random()<0.01){ // Bisschen mehr Drops generieren
+    if(Math.random()<0.01){
         let r=Math.random();
-        if     (r<0.30) items.push(new Item('suppe')); // 30% Chance auf Suppe
+        if     (r<0.30) items.push(new Item('suppe'));
         else if(r<0.55) items.push(new Item('crate')); 
         else if(r<0.65) items.push(new Item('shield'));
         else if(r<0.75) items.push(new Item('vodka'));
@@ -2078,7 +2107,6 @@ function spawnLogic(){
         else if(r<0.99){items.push(new Item('hammer'));playSound('delivery');player.hammerSpawnTimer=180;}
     }
 
-    // IDOC
     if(!idocEvent && !player.idocBlocker && frame%3000===1000){
         let sv=servers[Math.floor(Math.random()*servers.length)];
         if(sv){
@@ -2086,25 +2114,15 @@ function spawnLogic(){
             playSound('alarm');
             showToast("🚨 "+idocEvent.label,"#f00","Rotem Pfeil folgen → [E] drücken! (30 Sek)",true);
         }
-       // KLOSKA EVENT (greift Farmen an)
-    if(!kloskaEvent && serverFarms.length > 0 && frame % 2500 === 1800) {
-        // Wähle eine zufällige aktive Farm
-        let farm = serverFarms[Math.floor(Math.random() * serverFarms.length)];
-        kloskaEvent = {
-            serverRef: farm.serverRef,
-            x: farm.serverRef.x - 40, // Er steht links daneben
-            y: farm.serverRef.y + 10,
-            timer: 1800 // 30 Sekunden Zeit
-        };
-        playSound('alarm');
-        showToast("⚠️ ALARM!", "#ff00ff", "Kloska ist im Serverraum unterwegs!", true);
-    }
+        if(!kloskaEvent && serverFarms.length > 0 && frame % 2500 === 1800) {
+            let farm = serverFarms[Math.floor(Math.random() * serverFarms.length)];
+            kloskaEvent = { serverRef: farm.serverRef, x: farm.serverRef.x - 40, y: farm.serverRef.y + 10, timer: 1800 };
+            playSound('alarm');
+            showToast("⚠️ ALARM!", "#ff00ff", "Kloska ist im Serverraum unterwegs!", true);
+        }
     }
 
-    // Schicht
     if(frame%3600===0){ currentShift=(currentShift+1)%3; shiftTimer=0; playSound('delivery'); }
-
-    // Meeting
     if(!player.inMeeting&&frame%4500===2000){
         meetingZone={x:Math.random()*(WORLD_WIDTH-400)+200,y:Math.random()*(WORLD_HEIGHT-400)+200,r:150,active:true};
     }
@@ -2130,7 +2148,6 @@ function drawWorld(){
 
     splatters.forEach(s=>s.draw());
 
-    // Meeting zone
     if(meetingZone && meetingZone.active){
         ctx.beginPath();ctx.arc(meetingZone.x,meetingZone.y,meetingZone.r,0,Math.PI*2);
         ctx.fillStyle="rgba(0,0,255,.3)";ctx.fill();
@@ -2138,7 +2155,6 @@ function drawWorld(){
         ctx.fillStyle="#fff";ctx.font="30px Arial";ctx.fillText("MEETING RAUM",meetingZone.x,meetingZone.y);
     }
 
-    // Obstacles
     obstacles.forEach(o=>{
         ctx.fillStyle='rgba(0,0,0,.9)';ctx.fillRect(o.x+8,o.y+8,o.w,o.h);
         if(o.type==='desk'){
@@ -2155,7 +2171,6 @@ function drawWorld(){
         }
     });
 
-    // Servers (with farm indicator)
     servers.forEach(sv=>{
         ctx.fillStyle=sv.isFarm?'#145a32':'#c0392b';ctx.fillRect(sv.x,sv.y,sv.w,sv.h);
         for(let ly=5;ly<70;ly+=10){
@@ -2168,7 +2183,6 @@ function drawWorld(){
         }
     });
 
-    // Stations
     stations.forEach(s=>{
         ctx.shadowColor=s.color;ctx.shadowBlur=20;
         try { if(s.img) ctx.drawImage(s.img,s.x,s.y,s.w,s.h); } catch(e){} 
@@ -2177,7 +2191,6 @@ function drawWorld(){
         ctx.shadowColor="black";ctx.shadowBlur=4;ctx.fillText(s.label,s.x+s.w/2,s.y-10);ctx.shadowBlur=0;
     });
 
-    // IDOC marker + arrow
     if(idocEvent){
         ctx.beginPath();ctx.arc(idocEvent.x+20,idocEvent.y+40,60,0,Math.PI*2);
         ctx.strokeStyle="red";ctx.lineWidth=4;ctx.stroke();
@@ -2193,10 +2206,9 @@ function drawWorld(){
             ctx.restore();
         }
     }
-   // KLOSKA marker + arrow (Hüpfend animiert)
+
     if(kloskaEvent) {
         let bounce = Math.abs(Math.sin(frame * 0.1)) * 20; 
-        
         ctx.shadowColor = "#ff00ff"; ctx.shadowBlur = 20;
         if(kloskaImg && kloskaImg.complete && kloskaImg.naturalHeight !== 0) {
             ctx.drawImage(kloskaImg, kloskaEvent.x, kloskaEvent.y - bounce, 60, 90);
@@ -2204,10 +2216,8 @@ function drawWorld(){
             ctx.fillStyle = "#8e44ad"; ctx.fillRect(kloskaEvent.x, kloskaEvent.y - bounce, 40, 70);
         }
         ctx.shadowBlur = 0;
-        
         ctx.fillStyle = "#fff"; ctx.font = "bold 18px Arial"; ctx.textAlign="center";
         ctx.fillText("SABOTAGE!", kloskaEvent.x + 30, kloskaEvent.y - bounce - 10);
-
         let dx = kloskaEvent.x - player.x, dy = kloskaEvent.y - player.y;
         let angle = Math.atan2(dy, dx);
         let arrowDist = Math.min(Math.hypot(dx, dy) - 40, 100);
@@ -2218,7 +2228,7 @@ function drawWorld(){
             ctx.restore();
         }
     }
-} // <--- Diese Klammer schließt jetzt korrekt die drawWorld Funktion ab!
+}
 
 // ============================================================
 // SECTION 15 — HUD UPDATE
@@ -2236,43 +2246,48 @@ function updateHUD(){
     let ts = player.isMartin ? "maddinl.png" : "wurml.png";
     if(fi && !fi.src.includes(ts)) fi.src = ts;
     
-    // --- HUD LOGIK FÜR DAS WAFFEN ARSENAL ---
+    // Waffen HUD
     let wb = document.getElementById('weapon-bar');
     let wn = document.getElementById('hud-weapon-name');
     let wepKeys = Object.keys(player.activeWeapons);
-    
     if(wepKeys.length === 0){
-        wn.innerText = "STANDARD";
-        wb.style.width = "0%";
+        wn.innerText = "STANDARD"; wb.style.width = "0%";
     } else if(wepKeys.length === 1){
-        // Nur eine Spezialwaffe aktiv
         wn.innerText = wepKeys[0].toUpperCase();
         wb.style.width = ((player.activeWeapons[wepKeys[0]] / 1800) * 100) + "%";
         wb.style.backgroundColor = wepKeys[0] === 'minigun' ? '#ff00ff' : (wepKeys[0] === 'rocket' ? '#ff3333' : '#33ccff');
     } else {
-        // Multi-Weapon Mode! (Mehrere aktiv)
         wn.innerText = "ARSENAL (" + wepKeys.length + "X)";
-        // Der Balken zeigt den Timer der Waffe, die am längsten hält
         let maxT = Math.max(...Object.values(player.activeWeapons));
         wb.style.width = ((maxT / 1800) * 100) + "%";
-        wb.style.backgroundColor = '#ffeb3b'; // Leuchtend Gold für Multi-Kill
+        wb.style.backgroundColor = '#ffeb3b';
     }
-   // --- STATUS & COOLDOWN OVERLAY (OBEN RECHTS) ---
+
+    // --- NEU V20: BOSS HP BAR ---
+    let bossBar = document.getElementById('bossHpContainer');
+    if(activeBoss && activeBoss.hp > 0) {
+        bossBar.style.display = 'block';
+        document.getElementById('bossHpName').innerText = `☠ ${activeBoss.label} ☠`;
+        let pct = Math.max(0, activeBoss.hp / activeBoss.maxHp * 100);
+        document.getElementById('bossHpBarInner').style.width = pct + '%';
+        document.getElementById('bossHpPercent').innerText = `${Math.ceil(pct)}%  —  ${Math.ceil(activeBoss.hp)} / ${activeBoss.maxHp} HP`;
+        // Farbe bei niedrigem HP
+        let bar = document.getElementById('bossHpBarInner');
+        if(pct < 25) bar.style.background = 'linear-gradient(90deg, #8b0000, #c0392b, #ff4444)';
+        else if(pct < 50) bar.style.background = 'linear-gradient(90deg, #c0392b, #e74c3c, #ff6b6b)';
+        else bar.style.background = 'linear-gradient(90deg, #c0392b, #e74c3c, #ff6b6b)';
+    } else {
+        bossBar.style.display = 'none';
+    }
+
+    // Status Overlay
     let statusHtml = "<span style='color:#fff;text-decoration:underline;font-size:14px;font-weight:bold;'>📡 LEITSTAND-SYSTEME:</span><br>";
     let hasStatus = false;
-
     function addStatus(label, timer, color) {
-        if (timer > 0 && timer !== Infinity) {
-            hasStatus = true;
-            statusHtml += `<div style="color:${color}; margin-top:4px; font-weight:bold;">${label}: ${(timer/60).toFixed(1)}s</div>`;
-        } else if (timer === Infinity) {
-            hasStatus = true;
-            statusHtml += `<div style="color:${color}; margin-top:4px; font-weight:bold;">${label}: ∞</div>`;
-        }
+        if (timer > 0 && timer !== Infinity) { hasStatus = true; statusHtml += `<div style="color:${color}; margin-top:4px; font-weight:bold;">${label}: ${(timer/60).toFixed(1)}s</div>`; }
+        else if (timer === Infinity) { hasStatus = true; statusHtml += `<div style="color:${color}; margin-top:4px; font-weight:bold;">${label}: ∞</div>`; }
     }
-
     if(player) {
-        // Spieler Buffs & Debuffs
         if(player.rollCooldown > 0) addStatus("HECHTROLLE CD", player.rollCooldown, "#aaa");
         addStatus("🛡️ SCHUTZSCHILD", player.shieldTimer, "#FFFFFF");
         addStatus("🍺 VODKA (IMMUN)", player.vodkaTimer, "#0984e3");
@@ -2281,59 +2296,39 @@ function updateHUD(){
         addStatus("💿 SAP-SLOW", player.sapDebuffTimer, "#1f618d");
         addStatus("💾 BUG (INVERT)", player.bugTimer, "#FFFFFF");
         if(isWegflexenMode) addStatus("⚠️ FLEX-TIMER", Math.ceil(wegflexenTimer/60)+"s", "#f00");
-        
-        // Waffen-Rausch Anzeige (wenn mehrere Waffen aktiv sind)
-        let wepKeys = Object.keys(player.activeWeapons);
-        if(wepKeys.length > 0) {
-            let maxT = Math.max(...Object.values(player.activeWeapons));
-            addStatus("🔫 WAFFEN-ARSENAL", maxT, "#ffeb3b");
-        }
+        let wk = Object.keys(player.activeWeapons);
+        if(wk.length > 0) { let maxT = Math.max(...Object.values(player.activeWeapons)); addStatus("🔫 WAFFEN-ARSENAL", maxT, "#ffeb3b"); }
+        // NEU V20: Combo Status
+        if(combo >= 5) { hasStatus = true; statusHtml += `<div style="color:#f1c40f; margin-top:4px; font-weight:bold;">⚡ COMBO ×${comboMult}: ${combo} Kills</div>`; }
     }
-
-    // Event Timer
     if(idocEvent) addStatus("🚨 IDOC ALARM", idocEvent.timer, "#f00");
     if(kloskaEvent) addStatus("⚠️ KLOSKA SABOTAGE", kloskaEvent.timer, "#ff00ff");
     if(currentHackingServer) addStatus("🔒 HACKING TIMER", hackingTimer, "#ff4400");
-    
-    // System Kollaps
-    if(systemCollapse) {
-        hasStatus = true;
-        statusHtml += `<div style="color:#f00; margin-top:6px; font-weight:bold; font-size: 14px; text-shadow: 0 0 5px #f00;">🔥 KOLLAPS: ${(collapseTimer/60).toFixed(1)}s</div>`;
-    }
-
+    if(systemCollapse) { hasStatus = true; statusHtml += `<div style="color:#f00; margin-top:6px; font-weight:bold; font-size: 14px; text-shadow: 0 0 5px #f00;">🔥 KOLLAPS: ${(collapseTimer/60).toFixed(1)}s</div>`; }
     if(!hasStatus) statusHtml += `<div style="color:#555; margin-top:4px; font-style:italic;">Keine Systeme aktiv</div>`;
+    
     updateWegflexTimer();
     document.getElementById('status-overlay').innerHTML = statusHtml;
 }
-    function updateWegflexTimer() {
+
+function updateWegflexTimer() {
     var el  = document.getElementById('wegflexTimer');
     var bar = document.getElementById('wegflexTimerFill');
     var lbl = document.getElementById('wegflexTimerLabel');
     if (!el) return;
-
     if (isWegflexenMode && gameRunning && !gamePaused) {
         el.style.display = 'flex';
         var pct  = Math.max(0, (wegflexenTimer / 300) * 100);
         var secs = Math.ceil(wegflexenTimer / 60);
         bar.style.width = pct + '%';
-
-        if (pct > 60) {
-            bar.style.background = '#2ecc71';
-            el.classList.remove('danger');
-        } else if (pct > 30) {
-            bar.style.background = '#f1c40f';
-            el.classList.remove('danger');
-        } else {
-            bar.style.background = '#e74c3c';
-            el.classList.add('danger');
-        }
-
+        if (pct > 60) { bar.style.background = '#2ecc71'; el.classList.remove('danger'); }
+        else if (pct > 30) { bar.style.background = '#f1c40f'; el.classList.remove('danger'); }
+        else { bar.style.background = '#e74c3c'; el.classList.add('danger'); }
         lbl.innerText = '⚠ KILL-TIMER  ' + secs + 's';
     } else {
         el.style.display = 'none';
         el.classList.remove('danger');
     }
-
 }
 
 // ============================================================
@@ -2341,28 +2336,28 @@ function updateHUD(){
 // ============================================================
 function loop(){
     if(!gameRunning) return;
-    
-    // --- NEU: SPIEL PAUSIEREN ---
-    if(gamePaused) {
-        requestAnimationFrame(loop);
-        return; // Überspringt jegliche Logik & Rendern!
-    }
+    if(gamePaused) { requestAnimationFrame(loop); return; }
     
     try{
         frame++; shiftTimer++;
         spawnLogic();
         player.update();
-        // --- WEGFLEXEN ÜBERWACHUNG ---
+
         if(isWegflexenMode && gameRunning && !gamePaused) {
             wegflexenTimer--;
-            if(wegflexenTimer <= 0) {
-                player.hp = 0; 
-                showToast("ZU LANGSAM!", "#f00", "DU WURDEST WEGGEFLEXT!");
+            if(wegflexenTimer <= 0) { player.hp = 0; showToast("ZU LANGSAM!", "#f00", "DU WURDEST WEGGEFLEXT!"); }
+        }
+
+        // NEU V20: Combo-Timer herunterzählen
+        if(comboTimer > 0) {
+            comboTimer--;
+            if(comboTimer <= 0) {
+                updateCombo(false); // Combo verfallen
             }
         }
+
         updateFarms();
 
-        // IDOC timeout
         if(idocEvent){
             idocEvent.timer--;
             if(idocEvent.timer<=0){
@@ -2373,13 +2368,11 @@ function loop(){
                 enemies.forEach(e=>e.speed+=2);
             }
         }
-       // KLOSKA timeout
+
         if(kloskaEvent) {
             kloskaEvent.timer--;
             if(kloskaEvent.timer <= 0) {
-                // Kloska jagt die Farm hoch
                 triggerServerExplosion(kloskaEvent.serverRef.x + 20, kloskaEvent.serverRef.y + 40);
-                // Farm aus Arrays löschen
                 serverFarms = serverFarms.filter(f => f.serverRef !== kloskaEvent.serverRef);
                 servers = servers.filter(s => s !== kloskaEvent.serverRef);
                 kloskaEvent = null;
@@ -2389,7 +2382,6 @@ function loop(){
             }
         }
 
-        // Meeting
         if(meetingZone && meetingZone.active){
             let mt=document.getElementById('meeting-text'),mb=document.getElementById('meeting-bar-container'),mbar=document.getElementById('meeting-bar');
             if(Math.hypot(player.x-meetingZone.x,player.y-meetingZone.y)<meetingZone.r){
@@ -2399,17 +2391,11 @@ function loop(){
                     player.inMeeting=false; meetingZone.active=false;
                     mt.style.display='none'; mb.style.display='none';
                     player.meetingProgress=0;
-                    
-                    // 1. Tracker hochzählen & prüfen
                     player.runMeetings++;
                     if(player.runMeetings === 3) unlockTrophy('meeting_survivor');
-                    
-                    // 2. Punkte berechnen (Perk anwenden)
                     let earnedScore = 3000;
                     if(hasTrophy('meeting_survivor')) earnedScore += 1000; 
                     score += earnedScore;
-                    
-                    // 3. Feedback an den Spieler
                     floatingTexts.push(new FloatingText(player.x,player.y,"MEETING ÜBERLEBT!","#0f0"));
                     showToast("MEETING ÜBERLEBT!","#00ff00","+" + earnedScore + " Punkte");
                 }
@@ -2418,37 +2404,23 @@ function loop(){
 
         for(let t of turrets) t.update();
 
-        // Screen shake
-        // if(screenShake>0){ ctx.translate((Math.random()-.5)*screenShake,(Math.random()-.5)*screenShake); screenShake*=.9; if(screenShake<.5)screenShake=0; }
-
-        // Camera
         camera.x=Math.max(0,Math.min(player.x-canvas.width/2, WORLD_WIDTH-canvas.width));
         camera.y=Math.max(0,Math.min(player.y-canvas.height/2,WORLD_HEIGHT-canvas.height));
         input.worldX=input.x+camera.x; input.worldY=input.y+camera.y;
        
-        // Bullets
         for(let i=bullets.length-1;i>=0;i--){
             let b=bullets[i]; b.update();
             let hit=false;
             for(let k=servers.length-1;k>=0;k--){
                 let sv=servers[k];
                 if(b.x>sv.x&&b.x<sv.x+sv.w&&b.y>sv.y&&b.y<sv.y+sv.h){
-                    if(sv.isFarm) {
-                        hit=true; // Kugel verpufft an der Farm (Schusssicher!)
-                        break;
-                    } else {
-                        triggerServerExplosion(sv.x+sv.w/2,sv.y+sv.h/2);
-                        serverFarms=serverFarms.filter(f=>f.serverRef!==sv);
-                        servers.splice(k,1);
-                        hit=true;
-                        break;
-                    }
+                    if(sv.isFarm) { hit=true; break; }
+                    else { triggerServerExplosion(sv.x+sv.w/2,sv.y+sv.h/2); serverFarms=serverFarms.filter(f=>f.serverRef!==sv); servers.splice(k,1); hit=true; break; }
                 }
             }
             if(hit||checkWallCollision(b.x,b.y,2)||b.life<=0) bullets.splice(i,1);
         }
 
-        // Enemy vs bullets
         for(let i=enemies.length-1;i>=0;i--){
             let e=enemies[i]; e.update();
             for(let j=bullets.length-1;j>=0;j--){
@@ -2456,115 +2428,93 @@ function loop(){
                 let hr=e.radius+(b.type==='rocket'?20:0);
                 if(Math.hypot(e.x-b.x,e.y-b.y)<hr){
                     if(e.type===6){if(!player.isMartin||b.type!=='rocket'){bullets.splice(j,1);spawnParticles(e.x,e.y,'#f1c40f',2);playSound('hit');continue;}}
-                                        
                     if(b.type === 'rocket') {
                         screenShake=15;playSound('hammer');spawnParticles(b.x,b.y,'#f00',20);
                         enemies.forEach(oe=>{if(Math.hypot(oe.x-b.x,oe.y-b.y)<150){oe.hp-=100;floatingTexts.push(new FloatingText(oe.x,oe.y,"BOOM","#f00"));}});
                         bullets.splice(j,1);
-                    } 
-                    else if (b.type === 'railgun') {
-                        // Railgun durchschlägt Gegner!
+                    } else if (b.type === 'railgun') {
                         if (!b.hitEnemies.includes(e)) {
-                            e.hp -= b.dmg;
-                            b.hitEnemies.push(e); // Gegner als "getroffen" markieren
+                            e.hp -= b.dmg; b.hitEnemies.push(e);
                             spawnParticles(e.x, e.y, '#00ffff', 5); playSound('hit');
-                            e.x += Math.cos(b.angle) * 10; // Gegner zurückstoßen
-                            e.y += Math.sin(b.angle) * 10;
+                            e.x += Math.cos(b.angle) * 10; e.y += Math.sin(b.angle) * 10;
                         }
-                    } 
-                    else if (b.type === 'flame') {
-                        e.burnTimer = 90; // Gegner brennt für 1,5 Sekunden
-                        e.hp -= b.dmg;
-                        bullets.splice(j,1);
-                    }
-                    else { 
-                        // Verhindert, dass dieselbe Kugel einen Gegner im selben Frame 2x trifft
+                    } else if (b.type === 'flame') {
+                        e.burnTimer = 90; e.hp -= b.dmg; bullets.splice(j,1);
+                    } else { 
                         if (!b.hitEnemies.includes(e)) {
-                            e.hp -= b.dmg; 
-                            b.hitEnemies.push(e);
-                            spawnParticles(e.x, e.y, e.color, 3); 
-                            playSound('hit');
-                            
-                            // MOD: Brand-Munition (Gegner fackelt 3 Sekunden lang)
+                            e.hp -= b.dmg; b.hitEnemies.push(e);
+                            spawnParticles(e.x, e.y, e.color, 3); playSound('hit');
                             if(player.hasFireMod) e.burnTimer = 180; 
-                            
-                            // MOD: Durchschuss (Kugel wird erst nach 2 Treffern gelöscht)
-                            if(!player.hasPierceMod || b.hitEnemies.length >= 2) {
-                                bullets.splice(j, 1);
-                            }
+                            if(!player.hasPierceMod || b.hitEnemies.length >= 2) bullets.splice(j, 1);
                         }
                     }
-                   if(e.hp<=0) break;
+                    if(e.hp<=0) break;
                 }
             }
         }
-       // --- ORBIT-MAUS KOLLISION ---
+
         if (player.mouseTimer > 0) {
             let mx = player.x + Math.cos(player.orbitAngle) * 180;
             let my = player.y + Math.sin(player.orbitAngle) * 180 - 10;
             for (let e of enemies) {
-                // Hitbox von 15 auf 35 vergrößert, damit sie bei hohem Speed trifft
                 if (Math.hypot(e.x - mx, e.y - my) < e.radius + 35) {
                     if (e.mouseCooldown <= 0) {
-                        e.hp -= (50 + player.dmgBonus); // Schaden von 25 auf 50 verdoppelt!
-                        e.mouseCooldown = 15; 
-                        spawnParticles(e.x, e.y, '#f00', 8); // Rotes Blutspritzen für besseres Treffer-Feedback
-                        playSound('hit');
-                        // Brutaler Knockback
+                        e.hp -= (50 + player.dmgBonus); e.mouseCooldown = 15; 
+                        spawnParticles(e.x, e.y, '#f00', 8); playSound('hit');
                         let a = Math.atan2(e.y - my, e.x - mx);
-                        e.x += Math.cos(a) * 40;
-                        e.y += Math.sin(a) * 40;
+                        e.x += Math.cos(a) * 40; e.y += Math.sin(a) * 40;
                     }
                 }
             }
         }
 
-        // Dead enemy cleanup
         for(let i=enemies.length-1;i>=0;i--){
             if(enemies[i].hp<=0){
-    let e=enemies[i];
-    
-        // --- RACHE-HEILUNG ---
-    if(player.orangeHp > 0) {
-        let heal = 2; // Wert pro Kill (anpassbar)
-        if(heal > player.orangeHp) heal = player.orangeHp;
-        if(currentDiffLabel !== "SURVIVAL" && !isWegflexenMode) { 
-            player.hp = Math.min(player.maxHp, player.hp + heal);
-            player.runRacheHeal += heal;
-            if(player.runRacheHeal >= 1000) unlockTrophy('bloodlust');
-        }
-        player.orangeHp -= heal;
-        floatingTexts.push(new FloatingText(player.x, player.y, "+RACHE", "#ff6600"));
-    }
-    // ---------------------
+                let e=enemies[i];
+                
+                // Rache-Heilung
+                if(player.orangeHp > 0) {
+                    let heal = 2;
+                    if(heal > player.orangeHp) heal = player.orangeHp;
+                    if(currentDiffLabel !== "SURVIVAL" && !isWegflexenMode) { 
+                        player.hp = Math.min(player.maxHp, player.hp + heal);
+                        player.runRacheHeal += heal;
+                        if(player.runRacheHeal >= 1000) unlockTrophy('bloodlust');
+                    }
+                    player.orangeHp -= heal;
+                    floatingTexts.push(new FloatingText(player.x, player.y, "+RACHE", "#ff6600"));
+                }
 
-    if(e.hp===-1000){enemies.splice(i,1);continue;}
-                score+=e.score;
-                if(isWegflexenMode) wegflexenTimer = 300; // Setzt den 5-Sekunden-Timer bei jedem Kill zurück
-                if(currentShift===2) score+=Math.floor(e.score*.5);
+                if(e.hp===-1000){enemies.splice(i,1);continue;}
+
+                // NEU V20: Combo-System bei jedem Kill
+                updateCombo(true);
+
+                // Score mit Combo-Multiplikator
+                let earnedScore = e.score * comboMult;
+                score += earnedScore;
+                if(currentShift===2) score += Math.floor(e.score * 0.5 * comboMult);
+                
+                // Multiplikator-Floating-Text
+                if(comboMult > 1) {
+                    floatingTexts.push(new FloatingText(e.x, e.y - 20, `×${comboMult} ${earnedScore}`, comboMult >= 5 ? '#e74c3c' : (comboMult >= 3 ? '#e67e22' : '#f1c40f')));
+                }
+
+                if(isWegflexenMode) wegflexenTimer = 300;
                 splatters.push(new Splatter(e.x,e.y,e.color));
-                //if(e.type===99){activeBoss=null;floatingTexts.push(new FloatingText(e.x,e.y,"GIFTIGES ARBEITSKLIMA!","#ffd700"));screenShake=50;items.push(new Item('briefcase',e.x,e.y));showToast("BOSS BESIEGT!","#ffd700","Giftiges Arbeitsklima beseitigt!");}
+                
                 if(e.type===99){
                     activeBoss = null;
+                    document.getElementById('bossHpContainer').style.display = 'none';
                     if(e.label === "PETER BAYER") {
                         systemCollapse = true;
                         if(currentDiffLabel === "BURNOUT" || currentDiffLabel === "SURVIVAL") unlockTrophy('boss_killer');
-                        // --- NEU: DIE GÖTTER-PRÜFUNG ---
                         if(isWegflexenMode) unlockTrophy('god_of_leitstand'); 
                         collapseTimer = 0;
-                        // --- ALLES LÖSCHEN (Die leere Arena des Todes) ---
-                        enemies = [];       // Alle kleinen Tickets weg
-                        obstacles = [];     // Alle Tische und Regale weg
-                        stations = [];      // Witwe Bolte, Kaffee und Kloska weg
-                        servers = [];       // Alle Server weg
-                        serverFarms = [];   // Aktive Farmen weg
-                        turrets = [];       // Deine Azubis weg!
-                        items = [];         // Alle liegenden Items (auch Suppen) weg
-                        idocEvent = null;   // Offene Alarme abbrechen
-                        kloskaEvent = null; // Kloska-Sabotage abbrechen
-                        // -------------------------------------------------
-                        flashScreen = 100; 
-                        playSound('alarm');
+                        enemies = []; obstacles = []; stations = []; servers = [];
+                        serverFarms = []; turrets = []; items = [];
+                        idocEvent = null; kloskaEvent = null;
+                        flashScreen = 100; playSound('alarm');
                         showToast("SYSTEM-KOLLAPS!", "#f00", "ÜBERLEBE DAS CHAOS!");
                         break;
                     } else {
@@ -2574,13 +2524,13 @@ function loop(){
                         showToast("BOSS BESIEGT!","#ffd700","Projekt abgeschlossen!");
                     }
                 }
-               // Gegner droppen jetzt zu 25% etwas. Die Hälfte davon ist Suppe!
+
                 if(Math.random() < 0.10){
                     let l=Math.random();
-                    if     (l < 0.20) items.push(new Item('suppe', e.x, e.y));   // Nur noch 20% Suppe
-                    else if(l < 0.60) items.push(new Item('crate', e.x, e.y));   // 40% Waffen-Kisten
-                    else if(l < 0.90) items.push(new Item('chicken', e.x, e.y)); // 30% Hähnchen
-                    else              items.push(new Item('vodka', e.x, e.y));   // 10% Vodka
+                    if     (l < 0.20) items.push(new Item('suppe', e.x, e.y));
+                    else if(l < 0.60) items.push(new Item('crate', e.x, e.y));
+                    else if(l < 0.90) items.push(new Item('chicken', e.x, e.y));
+                    else              items.push(new Item('vodka', e.x, e.y));
                 }
                 enemies.splice(i,1); 
                 spawnParticles(e.x,e.y,'#fff',8);
@@ -2588,25 +2538,10 @@ function loop(){
             }
         }
 
-        // Items
         for(let i=items.length-1; i>=0; i--){
             let item = items[i];
-            // 1. Absoluter Sicherheits-Check: Gibt es das Item überhaupt?
-            if(!item) {
-                items.splice(i, 1);
-                continue; 
-            }
-            
-            // 2. Lebenszeit prüfen
-            if(item.life !== Infinity){
-                item.life--;
-                if(item.life <= 0){
-                    items.splice(i, 1);
-                    continue;
-                }
-            }
-            
-            // 3. Kollision mit Spieler
+            if(!item) { items.splice(i, 1); continue; }
+            if(item.life !== Infinity){ item.life--; if(item.life <= 0){ items.splice(i, 1); continue; } }
             if(Math.hypot(player.x-item.x, player.y-item.y) < player.radius + item.radius){
                 switch(item.type){
                     case 'suppe': 
@@ -2615,58 +2550,45 @@ function loop(){
                         playSound('powerup'); showToast("SUPPE! 🥣", "#ff9f43", "Zahlungsmittel für Kloska"); 
                         floatingTexts.push(new FloatingText(player.x,player.y,"+1 SUPPE","#ff9f43"));
                         break;  
-                    // case 'suppe': player.suppe++; playSound('powerup'); showToast("SUPPE! 🥣", "#ff9f43", "Zahlungsmittel für Kloska"); floatingTexts.push(new FloatingText(player.x,player.y,"+1 SUPPE","#ff9f43"));break;  
-                    // case 'chicken': player.hp=Math.min(player.maxHp,player.hp+30);spawnParticles(item.x,item.y,'#d35400',10);playSound('powerup');showToast("STÄRKUNG! 🍗","#d35400","+30 Gesundheit");break;
                     case 'chicken': 
-                        if(currentDiffLabel === "SURVIVAL" || isWegflexenMode) {
-                            showToast("VERDORBEN! 🍗", "#555", "Keine Heilung im Survival!");
-                        } else {
-                            player.hp = Math.min(player.maxHp, player.hp + 30);
-                            showToast("STÄRKUNG! 🍗","#d35400","+30 Gesundheit");
-                        }
+                        if(currentDiffLabel === "SURVIVAL" || isWegflexenMode) { showToast("VERDORBEN! 🍗", "#555", "Keine Heilung im Survival!"); }
+                        else { player.hp = Math.min(player.maxHp, player.hp + 30); showToast("STÄRKUNG! 🍗","#d35400","+30 Gesundheit"); }
                         spawnParticles(item.x,item.y,'#d35400',10); playSound('powerup');
                         break; 
-                   case 'vodka':   player.vodkaTimer=300;spawnParticles(item.x,item.y,'#0984e3',10);playSound('vodka');showToast(player.isMartin?"PATIENT NULL! 🍺":"WAFFE BLOCKIERT! 🍺",player.isMartin?"#0f0":"#f00",player.isMartin?"Unbesiegbar & giftig!":"KURWA...");break;
+                    case 'vodka':
+                        player.vodkaTimer=300;spawnParticles(item.x,item.y,'#0984e3',10);
+                        playSound('vodka'); // FIX V20: korrekter Sound-Key
+                        showToast(player.isMartin?"PATIENT NULL! 🍺":"WAFFE BLOCKIERT! 🍺",player.isMartin?"#0f0":"#f00",player.isMartin?"Unbesiegbar & giftig!":"KURWA...");
+                        break;
                     case 'crate':   {const w=['minigun','shotgun','rocket','uzi','ak47', 'railgun', 'flamer', 'mouse'];player.equipWeapon(w[Math.floor(Math.random()*w.length)]);spawnParticles(item.x,item.y,'#8e44ad',15);break;}
-                    // case 'shield':  player.shieldTimer=600;playSound('powerup');showToast("SCHUTZSCHILD! 🛡️","#00f","Immunität für 10 Sek");floatingTexts.push(new FloatingText(player.x,player.y,"SCHUTZSCHILD!","#00f"));break;
                     case 'shield':  
-                        if(isWegflexenMode) { 
-                            showToast("KEINE HILFE!", "#f00", "Götter brauchen keine Schilde!"); 
-                            break; 
-                        }
-                        player.shieldTimer=600;
-                        playSound('powerup');
+                        if(isWegflexenMode) { showToast("KEINE HILFE!", "#f00", "Götter brauchen keine Schilde!"); break; }
+                        player.shieldTimer=600; playSound('powerup');
                         showToast("SCHUTZSCHILD! 🛡️","#00f","Immunität für 10 Sek");
                         floatingTexts.push(new FloatingText(player.x,player.y,"SCHUTZSCHILD!","#00f"));
-                        break; // <-- DIESES BREAK HAT GEFEHLT!
-                   case 'bug':     player.bugTimer=600;playSound('bug');spawnParticles(item.x,item.y,'#f0f',20);showToast("JANSKIS HOTFIX! 💾","#f0f","Steuerung invertiert...");break;
+                        break;
+                    case 'bug':     player.bugTimer=600;playSound('bug');spawnParticles(item.x,item.y,'#f0f',20);showToast("JANSKIS HOTFIX! 💾","#f0f","Steuerung invertiert...");break;
                     case 'hammer':  player.hammerEffectTimer=120;playSound('hammer');screenShake=30;for(let k=enemies.length-1;k>=0;k--){if(enemies[k].type!==99){score+=Math.max(1,Math.floor(enemies[k].score*.1));splatters.push(new Splatter(enemies[k].x,enemies[k].y,enemies[k].color));enemies.splice(k,1);}else enemies[k].hp-=500;}showToast("RAMADAMA! 🔨","#e74c3c","Schleichst eich!");break;
-                    // case 'nuke':    triggerNuke();break;
                     case 'vacation':
                         player.yellowSlips++; 
                         if(player.yellowSlips === 10) unlockTrophy('vacation_hoarder');
                         playSound('vacation');showToast("+1 URLAUBSTAG! 💤","#ffff00","Minusstunden gespart");
                         floatingTexts.push(new FloatingText(player.x,player.y,"+1 URLAUB!","#ffff00"));
                         break;  
-                    // case 'vacation':player.yellowSlips++;playSound('vacation');showToast("+1 URLAUBSTAG! 💤","#ffff00","Minusstunden gespart");floatingTexts.push(new FloatingText(player.x,player.y,"+1 URLAUB!","#ffff00"));break;
                     case 'bike':    player.bikeTimer=600;playSound('powerup');showToast("RADL-RAMBO! 🚲","#0f0","Speed x2 + Autofire");floatingTexts.push(new FloatingText(player.x,player.y,"RADL-RAMBO!","#0f0"));break;
                     case 'briefcase':
                         player.maxHp += 50;
-                        // Nur heilen, wenn weder Survival noch Wegflexen aktiv ist
                         if(currentDiffLabel !== "SURVIVAL" && !isWegflexenMode) player.hp = player.maxHp;
                         playSound('evolve'); 
                         showToast("GEHALTSERHÖHUNG! 💼","#ffd700","Max-HP +50");
                         floatingTexts.push(new FloatingText(player.x,player.y,"GEHALTSERHÖHUNG!","#ffd700"));
                         spawnParticles(item.x,item.y,'#ffd700',20);
                         break;
-                      // case 'briefcase':player.maxHp+=50;player.hp=player.maxHp;playSound('evolve');showToast("GEHALTSERHÖHUNG! 💼","#ffd700","Max-HP +50");floatingTexts.push(new FloatingText(player.x,player.y,"GEHALTSERHÖHUNG!","#ffd700"));spawnParticles(item.x,item.y,'#ffd700',20);break;
                 }
-                // Item nach dem Einsammeln sicher entfernen
                 items.splice(i, 1);
             }
         }
 
-        // Particles & texts
         for(let i=particles.length-1;i>=0;i--){if(!particles[i])continue;particles[i].update();if(particles[i].life<=0)particles.splice(i,1);}
         shells.forEach(s=>s.update()); if(shells.length>200)shells.splice(0,50);
         for(let i=floatingTexts.length-1;i>=0;i--){if(!floatingTexts[i])continue;floatingTexts[i].update();if(floatingTexts[i].life<=0)floatingTexts.splice(i,1);}
@@ -2675,11 +2597,9 @@ function loop(){
         checkGameOver();
         updateHUD();
 
-        // --- TROPHY PASSIVE TRACKER ---
-        if(frame === 10800 && player.shotsFired === 0) unlockTrophy('pacifist'); // 3 Minuten!
-        if(systemCollapse && collapseTimer === 10800) unlockTrophy('collapse_survivor'); // 3 Minuten!
-        if(currentDiffLabel === "SURVIVAL" && score >= 250000) unlockTrophy('survival_master'); // 250.000 Punkte
-        // ------------------------------
+        if(frame === 10800 && player.shotsFired === 0) unlockTrophy('pacifist');
+        if(systemCollapse && collapseTimer === 10800) unlockTrophy('collapse_survivor');
+        if(currentDiffLabel === "SURVIVAL" && score >= 250000) unlockTrophy('survival_master');
 
         // Render
         ctx.setTransform(1,0,0,1,0,0);
@@ -2696,25 +2616,22 @@ function loop(){
         floatingTexts.forEach(ft=>ft.draw());
         player.draw();
 
-        // Night vignette
         if(currentShift===2){
             let g=ctx.createRadialGradient(player.x,player.y,100,player.x,player.y,400);
             g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,0.75)");
             ctx.fillStyle=g;ctx.fillRect(player.x-1000,player.y-1000,2000,2000);
         }
-        // Flash
         if(flashScreen>0){ctx.fillStyle=`rgba(255,255,255,${flashScreen/50})`;ctx.fillRect(player.x-1000,player.y-1000,2000,2000);flashScreen*=.9;if(flashScreen<.1)flashScreen=0;}
-       if(systemCollapse) {
+        if(systemCollapse) {
             ctx.fillStyle = `rgba(255, 0, 0, ${0.1 + Math.sin(frame * 0.1) * 0.1})`;
             ctx.fillRect(player.x - 2000, player.y - 2000, 4000, 4000);
             ctx.fillStyle = "#f00"; ctx.font = "bold 40px Courier New"; ctx.textAlign = "center";
             ctx.fillText(`KOLLAPS-STATUS: ${(collapseTimer/60).toFixed(1)}s`, player.x, player.y - 150);
         } 
-       ctx.restore();
+        ctx.restore();
 
         requestAnimationFrame(loop);
-    } catch(err){ alert("ERROR: "+err.message); console.error(err); gameRunning=false; }
-
+    } catch(err){ console.error("GAME ERROR:", err); alert("ERROR: "+err.message); gameRunning=false; }
 }
 
 // ============================================================
@@ -2730,10 +2647,12 @@ function startGame(diff=1){
     document.getElementById('emailOverlay').style.display='none';
     document.getElementById('shopOverlay').style.display='none';
     document.getElementById('sapOverlay').style.display='none';
+    document.getElementById('pauseOverlay').classList.remove('active');
+    document.getElementById('bossHpContainer').style.display='none';
+    document.getElementById('comboDisplay').style.display='none';
 
     input.keys={};input.mouseDown=false;
     score=0;frame=0;difficulty=diff;
-    // currentDiffLabel=diff===1?"PRAKTIKANT":(diff===3?"VOLLZEIT":"BURNOUT");
     currentDiffLabel = isWegflexenMode ? "WEGFLEXEN" : (diff===1 ? "PRAKTIKANT" : (diff===3 ? "VOLLZEIT" : (diff===6 ? "BURNOUT" : "SURVIVAL")));
     lastChosenDifficulty=diff;
     currentBossStage=0;activeBoss=null;
@@ -2741,16 +2660,17 @@ function startGame(diff=1){
     gamePaused=false;idocEvent=null;meetingZone=null;kloskaEvent=null;
     systemCollapse = false; collapseTimer = 0;
     enemies=[];bullets=[];particles=[];items=[];splatters=[];floatingTexts=[];turrets=[];shells=[];serverFarms=[];
+    
+    // Reset Combo
+    combo = 0; comboTimer = 0; comboMult = 1; bestComboThisRun = 1;
+    
     clearAllToasts();
 
     player = new Player();
     
-    // Korrektur: Erlaubt Schwierigkeit 9 (Survival-Level) für Wegflexen
     if(diff !== 9 && diff !== 10) isWegflexenMode = false; 
-
     if(isWegflexenMode) {
-        player.maxHp = 100; // Basis bleibt 100%
-        player.hp = 1;      // Felix startet mit 1% (DNA des Schmerzes)
+        player.maxHp = 100; player.hp = 1;
         wegflexenTimer = 300; 
         showToast("MODUS: WEGFLEXEN", "#f00", "1 HP | 5S KILL-TIMER | 10X PUNKTE");
     }
@@ -2764,37 +2684,28 @@ window.addEventListener('click',()=>{
     const mm=document.getElementById('menuMusic');
     if(mm&&mm.paused&&!gameRunning) mm.play().catch(()=>{});
 });
-   // ============================================================
+
+// ============================================================
 // KLOSKA SHOP LOGIK
 // ============================================================
 function openKloskaShop() {
-    gamePaused = true; // Spiel einfrieren!
+    gamePaused = true;
     document.getElementById('kloskaShopScreen').style.display = 'block';
     document.getElementById('shopSuppenCount').innerText = player.suppe;
-    kloskaVoice.currentTime=0; kloskaVoice.play().catch(()=>{}); // Kloska-Sound (Ersetzbar mit "What are ya buying?")
+    kloskaVoice.currentTime=0; kloskaVoice.play().catch(()=>{});
 }
-
 function closeKloskaShop() {
     document.getElementById('kloskaShopScreen').style.display = 'none';
-    gamePaused = false; // Spiel läuft weiter
-    input.keys = {}; // Tasten leeren, damit er nicht beim Schließen aus Versehen weiterläuft
+    gamePaused = false;
+    input.keys = {};
 }
-
 function buyKloskaItem(item, cost) {
     if(player.suppe >= cost) {
         player.suppe -= cost;
         document.getElementById('shopSuppenCount').innerText = player.suppe;
         playSound('powerup');
-        
-        // --- NEUE ITEMS ANWENDEN ---
-        if(item === 'perm_mouse') { 
-            player.mouseTimer = Infinity; // Hält für immer!
-            showToast("GEKAUFT!", "#0ff", "PERMANENTE ORBIT MAUS");
-        }
-        if(item === 'thinclient') { 
-            player.idocBlocker = true; // Neues Flag im Player
-            showToast("GEKAUFT!", "#0ff", "KEINE PROZESSAUSFÄLLE MEHR");
-        }
+        if(item === 'perm_mouse') { player.mouseTimer = Infinity; showToast("GEKAUFT!", "#0ff", "PERMANENTE ORBIT MAUS"); }
+        if(item === 'thinclient') { player.idocBlocker = true; showToast("GEKAUFT!", "#0ff", "KEINE PROZESSAUSFÄLLE MEHR"); }
         if(item === 'azubi_army') { 
             turrets.push(new Turret(player.x - 50, player.y + 50));
             turrets.push(new Turret(player.x + 50, player.y + 50));
@@ -2804,13 +2715,8 @@ function buyKloskaItem(item, cost) {
         if(item === 'nuke') { 
             screenShake = 50; flashScreen = 50; playSound('hammer');
             for(let i=enemies.length-1; i>=0; i--) {
-                if(enemies[i].type !== 99) { // Boss überlebt!
-                    score += enemies[i].score;
-                    splatters.push(new Splatter(enemies[i].x, enemies[i].y, enemies[i].color));
-                    enemies.splice(i, 1);
-                } else {
-                    enemies[i].hp -= 1500; // Boss kriegt nur krassen Schaden
-                }
+                if(enemies[i].type !== 99) { score += enemies[i].score; splatters.push(new Splatter(enemies[i].x, enemies[i].y, enemies[i].color)); enemies.splice(i, 1); }
+                else { enemies[i].hp -= 1500; }
             }
             showToast("STRG+ALT+ENTF", "#f00", "SYSTEM NEUGESTARTET");
         }
@@ -2819,15 +2725,17 @@ function buyKloskaItem(item, cost) {
         playSound('hit');
     }
 }
-
-
-// ============================================================
 </script>
 <script>
-// ABSOLUTER FALLBACK: Falls Preloader nach 3s noch läuft → einfach starten
+// Fallback: Wenn Preloader nach 5s noch läuft → forcierter Start
 setTimeout(function(){
-    var ls = document.getElementById('loadingScreen')
-
-
-
-
+    var ls = document.getElementById('loadingScreen');
+    if(ls && ls.style.display !== 'none') {
+        ls.style.display = 'none';
+        var ss = document.getElementById('startScreen');
+        if(ss) ss.style.display = 'block';
+        try {
+            var el = document.getElementById('startKBAmount');
+            if(el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
+        } catch(e) {}
+        var best = parseInt(localStorag
