@@ -414,6 +414,7 @@ input[type="text"] {
             <!-- playerName wird aus dem Startscreen gelesen -->
         </div>
         <button class="btn-shop" onclick="openShop()" style="margin-top:10px;">☕ UPGRADE SHOP</button>
+        <button class="btn-info" onclick="saveHighscoreAndMainMenu()" style="margin-top:10px;">🏠 FEIERABEND!</button>
     </div>
     
     <div id="kloskaShopScreen" class="panel" style="z-index:300; background:#111; border-color:#9b59b6; width:600px;">
@@ -624,6 +625,47 @@ function saveHighscoreAndRestart() {
     } else { 
         startGame(lastChosenDifficulty); 
     }
+}
+   function saveHighscoreAndMainMenu() {
+    // 1. Allzeit-Highscore sichern
+    let currentBest = parseInt(localStorage.getItem('ts_best_score') || '0');
+    if (score > currentBest) {
+        localStorage.setItem('ts_best_score', score);
+    }
+    // 2. Kaffeebons & Profil sichern
+    saveProgress(); 
+    
+    let name = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim().substring(0,10);
+    
+    // 3. Online-Highscore eintragen und dann ins Menü wechseln
+    if(db && score > 0) {
+        db.collection("highscores").add({
+            name: name, 
+            score: score, 
+            difficulty: currentDiffLabel, 
+            collapseTime: systemCollapse ? (collapseTimer / 60).toFixed(1) : 0,
+            date: new Date().toISOString()
+        })
+        .then(() => { 
+            loadHighscores(); 
+            returnToMainMenu(); 
+        })
+        .catch((e) => { 
+            console.error("FIREBASE HIGHSCORE ERROR:", e);
+            returnToMainMenu(); 
+        });
+    } else { 
+        returnToMainMenu(); 
+    }
+}
+
+function returnToMainMenu() {
+    document.getElementById('gameOverScreen').style.display = 'none';
+    document.getElementById('startScreen').style.display = 'block';
+    
+    // Anzeige der Kaffeebons im Startbildschirm direkt aktualisieren
+    let kbDisplay = document.getElementById('startKBAmount');
+    if(kbDisplay) kbDisplay.innerText = kaffeebons;
 }
 
 // ============================================================
@@ -2324,6 +2366,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
