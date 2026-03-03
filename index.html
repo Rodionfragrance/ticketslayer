@@ -2241,7 +2241,17 @@ function updateHUD(){
     document.getElementById('hud-suppe').innerText = player.suppe || 0;
     document.getElementById('hud-kb').innerText = kaffeebons;
     document.getElementById('hud-shift').innerText = currentShift === 0 ? "FRÜH" : (currentShift === 1 ? "SPÄT" : "NACHT");
-    
+
+    // Modus-Anzeige mit Farbe
+    const modeEl = document.getElementById('hud-mode');
+    if(modeEl) {
+        const modeColors = { "PRAKTIKANT":"#2ecc71", "VOLLZEIT":"#f1c40f", "BURNOUT":"#c0392b", "SURVIVAL":"#9b59b6", "WEGFLEXEN":"#ff0000" };
+        modeEl.innerText = currentDiffLabel;
+        modeEl.style.color = modeColors[currentDiffLabel] || '#aaa';
+        if(currentDiffLabel === "WEGFLEXEN") modeEl.style.textShadow = "0 0 8px #f00";
+        else modeEl.style.textShadow = "2px 2px 0 #000";
+    }
+   
     let fi = document.getElementById('hud-face');
     let ts = player.isMartin ? "maddinl.png" : "wurml.png";
     if(fi && !fi.src.includes(ts)) fi.src = ts;
@@ -2739,3 +2749,4 @@ setTimeout(function(){
             if(el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
         } catch(e) {}
         var best = parseInt(localStorag
+
