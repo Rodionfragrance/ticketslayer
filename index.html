@@ -886,15 +886,15 @@ function saveHighscoreAndRestart() {
             date: new Date().toISOString()
         }).then(() => { 
             loadHighscores();
-            if(lastChosenDifficulty === 9) isWegflexenMode = true;
+            if(lastWasWegflexen) isWegflexenMode = true;
             startGame(lastChosenDifficulty); 
         }).catch((e) => { 
             console.error("FIREBASE HIGHSCORE ERROR:", e);
-            if(lastChosenDifficulty === 9) isWegflexenMode = true;
+            if(lastWasWegflexen) isWegflexenMode = true;
             startGame(lastChosenDifficulty); 
         });
     } else { 
-        if(lastChosenDifficulty === 9) isWegflexenMode = true;
+        if(lastWasWegflexen) isWegflexenMode = true;
         startGame(lastChosenDifficulty); 
     }
 }
@@ -1157,6 +1157,7 @@ let servers=[], items=[], splatters=[], floatingTexts=[], turrets=[], shells=[];
 let serverFarms=[];
 let systemCollapse = false;
 let isWegflexenMode = false;
+let lastWasWegflexen = false;
 let wegflexenTimer = 300;   
 let collapseTimer = 0;
 
@@ -2231,7 +2232,7 @@ function updateHUD(){
         addStatus("🖱️ ORBIT-MAUS", player.mouseTimer, "#FFFFFF");
         addStatus("💿 SAP-SLOW", player.sapDebuffTimer, "#1f618d");
         addStatus("💾 BUG (INVERT)", player.bugTimer, "#FFFFFF");
-        if(isWegflexenMode) addStatus("⚠️ FLEX-TIMER", Math.ceil(wegflexenTimer/60)+"s", "#f00");
+        if(isWegflexenMode) addStatus("⚠️ FLEX-TIMER", wegflexenTimer, "#f00");
         let wk = Object.keys(player.activeWeapons);
         if(wk.length > 0) { let maxT = Math.max(...Object.values(player.activeWeapons)); addStatus("🔫 WAFFEN-ARSENAL", maxT, "#ffeb3b"); }
         // NEU V20: Combo Status
@@ -2586,6 +2587,7 @@ function startGame(diff=1){
     player = new Player();
     
     if(diff !== 9 && diff !== 10) isWegflexenMode = false; 
+    lastWasWegflexen = isWegflexenMode;
     if(isWegflexenMode) {
         player.maxHp = 100; player.hp = 1;
         wegflexenTimer = 300; 
