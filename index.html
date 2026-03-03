@@ -1690,7 +1690,7 @@ function spawnLogic(){
    if(systemCollapse) {
         collapseTimer++;
         // Spawnt nur noch Prio 1 Gegner, wird alle paar Sekunden schneller
-        let rate = Math.max(15, 120 - Math.floor(collapseTimer / 300));
+        let rate = Math.max(4, 25 - Math.floor(collapseTimer / 60));
         if(frame % rate === 0) {
             let p1 = new Enemy();
             p1.type = 1; p1.color = '#c0392b'; p1.hp = 450; p1.maxHp = 450;
@@ -2314,5 +2314,6 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
