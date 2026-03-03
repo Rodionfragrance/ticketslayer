@@ -2098,7 +2098,17 @@ function loop(){
                     if(e.label === "PETER BAYER") {
                         systemCollapse = true;
                         collapseTimer = 0;
-                        enemies = []; // Alle normalen Tickets löschen
+                        // --- ALLES LÖSCHEN (Die leere Arena des Todes) ---
+                        enemies = [];       // Alle kleinen Tickets weg
+                        obstacles = [];     // Alle Tische und Regale weg
+                        stations = [];      // Witwe Bolte, Kaffee und Kloska weg
+                        servers = [];       // Alle Server weg
+                        serverFarms = [];   // Aktive Farmen weg
+                        turrets = [];       // Deine Azubis weg!
+                        items = [];         // Alle liegenden Items (auch Suppen) weg
+                        idocEvent = null;   // Offene Alarme abbrechen
+                        kloskaEvent = null; // Kloska-Sabotage abbrechen
+                        // -------------------------------------------------
                         flashScreen = 100; 
                         playSound('alarm');
                         showToast("SYSTEM-KOLLAPS!", "#f00", "ÜBERLEBE DAS CHAOS!");
@@ -2314,6 +2324,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
