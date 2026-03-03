@@ -1140,7 +1140,7 @@ function updateFarms(){
 
     // --- PASSIVES EINKOMMEN LOGIK ---
     serverFarms=serverFarms.filter(f=>servers.includes(f.serverRef));
-    let income = 3 + getUpgradeLevel('damage'); 
+    let income = 3 + getUpgradeLevel('damage') + (hasTrophy('admin_hacker') ? 2 : 0);
     for(let f of serverFarms){
         f.ticker++;
         if(f.ticker>=60){
@@ -1176,6 +1176,7 @@ function checkHack(selected) {
     if(selected.startsWith("172")) { 
         serverFarms.push({serverRef: currentHackingServer, ticker:0});
         currentHackingServer.isFarm = true;
+        if(player) { player.runHacks++; if(player.runHacks >= 3) unlockTrophy('admin_hacker'); }
         showToast("HACK ERFOLGREICH! 🔓", "#00ff88");
         playSound('powerup');
     } else {
@@ -1305,7 +1306,7 @@ class Player{
             this.rollDx = Math.cos(angle) * 15; 
             this.rollDy = Math.sin(angle) * 15;
             this.rollTimer = 15;      
-            this.rollCooldown = 120;  
+            this.rollCooldown = hasTrophy('perfect_dodge') ? 90 : 120;  
             playSound('delivery');    
             input.rightClick = false; 
             return; 
@@ -1353,7 +1354,7 @@ class Player{
         }
 
         // if(this.vacationTimer>0){this.vacationTimer--;if(frame%60===0&&this.hp<this.maxHp)this.hp+=2;}
-        if(this.vacationTimer>0){this.vacationTimer--;if(frame%60===0&&this.hp<this.maxHp && currentDiffLabel !== "SURVIVAL")this.hp+=2;}
+        if(this.vacationTimer>0){this.vacationTimer--;if(frame%(hasTrophy('vacation_hoarder') ? 48 : 60)===0&&this.hp<this.maxHp && currentDiffLabel !== "SURVIVAL")this.hp+=2;}
         if(this.bikeTimer>0)        this.bikeTimer--;
         if(this.speedBoostTimer>0)  this.speedBoostTimer--;
         if(this.sapDebuffTimer>0){  this.sapDebuffTimer--; if(this.sapDebuffTimer<=0){ document.getElementById('sapOverlay').style.display='none'; showToast("SAP-UPDATE ABGESCHLOSSEN","#1f618d","Speed wiederhergestellt"); } }
@@ -1445,12 +1446,13 @@ class Player{
             return; 
         }
         // Waffe wird hinzugefügt oder Timer resettet
-        this.activeWeapons[type] = 1800;
+        this.activeWeapons[type] = hasTrophy('collapse_survivor') ? 2250 : 1800;
         this.crateFlashTimer=120; flashScreen=10;
         showToast("ARSENAL ERWEITERT!", "#0ff", type.toUpperCase());
     }
 
     shootWeapon(w){
+        this.shotsFired++; // Tracker für Pazifist
         let offset=this.isMartin?-20:-10;
         let angle=Math.atan2(input.y-(this.y+offset-camera.y), input.x-(this.x-camera.x));
         if(w==='uzi'&&this.bikeTimer>0&&!input.mouseDown) angle=Math.random()*Math.PI*2;
@@ -1681,6 +1683,7 @@ class Enemy{
                         spawnParticles(player.x, player.y, '#f00', 15);
                         showToast("VOM CHEF ZERSTAMPFT!", "#f00", "Shift für Hechtrolle nutzen!");
                     } else { // Perfekter Dodge
+                        unlockTrophy('perfect_dodge');
                         floatingTexts.push(new FloatingText(player.x, player.y - 40, "PERFEKT AUSGEWICHEN!", "#0f0"));
                         score += 1000; // Harte Typen werden belohnt
                     }
@@ -2282,8 +2285,11 @@ function loop(){
     if(player.orangeHp > 0) {
         let heal = 2; // Wert pro Kill (anpassbar)
         if(heal > player.orangeHp) heal = player.orangeHp;
-        // player.hp = Math.min(player.maxHp, player.hp + heal);
-        if(currentDiffLabel !== "SURVIVAL") player.hp = Math.min(player.maxHp, player.hp + heal);
+        if(currentDiffLabel !== "SURVIVAL") {
+            player.hp = Math.min(player.maxHp, player.hp + heal);
+            player.runRacheHeal += heal;
+            if(player.runRacheHeal >= 100) unlockTrophy('bloodlust');
+        }
         player.orangeHp -= heal;
         floatingTexts.push(new FloatingText(player.x, player.y, "+RACHE", "#ff6600"));
     }
@@ -2357,7 +2363,13 @@ function loop(){
             // 3. Kollision mit Spieler
             if(Math.hypot(player.x-item.x, player.y-item.y) < player.radius + item.radius){
                 switch(item.type){
-                    case 'suppe': player.suppe++; playSound('powerup'); showToast("SUPPE! 🥣", "#ff9f43", "Zahlungsmittel für Kloska"); floatingTexts.push(new FloatingText(player.x,player.y,"+1 SUPPE","#ff9f43"));break;  
+                    case 'suppe': 
+                        player.suppe++; player.runSuppen++;
+                        if(player.runSuppen >= 15) unlockTrophy('soup_king');
+                        playSound('powerup'); showToast("SUPPE! 🥣", "#ff9f43", "Zahlungsmittel für Kloska"); 
+                        floatingTexts.push(new FloatingText(player.x,player.y,"+1 SUPPE","#ff9f43"));
+                        break;  
+                    // case 'suppe': player.suppe++; playSound('powerup'); showToast("SUPPE! 🥣", "#ff9f43", "Zahlungsmittel für Kloska"); floatingTexts.push(new FloatingText(player.x,player.y,"+1 SUPPE","#ff9f43"));break;  
                     case 'chicken': player.hp=Math.min(player.maxHp,player.hp+30);spawnParticles(item.x,item.y,'#d35400',10);playSound('powerup');showToast("STÄRKUNG! 🍗","#d35400","+30 Gesundheit");break;
                     case 'vodka':   player.vodkaTimer=300;spawnParticles(item.x,item.y,'#0984e3',10);playSound('vodka');showToast(player.isMartin?"PATIENT NULL! 🍺":"WAFFE BLOCKIERT! 🍺",player.isMartin?"#0f0":"#f00",player.isMartin?"Unbesiegbar & giftig!":"KURWA...");break;
                     case 'crate':   {const w=['minigun','shotgun','rocket','uzi','ak47', 'railgun', 'flamer', 'mouse'];player.equipWeapon(w[Math.floor(Math.random()*w.length)]);spawnParticles(item.x,item.y,'#8e44ad',15);break;}
@@ -2365,7 +2377,13 @@ function loop(){
                     case 'bug':     player.bugTimer=600;playSound('bug');spawnParticles(item.x,item.y,'#f0f',20);showToast("JANSKIS HOTFIX! 💾","#f0f","Steuerung invertiert...");break;
                     case 'hammer':  player.hammerEffectTimer=120;playSound('hammer');screenShake=30;for(let k=enemies.length-1;k>=0;k--){if(enemies[k].type!==99){score+=Math.max(1,Math.floor(enemies[k].score*.1));splatters.push(new Splatter(enemies[k].x,enemies[k].y,enemies[k].color));enemies.splice(k,1);}else enemies[k].hp-=500;}showToast("RAMADAMA! 🔨","#e74c3c","Schleichst eich!");break;
                     // case 'nuke':    triggerNuke();break;
-                    case 'vacation':player.yellowSlips++;playSound('vacation');showToast("+1 URLAUBSTAG! 💤","#ffff00","Minusstunden gespart");floatingTexts.push(new FloatingText(player.x,player.y,"+1 URLAUB!","#ffff00"));break;
+                    case 'vacation':
+                        player.yellowSlips++; 
+                        if(player.yellowSlips >= 5) unlockTrophy('vacation_hoarder');
+                        playSound('vacation');showToast("+1 URLAUBSTAG! 💤","#ffff00","Minusstunden gespart");
+                        floatingTexts.push(new FloatingText(player.x,player.y,"+1 URLAUB!","#ffff00"));
+                        break;  
+                    // case 'vacation':player.yellowSlips++;playSound('vacation');showToast("+1 URLAUBSTAG! 💤","#ffff00","Minusstunden gespart");floatingTexts.push(new FloatingText(player.x,player.y,"+1 URLAUB!","#ffff00"));break;
                     case 'bike':    player.bikeTimer=600;playSound('powerup');showToast("RADL-RAMBO! 🚲","#0f0","Speed x2 + Autofire");floatingTexts.push(new FloatingText(player.x,player.y,"RADL-RAMBO!","#0f0"));break;
                     case 'briefcase':player.maxHp+=50;player.hp=player.maxHp;playSound('evolve');showToast("GEHALTSERHÖHUNG! 💼","#ffd700","Max-HP +50");floatingTexts.push(new FloatingText(player.x,player.y,"GEHALTSERHÖHUNG!","#ffd700"));spawnParticles(item.x,item.y,'#ffd700',20);break;
                 }
@@ -2382,6 +2400,12 @@ function loop(){
 
         checkGameOver();
         updateHUD();
+
+        // --- TROPHY PASSIVE TRACKER ---
+        if(frame === 3600 && player.shotsFired === 0) unlockTrophy('pacifist');
+        if(systemCollapse && collapseTimer === 3600) unlockTrophy('collapse_survivor');
+        if(currentDiffLabel === "SURVIVAL" && score >= 50000) unlockTrophy('survival_master');
+        // ------------------------------
 
         // Render
         ctx.setTransform(1,0,0,1,0,0);
@@ -2527,4 +2551,5 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
