@@ -1176,7 +1176,7 @@ function checkHack(selected) {
     if(selected.startsWith("172")) { 
         serverFarms.push({serverRef: currentHackingServer, ticker:0});
         currentHackingServer.isFarm = true;
-        if(player) { player.runHacks++; if(player.runHacks >= 3) unlockTrophy('admin_hacker'); }
+        if(player) { player.runHacks++; if(player.runHacks === 3) unlockTrophy('admin_hacker'); }
         showToast("HACK ERFOLGREICH! 🔓", "#00ff88");
         playSound('powerup');
     } else {
@@ -2365,7 +2365,7 @@ function loop(){
                 switch(item.type){
                     case 'suppe': 
                         player.suppe++; player.runSuppen++;
-                        if(player.runSuppen >= 15) unlockTrophy('soup_king');
+                        if(player.runSuppen === 15) unlockTrophy('soup_king');
                         playSound('powerup'); showToast("SUPPE! 🥣", "#ff9f43", "Zahlungsmittel für Kloska"); 
                         floatingTexts.push(new FloatingText(player.x,player.y,"+1 SUPPE","#ff9f43"));
                         break;  
@@ -2379,7 +2379,7 @@ function loop(){
                     // case 'nuke':    triggerNuke();break;
                     case 'vacation':
                         player.yellowSlips++; 
-                        if(player.yellowSlips >= 5) unlockTrophy('vacation_hoarder');
+                        if(player.yellowSlips === 5) unlockTrophy('vacation_hoarder');
                         playSound('vacation');showToast("+1 URLAUBSTAG! 💤","#ffff00","Minusstunden gespart");
                         floatingTexts.push(new FloatingText(player.x,player.y,"+1 URLAUB!","#ffff00"));
                         break;  
@@ -2551,5 +2551,6 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
