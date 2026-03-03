@@ -1592,9 +1592,20 @@ class Enemy{
             let a=Math.random()*Math.PI*2, d=Math.max(canvas.width,canvas.height)/1.5+150;
             this.x=Math.max(30,Math.min(WORLD_WIDTH-30, player.x+Math.cos(a)*d));
             this.y=Math.max(30,Math.min(WORLD_HEIGHT-30,player.y+Math.sin(a)*d));
-            this.type=99; this.hp=bossData.hp; this.maxHp=bossData.hp;
-            this.speed=bossData.speed; this.radius=bossData.radius;
-            this.color=bossData.color; this.score=5000;
+            this.type=99; 
+            
+            // --- DYNAMISCHES BOSS BALANCING ---
+            // lastChosenDifficulty ist 1 (Praktikant), 3 (Vollzeit), 6 (Burnout) oder 9 (Survival)
+            let hpMult = lastChosenDifficulty; 
+            let spdBonus = lastChosenDifficulty * 0.2; // Speed sanft erhöhen, sonst unspielbar
+
+            this.hp = bossData.hp * hpMult; 
+            this.maxHp = bossData.hp * hpMult;
+            this.speed = bossData.speed + spdBonus; 
+            
+            this.radius=bossData.radius;
+            this.color=bossData.color; 
+            this.score = 5000 * hpMult; // Boss gibt auf höheren Stufen auch entsprechend mehr Punkte!
             this.label=bossData.name; this.symbol="☠"; this.laserCooldown=300;
             return;
         }
@@ -2587,6 +2598,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
