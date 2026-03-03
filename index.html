@@ -387,56 +387,85 @@ input[type="text"] {
 <!-- EMAIL OVERLAY -->
 <div id="emailOverlay">
     <div class="email-header">
-        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fa9b9e979394ba8d8f8897809f948e889b969fd49e9f">[email&#160;protected]</a>&gt;</div>
+        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;leitstand@zls-hamm.de&gt;</div>
         <div class="email-row"><span class="email-label">AN:</span> Alle Mitarbeiter</div>
-        <div class="email-row email-subject">WICHTIG: Neue Prozessanweisung V18 (Dopamin-Update)</div>
+        <div class="email-row email-subject">PFLICHTLEKTÜRE: Neue Prozessanweisung V19 (Wegflexen-Update)</div>
     </div>
     <div class="email-content">
         <p>Hallo Team,</p>
-        <p><strong>WARNUNG:</strong> Sobald die Schicht beginnt (Spielstart), gibt es keine Pausen mehr.</p>
+        <p><strong>WARNUNG:</strong> Sobald die Schicht beginnt, gibt es keine Pausen mehr. Wer nicht flexen kann, wird weggeflext.</p>
         <hr class="email-hr">
+
         <h3>1. BASIS-STEUERUNG</h3>
         <ul>
             <li><span class="key-hint">WASD</span> + <span class="key-hint">Maus</span>: Bewegung &amp; Ticket-Bearbeitung.</li>
-            <li><span class="key-hint">SHIFT</span> (Oder Rechtsklick): Hechtrolle. (Kurzzeitige Unverwundbarkeit).</li>
-            <li><span class="key-hint">E</span>: Interaktion (Heilen / IDOC fixen / Hardwarelager öffnen).</li>
-            <li><span class="key-hint">B</span>: <strong>Personal anfordern.</strong> Kostet 5000 Pkt. Platziert einen Azubi.</li>
-            <li><span class="key-hint">F</span>: <strong>Server-Farm aktivieren.</strong> Generiert passiv Punkte.</li>
-            <li><span class="key-hint">G</span>: <strong>Krankmeldung.</strong> (Urlaubstag einlösen).</li>
+            <li><span class="key-hint">SHIFT</span> / Rechtsklick: Hechtrolle — kurzzeitige Unverwundbarkeit (i-Frames). Pflicht bei Boss-Angriffen.</li>
+            <li><span class="key-hint">E</span>: Interaktion — Heilen an Witwe Bolte / IDOC fixen / Hardwarelager betreten.</li>
+            <li><span class="key-hint">B</span>: <strong>Personal anfordern.</strong> Kostet Punkte. Platziert einen Azubi-Geschützturm.</li>
+            <li><span class="key-hint">F</span>: <strong>Server-Farm aktivieren.</strong> Generiert passiv Punkte bis Kloska sie sabotiert.</li>
+            <li><span class="key-hint">G</span>: <strong>Krankmeldung</strong> — Urlaubstag einlösen für sofortige Heilung.</li>
         </ul>
 
-        <h3>2. NEUES WAFFEN-ARSENAL</h3>
-        <p>Waffen überschreiben sich nicht mehr. Eingesammelte Spezialwaffen werden gestapelt. Der Spieler feuert <strong>ALLE aktiven Waffen gleichzeitig</strong> ab, solange deren jeweiliger Timer läuft.</p>
-
-        <h3>3. RACHE-SYSTEM (ARBEITSZEITERFASSUNG)</h3>
-        <p>Erlittener Schaden wird im HUD orange markiert. Wird innerhalb von 2 Sekunden ein Ticket geschlossen (Kill), wird die orange markierte Gesundheit wiederhergestellt.</p>
-
-        <h3>4. V18 GEFAHREN & SABOTAGE</h3>
+        <h3>2. SCHWIERIGKEITSGRADE</h3>
         <ul>
-            <li><strong>🧑 DER ANWENDER:</strong> Teleportiert sich zufällig auf der Fläche.</li>
-            <li><strong>💿 SAP-UPDATE:</strong> Reduziert bei Berührung das Lauftempo für 5 Sekunden massiv.</li>
-            <li><strong>KLOSKA SABOTAGE:</strong> Kloska greift gelegentlich Server-Farmen an. Er muss innerhalb von 30 Sekunden vertrieben werden, sonst wird der Server endgültig zerstört.</li>
-            <li><strong>PETER BAYER:</strong> Führt alle 5 Sekunden einen Flächenangriff (Stampfer) aus. Sichtbar durch roten Radius.</li>
+            <li><strong style="color:#2ecc71;">PRAKTIKANT</strong> — Einarbeitung. Für Quereinsteiger.</li>
+            <li><strong style="color:#f1c40f;">VOLLZEIT</strong> — Normalbetrieb. Schichtarbeit inklusive.</li>
+            <li><strong style="color:#c0392b;">BURNOUT</strong> — Überstunden ohne Ende. Gegner eskalieren schneller.</li>
+            <li><strong style="color:#8e44ad;">SURVIVAL</strong> — Endlosmodus. Kein Rache-Heilen. Kein Gnadenschuss.</li>
+            <li><strong style="color:#f00;">☠ WEGFLEXEN</strong> — Gott-Modus. 1 HP. One-Hit-Kill. 5-Sekunden Kill-Timer. 10× Score.</li>
         </ul>
 
-        <h3>5. HARDWARELAGER (KLOSKA SHOP)</h3>
-        <p>Das Hardwarelager kann auf der Karte mit <span class="key-hint">E</span> betreten werden. Zahlungsmittel ist Suppe (🥣). Das Sortiment umfasst:</p>
+        <h3>3. WAFFEN-ARSENAL</h3>
+        <p>Eingesammelte Spezialwaffen werden <strong>gestapelt</strong> — alle aktiven Waffen feuern gleichzeitig, solange ihr Timer läuft. Waffenkisten droppen zufällig vom Boden oder aus besiegten Gegnern.</p>
         <ul>
-            <li>Orbit-Maus (Permanent) [10 🥣]</li>
-            <li>Defekter ThinClient (Stoppt IDOC-Alarme) [12 🥣]</li>
-            <li>Azubi-Armee (Spawnt 3 Geschütze) [8 🥣]</li>
-            <li>System-Reboot (Löscht alle Gegner) [20 🥣]</li>
+            <li>🔫 <strong>Standard</strong> — Immer aktiv. Solider Allrounder.</li>
+            <li>🌀 <strong>Minigun</strong> — Hohe Feuerrate, leichter Streuung.</li>
+            <li>💥 <strong>Schrotflinte</strong> — Fächerschuss. Ideal für enge Gassen.</li>
+            <li>🚀 <strong>Raketenwerfer</strong> — Rückstoß schiebt dich automatisch zurück. Kombinierbar mit Flamme.</li>
+            <li>⚡ <strong>Railgun</strong> — Durchdringt mehrere Gegner. Perfekt für Linien-Pulls.</li>
+            <li>🔥 <strong>Flammenwerfer</strong> — Setzt Gegner in Brand (DoT). Synergiert mit Brand-Munition-Upgrade.</li>
+            <li>🖱️ <strong>Orbit-Maus</strong> — Kreist um dich, knockt zurück. Im Hardwarelager permanent kaufbar.</li>
         </ul>
+
+        <h3>4. RACHE-SYSTEM (ARBEITSZEITERFASSUNG)</h3>
+        <p>Erlittener Schaden wird im HUD <strong>orange markiert</strong>. Töte innerhalb von 2 Sekunden einen Gegner → orange HP wird wiederhergestellt. <em>Deaktiviert im Survival- und Wegflexen-Modus.</em></p>
+
+        <h3>5. GEGNER &amp; GEFAHREN</h3>
+        <ul>
+            <li><strong>🪱 PRIO 5–3</strong> — Standardtickets. Klein, mittel, groß. Schaden skaliert mit Typ.</li>
+            <li><strong>☠ PRIO 1–2</strong> — Tanks. Langsam aber zäh. Nicht unterschätzen.</li>
+            <li><strong>🧑 DER ANWENDER</strong> — Teleportiert sich alle 3 Sekunden zufällig. Immer in Bewegung halten.</li>
+            <li><strong>💿 SAP-UPDATE</strong> — Massiver Speed-Debuff bei Berührung für 5 Sekunden. Im Wegflexen sofortiger Tod.</li>
+            <li><strong>KLOSKA-SABOTAGE</strong> — Kloska greift Server-Farmen an. 30 Sekunden Zeit ihn zu vertreiben, sonst Farm dauerhaft zerstört.</li>
+            <li><strong>👔 PETER BAYER (BOSS)</strong> — Stampfer-Angriff alle 5 Sek (roter Radius sichtbar). Spawnt Ticket-Fluten. Löst bei Tod den <em>System-Kollaps</em> aus. Im Wegflexen: One-Hit-Kill durch Stampfer.</li>
+        </ul>
+
+        <h3>6. SYSTEM-KOLLAPS</h3>
+        <p>Nach Bayers Tod: Arena wird geleert. Du stehst allein. Timer läuft. Überlebe 3 Minuten im Kollaps → Trophäe <em>„Feuerprobe"</em> + Perk.</p>
+
+        <h3>7. HARDWARELAGER (KLOSKA SHOP)</h3>
+        <p>Betritt das Lager auf der Karte mit <span class="key-hint">E</span>. Zahlungsmittel: Suppe (🥣).</p>
+        <ul>
+            <li>🖱️ <strong>Orbit-Maus (Permanent)</strong> — Kreist bis Rundenende. [10 🥣]</li>
+            <li>🖥️ <strong>Defekter ThinClient</strong> — Blockiert alle IDOC-Alarme für den Rest des Runs. [12 🥣]</li>
+            <li>👷 <strong>Azubi-Armee</strong> — Spawnt sofort 3 Geschütze. [8 🥣]</li>
+            <li>☢️ <strong>System-Reboot</strong> — Löscht ALLE Gegner auf der Map. Panik-Button. [20 🥣]</li>
+        </ul>
+
+        <h3>8. META-PROGRESSION</h3>
+        <p><strong>☕ Upgrade-Shop</strong> (Kaffeebons): Permanente Verbesserungen zwischen den Runs — mehr HP, Speed, Feuerrate, Schaden, Urlaubstage u.v.m. Freischaltbare Endgame-Upgrades ab 30k/50k Punkte.</p>
+        <p><strong>🏆 Trophäenschrank</strong>: 13 Trophäen mit passiven Perks. Jede Trophäe gibt einen dauerhaften Vorteil für alle zukünftigen Runs. Höchste Trophäe: <em>„Gott des Leitstands"</em> — Besiege Peter Bayer im Wegflexen-Modus.</p>
 
         <hr class="email-hr">
-        
-        <div style="margin-top: 25px; padding: 15px; background: #e8e8e8; border: 1px solid #ccc; font-size: 11px; color: #555; line-height: 1.4; text-align: justify;">
-            <strong>* INOFFIZIELLE LEITSTAND-NOTIZEN / SURVIVAL-TIPPS (NUR FÜR INTERNEN GEBRAUCH):</strong><br>
-            <i>(1) Bayers Stampfer ausnutzen:</i> Peter Bayer vernichtet bei seinem Sprungangriff alle Tickets in seinem roten Radius. Ziehe eine Horde Gegner in den Kreis, warte bis er springt und drücke im exakten Moment des Einschlags SHIFT (Hechtrolle). Du nimmst durch die i-Frames keinen Schaden, er tötet seine eigenen Leute und du kassierst +1000 Punkte für perfektes Ausweichen.<br>
-            <i>(2) Suppen-Wirtschaft:</i> Anders als Waffen-Kisten oder Wodka despawnt Suppe NIEMALS. Lass sie im Eifer des Gefechts ruhig liegen und sammle sie erst auf, wenn der Kloska-Shop in der Nähe ist oder die Welle abflacht.<br>
-            <i>(3) ThinClient vs. Reboot:</i> Wenn du 12 Suppen hast, kauf sofort den defekten ThinClient. Er schaltet die nervigen roten IDOC-Pfeile für den Rest des Runs komplett ab. Spar dir den "System-Reboot" (20 Suppen) zwingend als Panik-Button auf, wenn du komplett umzingelt bist oder ein Boss eskaliert.<br>
-            <i>(4) Arsenal-Eskalation:</i> Wenn du die Permanente Orbit-Maus hast, fahre durch die Gegnergruppen. Die Maus schlägt Gegner zurück, was das Einsammeln weiterer Kisten erleichtert. Kombiniere Raketenwerfer und Flammenwerfer, da der Rückstoß der Raketen dich automatisch aus der Gefahrenzone schiebt, während die Flammen den Bereich vor dir abschirmen.<br>
-            <i>(5) Aggressives Heilen:</i> Wenn du vom SAP-Update verlangsamt wurdest, renn nicht weg. Schieß sofort alles ab, was sich bewegt. Das Rache-System heilt dich, und du kannst die 5 langsamen Sekunden durch rohe Gewalt überleben.
+
+        <div style="margin-top:25px; padding:15px; background:#e8e8e8; border:1px solid #ccc; font-size:11px; color:#555; line-height:1.5; text-align:justify;">
+            <strong>* INOFFIZIELLE LEITSTAND-NOTIZEN / SURVIVAL-TIPPS (NUR FÜR INTERNEN GEBRAUCH):</strong><br><br>
+            <i>(1) Bayers Stampfer als Massenvernichtungswaffe:</i> Peter Bayer vernichtet bei seinem Sprung ALLE Tickets in seinem roten Radius. Zieh eine Horde rein, warte auf den Einschlag, drück im exakten Moment SHIFT. Du nimmst durch i-Frames keinen Schaden, er killt seine eigenen Leute, du kassierst +1000 Punkte Bonus.<br><br>
+            <i>(2) Suppe despawnt nie:</i> Anders als Waffenkisten oder Wodka liegen Suppen ewig. Lass sie in heißen Phasen ruhig liegen und sammel sie erst ein wenn du kurz vorm Hardwarelager bist oder die Welle abflacht.<br><br>
+            <i>(3) ThinClient kaufen, Reboot sparen:</i> Mit 12 Suppen sofort den ThinClient kaufen — er schaltet IDOC-Alarme für den gesamten Rest des Runs ab. Den System-Reboot (20 Suppen) als Panik-Taste aufheben für den Moment wo du komplett eingekreist bist oder der Boss eskaliert.<br><br>
+            <i>(4) Wegflexen-Strategie:</i> Im Wegflexen-Modus tickt immer ein 5-Sekunden Kill-Timer. Stehst du still, stirbst du. Kein Schild, kein Heilen, kein SAP überleben. Bewegung ist Leben. Kreise Gegnergruppen ein, nutze die Orbit-Maus für sicheren Abstand und schieß ohne Pause. Der einzige Weg Peter Bayer zu besiegen: Stampfer mit perfekter Hechtrolle kontern.<br><br>
+            <i>(5) Arsenal-Eskalation:</i> Raketenwerfer + Flammenwerfer kombinieren — der Rückstoß der Raketen schiebt dich automatisch aus der Gefahrenzone, während die Flammen den Bereich vor dir abbrennen. Mit Brand-Munition-Upgrade (30k Score) brennt danach alles von selbst.<br><br>
+            <i>(6) Aggressiv heilen statt flüchten:</i> Wenn dich das SAP-Update verlangsamt hat: nicht wegrennen. Sofort alles abschießen. Das Rache-System heilt dich durch die Kills und du überlebst die 5 langsamen Sekunden durch rohe Gewalt. Außer im Wegflexen. Da bist du einfach tot.
         </div>
     </div>
     <div class="close-hint" onclick="hideEmail()">ZURÜCK ZUM HAUPTMENÜ</div>
