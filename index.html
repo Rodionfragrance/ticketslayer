@@ -770,17 +770,17 @@ let prestigeLevel    = parseInt(localStorage.getItem('ts_prestige') || '0');
 // --- TROPHY SYSTEM ---
 const TROPHIES_DEF = [
     { id:'first_game', icon:'👶', name:'Willkommen in der Hölle', desc:'Schließe dein erstes Spiel ab.', perk:'Koffein-Resistenz: Start-HP +5' },
-    { id:'soup_king', icon:'🥣', name:'Suppenkasper', desc:'Sammle 15 Suppen in einem Run.', perk:'Stammkunde: Du startest mit 1 Suppe gratis' },
-    { id:'meeting_survivor', icon:'🤝', name:'Bullshit-Bingo', desc:'Überlebe ein Meeting.', perk:'Protokollant: Meetings geben 4000 statt 3000 Pkt' },
-    { id:'admin_hacker', icon:'🖥️', name:'Netzwerk-Admin', desc:'Hacke 3 Server in einem Run.', perk:'Krypto-Miner: Farmen geben +2 Punkte mehr' },
-    { id:'idoc_savior', icon:'🚨', name:'Prozess-Retter', desc:'Löse einen IDOC-Alarm.', perk:'Adrenalin: 10% mehr Speed während Alarmen' },
-    { id:'vacation_hoarder', icon:'💤', name:'Betriebsrat', desc:'Sammle 5 Urlaubstage auf einmal.', perk:'Gleitzeit: G-Heilung wirkt 20% schneller' },
+    { id:'soup_king', icon:'🥣', name:'Suppenkasper', desc:'Sammle 50 Suppen in einem Run.', perk:'Stammkunde: Du startest mit 1 Suppe gratis' },
+    { id:'meeting_survivor', icon:'🤝', name:'Bullshit-Bingo', desc:'Überlebe 3 Meetings in einem Run.', perk:'Protokollant: Meetings geben 4000 statt 3000 Pkt' },
+    { id:'admin_hacker', icon:'🖥️', name:'Netzwerk-Admin', desc:'Hacke 10 Server in einem Run.', perk:'Krypto-Miner: Farmen geben +2 Punkte mehr' },
+    { id:'idoc_savior', icon:'🚨', name:'Prozess-Retter', desc:'Fixe 5 IDOC-Alarme in einem Run.', perk:'Adrenalin: 10% mehr Speed während Alarmen' },
+    { id:'vacation_hoarder', icon:'💤', name:'Betriebsrat', desc:'Sammle 10 Urlaubstage auf einmal.', perk:'Gleitzeit: G-Heilung wirkt 20% schneller' },
     { id:'perfect_dodge', icon:'💃', name:'Tanz auf dem Vulkan', desc:'Perfektes Ausweichen bei Peter Bayer.', perk:'Leichtfüßig: Hechtrolle-Cooldown sinkt auf 1.5s' },
-    { id:'bloodlust', icon:'🩸', name:'Blutrausch', desc:'Heile 100 HP durch Rache in einem Run.', perk:'Rachsüchtig: Rache-Zeitfenster steigt auf 3s' },
-    { id:'pacifist', icon:'🕊️', name:'Pazifist', desc:'Überlebe 60s ohne einen Schuss.', perk:'Fluchttier: Grund-Speed +0.2' },
-    { id:'boss_killer', icon:'👑', name:'Vorstandswechsel', desc:'Besiege Peter Bayer.', perk:'Chef-Aura: 10s Schutzschild beim Start' },
-    { id:'collapse_survivor', icon:'🔥', name:'Feuerprobe', desc:'Überlebe 60s im System-Kollaps.', perk:'Arsenal-Experte: Spezialwaffen halten 25% länger' },
-    { id:'survival_master', icon:'💀', name:'Der wahre Kern', desc:'Erreiche 50k Punkte im Survival-Modus.', perk:'Gnadenlos: Basis-Schaden dauerhaft +2' }
+    { id:'bloodlust', icon:'🩸', name:'Blutrausch', desc:'Heile 1.000 HP durch Rache in einem Run.', perk:'Rachsüchtig: Rache-Zeitfenster steigt auf 3s' },
+    { id:'pacifist', icon:'🕊️', name:'Pazifist', desc:'Überlebe 3 Minuten ohne einen Schuss.', perk:'Fluchttier: Grund-Speed +0.2' },
+    { id:'boss_killer', icon:'👑', name:'Vorstandswechsel', desc:'Besiege Peter Bayer im Burnout/Survival.', perk:'Chef-Aura: 10s Schutzschild beim Start' },
+    { id:'collapse_survivor', icon:'🔥', name:'Feuerprobe', desc:'Überlebe 3 Minuten im System-Kollaps.', perk:'Arsenal-Experte: Spezialwaffen halten 25% länger' },
+    { id:'survival_master', icon:'💀', name:'Der wahre Kern', desc:'Erreiche 250k Punkte im Survival-Modus.', perk:'Gnadenlos: Basis-Schaden dauerhaft +2' }
 ];
 
 let unlockedTrophies = JSON.parse(localStorage.getItem('ts_trophies') || '[]');
@@ -1178,7 +1178,7 @@ function checkHack(selected) {
     if(selected.startsWith("172")) { 
         serverFarms.push({serverRef: currentHackingServer, ticker:0});
         currentHackingServer.isFarm = true;
-        if(player) { player.runHacks++; if(player.runHacks === 3) unlockTrophy('admin_hacker'); }
+        if(player) { player.runHacks++; if(player.runHacks === 10) unlockTrophy('admin_hacker'); }
         showToast("HACK ERFOLGREICH! 🔓", "#00ff88");
         playSound('powerup');
     } else {
@@ -1270,6 +1270,8 @@ class Player{
         this.runHacks = 0;
         this.runRacheHeal = 0;
         this.shotsFired = 0;
+        this.runMeetings = 0; // NEU
+        this.runIdocs = 0;    // NEU
     }
 
     activateVacation(){
@@ -1335,7 +1337,11 @@ class Player{
                     if(frame%30===0) floatingTexts.push(new FloatingText(this.x,this.y-60,"ABMAHNUNG!","#f00"));
                 }
             }
-            if(idocEvent&&Math.hypot(this.x-idocEvent.x,this.y-idocEvent.y)<100){ idocEvent=null;unlockTrophy('idoc_savior'); score+=2000; removePersistentToast(); floatingTexts.push(new FloatingText(this.x,this.y,"PROBLEM GELÖST!","#0f0")); showToast("PROBLEM GELÖST!","#00ff00","+2000 Punkte — Gegner eingefroren"); enemies.forEach(e=>e.freezeTimer=300); }
+            if(idocEvent&&Math.hypot(this.x-idocEvent.x,this.y-idocEvent.y)<100){ 
+                idocEvent=null; 
+                player.runIdocs++;
+                if(player.runIdocs === 5) unlockTrophy('idoc_savior'); 
+                score+=2000; removePersistentToast(); floatingTexts.push(new FloatingText(this.x,this.y,"PROBLEM GELÖST!","#0f0")); showToast("PROBLEM GELÖST!","#00ff00","+2000 Punkte — Gegner eingefroren"); enemies.forEach(e=>e.freezeTimer=300); }
             if(kloskaEvent&&Math.hypot(this.x-kloskaEvent.x,this.y-kloskaEvent.y)<120){ kloskaEvent=null; score+=1500; removePersistentToast(); floatingTexts.push(new FloatingText(this.x,this.y,"KLOSKA VERJAGT!","#0f0")); showToast("KLOSKA VERJAGT!","#00ff00","Server gerettet! (+1500 Pkt)"); }
         }
         
@@ -2168,11 +2174,20 @@ function loop(){
                 if(player.meetingProgress>=100){
                     player.inMeeting=false; meetingZone.active=false;
                     mt.style.display='none'; mb.style.display='none';
-                    score+=3000; player.meetingProgress=0;
+                    player.meetingProgress=0;
+                    
+                    // 1. Tracker hochzählen & prüfen
+                    player.runMeetings++;
+                    if(player.runMeetings === 3) unlockTrophy('meeting_survivor');
+                    
+                    // 2. Punkte berechnen (Perk anwenden)
+                    let earnedScore = 3000;
+                    if(hasTrophy('meeting_survivor')) earnedScore += 1000; 
+                    score += earnedScore;
+                    
+                    // 3. Feedback an den Spieler
                     floatingTexts.push(new FloatingText(player.x,player.y,"MEETING ÜBERLEBT!","#0f0"));
-                   unlockTrophy('meeting_survivor');
-                    if(hasTrophy('meeting_survivor')) score += 1000; // Perk: +1000 Extra-Punkte
-                    showToast("MEETING ÜBERLEBT!","#00ff00","+3000 Punkte");
+                    showToast("MEETING ÜBERLEBT!","#00ff00","+" + earnedScore + " Punkte");
                 }
             }
         }
@@ -2293,7 +2308,7 @@ function loop(){
         if(currentDiffLabel !== "SURVIVAL") {
             player.hp = Math.min(player.maxHp, player.hp + heal);
             player.runRacheHeal += heal;
-            if(player.runRacheHeal >= 100) unlockTrophy('bloodlust');
+            if(player.runRacheHeal >= 1000) unlockTrophy('bloodlust');
         }
         player.orangeHp -= heal;
         floatingTexts.push(new FloatingText(player.x, player.y, "+RACHE", "#ff6600"));
@@ -2309,7 +2324,7 @@ function loop(){
                     activeBoss = null;
                     if(e.label === "PETER BAYER") {
                         systemCollapse = true;
-                        unlockTrophy('boss_killer');
+                        if(currentDiffLabel === "BURNOUT" || currentDiffLabel === "SURVIVAL") unlockTrophy('boss_killer');
                         collapseTimer = 0;
                         // --- ALLES LÖSCHEN (Die leere Arena des Todes) ---
                         enemies = [];       // Alle kleinen Tickets weg
@@ -2370,7 +2385,7 @@ function loop(){
                 switch(item.type){
                     case 'suppe': 
                         player.suppe++; player.runSuppen++;
-                        if(player.runSuppen === 15) unlockTrophy('soup_king');
+                        if(player.runSuppen === 50) unlockTrophy('soup_king');
                         playSound('powerup'); showToast("SUPPE! 🥣", "#ff9f43", "Zahlungsmittel für Kloska"); 
                         floatingTexts.push(new FloatingText(player.x,player.y,"+1 SUPPE","#ff9f43"));
                         break;  
@@ -2393,7 +2408,7 @@ function loop(){
                     // case 'nuke':    triggerNuke();break;
                     case 'vacation':
                         player.yellowSlips++; 
-                        if(player.yellowSlips === 5) unlockTrophy('vacation_hoarder');
+                        if(player.yellowSlips === 10) unlockTrophy('vacation_hoarder');
                         playSound('vacation');showToast("+1 URLAUBSTAG! 💤","#ffff00","Minusstunden gespart");
                         floatingTexts.push(new FloatingText(player.x,player.y,"+1 URLAUB!","#ffff00"));
                         break;  
@@ -2423,9 +2438,9 @@ function loop(){
         updateHUD();
 
         // --- TROPHY PASSIVE TRACKER ---
-        if(frame === 3600 && player.shotsFired === 0) unlockTrophy('pacifist');
-        if(systemCollapse && collapseTimer === 3600) unlockTrophy('collapse_survivor');
-        if(currentDiffLabel === "SURVIVAL" && score >= 50000) unlockTrophy('survival_master');
+        if(frame === 10800 && player.shotsFired === 0) unlockTrophy('pacifist'); // 3 Minuten!
+        if(systemCollapse && collapseTimer === 10800) unlockTrophy('collapse_survivor'); // 3 Minuten!
+        if(currentDiffLabel === "SURVIVAL" && score >= 250000) unlockTrophy('survival_master'); // 250.000 Punkte
         // ------------------------------
 
         // Render
@@ -2572,6 +2587,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
