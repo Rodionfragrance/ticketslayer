@@ -639,6 +639,7 @@ input[type="text"] {
         </div>
         <button class="btn-shop" onclick="openShop()" style="width:100%;margin-top:10px;">&#9749; UPGRADE SHOP</button>
         <button class="btn-shop" onclick="openTrophies()" style="width:100%;margin-top:6px; border-color:#f1c40f; color:#f1c40f;">🏆 TROPHÄENSCHRANK</button>
+        <button onclick="openDailyOverlay()" id="daily-menu-btn" style="width:100%;margin-top:6px; background:#111; color:#f1c40f; border:2px solid #f1c40f; padding:12px; font-size:16px; cursor:pointer; font-weight:bold; text-transform:uppercase; font-family:'Courier New',monospace; letter-spacing:2px;">☕ TAGES-BONUS</button>
         <button class="btn-info" onclick="showEmail()" style="width:100%;margin-top:6px;">[I] PROZESSANWEISUNG</button>
     </div>
     
@@ -692,6 +693,35 @@ input[type="text"] {
     </div>
 </div>
    
+<!-- DAILY REWARD OVERLAY -->
+<div id="dailyOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.92); z-index:700; font-family:'Courier New',monospace; justify-content:center; align-items:center; flex-direction:column; gap:0;">
+    <div style="max-width:520px; width:90%; border:3px solid #f1c40f; background:#0a0a0a; border-radius:6px; padding:30px; text-align:center; box-shadow:0 0 60px rgba(241,196,15,0.3);">
+        <div id="daily-streak-display" style="font-size:48px; margin-bottom:10px;">☕</div>
+        <h2 style="color:#f1c40f; font-size:24px; letter-spacing:4px; margin:0 0 6px; text-transform:uppercase;">TAGES-BONUS</h2>
+        <div id="daily-streak-text" style="color:#aaa; font-size:13px; margin-bottom:20px; letter-spacing:2px;"></div>
+        
+        <!-- Streak Tage -->
+        <div style="display:flex; justify-content:center; gap:8px; margin-bottom:22px;" id="daily-streak-dots"></div>
+        
+        <!-- Belohnung -->
+        <div style="background:#111; border:2px solid #f1c40f; border-radius:4px; padding:16px; margin-bottom:18px;">
+            <div style="color:#aaa; font-size:12px; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Heute erhältst du:</div>
+            <div id="daily-reward-display" style="font-size:32px; color:#f1c40f; font-weight:bold;"></div>
+        </div>
+        
+        <!-- Tages-Challenge -->
+        <div style="background:#0a0a1a; border:2px solid #3498db; border-radius:4px; padding:14px; margin-bottom:20px;">
+            <div style="color:#3498db; font-size:12px; text-transform:uppercase; letter-spacing:2px; margin-bottom:6px;">📋 TAGES-CHALLENGE</div>
+            <div id="daily-challenge-text" style="color:#fff; font-size:14px; font-weight:bold; margin-bottom:4px;"></div>
+            <div id="daily-challenge-reward" style="color:#f1c40f; font-size:12px;"></div>
+            <div id="daily-challenge-done" style="color:#2ecc71; font-size:12px; font-weight:bold; display:none;">✅ BEREITS ERLEDIGT!</div>
+        </div>
+        
+        <button onclick="claimDailyReward()" id="daily-claim-btn" style="width:100%; background:#f1c40f; color:#000; border:none; padding:14px; font-size:16px; font-weight:bold; font-family:'Courier New',monospace; text-transform:uppercase; letter-spacing:3px; cursor:pointer; border-radius:2px;">EINLOGGEN & KASSIEREN</button>
+        <button onclick="closeDailyOverlay()" style="width:100%; background:transparent; color:#555; border:1px solid #333; padding:10px; font-size:13px; font-family:'Courier New',monospace; text-transform:uppercase; cursor:pointer; margin-top:8px; border-radius:2px;">SPÄTER</button>
+    </div>
+</div>
+
 <!-- UPGRADE SHOP -->
 <div id="shopOverlay">
     <div id="shopInner">
@@ -799,6 +829,7 @@ function startPreloader() {
             try {
                 var el = document.getElementById('startKBAmount');
                 if (el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
+                updateDailyMenuBtn();
             } catch(e) {}
             
             let best = parseInt(localStorage.getItem('ts_best_score') || '0');
@@ -944,6 +975,197 @@ const UPGRADES_DEF = [
 ];
 
 let kaffeebons       = parseInt(localStorage.getItem('ts_kb') || '0');
+
+// ============================================================
+// DAILY REWARD + STREAK + CHALLENGE SYSTEM
+// ============================================================
+const DAILY_CHALLENGES = [
+    { text: "Besiege 50 Gegner in einem Run",       key: "kills_50",    reward: 150, check: (s) => s.totalKills >= 50 },
+    { text: "Erreiche 10.000 Punkte",                key: "score_10k",   reward: 100, check: (s) => s.score >= 10000 },
+    { text: "Überlebe ohne Hechtrolle",              key: "no_roll",     reward: 200, check: (s) => s.rollsUsed === 0 },
+    { text: "Aktiviere 3 Server-Farmen",             key: "farms_3",     reward: 175, check: (s) => s.runHacks >= 3 },
+    { text: "Beende ein Meeting",                    key: "meeting_1",   reward: 100, check: (s) => s.runMeetings >= 1 },
+    { text: "Sammel 10 Suppen in einem Run",         key: "suppe_10",    reward: 150, check: (s) => s.runSuppen >= 10 },
+    { text: "Besiege einen Boss",                    key: "boss_kill",   reward: 250, check: (s) => s.bossKilled },
+    { text: "Erreiche ×5 Combo",                     key: "combo_x5",    reward: 200, check: (s) => s.bestComboThisRun >= 5 },
+    { text: "Überlebe 5 Minuten",                    key: "survive_5m",  reward: 175, check: (s) => s.frame >= 18000 },
+    { text: "Heile 200 HP durch Rache",              key: "rache_200",   reward: 150, check: (s) => s.runRacheHeal >= 200 },
+    { text: "Spiele im Burnout-Modus",               key: "play_burnout",reward: 125, check: (s) => s.currentDiffLabel === "BURNOUT" },
+    { text: "Benutze 5 verschiedene Waffen",         key: "weapons_5",   reward: 175, check: (s) => s.weaponTypesUsed >= 5 },
+    { text: "Fixe 3 IDOC-Alarme",                    key: "idoc_3",      reward: 150, check: (s) => s.runIdocs >= 3 },
+    { text: "Lass keinen Urlaubstag übrig",          key: "no_vacation", reward: 125, check: (s) => s.yellowSlips === 0 && s.frame > 3600 },
+];
+
+function getTodayStr() {
+    let d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+}
+
+function getTodayChallenge() {
+    // Deterministisch: gleicher Tag = gleiche Challenge für alle
+    let d = new Date();
+    let seed = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate();
+    return DAILY_CHALLENGES[seed % DAILY_CHALLENGES.length];
+}
+
+function getDailyState() {
+    try { return JSON.parse(localStorage.getItem('ts_daily') || '{}'); } catch(e) { return {}; }
+}
+function saveDailyState(s) {
+    localStorage.setItem('ts_daily', JSON.stringify(s));
+}
+
+function openDailyOverlay() {
+    let state = getDailyState();
+    let today = getTodayStr();
+    let streak = state.streak || 0;
+    let lastDay = state.lastLogin || '';
+    let alreadyClaimed = state.lastLogin === today;
+
+    // Streak berechnen
+    let yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+    let yStr = yesterday.getFullYear() + '-' + (yesterday.getMonth()+1) + '-' + yesterday.getDate();
+    if(lastDay !== today && lastDay !== yStr) streak = 0; // Streak gerissen
+
+    let newStreak = alreadyClaimed ? streak : Math.min(streak + 1, 7);
+
+    // Belohnung berechnen
+    let baseReward = 50;
+    let streakBonus = newStreak >= 7 ? 200 : (newStreak >= 3 ? 100 : 0);
+    let totalReward = baseReward + streakBonus;
+
+    // Streak-Dots rendern (7 Tage)
+    let dots = '';
+    for(let i = 1; i <= 7; i++) {
+        let active = i <= newStreak;
+        let isToday = i === newStreak && !alreadyClaimed;
+        dots += `<div style="width:36px;height:36px;border-radius:50%;border:2px solid ${active?'#f1c40f':'#333'};
+            background:${isToday?'#f1c40f':(active?'rgba(241,196,15,0.3)':'#111')};
+            display:flex;align-items:center;justify-content:center;font-size:16px;
+            color:${active?'#f1c40f':'#555'};">${i===7?'🌟':(active?'☕':'·')}</div>`;
+    }
+    document.getElementById('daily-streak-dots').innerHTML = dots;
+
+    // Streak-Emoji
+    let streakEmoji = newStreak >= 7 ? '🌟' : (newStreak >= 3 ? '🔥' : '☕');
+    document.getElementById('daily-streak-display').innerText = streakEmoji;
+    document.getElementById('daily-streak-text').innerText =
+        newStreak >= 7 ? 'TAG 7 — MAXIMALER STREAK! 🌟' :
+        (newStreak >= 3 ? `TAG ${newStreak} — STREAK AKTIV 🔥 (+100 BONUS)` :
+        `TAG ${newStreak} VON 7`);
+
+    // Belohnung anzeigen
+    let rewardText = `+${totalReward} ☕ KAFFEEBONS`;
+    if(streakBonus > 0) rewardText += `
+(Basis: +${baseReward} + Streak: +${streakBonus})`;
+    document.getElementById('daily-reward-display').innerText = rewardText;
+
+    // Challenge
+    let challenge = getTodayChallenge();
+    document.getElementById('daily-challenge-text').innerText = challenge.text;
+    document.getElementById('daily-challenge-reward').innerText = `Belohnung: +${challenge.reward} KB`;
+    let challengeDone = state.challengeDone === today;
+    document.getElementById('daily-challenge-done').style.display = challengeDone ? 'block' : 'none';
+    document.getElementById('daily-challenge-reward').style.display = challengeDone ? 'none' : 'block';
+
+    // Button
+    let btn = document.getElementById('daily-claim-btn');
+    if(alreadyClaimed) {
+        btn.innerText = '✅ HEUTE BEREITS KASSIERT';
+        btn.style.background = '#333';
+        btn.style.color = '#888';
+        btn.style.cursor = 'default';
+        btn.onclick = null;
+    } else {
+        btn.innerText = `EINLOGGEN & +${totalReward} KB KASSIEREN`;
+        btn.style.background = '#f1c40f';
+        btn.style.color = '#000';
+        btn.style.cursor = 'pointer';
+        btn.onclick = claimDailyReward;
+    }
+
+    document.getElementById('dailyOverlay').style.display = 'flex';
+
+    // Button-Label im Menü aktualisieren
+    updateDailyMenuBtn();
+}
+
+function claimDailyReward() {
+    let state = getDailyState();
+    let today = getTodayStr();
+    if(state.lastLogin === today) return;
+
+    let yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+    let yStr = yesterday.getFullYear() + '-' + (yesterday.getMonth()+1) + '-' + yesterday.getDate();
+    let streak = state.streak || 0;
+    if(state.lastLogin !== yStr) streak = 0;
+    streak = Math.min(streak + 1, 7);
+
+    let baseReward = 50;
+    let streakBonus = streak >= 7 ? 200 : (streak >= 3 ? 100 : 0);
+    let totalReward = baseReward + streakBonus;
+
+    kaffeebons += totalReward;
+    state.lastLogin = today;
+    state.streak = streak;
+    saveDailyState(state);
+    saveProgress();
+
+    showToast('☕ TAGES-BONUS!', '#f1c40f', `+${totalReward} Kaffeebons — Tag ${streak}/7`);
+    document.getElementById('startKBAmount').innerText = kaffeebons;
+
+    let btn = document.getElementById('daily-claim-btn');
+    btn.innerText = '✅ KASSIERT! +' + totalReward + ' KB';
+    btn.style.background = '#333'; btn.style.color = '#2ecc71'; btn.style.cursor = 'default';
+    btn.onclick = null;
+
+    // Streak-Dots neu rendern
+    setTimeout(() => openDailyOverlay(), 100);
+    updateDailyMenuBtn();
+}
+
+function checkDailyChallenge() {
+    let state = getDailyState();
+    let today = getTodayStr();
+    if(state.challengeDone === today) return;
+    let challenge = getTodayChallenge();
+    // Übergebe aktuellen Spielstand
+    let gameStats = { totalKills: enemies.length, score, rollsUsed: player ? (player._rollsUsed||0) : 0,
+        runHacks: player ? player.runHacks : 0, runMeetings: player ? player.runMeetings : 0,
+        runSuppen: player ? player.runSuppen : 0, bossKilled: !activeBoss && currentBossStage > 0,
+        bestComboThisRun, frame, runRacheHeal: player ? player.runRacheHeal : 0,
+        currentDiffLabel, weaponTypesUsed: player ? Object.keys(player.activeWeapons||{}).length : 0,
+        yellowSlips: player ? player.yellowSlips : 2 };
+    // Kills zählen wir über score (Näherung)
+    gameStats.totalKills = Math.floor(score / 20);
+    if(challenge.check(gameStats)) {
+        state.challengeDone = today;
+        saveDailyState(state);
+        kaffeebons += challenge.reward;
+        saveProgress();
+        showToast('📋 CHALLENGE ERLEDIGT!', '#3498db', `+${challenge.reward} KB — ${challenge.text}`);
+        document.getElementById('startKBAmount').innerText = kaffeebons;
+    }
+}
+
+function closeDailyOverlay() {
+    document.getElementById('dailyOverlay').style.display = 'none';
+}
+
+function updateDailyMenuBtn() {
+    let state = getDailyState();
+    let today = getTodayStr();
+    let btn = document.getElementById('daily-menu-btn');
+    if(!btn) return;
+    if(state.lastLogin === today) {
+        btn.innerText = '☕ TAGES-BONUS ✅';
+        btn.style.borderColor = '#555'; btn.style.color = '#555';
+    } else {
+        btn.innerText = '☕ TAGES-BONUS — VERFÜGBAR!';
+        btn.style.borderColor = '#f1c40f'; btn.style.color = '#f1c40f';
+        btn.style.boxShadow = '0 0 10px rgba(241,196,15,0.4)';
+    }
+}
 let upgradeProgress  = JSON.parse(localStorage.getItem('ts_upgrades') || '{}');
 let prestigeLevel    = parseInt(localStorage.getItem('ts_prestige') || '0');
 
@@ -1322,6 +1544,7 @@ function checkGameOver(){
         } else {
             document.getElementById('goBestCombo').style.display = 'none';
         }
+        checkDailyChallenge();
         document.getElementById('gameOverScreen').style.display='block';
         document.getElementById('highscoreInputArea').style.display='block';
         document.getElementById('meeting-bar-container').style.display='none';
