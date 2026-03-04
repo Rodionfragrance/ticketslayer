@@ -1271,61 +1271,61 @@ const SKILL_NODES = [
     { id:'start', x:0, y:0, type:'start', zone:'center', name:'LEITSTAND', desc:'Dein Arbeitsplatz. Der Anfang aller Übel. Immer freigeschaltet.', cost:0, requires:[], effect:null },
 
     // ═══ RAGE (oben-rechts) ═══
-    { id:'r1', x:110, y:-90, type:'minor', zone:'rage', name:'Mehrarbeit', desc:'+8% Schaden auf alle Waffen.', cost:100, requires:['start'], effect:'dmg_pct:0.08' },
-    { id:'r2', x:180, y:-140, type:'minor', zone:'rage', name:'Frustration', desc:'+12% Feuerrate.', cost:100, requires:['r1'], effect:'firerate_pct:0.12' },
-    { id:'r3', x:260, y:-110, type:'notable', zone:'rage', name:'Adrenalinschub', desc:'+20% Schaden und +15% Feuerrate gleichzeitig.', cost:250, requires:['r2'], effect:'adrenalin' },
-    { id:'r4', x:320, y:-180, type:'minor', zone:'rage', name:'Überstunden', desc:'+6% Schaden pro aktiver Waffe im Arsenal.', cost:150, requires:['r3'], effect:'dmg_per_weapon:0.06' },
-    { id:'r5', x:400, y:-150, type:'notable', zone:'rage', name:'Schnellschuss', desc:'Feuerrate +25%. Streuung +10%.', cost:300, requires:['r4'], effect:'schnellschuss' },
-    { id:'r6', x:370, y:-250, type:'minor', zone:'rage', name:'Explosive Wut', desc:'15% Chance pro Treffer: kleiner Splash-Effekt (+30px).', cost:200, requires:['r3'], effect:'explosive_chance:0.15' },
-    { id:'r_ks', x:470, y:-220, type:'keystone', zone:'rage', name:'ÜBERSTUNDEN-RAGE', desc:'+100% Schaden unter 30% HP. Kein Schutzschild-Item wirkt.', cost:900, requires:['r5','r6'], effect:'ks_rage' },
+    { id:'r1', x:110, y:-90, type:'minor', zone:'rage', name:'Mehrarbeit', desc:'+8% Schaden auf alle Waffen.', cost:1000, requires:['start'], effect:'dmg_pct:0.08' },
+    { id:'r2', x:180, y:-140, type:'minor', zone:'rage', name:'Frustration', desc:'+12% Feuerrate.', cost:1000, requires:['r1'], effect:'firerate_pct:0.12' },
+    { id:'r3', x:260, y:-110, type:'notable', zone:'rage', name:'Adrenalinschub', desc:'+20% Schaden und +15% Feuerrate gleichzeitig.', cost:2500, requires:['r2'], effect:'adrenalin' },
+    { id:'r4', x:320, y:-180, type:'minor', zone:'rage', name:'Überstunden', desc:'+6% Schaden pro aktiver Waffe im Arsenal.', cost:1500, requires:['r3'], effect:'dmg_per_weapon:0.06' },
+    { id:'r5', x:400, y:-150, type:'notable', zone:'rage', name:'Schnellschuss', desc:'Feuerrate +25%. Streuung +10%.', cost:3000, requires:['r4'], effect:'schnellschuss' },
+    { id:'r6', x:370, y:-250, type:'minor', zone:'rage', name:'Explosive Wut', desc:'15% Chance pro Treffer: kleiner Splash-Effekt (+30px).', cost:2000, requires:['r3'], effect:'explosive_chance:0.15' },
+    { id:'r_ks', x:470, y:-220, type:'keystone', zone:'rage', name:'ÜBERSTUNDEN-RAGE', desc:'+100% Schaden unter 30% HP. Kein Schutzschild-Item wirkt.', cost:9000, requires:['r5','r6'], effect:'ks_rage' },
 
     // ═══ PANZER (rechts) ═══
-    { id:'p1', x:130, y:20, type:'minor', zone:'panzer', name:'Schutzweste', desc:'+20 Max-HP.', cost:100, requires:['start'], effect:'maxhp:20' },
-    { id:'p2', x:210, y:60, type:'minor', zone:'panzer', name:'Dicke Haut', desc:'Kontaktschaden von Gegnern -15%.', cost:120, requires:['p1'], effect:'dmg_reduction:0.15' },
-    { id:'p3', x:300, y:30, type:'notable', zone:'panzer', name:'Arbeitnehmerrechte', desc:'+30 Max-HP. Alle Schadenquellen -10%.', cost:280, requires:['p2'], effect:'arbeitsrecht' },
-    { id:'p4', x:370, y:90, type:'minor', zone:'panzer', name:'Immunsystem', desc:'SAP-Debuff dauert nur 2s statt 5s.', cost:180, requires:['p3'], effect:'sap_resist' },
-    { id:'p5', x:430, y:30, type:'notable', zone:'panzer', name:'Stahlnerven', desc:'Bayer Stampfer-Stun wird auf 1s reduziert.', cost:350, requires:['p4'], effect:'stun_resist' },
-    { id:'p_ks', x:500, y:90, type:'keystone', zone:'panzer', name:'UNANTASTBAR', desc:'Hechtrolle gibt 3s Unverwundbarkeit. Cooldown +0.5s.', cost:900, requires:['p3','p5'], effect:'ks_unantastbar' },
+    { id:'p1', x:130, y:20, type:'minor', zone:'panzer', name:'Schutzweste', desc:'+20 Max-HP.', cost:1000, requires:['start'], effect:'maxhp:20' },
+    { id:'p2', x:210, y:60, type:'minor', zone:'panzer', name:'Dicke Haut', desc:'Kontaktschaden von Gegnern -15%.', cost:1200, requires:['p1'], effect:'dmg_reduction:0.15' },
+    { id:'p3', x:300, y:30, type:'notable', zone:'panzer', name:'Arbeitnehmerrechte', desc:'+30 Max-HP. Alle Schadenquellen -10%.', cost:2800, requires:['p2'], effect:'arbeitsrecht' },
+    { id:'p4', x:370, y:90, type:'minor', zone:'panzer', name:'Immunsystem', desc:'SAP-Debuff dauert nur 2s statt 5s.', cost:1800, requires:['p3'], effect:'sap_resist' },
+    { id:'p5', x:430, y:30, type:'notable', zone:'panzer', name:'Stahlnerven', desc:'Bayer Stampfer-Stun wird auf 1s reduziert.', cost:3500, requires:['p4'], effect:'stun_resist' },
+    { id:'p_ks', x:500, y:90, type:'keystone', zone:'panzer', name:'UNANTASTBAR', desc:'Hechtrolle gibt 3s Unverwundbarkeit. Cooldown +0.5s.', cost:9000, requires:['p3','p5'], effect:'ks_unantastbar' },
 
     // ═══ KAFFEEKASSE (unten-rechts) ═══
-    { id:'k1', x:110, y:110, type:'minor', zone:'kasse', name:'Sparsamkeit', desc:'+20% Kaffeebons nach jedem Run.', cost:100, requires:['start'], effect:'kb_rate:0.20' },
-    { id:'k2', x:160, y:200, type:'minor', zone:'kasse', name:'Marktkenntnis', desc:'Starte jeden Run mit 1 Suppe.', cost:120, requires:['k1'], effect:'start_suppe:1' },
-    { id:'k3', x:260, y:180, type:'notable', zone:'kasse', name:'Kaffeevollautomatik', desc:'+35% Kaffeebons. Suppe-Dropchance +25%.', cost:280, requires:['k2'], effect:'kaffeevoll' },
-    { id:'k4', x:320, y:260, type:'minor', zone:'kasse', name:'Sozialkasse', desc:'Starte mit 3 Suppen.', cost:200, requires:['k3'], effect:'start_suppe:2' },
-    { id:'k5', x:420, y:220, type:'notable', zone:'kasse', name:'Gewerkschaft', desc:'Azubi kostet nur 2000 Pkt. Azubis haben +300px Reichweite.', cost:350, requires:['k4'], effect:'gewerkschaft' },
-    { id:'k_ks', x:460, y:310, type:'keystone', zone:'kasse', name:'BETRIEBSRAT', desc:'Meetings geben 2× Punkte. Aber Gegner-Spawn +20% schneller.', cost:900, requires:['k3','k5'], effect:'ks_betriebsrat' },
+    { id:'k1', x:110, y:110, type:'minor', zone:'kasse', name:'Sparsamkeit', desc:'+20% Kaffeebons nach jedem Run.', cost:1000, requires:['start'], effect:'kb_rate:0.20' },
+    { id:'k2', x:160, y:200, type:'minor', zone:'kasse', name:'Marktkenntnis', desc:'Starte jeden Run mit 1 Suppe.', cost:1200, requires:['k1'], effect:'start_suppe:1' },
+    { id:'k3', x:260, y:180, type:'notable', zone:'kasse', name:'Kaffeevollautomatik', desc:'+35% Kaffeebons. Suppe-Dropchance +25%.', cost:2800, requires:['k2'], effect:'kaffeevoll' },
+    { id:'k4', x:320, y:260, type:'minor', zone:'kasse', name:'Sozialkasse', desc:'Starte mit 3 Suppen.', cost:2000, requires:['k3'], effect:'start_suppe:2' },
+    { id:'k5', x:420, y:220, type:'notable', zone:'kasse', name:'Gewerkschaft', desc:'Azubi kostet nur 2000 Pkt. Azubis haben +300px Reichweite.', cost:3500, requires:['k4'], effect:'gewerkschaft' },
+    { id:'k_ks', x:460, y:310, type:'keystone', zone:'kasse', name:'BETRIEBSRAT', desc:'Meetings geben 2× Punkte. Aber Gegner-Spawn +20% schneller.', cost:9000, requires:['k3','k5'], effect:'ks_betriebsrat' },
 
     // ═══ CHAOS (unten-links) ═══
-    { id:'c1', x:-110, y:110, type:'minor', zone:'chaos', name:'Glücksprinzip', desc:'Kisten-Dropchance von Gegnern +25%.', cost:100, requires:['start'], effect:'crate_chance:0.25' },
-    { id:'c2', x:-160, y:200, type:'minor', zone:'chaos', name:'Würfelwurf', desc:'7% Chance pro Kill: sofort +5 HP regeneriert.', cost:120, requires:['c1'], effect:'kill_heal:0.07' },
-    { id:'c3', x:-260, y:180, type:'notable', zone:'chaos', name:'Russisches Roulette', desc:'12% Chance: Kill gibt 3× Score statt 1×.', cost:280, requires:['c2'], effect:'triple_score:0.12' },
-    { id:'c4', x:-340, y:250, type:'minor', zone:'chaos', name:'Anarchie', desc:'Raketenwerfer Splash +40px. Rückstoß -30%.', cost:200, requires:['c3'], effect:'rocket_mod' },
-    { id:'c5', x:-430, y:200, type:'notable', zone:'chaos', name:'Doppelt oder Nichts', desc:'25% Chance: Score-Kill gibt 2×. 5% Chance: gibt 0.', cost:350, requires:['c4'], effect:'double_nothing:0.25' },
-    { id:'c_ks', x:-480, y:290, type:'keystone', zone:'chaos', name:'SYSTEMKOLLAPS PRO', desc:'Kollaps startet 30s früher. Score ×1.5 während Kollaps.', cost:900, requires:['c3','c5'], effect:'ks_collapse' },
+    { id:'c1', x:-110, y:110, type:'minor', zone:'chaos', name:'Glücksprinzip', desc:'Kisten-Dropchance von Gegnern +25%.', cost:1000, requires:['start'], effect:'crate_chance:0.25' },
+    { id:'c2', x:-160, y:200, type:'minor', zone:'chaos', name:'Würfelwurf', desc:'7% Chance pro Kill: sofort +5 HP regeneriert.', cost:1200, requires:['c1'], effect:'kill_heal:0.07' },
+    { id:'c3', x:-260, y:180, type:'notable', zone:'chaos', name:'Russisches Roulette', desc:'12% Chance: Kill gibt 3× Score statt 1×.', cost:2800, requires:['c2'], effect:'triple_score:0.12' },
+    { id:'c4', x:-340, y:250, type:'minor', zone:'chaos', name:'Anarchie', desc:'Raketenwerfer Splash +40px. Rückstoß -30%.', cost:2000, requires:['c3'], effect:'rocket_mod' },
+    { id:'c5', x:-430, y:200, type:'notable', zone:'chaos', name:'Doppelt oder Nichts', desc:'25% Chance: Score-Kill gibt 2×. 5% Chance: gibt 0.', cost:3500, requires:['c4'], effect:'double_nothing:0.25' },
+    { id:'c_ks', x:-480, y:290, type:'keystone', zone:'chaos', name:'SYSTEMKOLLAPS PRO', desc:'Kollaps startet 30s früher. Score ×1.5 während Kollaps.', cost:9000, requires:['c3','c5'], effect:'ks_collapse' },
 
     // ═══ TECHNIK (links) ═══
-    { id:'t1', x:-130, y:20, type:'minor', zone:'technik', name:'Netzwerk-Ping', desc:'Farm-Einkommen +4 Pkt/Sek.', cost:100, requires:['start'], effect:'farm_income:4' },
-    { id:'t2', x:-220, y:60, type:'minor', zone:'technik', name:'IT-Support', desc:'IDOC-Zeitfenster +8s.', cost:120, requires:['t1'], effect:'idoc_time:480' },
-    { id:'t3', x:-310, y:30, type:'notable', zone:'technik', name:'Netzwerk-Admin', desc:'Max. Server-Farmen +2. Hack-Zeitfenster +3s.', cost:280, requires:['t2'], effect:'farm_slots:2' },
-    { id:'t4', x:-380, y:90, type:'minor', zone:'technik', name:'Azubi-Coaching', desc:'Azubis haben +250px Reichweite und +20% Feuerrate.', cost:180, requires:['t3'], effect:'azubi_boost' },
-    { id:'t5', x:-450, y:30, type:'notable', zone:'technik', name:'Automatisierung', desc:'Azubis feuern doppelt so schnell. Cooldown halbiert.', cost:350, requires:['t4'], effect:'azubi_auto' },
-    { id:'t_ks', x:-500, y:90, type:'keystone', zone:'technik', name:'KÜNSTLICHE INTELLIGENZ', desc:'Azubis priorisieren stärkste Gegner. Max. Turrets +4.', cost:900, requires:['t3','t5'], effect:'ks_ki' },
+    { id:'t1', x:-130, y:20, type:'minor', zone:'technik', name:'Netzwerk-Ping', desc:'Farm-Einkommen +4 Pkt/Sek.', cost:1000, requires:['start'], effect:'farm_income:4' },
+    { id:'t2', x:-220, y:60, type:'minor', zone:'technik', name:'IT-Support', desc:'IDOC-Zeitfenster +8s.', cost:1200, requires:['t1'], effect:'idoc_time:480' },
+    { id:'t3', x:-310, y:30, type:'notable', zone:'technik', name:'Netzwerk-Admin', desc:'Max. Server-Farmen +2. Hack-Zeitfenster +3s.', cost:2800, requires:['t2'], effect:'farm_slots:2' },
+    { id:'t4', x:-380, y:90, type:'minor', zone:'technik', name:'Azubi-Coaching', desc:'Azubis haben +250px Reichweite und +20% Feuerrate.', cost:1800, requires:['t3'], effect:'azubi_boost' },
+    { id:'t5', x:-450, y:30, type:'notable', zone:'technik', name:'Automatisierung', desc:'Azubis feuern doppelt so schnell. Cooldown halbiert.', cost:3500, requires:['t4'], effect:'azubi_auto' },
+    { id:'t_ks', x:-500, y:90, type:'keystone', zone:'technik', name:'KÜNSTLICHE INTELLIGENZ', desc:'Azubis priorisieren stärkste Gegner. Max. Turrets +4.', cost:9000, requires:['t3','t5'], effect:'ks_ki' },
 
     // ═══ BEWEGUNG (oben-links) ═══
-    { id:'b1', x:-110, y:-90, type:'minor', zone:'bewegung', name:'Laufschuhe Pro', desc:'+0.4 Grundgeschwindigkeit.', cost:100, requires:['start'], effect:'speed:0.4' },
-    { id:'b2', x:-180, y:-150, type:'minor', zone:'bewegung', name:'Flinke Füße', desc:'Hechtrolle-Cooldown -0.4s.', cost:100, requires:['b1'], effect:'roll_cd:-24' },
-    { id:'b3', x:-270, y:-120, type:'notable', zone:'bewegung', name:'Parkour', desc:'+0.6 Speed. Hechtrolle-Distanz +40%.', cost:280, requires:['b2'], effect:'parkour' },
-    { id:'b4', x:-350, y:-190, type:'minor', zone:'bewegung', name:'Windschatten', desc:'1s nach Hechtrolle: +60% Speed-Burst.', cost:180, requires:['b3'], effect:'windschatten' },
-    { id:'b5', x:-430, y:-150, type:'notable', zone:'bewegung', name:'Geisterläufer', desc:'Während Hechtrolle: passiert Gegner ohne Schaden.', cost:350, requires:['b4'], effect:'ghost_roll' },
-    { id:'b_ks', x:-480, y:-230, type:'keystone', zone:'bewegung', name:'BÜROKRAT', desc:'+2.0 Speed. Aber Schaden dauerhaft -25%.', cost:900, requires:['b3','b5'], effect:'ks_buerokrat' },
+    { id:'b1', x:-110, y:-90, type:'minor', zone:'bewegung', name:'Laufschuhe Pro', desc:'+0.4 Grundgeschwindigkeit.', cost:1000, requires:['start'], effect:'speed:0.4' },
+    { id:'b2', x:-180, y:-150, type:'minor', zone:'bewegung', name:'Flinke Füße', desc:'Hechtrolle-Cooldown -0.4s.', cost:1000, requires:['b1'], effect:'roll_cd:-24' },
+    { id:'b3', x:-270, y:-120, type:'notable', zone:'bewegung', name:'Parkour', desc:'+0.6 Speed. Hechtrolle-Distanz +40%.', cost:2800, requires:['b2'], effect:'parkour' },
+    { id:'b4', x:-350, y:-190, type:'minor', zone:'bewegung', name:'Windschatten', desc:'1s nach Hechtrolle: +60% Speed-Burst.', cost:1800, requires:['b3'], effect:'windschatten' },
+    { id:'b5', x:-430, y:-150, type:'notable', zone:'bewegung', name:'Geisterläufer', desc:'Während Hechtrolle: passiert Gegner ohne Schaden.', cost:3500, requires:['b4'], effect:'ghost_roll' },
+    { id:'b_ks', x:-480, y:-230, type:'keystone', zone:'bewegung', name:'BÜROKRAT', desc:'+2.0 Speed. Aber Schaden dauerhaft -25%.', cost:9000, requires:['b3','b5'], effect:'ks_buerokrat' },
 
     // ═══ CROSS-ZONE BRÜCKEN ═══
-    { id:'x1', x:230, y:-60, type:'minor', zone:'rage', name:'Waffenöl', desc:'+6% Feuerrate und +6% Schaden.', cost:180, requires:['r1','p1'], effect:'waffentoel' },
-    { id:'x2', x:230, y:120, type:'minor', zone:'kasse', name:'Teamwork', desc:'Azubi-Kills zählen für Combo-System.', cost:200, requires:['p1','k1'], effect:'azubi_combo' },
-    { id:'x3', x:-230, y:120, type:'minor', zone:'chaos', name:'Flexible Arbeitszeit', desc:'Wegflexen-Timer +1.5s pro Kill.', cost:200, requires:['c1','b1'], effect:'flex_timer:1.5' },
-    { id:'x4', x:-230, y:-60, type:'notable', zone:'bewegung', name:'Synergie', desc:'Pro aktiver Farm: +0.2 Speed und +3% Schaden.', cost:300, requires:['t1','b1'], effect:'synergy' },
-    { id:'x5', x:0, y:-200, type:'minor', zone:'rage', name:'Präzision', desc:'Kritische Treffer-Chance +8% (×1.5 Schaden).', cost:180, requires:['r2','b2'], effect:'crit:0.08' },
-    { id:'x6', x:0, y:250, type:'minor', zone:'kasse', name:'Lunchpaket', desc:'Start mit +20 HP UND 1 Suppe extra.', cost:220, requires:['k1','c1'], effect:'lunchpaket' },
+    { id:'x1', x:230, y:-60, type:'minor', zone:'rage', name:'Waffenöl', desc:'+6% Feuerrate und +6% Schaden.', cost:1800, requires:['r1','p1'], effect:'waffentoel' },
+    { id:'x2', x:230, y:120, type:'minor', zone:'kasse', name:'Teamwork', desc:'Azubi-Kills zählen für Combo-System.', cost:2000, requires:['p1','k1'], effect:'azubi_combo' },
+    { id:'x3', x:-230, y:120, type:'minor', zone:'chaos', name:'Flexible Arbeitszeit', desc:'Wegflexen-Timer +1.5s pro Kill.', cost:2000, requires:['c1','b1'], effect:'flex_timer:1.5' },
+    { id:'x4', x:-230, y:-60, type:'notable', zone:'bewegung', name:'Synergie', desc:'Pro aktiver Farm: +0.2 Speed und +3% Schaden.', cost:3000, requires:['t1','b1'], effect:'synergy' },
+    { id:'x5', x:0, y:-200, type:'minor', zone:'rage', name:'Präzision', desc:'Kritische Treffer-Chance +8% (×1.5 Schaden).', cost:1800, requires:['r2','b2'], effect:'crit:0.08' },
+    { id:'x6', x:0, y:250, type:'minor', zone:'kasse', name:'Lunchpaket', desc:'Start mit +20 HP UND 1 Suppe extra.', cost:2200, requires:['k1','c1'], effect:'lunchpaket' },
 ];
 
 // Skilltree State
@@ -3596,3 +3596,4 @@ setTimeout(function(){
             if(el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
         } catch(e) {}
         var best = parseInt(localStorag
+
