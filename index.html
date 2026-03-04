@@ -853,11 +853,13 @@ function loadHighscores() {
             if(scores[mode].length > 0) {
                 let color = mode === 'WEGFLEXEN' ? '#f00' : (mode === 'SURVIVAL' ? '#8e44ad' : (mode === 'BURNOUT' ? '#c0392b' : (mode === 'VOLLZEIT' ? '#f1c40f' : '#2ecc71')));
                 html += `<div style="color:${color}; font-weight:bold; margin-top:6px; font-size:12px;">[${mode}]</div>`;
+                // BALANCING: 1 Sekunde Kollaps = TIME_BONUS Punkte wert.
+                // Erhöhen = Zeit wichtiger. Verringern = Score wichtiger.
+                const TIME_BONUS = 3000;
                 scores[mode].sort((a, b) => {
-                    let collA = parseFloat(a.collapseTime) || 0;
-                    let collB = parseFloat(b.collapseTime) || 0;
-                    if (collA !== collB) return collB - collA; 
-                    return b.score - a.score;
+                    let rA = (a.score||0) + (parseFloat(a.collapseTime)||0) * TIME_BONUS;
+                    let rB = (b.score||0) + (parseFloat(b.collapseTime)||0) * TIME_BONUS;
+                    return rB - rA;
                 });
                 let top5 = scores[mode].slice(0, 5);
                 top5.forEach((d, i) => {
@@ -1785,6 +1787,24 @@ class Enemy{
             case 7: this.hp=35;   this.maxHp=35;   this.speed=2.2; this.radius=18; this.color='#9b59b6'; this.score=75;   this.label="DER ANWENDER";this.symbol="🧑"; this.teleportTimer=180+Math.floor(Math.random()*60); break;
             case 8: this.hp=220;  this.maxHp=220;  this.speed=0.6; this.radius=30; this.color='#1f618d'; this.score=200;  this.label="SAP-UPDATE"; this.symbol="💿"; break;
         }
+
+        // Schwierigkeitsgrad-Skalierung für alle normalen Gegner
+        // Teichmann (Typ 6) wird bewusst NICHT skaliert — er ist ein Trigger-Gegner, kein Kampfgegner
+        if(this.type !== 6) {
+            const diffScaling = {
+                1: { hp: 1.0, spd: 1.0 },  // Praktikant
+                3: { hp: 1.5, spd: 1.1 },  // Vollzeit
+                6: { hp: 2.5, spd: 1.3 },  // Burnout
+                9: { hp: 4.0, spd: 1.5 }   // Survival
+            };
+            let scale = diffScaling[lastChosenDifficulty] || diffScaling[1];
+            // Wegflexen bekommt nochmal extra
+            if(isWegflexenMode) { scale = { hp: 5.0, spd: 1.7 }; }
+            this.hp    = Math.round(this.hp    * scale.hp);
+            this.maxHp = Math.round(this.maxHp * scale.hp);
+            this.speed = parseFloat((this.speed * scale.spd).toFixed(2));
+            // Score bleibt auf allen Stufen gleich wie Praktikant
+        }
     }
 
     update(){
@@ -1851,7 +1871,8 @@ class Enemy{
                 enemies.forEach(oe=>{
                     if(oe!==this&&oe.type!==1&&oe.type!==99&&oe.type!==6){
                         if(Math.hypot(oe.x-this.x,oe.y-this.y)<800&&Math.abs(Math.atan2(oe.y-this.y,oe.x-this.x)-atp)<0.2){
-                            oe.type=2;oe.color='#e67e22';oe.hp=120;oe.maxHp=120;oe.label="PRIO2";oe.symbol="⚡";
+                            let p2hp = Math.round(120 * ({1:1.0,3:1.5,6:2.5,9:isWegflexenMode?5.0:4.0}[lastChosenDifficulty]||1.0));
+                            oe.type=2;oe.color='#e67e22';oe.hp=p2hp;oe.maxHp=p2hp;oe.label="PRIO2";oe.symbol="⚡";
                         }
                     }
                 });
@@ -1873,7 +1894,7 @@ class Enemy{
                 floatingTexts.push(new FloatingText(player.x,player.y,"CRITICAL UPDATE!","#f00"));
                 playSound('bug');
                 enemies.forEach(oe=>{
-                    if(oe.type!==99&&oe.type!==1&&oe!==this){oe.type=1;oe.color='#c0392b';oe.hp=400;oe.maxHp=400;oe.score=1000;oe.radius=50;oe.label="PRIO1";oe.symbol="☠";}
+                    if(oe.type!==99&&oe.type!==1&&oe!==this){let p1hp=Math.round(400*({1:1.0,3:1.5,6:2.5,9:isWegflexenMode?5.0:4.0}[lastChosenDifficulty]||1.0));oe.type=1;oe.color='#c0392b';oe.hp=p1hp;oe.maxHp=p1hp;oe.score=1000;oe.radius=50;oe.label="PRIO1";oe.symbol="☠";}
                 });
                 this.hp=-1000;
             } else if(this.type===8&&frame%30===0){
