@@ -2305,7 +2305,7 @@ class Player{
             input.keys['KeyB']=false;
         }
         if(input.keys['KeyF']){tryActivateFarm();input.keys['KeyF']=false;}
-        if(score>=2500&&!this.isMartin&&!this.promoTriggered) this.triggerEvolution();
+        // if(score>=2500&&!this.isMartin&&!this.promoTriggered) this.triggerEvolution();
 
         if(input.keys['KeyE']){
             for(let s of stations){
@@ -3603,3 +3603,4 @@ setTimeout(function(){
             if(el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
         } catch(e) {}
         var best = parseInt(localStorag
+
