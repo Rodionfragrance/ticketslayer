@@ -639,6 +639,7 @@ input[type="text"] {
         </div>
         <button class="btn-shop" onclick="openShop()" style="width:100%;margin-top:10px;">&#9749; UPGRADE SHOP</button>
         <button class="btn-shop" onclick="openTrophies()" style="width:100%;margin-top:6px; border-color:#f1c40f; color:#f1c40f;">🏆 TROPHÄENSCHRANK</button>
+        <button onclick="openWaffenkammer()" style="width:100%;margin-top:6px; background:#111; color:#e74c3c; border:2px solid #e74c3c; padding:12px; font-size:16px; cursor:pointer; font-weight:bold; text-transform:uppercase; font-family:'Courier New',monospace; letter-spacing:2px;">🔫 WAFFENKAMMER</button>
         <button onclick="openDailyOverlay()" id="daily-menu-btn" style="width:100%;margin-top:6px; background:#111; color:#f1c40f; border:2px solid #f1c40f; padding:12px; font-size:16px; cursor:pointer; font-weight:bold; text-transform:uppercase; font-family:'Courier New',monospace; letter-spacing:2px;">☕ TAGES-BONUS</button>
         <button class="btn-info" onclick="showEmail()" style="width:100%;margin-top:6px;">[I] PROZESSANWEISUNG</button>
     </div>
@@ -719,6 +720,17 @@ input[type="text"] {
         
         <button onclick="claimDailyReward()" id="daily-claim-btn" style="width:100%; background:#f1c40f; color:#000; border:none; padding:14px; font-size:16px; font-weight:bold; font-family:'Courier New',monospace; text-transform:uppercase; letter-spacing:3px; cursor:pointer; border-radius:2px;">EINLOGGEN & KASSIEREN</button>
         <button onclick="closeDailyOverlay()" style="width:100%; background:transparent; color:#555; border:1px solid #333; padding:10px; font-size:13px; font-family:'Courier New',monospace; text-transform:uppercase; cursor:pointer; margin-top:8px; border-radius:2px;">SPÄTER</button>
+    </div>
+</div>
+
+<!-- WAFFENKAMMER -->
+<div id="waffenOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.93); z-index:550; overflow-y:auto; font-family:'Courier New',monospace;">
+    <div style="max-width:740px; margin:40px auto; padding:30px; border:3px solid #e74c3c; background:#0a0a0a; border-radius:4px; box-shadow:0 0 60px rgba(231,76,60,0.2);">
+        <h2 style="color:#e74c3c; font-size:26px; letter-spacing:4px; margin:0 0 5px; text-transform:uppercase;">🔫 WAFFENKAMMER</h2>
+        <div style="color:#aaa; font-size:13px; margin-bottom:6px;">Einmal freischalten — garantiert als erste Kiste im Run.</div>
+        <div style="color:#ffd700; font-size:16px; margin-bottom:22px;">☕ Kaffeebons: <span id="waffenKBAmount">0</span></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;" id="waffenGrid"></div>
+        <button onclick="closeWaffenkammer()" style="display:block;width:100%;margin-top:22px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
     </div>
 </div>
 
@@ -1187,6 +1199,105 @@ const TROPHIES_DEF = [
 ];
 
 let unlockedTrophies = JSON.parse(localStorage.getItem('ts_trophies') || '[]');
+let unlockedWeapons  = JSON.parse(localStorage.getItem('ts_weapons') || '[]');
+let favoriteWeapon   = localStorage.getItem('ts_favorite') || null;
+
+// ============================================================
+// WAFFENKAMMER — Meta-Shop mit Kaffeebons
+// ============================================================
+const WEAPON_SHOP = [
+    { id:'minigun',  icon:'🌀', name:'Minigun',       desc:'Sehr hohe Feuerrate, leichte Streuung.',        cost:20000 },
+    { id:'shotgun',  icon:'💥', name:'Schrotflinte',  desc:'5-Pellet Fächer. Brutal auf kurze Distanz.',    cost:25000 },
+    { id:'flamer',   icon:'🔥', name:'Flammenwerfer', desc:'Setzt Gegner in Brand (DoT). Kurze Reichweite.',cost:35000 },
+    { id:'mouse',    icon:'🖱️', name:'Orbit-Maus',    desc:'Kreist um dich, knockt zurück (50 Dmg).',       cost:30000 },
+    { id:'rocket',   icon:'🚀', name:'Raketenwerfer', desc:'Splash-Damage 150px. Rückstoß schiebt zurück.', cost:40000 },
+    { id:'railgun',  icon:'⚡', name:'Railgun',        desc:'Durchdringt Gegner in einer Linie. Stark.',     cost:50000 },
+];
+
+function hasWeaponUnlocked(id) { return unlockedWeapons.includes(id); }
+
+function openWaffenkammer() {
+    renderWaffenkammer();
+    document.getElementById('waffenOverlay').style.display = 'block';
+}
+function closeWaffenkammer() {
+    document.getElementById('waffenOverlay').style.display = 'none';
+    document.getElementById('startKBAmount').innerText = kaffeebons;
+}
+
+function renderWaffenkammer() {
+    document.getElementById('waffenKBAmount').innerText = kaffeebons;
+    let grid = document.getElementById('waffenGrid');
+    grid.innerHTML = '';
+
+    // Info-Banner
+    let favName = favoriteWeapon ? (WEAPON_SHOP.find(x=>x.id===favoriteWeapon)||{}).name||'' : null;
+    let banner = favoriteWeapon
+        ? `<div style="grid-column:1/-1;background:rgba(231,76,60,0.1);border:1px solid #e74c3c;padding:10px;text-align:center;color:#e74c3c;font-size:13px;border-radius:3px;margin-bottom:4px;">
+            ⭐ FAVORIT: <strong>${favName}</strong> — startet permanent in jedem Run</div>`
+        : `<div style="grid-column:1/-1;background:rgba(255,255,255,0.03);border:1px solid #333;padding:10px;text-align:center;color:#666;font-size:12px;border-radius:3px;margin-bottom:4px;">
+            Wähle einen ⭐ FAVORITEN — er startet permanent ohne Timer im Run</div>`;
+    grid.innerHTML = banner;
+
+    WEAPON_SHOP.forEach(w => {
+        let owned = hasWeaponUnlocked(w.id);
+        let isFav = favoriteWeapon === w.id;
+        let cantAfford = kaffeebons < w.cost;
+        let borderColor = isFav ? '#f1c40f' : (owned ? '#2ecc71' : (cantAfford ? '#333' : '#e74c3c'));
+        let opacity = (!owned && cantAfford) ? '0.5' : '1';
+        let bg = isFav ? 'rgba(241,196,15,0.08)' : '#111';
+
+        let statusLine = '';
+        if(!owned) {
+            statusLine = `<div style="margin-top:8px;font-size:13px;font-weight:bold;color:${cantAfford?'#555':'#ffd700'};">
+                ${cantAfford ? '🔒 ' : '☕ '}${w.cost} KB${cantAfford?' (zu wenig)':''}</div>`;
+        } else {
+            statusLine = `
+                <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <span style="color:#2ecc71;font-size:12px;">✅ Freigeschaltet</span>
+                    ${isFav
+                        ? `<span style="color:#f1c40f;font-size:12px;font-weight:bold;">⭐ FAVORIT (aktiv)</span>
+                           <button onclick="setFavorite(null)" style="background:#333;color:#aaa;border:1px solid #555;padding:3px 10px;font-size:11px;cursor:pointer;font-family:'Courier New',monospace;">✖ Entfernen</button>`
+                        : `<button onclick="setFavorite('${w.id}')" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:3px 10px;font-size:12px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;">⭐ Als Favorit</button>`
+                    }
+                </div>`;
+        }
+
+        grid.innerHTML += `
+        <div onclick="${(!owned && !cantAfford) ? `buyWeapon('${w.id}')` : ''}" style="
+            background:${bg}; border:2px solid ${borderColor}; padding:16px; border-radius:3px;
+            cursor:${(!owned && !cantAfford) ? 'pointer' : 'default'}; opacity:${opacity}; transition:0.15s;">
+            <div style="font-size:28px;float:left;margin-right:12px;line-height:1;">${w.icon}</div>
+            <div>
+                <div style="color:${isFav?'#f1c40f':'#fff'};font-size:13px;font-weight:bold;text-transform:uppercase;">${isFav?'⭐ ':''} ${w.name}</div>
+                <div style="color:#888;font-size:11px;margin-top:3px;">${w.desc}</div>
+                ${statusLine}
+            </div>
+        </div>`;
+    });
+}
+
+function setFavorite(id) {
+    favoriteWeapon = id;
+    localStorage.setItem('ts_favorite', id || '');
+    saveProgress();
+    let w = id ? WEAPON_SHOP.find(x=>x.id===id) : null;
+    showToast(id ? '⭐ FAVORIT GESETZT!' : '⭐ FAVORIT ENTFERNT',
+              '#f1c40f', id ? (w.name + ' — permanent im nächsten Run') : 'Kein permanenter Start mehr');
+    renderWaffenkammer();
+}
+
+function buyWeapon(id) {
+    let w = WEAPON_SHOP.find(x => x.id === id);
+    if(!w || hasWeaponUnlocked(id) || kaffeebons < w.cost) return;
+    kaffeebons -= w.cost;
+    unlockedWeapons.push(id);
+    localStorage.setItem('ts_weapons', JSON.stringify(unlockedWeapons));
+    if(favoriteWeapon) localStorage.setItem('ts_favorite', favoriteWeapon);
+    saveProgress();
+    showToast('🔫 FREIGESCHALTET!', '#e74c3c', w.name + ' — spawnt als erste Kiste!');
+    renderWaffenkammer();
+}
 
 function hasTrophy(id) { return unlockedTrophies.includes(id); }
 function unlockTrophy(id) {
@@ -1223,10 +1334,12 @@ function saveProgress() {
     localStorage.setItem('ts_prestige', prestigeLevel);
     localStorage.setItem('ts_name', _name);
     localStorage.setItem('ts_trophies', JSON.stringify(unlockedTrophies));
+    localStorage.setItem('ts_weapons', JSON.stringify(unlockedWeapons));
     if(db && _name !== 'ANONYM') {
         db.collection('playerProfiles').doc(_name).set({
             kb: kaffeebons, upgrades: upgradeProgress,
-            prestige: prestigeLevel, trophies: unlockedTrophies, lastSeen: new Date().toISOString()
+            prestige: prestigeLevel, trophies: unlockedTrophies,
+            weapons: unlockedWeapons, favorite: favoriteWeapon||null, lastSeen: new Date().toISOString()
         }, {merge:true}).catch(function(){});
     }
 }
@@ -1241,7 +1354,11 @@ async function loadCloudProfile() {
             var d = doc.data();
             kaffeebons = d.kb||0; upgradeProgress = d.upgrades||{}; prestigeLevel = d.prestige||0;
             unlockedTrophies = d.trophies || [];
+            unlockedWeapons  = d.weapons   || [];
+            favoriteWeapon   = d.favorite  || null;
             localStorage.setItem('ts_trophies', JSON.stringify(unlockedTrophies));
+            localStorage.setItem('ts_weapons',  JSON.stringify(unlockedWeapons));
+            if(favoriteWeapon) localStorage.setItem('ts_favorite', favoriteWeapon);
             var el2 = document.getElementById('startKBAmount');
             if(el2) el2.innerText = kaffeebons;
             showToast('PROFIL GELADEN','#00e5ff','Willkommen zurück, '+name+'!');
@@ -1794,6 +1911,7 @@ class Player{
         if(this.mouseTimer>0 && this.mouseTimer !== Infinity) this.mouseTimer--;
 
         for(let w in this.activeWeapons){
+            if(this.activeWeapons[w] === Infinity) continue; // Favorit läuft nie ab
             this.activeWeapons[w]--;
             if(this.activeWeapons[w] <= 0) delete this.activeWeapons[w];
         }
@@ -2465,7 +2583,8 @@ function updateHUD(){
         wn.innerText = "STANDARD"; wb.style.width = "0%";
     } else if(wepKeys.length === 1){
         wn.innerText = wepKeys[0].toUpperCase();
-        wb.style.width = ((player.activeWeapons[wepKeys[0]] / 1800) * 100) + "%";
+        let wt = player.activeWeapons[wepKeys[0]];
+        wb.style.width = wt === Infinity ? "100%" : ((wt / 1800) * 100) + "%";
         wb.style.backgroundColor = wepKeys[0] === 'minigun' ? '#ff00ff' : (wepKeys[0] === 'rocket' ? '#ff3333' : '#33ccff');
     } else {
         wn.innerText = "ARSENAL (" + wepKeys.length + "X)";
@@ -2787,7 +2906,19 @@ function loop(){
                         playSound('vodka'); // FIX V20: korrekter Sound-Key
                         showToast(player.isMartin?"PATIENT NULL! 🍺":"WAFFE BLOCKIERT! 🍺",player.isMartin?"#0f0":"#f00",player.isMartin?"Unbesiegbar & giftig!":"KURWA...");
                         break;
-                    case 'crate':   {const w=['minigun','shotgun','rocket','uzi','ak47', 'railgun', 'flamer', 'mouse'];player.equipWeapon(w[Math.floor(Math.random()*w.length)]);spawnParticles(item.x,item.y,'#8e44ad',15);break;}
+                    case 'crate': {
+    let wep;
+    if(item._forcedWeapon) {
+        wep = item._forcedWeapon;
+        floatingTexts.push(new FloatingText(item.x, item.y-30, '🔫 WAFFENKAMMER!', '#e74c3c'));
+    } else {
+        const w=['minigun','shotgun','rocket','uzi','ak47','railgun','flamer','mouse'];
+        wep = w[Math.floor(Math.random()*w.length)];
+    }
+    player.equipWeapon(wep);
+    spawnParticles(item.x,item.y,'#8e44ad',15);
+    break;
+}
                     case 'shield':  
                         if(isWegflexenMode) { showToast("KEINE HILFE!", "#f00", "Götter brauchen keine Schilde!"); break; }
                         player.shieldTimer=600; playSound('powerup');
@@ -2960,6 +3091,12 @@ function startGame(diff=1){
         showToast("MODUS: WEGFLEXEN", "#f00", "1 HP | 5S KILL-TIMER | 10X PUNKTE");
     }
     generateWorld();
+    // Favorit-Waffe permanent equippen (kein Timer)
+    if(favoriteWeapon && hasWeaponUnlocked(favoriteWeapon)) {
+        player.activeWeapons[favoriteWeapon] = Infinity; // kein Timer
+        let w = WEAPON_SHOP.find(x=>x.id===favoriteWeapon);
+        showToast('⭐ FAVORIT AKTIV', '#f1c40f', (w?w.name:'Waffe') + ' — permanent für diesen Run');
+    }
     gameRunning=true;
     loop();
 }
