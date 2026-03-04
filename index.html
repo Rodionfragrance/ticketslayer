@@ -1217,12 +1217,12 @@ let favoriteWeapon   = localStorage.getItem('ts_favorite') || null;
 // WAFFENKAMMER — Meta-Shop mit Kaffeebons
 // ============================================================
 const WEAPON_SHOP = [
-    { id:'minigun',  icon:'🌀', name:'Minigun',       desc:'Sehr hohe Feuerrate, leichte Streuung.',        cost:200 },
-    { id:'shotgun',  icon:'💥', name:'Schrotflinte',  desc:'5-Pellet Fächer. Brutal auf kurze Distanz.',    cost:250 },
-    { id:'flamer',   icon:'🔥', name:'Flammenwerfer', desc:'Setzt Gegner in Brand (DoT). Kurze Reichweite.',cost:350 },
-    { id:'mouse',    icon:'🖱️', name:'Orbit-Maus',    desc:'Kreist um dich, knockt zurück (50 Dmg).',       cost:300 },
-    { id:'rocket',   icon:'🚀', name:'Raketenwerfer', desc:'Splash-Damage 150px. Rückstoß schiebt zurück.', cost:400 },
-    { id:'railgun',  icon:'⚡', name:'Railgun',        desc:'Durchdringt Gegner in einer Linie. Stark.',     cost:500 },
+    { id:'minigun',  icon:'🌀', name:'Minigun',       desc:'Sehr hohe Feuerrate, leichte Streuung.',        cost:20000 },
+    { id:'shotgun',  icon:'💥', name:'Schrotflinte',  desc:'5-Pellet Fächer. Brutal auf kurze Distanz.',    cost:25000 },
+    { id:'flamer',   icon:'🔥', name:'Flammenwerfer', desc:'Setzt Gegner in Brand (DoT). Kurze Reichweite.',cost:35000 },
+    { id:'mouse',    icon:'🖱️', name:'Orbit-Maus',    desc:'Kreist um dich, knockt zurück (50 Dmg).',       cost:30000 },
+    { id:'rocket',   icon:'🚀', name:'Raketenwerfer', desc:'Splash-Damage 150px. Rückstoß schiebt zurück.', cost:40000 },
+    { id:'railgun',  icon:'⚡', name:'Railgun',        desc:'Durchdringt Gegner in einer Linie. Stark.',     cost:50000 },
 ];
 
 function hasWeaponUnlocked(id) { return unlockedWeapons.includes(id); }
@@ -3172,3 +3172,4 @@ setTimeout(function(){
             if(el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
         } catch(e) {}
         var best = parseInt(localStorag
+
