@@ -620,28 +620,39 @@ input[type="text"] {
 
 <!-- SCREENS -->
 <div id="screens">
-    <div id="startScreen" class="panel">
-        <h1>TICKET SLAYER<br><span style="font-size:18px;color:#aaa;">V20</span></h1>
-        <div style="margin:10px 0 16px;background:rgba(0,255,0,0.05);padding:14px;border:1px solid #1a3a1a;border-radius:3px;">
-            <p style="font-size:11px;color:#666;margin:0 0 8px;text-transform:uppercase;letter-spacing:2px;">Identifikation erforderlich:</p>
+    <div id="startScreen" class="panel" style="min-width:600px; max-width:700px;">
+        <!-- TITEL -->
+        <h1 style="margin-bottom:4px;">TICKET SLAYER</h1>
+        <div style="color:#555; font-size:13px; letter-spacing:4px; margin-bottom:16px;">V 2 0</div>
+
+        <!-- LOGIN-ZEILE -->
+        <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:12px; background:rgba(0,255,0,0.04); padding:12px; border:1px solid #1a3a1a; border-radius:3px;">
             <input type="text" id="playerName" placeholder="NAME" maxlength="10"
-                   style="background:#000;color:#0f0;border:2px solid #0f0;padding:10px 14px;text-align:center;font-family:'Courier New',monospace;font-size:16px;width:200px;outline:none;text-transform:uppercase;letter-spacing:3px;margin-bottom:10px;">
-            <br>
-            <button onclick="loadCloudProfile()" style="background:#0f0;color:#000;border:none;padding:9px 20px;cursor:pointer;font-weight:bold;font-size:13px;font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:2px;">LADE PROFIL</button>
+                   style="background:#000;color:#0f0;border:2px solid #0f0;padding:9px 14px;text-align:center;font-family:'Courier New',monospace;font-size:15px;width:160px;outline:none;text-transform:uppercase;letter-spacing:3px;">
+            <button onclick="loadCloudProfile()" style="background:#0f0;color:#000;border:none;padding:9px 18px;cursor:pointer;font-weight:bold;font-size:13px;font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;">LADE PROFIL</button>
         </div>
-        <div style="color:#00e5ff;font-size:14px;margin-bottom:14px;">&#9749; Kaffeebons: <span id="startKBAmount">0</span></div>
-        <div class="btn-group">
+
+        <!-- KB ANZEIGE -->
+        <div style="color:#00e5ff; font-size:14px; margin-bottom:14px;">☕ Kaffeebons: <span id="startKBAmount">0</span></div>
+
+        <!-- SCHWIERIGKEITSGRAD BUTTONS -->
+        <div class="btn-group" style="flex-wrap:wrap;">
             <button class="btn-easy"   onclick="startGame(1)">Praktikant</button>
             <button class="btn-normal" onclick="startGame(3)">Vollzeit</button>
             <button class="btn-hard"   onclick="startGame(6)">Burnout</button>
-            <button id="btn-survival" onclick="startGame(9)" style="background:#111; color:#9b59b6; border:2px solid #9b59b6; padding:12px 18px; font-size:16px; cursor:pointer; font-weight:bold; text-transform:uppercase; font-family:'Courier New',monospace; min-width:130px; transition:0.2s;">Survival</button>
-            <button class="btn-flex" onclick="isWegflexenMode=true; startGame(9)">WEGFLEXEN</button>
+            <button id="btn-survival"  onclick="startGame(9)" style="background:#111;color:#9b59b6;border:2px solid #9b59b6;padding:12px 18px;font-size:16px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;min-width:130px;transition:0.2s;">Survival</button>
+            <button class="btn-flex"   onclick="isWegflexenMode=true; startGame(9)">WEGFLEXEN</button>
         </div>
-        <button class="btn-shop" onclick="openShop()" style="width:100%;margin-top:10px;">&#9749; UPGRADE SHOP</button>
-        <button class="btn-shop" onclick="openTrophies()" style="width:100%;margin-top:6px; border-color:#f1c40f; color:#f1c40f;">🏆 TROPHÄENSCHRANK</button>
-        <button onclick="openWaffenkammer()" style="width:100%;margin-top:6px; background:#111; color:#e74c3c; border:2px solid #e74c3c; padding:12px; font-size:16px; cursor:pointer; font-weight:bold; text-transform:uppercase; font-family:'Courier New',monospace; letter-spacing:2px;">🔫 WAFFENKAMMER</button>
-        <button onclick="openDailyOverlay()" id="daily-menu-btn" style="width:100%;margin-top:6px; background:#111; color:#f1c40f; border:2px solid #f1c40f; padding:12px; font-size:16px; cursor:pointer; font-weight:bold; text-transform:uppercase; font-family:'Courier New',monospace; letter-spacing:2px;">☕ TAGES-BONUS</button>
-        <button class="btn-info" onclick="showEmail()" style="width:100%;margin-top:6px;">[I] PROZESSANWEISUNG</button>
+
+        <!-- MENÜ-GRID 3x2 -->
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:14px;">
+            <button onclick="openShop()" style="background:#111;color:#00e5ff;border:2px solid #00e5ff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#00e5ff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#00e5ff'">☕ UPGRADES</button>
+            <button onclick="openTrophies()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🏆 TROPHÄEN</button>
+            <button onclick="openWaffenkammer()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#e74c3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#e74c3c'">🔫 WAFFEN</button>
+            <button onclick="openDailyOverlay()" id="daily-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;">☕ TAGES-BONUS</button>
+            <button onclick="showEmail()" style="background:#111;color:#3498db;border:2px solid #3498db;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#3498db';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#3498db'">[I] ANLEITUNG</button>
+            <button style="background:#111;color:#333;border:2px solid #222;padding:11px 6px;font-size:13px;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;cursor:default;">– – –</button>
+        </div>
     </div>
     
     <div id="gameOverScreen" class="panel">
@@ -1206,12 +1217,12 @@ let favoriteWeapon   = localStorage.getItem('ts_favorite') || null;
 // WAFFENKAMMER — Meta-Shop mit Kaffeebons
 // ============================================================
 const WEAPON_SHOP = [
-    { id:'minigun',  icon:'🌀', name:'Minigun',       desc:'Sehr hohe Feuerrate, leichte Streuung.',        cost:20000 },
-    { id:'shotgun',  icon:'💥', name:'Schrotflinte',  desc:'5-Pellet Fächer. Brutal auf kurze Distanz.',    cost:25000 },
-    { id:'flamer',   icon:'🔥', name:'Flammenwerfer', desc:'Setzt Gegner in Brand (DoT). Kurze Reichweite.',cost:35000 },
-    { id:'mouse',    icon:'🖱️', name:'Orbit-Maus',    desc:'Kreist um dich, knockt zurück (50 Dmg).',       cost:30000 },
-    { id:'rocket',   icon:'🚀', name:'Raketenwerfer', desc:'Splash-Damage 150px. Rückstoß schiebt zurück.', cost:40000 },
-    { id:'railgun',  icon:'⚡', name:'Railgun',        desc:'Durchdringt Gegner in einer Linie. Stark.',     cost:50000 },
+    { id:'minigun',  icon:'🌀', name:'Minigun',       desc:'Sehr hohe Feuerrate, leichte Streuung.',        cost:200 },
+    { id:'shotgun',  icon:'💥', name:'Schrotflinte',  desc:'5-Pellet Fächer. Brutal auf kurze Distanz.',    cost:250 },
+    { id:'flamer',   icon:'🔥', name:'Flammenwerfer', desc:'Setzt Gegner in Brand (DoT). Kurze Reichweite.',cost:350 },
+    { id:'mouse',    icon:'🖱️', name:'Orbit-Maus',    desc:'Kreist um dich, knockt zurück (50 Dmg).',       cost:300 },
+    { id:'rocket',   icon:'🚀', name:'Raketenwerfer', desc:'Splash-Damage 150px. Rückstoß schiebt zurück.', cost:400 },
+    { id:'railgun',  icon:'⚡', name:'Railgun',        desc:'Durchdringt Gegner in einer Linie. Stark.',     cost:500 },
 ];
 
 function hasWeaponUnlocked(id) { return unlockedWeapons.includes(id); }
