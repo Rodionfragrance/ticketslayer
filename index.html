@@ -1767,10 +1767,14 @@ function saveProgress() {
     localStorage.setItem('ts_trophies', JSON.stringify(unlockedTrophies));
     localStorage.setItem('ts_weapons', JSON.stringify(unlockedWeapons));
     if(db && _name !== 'ANONYM') {
+        let _daily = {}; try { _daily = JSON.parse(localStorage.getItem('ts_daily')||'{}'); } catch(e){}
+        let _best  = parseInt(localStorage.getItem('ts_best_score')||'0');
         db.collection('playerProfiles').doc(_name).set({
             kb: kaffeebons, upgrades: upgradeProgress,
             prestige: prestigeLevel, trophies: unlockedTrophies,
-            weapons: unlockedWeapons, favorite: favoriteWeapon||null, skills: unlockedSkills, lastSeen: new Date().toISOString()
+            weapons: unlockedWeapons, favorite: favoriteWeapon||null, skills: unlockedSkills,
+            daily: _daily, bestScore: _best,
+            lastSeen: new Date().toISOString()
         }, {merge:true}).catch(function(){});
     }
 }
@@ -1788,7 +1792,10 @@ async function loadCloudProfile() {
             unlockedWeapons  = d.weapons   || [];
             favoriteWeapon   = d.favorite  || null;
             unlockedSkills   = d.skills    || [];
-            localStorage.setItem('ts_skills', JSON.stringify(unlockedSkills));
+            // Daily + BestScore aus Firebase wiederherstellen
+            if(d.daily)     { localStorage.setItem('ts_daily',      JSON.stringify(d.daily)); }
+            if(d.bestScore) { localStorage.setItem('ts_best_score', d.bestScore); }
+            localStorage.setItem('ts_skills',   JSON.stringify(unlockedSkills));
             localStorage.setItem('ts_trophies', JSON.stringify(unlockedTrophies));
             localStorage.setItem('ts_weapons',  JSON.stringify(unlockedWeapons));
             if(favoriteWeapon) localStorage.setItem('ts_favorite', favoriteWeapon);
@@ -3596,4 +3603,3 @@ setTimeout(function(){
             if(el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
         } catch(e) {}
         var best = parseInt(localStorag
-
