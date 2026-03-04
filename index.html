@@ -1155,6 +1155,7 @@ let idocEvent=null, meetingZone=null, kloskaEvent=null;
 
 let player=null;
 let bullets=[], enemies=[], particles=[], obstacles=[], stations=[];
+let vehicles=[];
 let servers=[], items=[], splatters=[], floatingTexts=[], turrets=[], shells=[];
 let serverFarms=[];
 let systemCollapse = false;
@@ -2062,12 +2063,41 @@ function spawnLogic(){
             playSound('alarm');
             showToast("🚨 "+idocEvent.label,"#f00","Rotem Pfeil folgen → [E] drücken! (30 Sek)",true);
         }
-        if(!kloskaEvent && serverFarms.length > 0 && frame % 2500 === 1800) {
-            let farm = serverFarms[Math.floor(Math.random() * serverFarms.length)];
-            kloskaEvent = { serverRef: farm.serverRef, x: farm.serverRef.x - 40, y: farm.serverRef.y + 10, timer: 1800 };
-            playSound('alarm');
-            showToast("⚠️ ALARM!", "#ff00ff", "Kloska ist im Serverraum unterwegs!", true);
-        }
+    }
+    // Kloska hat eigenen unabhängigen Timer — FIX: war vorher im IDOC-Block gefangen
+    if(!kloskaEvent && serverFarms.length > 0 && frame % 2800 === 0) {
+        let farm = serverFarms[Math.floor(Math.random() * serverFarms.length)];
+        kloskaEvent = { serverRef: farm.serverRef, x: farm.serverRef.x - 40, y: farm.serverRef.y + 10, timer: 1800 };
+        playSound('alarm');
+        showToast("⚠️ ALARM!", "#ff00ff", "Kloska ist im Serverraum unterwegs!", true);
+    }
+    // Gabelstapler im Warehouse (y 1200-2600) — von links oder rechts
+    if(frame % 900 === 300 && Math.random() < 0.6) {
+        let goRight = Math.random() < 0.5;
+        vehicles.push({
+            type: 'forklift',
+            x: goRight ? -120 : WORLD_WIDTH + 120,
+            y: 1300 + Math.random() * 1100,
+            dx: goRight ? 8 : -8,
+            w: 80, h: 50,
+            color: '#e67e22',
+            label: '🚜 GABELSTAPLER',
+            hitPlayed: false
+        });
+    }
+    // LKW in Logistics (y 2600-4000) — von links oder rechts
+    if(frame % 1200 === 600 && Math.random() < 0.6) {
+        let goRight = Math.random() < 0.5;
+        vehicles.push({
+            type: 'truck',
+            x: goRight ? -200 : WORLD_WIDTH + 200,
+            y: 2700 + Math.random() * 1100,
+            dx: goRight ? 11 : -11,
+            w: 160, h: 70,
+            color: '#7f8c8d',
+            label: '🚚 LKW',
+            hitPlayed: false
+        });
     }
 
     if(frame%3600===0){ currentShift=(currentShift+1)%3; shiftTimer=0; playSound('delivery'); }
@@ -2343,6 +2373,41 @@ function loop(){
 
         for(let t of turrets) t.update();
 
+        // === VEHICLES (Gabelstapler + LKW) ===
+        for(let i=vehicles.length-1; i>=0; i--) {
+            let v = vehicles[i];
+            v.x += v.dx;
+            // Aus der Welt raus = entfernen
+            if(v.dx > 0 && v.x > WORLD_WIDTH + 300) { vehicles.splice(i,1); continue; }
+            if(v.dx < 0 && v.x < -300)               { vehicles.splice(i,1); continue; }
+
+            // Kollision mit Spieler
+            if(player && player.rollTimer <= 0) {
+                let pInX = player.x > v.x - player.radius && player.x < v.x + v.w + player.radius;
+                let pInY = player.y > v.y - player.radius && player.y < v.y + v.h + player.radius;
+                if(pInX && pInY) {
+                    if(!v.hitPlayed) {
+                        v.hitPlayed = true;
+                        if(isWegflexenMode) { player.hp = 0; }
+                        else {
+                            let dmg = v.type === 'truck' ? 30 : 20;
+                            player.hp -= dmg;
+                            player.orangeHp += dmg; player.orangeTimer = 120;
+                            // 1-Sekunde Speed-Buff als Adrenalin
+                            player.speedBoostTimer = 60;
+                        }
+                        screenShake = v.type === 'truck' ? 25 : 15;
+                        spawnParticles(player.x, player.y, '#e67e22', 20);
+                        playSound('hammer');
+                        showToast(v.type === 'truck' ? "🚚 ÜBERFAHREN!" : "🚜 ANGEFAHREN!", "#e67e22",
+                                  "Schaden! +1s Speed-Boost");
+                    }
+                } else { v.hitPlayed = false; }
+            }
+
+            // Gegner werden von Fahrzeugen ignoriert — reine Spieler-Gefahr
+        }
+
         camera.x=Math.max(0,Math.min(player.x-canvas.width/2, WORLD_WIDTH-canvas.width));
         camera.y=Math.max(0,Math.min(player.y-canvas.height/2,WORLD_HEIGHT-canvas.height));
         input.worldX=input.x+camera.x; input.worldY=input.y+camera.y;
@@ -2548,6 +2613,63 @@ function loop(){
         ctx.translate(-camera.x,-camera.y);
         drawWorld();
         items.forEach(it=>it.draw());
+
+        // Vehicles zeichnen
+        vehicles.forEach(v => {
+            ctx.save();
+            // Schatten
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.fillRect(v.x + 8, v.y + 8, v.w, v.h);
+            if(v.type === 'forklift') {
+                // Körper
+                ctx.fillStyle = '#e67e22';
+                ctx.fillRect(v.x, v.y, v.w, v.h);
+                // Kabine
+                ctx.fillStyle = '#d35400';
+                ctx.fillRect(v.x + (v.dx > 0 ? 10 : v.w-40), v.y - 20, 30, 25);
+                // Gabel (Richtung Fahrtrichtung)
+                ctx.fillStyle = '#888';
+                let forkX = v.dx > 0 ? v.x + v.w : v.x - 15;
+                ctx.fillRect(forkX, v.y + 10, 15, 6);
+                ctx.fillRect(forkX, v.y + 28, 15, 6);
+                // Räder
+                ctx.fillStyle = '#333';
+                ctx.beginPath(); ctx.arc(v.x + 15, v.y + v.h, 10, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(v.x + v.w - 15, v.y + v.h, 10, 0, Math.PI*2); ctx.fill();
+                // Label
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'center';
+                ctx.shadowColor = '#000'; ctx.shadowBlur = 4;
+                ctx.fillText('⚠ GABELSTAPLER', v.x + v.w/2, v.y - 28);
+            } else {
+                // LKW Trailer
+                ctx.fillStyle = '#7f8c8d';
+                ctx.fillRect(v.x + (v.dx > 0 ? 50 : 0), v.y, 110, v.h);
+                // Kabine
+                ctx.fillStyle = '#c0392b';
+                let cabX = v.dx > 0 ? v.x : v.x + 110;
+                ctx.fillRect(cabX, v.y - 5, 50, v.h + 5);
+                // Fenster
+                ctx.fillStyle = 'rgba(100,200,255,0.6)';
+                ctx.fillRect(cabX + (v.dx > 0 ? 8 : 8), v.y + 5, 20, 20);
+                // Räder
+                ctx.fillStyle = '#111';
+                [0.2, 0.5, 0.8].forEach(t => {
+                    ctx.beginPath(); ctx.arc(v.x + v.w*t, v.y + v.h + 2, 12, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = '#555'; ctx.beginPath(); ctx.arc(v.x + v.w*t, v.y + v.h + 2, 6, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = '#111';
+                });
+                // Warnstreifen
+                for(let s=0; s<110; s+=20) {
+                    ctx.fillStyle = s%40===0 ? '#f39c12' : '#333';
+                    ctx.fillRect(v.x + (v.dx>0?50:0) + s, v.y + v.h - 8, 20, 8);
+                }
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'center';
+                ctx.shadowColor = '#000'; ctx.shadowBlur = 4;
+                ctx.fillText('⚠ LKW', v.x + v.w/2, v.y - 15);
+            }
+            ctx.shadowBlur = 0;
+            ctx.restore();
+        });
         bullets.forEach(b=>b.draw());
         particles.forEach(p=>p.draw()); shells.forEach(s=>s.draw());
         enemies.forEach(e=>e.draw());
@@ -2598,7 +2720,7 @@ function startGame(diff=1){
     currentShift=0;shiftTimer=0;
     gamePaused=false;idocEvent=null;meetingZone=null;kloskaEvent=null;
     systemCollapse = false; collapseTimer = 0;
-    enemies=[];bullets=[];particles=[];items=[];splatters=[];floatingTexts=[];turrets=[];shells=[];serverFarms=[];
+    enemies=[];bullets=[];particles=[];items=[];splatters=[];floatingTexts=[];turrets=[];shells=[];serverFarms=[];vehicles=[];
     
     // Reset Combo
     combo = 0; comboTimer = 0; comboMult = 1; bestComboThisRun = 1;
