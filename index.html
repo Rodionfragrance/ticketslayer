@@ -651,7 +651,7 @@ input[type="text"] {
             <button onclick="openWaffenkammer()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#e74c3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#e74c3c'">🔫 WAFFEN</button>
             <button onclick="openDailyOverlay()" id="daily-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;">☕ TAGES-BONUS</button>
             <button onclick="showEmail()" style="background:#111;color:#3498db;border:2px solid #3498db;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#3498db';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#3498db'">[I] ANLEITUNG</button>
-            <button style="background:#111;color:#333;border:2px solid #222;padding:11px 6px;font-size:13px;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;cursor:default;">– – –</button>
+            <button onclick="openSkillTree()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🌳 SKILLTREE</button>
         </div>
     </div>
     
@@ -731,6 +731,46 @@ input[type="text"] {
         
         <button onclick="claimDailyReward()" id="daily-claim-btn" style="width:100%; background:#f1c40f; color:#000; border:none; padding:14px; font-size:16px; font-weight:bold; font-family:'Courier New',monospace; text-transform:uppercase; letter-spacing:3px; cursor:pointer; border-radius:2px;">EINLOGGEN & KASSIEREN</button>
         <button onclick="closeDailyOverlay()" style="width:100%; background:transparent; color:#555; border:1px solid #333; padding:10px; font-size:13px; font-family:'Courier New',monospace; text-transform:uppercase; cursor:pointer; margin-top:8px; border-radius:2px;">SPÄTER</button>
+    </div>
+</div>
+
+<!-- SKILLTREE OVERLAY -->
+<div id="skilltreeOverlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.96);z-index:560;font-family:'Courier New',monospace;flex-direction:column;align-items:center;">
+    <div style="width:100%;padding:16px 30px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #222;flex-shrink:0;">
+        <div>
+            <h2 style="color:#f1c40f;font-size:22px;letter-spacing:4px;margin:0;text-transform:uppercase;">🌳 LEITSTAND SKILLTREE</h2>
+            <div style="color:#555;font-size:11px;margin-top:3px;">Klicke auf Knoten um Skills freizuschalten • Scrollen zum Zoomen • Ziehen zum Verschieben</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="color:#ffd700;font-size:16px;">☕ <span id="stKB">0</span> KB</div>
+            <div style="color:#aaa;font-size:11px;margin-top:3px;">Punkte verteilt: <span id="stUsed">0</span> / <span id="stMax">20</span></div>
+        </div>
+    </div>
+    <div style="display:flex;gap:8px;padding:8px 30px;flex-shrink:0;flex-wrap:wrap;">
+        <span style="font-size:11px;color:#e74c3c;border:1px solid #e74c3c;padding:2px 8px;border-radius:10px;">🔴 RAGE</span>
+        <span style="font-size:11px;color:#3498db;border:1px solid #3498db;padding:2px 8px;border-radius:10px;">🔵 PANZER</span>
+        <span style="font-size:11px;color:#f1c40f;border:1px solid #f1c40f;padding:2px 8px;border-radius:10px;">🟡 KAFFEEKASSE</span>
+        <span style="font-size:11px;color:#9b59b6;border:1px solid #9b59b6;padding:2px 8px;border-radius:10px;">🟣 CHAOS</span>
+        <span style="font-size:11px;color:#1abc9c;border:1px solid #1abc9c;padding:2px 8px;border-radius:10px;">⚪ TECHNIK</span>
+        <span style="font-size:11px;color:#2ecc71;border:1px solid #2ecc71;padding:2px 8px;border-radius:10px;">🟢 BEWEGUNG</span>
+        <span style="font-size:11px;color:#aaa;border:1px solid #333;padding:2px 8px;border-radius:10px;">○ Minor</span>
+        <span style="font-size:11px;color:#aaa;border:1px solid #555;padding:2px 8px;border-radius:10px;">◉ Notable</span>
+        <span style="font-size:11px;color:#f1c40f;border:1px solid #f1c40f;padding:2px 8px;border-radius:10px;">★ Keystone</span>
+    </div>
+    <div style="position:relative;flex:1;width:100%;overflow:hidden;">
+        <canvas id="skilltreeCanvas" style="cursor:grab;display:block;"></canvas>
+        <!-- Tooltip -->
+        <div id="stTooltip" style="display:none;position:absolute;background:rgba(10,10,20,0.97);border:2px solid #555;padding:12px 16px;border-radius:4px;pointer-events:none;z-index:10;max-width:260px;">
+            <div id="stTipName" style="font-size:14px;font-weight:bold;text-transform:uppercase;margin-bottom:4px;"></div>
+            <div id="stTipType" style="font-size:10px;letter-spacing:2px;margin-bottom:8px;opacity:0.7;"></div>
+            <div id="stTipDesc" style="font-size:12px;color:#ccc;line-height:1.5;margin-bottom:8px;"></div>
+            <div id="stTipCost" style="font-size:13px;font-weight:bold;color:#ffd700;"></div>
+            <div id="stTipReq" style="font-size:10px;color:#e74c3c;margin-top:4px;display:none;"></div>
+        </div>
+    </div>
+    <div style="padding:12px 30px;display:flex;gap:10px;flex-shrink:0;border-top:1px solid #1a1a1a;">
+        <button onclick="resetSkillTree()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:10px 20px;font-size:13px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;">↺ ZURÜCKSETZEN (50% Rückerstattung)</button>
+        <button onclick="closeSkillTree()" style="background:#c0392b;color:#fff;border:none;padding:10px 30px;font-size:13px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
     </div>
 </div>
 
@@ -1214,6 +1254,385 @@ let unlockedWeapons  = JSON.parse(localStorage.getItem('ts_weapons') || '[]');
 let favoriteWeapon   = localStorage.getItem('ts_favorite') || null;
 
 // ============================================================
+// SKILLTREE SYSTEM — POE-STYLE
+// ============================================================
+let unlockedSkills = JSON.parse(localStorage.getItem('ts_skills') || '[]');
+const ST_MAX_POINTS = 20;
+
+const ZONE_COLORS = {
+    center: '#ffffff', rage: '#e74c3c', panzer: '#3498db',
+    kasse: '#f1c40f', chaos: '#9b59b6', technik: '#1abc9c', bewegung: '#2ecc71'
+};
+
+// CX/CY = canvas center (set on open)
+// Koordinaten relativ zu Mittelpunkt (0,0)
+const SKILL_NODES = [
+    // CENTER
+    { id:'start', x:0, y:0, type:'start', zone:'center', name:'LEITSTAND', desc:'Dein Arbeitsplatz. Der Anfang aller Übel. Immer freigeschaltet.', cost:0, requires:[], effect:null },
+
+    // ═══ RAGE (oben-rechts) ═══
+    { id:'r1', x:110, y:-90, type:'minor', zone:'rage', name:'Mehrarbeit', desc:'+8% Schaden auf alle Waffen.', cost:100, requires:['start'], effect:'dmg_pct:0.08' },
+    { id:'r2', x:180, y:-140, type:'minor', zone:'rage', name:'Frustration', desc:'+12% Feuerrate.', cost:100, requires:['r1'], effect:'firerate_pct:0.12' },
+    { id:'r3', x:260, y:-110, type:'notable', zone:'rage', name:'Adrenalinschub', desc:'+20% Schaden und +15% Feuerrate gleichzeitig.', cost:250, requires:['r2'], effect:'adrenalin' },
+    { id:'r4', x:320, y:-180, type:'minor', zone:'rage', name:'Überstunden', desc:'+6% Schaden pro aktiver Waffe im Arsenal.', cost:150, requires:['r3'], effect:'dmg_per_weapon:0.06' },
+    { id:'r5', x:400, y:-150, type:'notable', zone:'rage', name:'Schnellschuss', desc:'Feuerrate +25%. Streuung +10%.', cost:300, requires:['r4'], effect:'schnellschuss' },
+    { id:'r6', x:370, y:-250, type:'minor', zone:'rage', name:'Explosive Wut', desc:'15% Chance pro Treffer: kleiner Splash-Effekt (+30px).', cost:200, requires:['r3'], effect:'explosive_chance:0.15' },
+    { id:'r_ks', x:470, y:-220, type:'keystone', zone:'rage', name:'ÜBERSTUNDEN-RAGE', desc:'+100% Schaden unter 30% HP. Kein Schutzschild-Item wirkt.', cost:900, requires:['r5','r6'], effect:'ks_rage' },
+
+    // ═══ PANZER (rechts) ═══
+    { id:'p1', x:130, y:20, type:'minor', zone:'panzer', name:'Schutzweste', desc:'+20 Max-HP.', cost:100, requires:['start'], effect:'maxhp:20' },
+    { id:'p2', x:210, y:60, type:'minor', zone:'panzer', name:'Dicke Haut', desc:'Kontaktschaden von Gegnern -15%.', cost:120, requires:['p1'], effect:'dmg_reduction:0.15' },
+    { id:'p3', x:300, y:30, type:'notable', zone:'panzer', name:'Arbeitnehmerrechte', desc:'+30 Max-HP. Alle Schadenquellen -10%.', cost:280, requires:['p2'], effect:'arbeitsrecht' },
+    { id:'p4', x:370, y:90, type:'minor', zone:'panzer', name:'Immunsystem', desc:'SAP-Debuff dauert nur 2s statt 5s.', cost:180, requires:['p3'], effect:'sap_resist' },
+    { id:'p5', x:430, y:30, type:'notable', zone:'panzer', name:'Stahlnerven', desc:'Bayer Stampfer-Stun wird auf 1s reduziert.', cost:350, requires:['p4'], effect:'stun_resist' },
+    { id:'p_ks', x:500, y:90, type:'keystone', zone:'panzer', name:'UNANTASTBAR', desc:'Hechtrolle gibt 3s Unverwundbarkeit. Cooldown +0.5s.', cost:900, requires:['p3','p5'], effect:'ks_unantastbar' },
+
+    // ═══ KAFFEEKASSE (unten-rechts) ═══
+    { id:'k1', x:110, y:110, type:'minor', zone:'kasse', name:'Sparsamkeit', desc:'+20% Kaffeebons nach jedem Run.', cost:100, requires:['start'], effect:'kb_rate:0.20' },
+    { id:'k2', x:160, y:200, type:'minor', zone:'kasse', name:'Marktkenntnis', desc:'Starte jeden Run mit 1 Suppe.', cost:120, requires:['k1'], effect:'start_suppe:1' },
+    { id:'k3', x:260, y:180, type:'notable', zone:'kasse', name:'Kaffeevollautomatik', desc:'+35% Kaffeebons. Suppe-Dropchance +25%.', cost:280, requires:['k2'], effect:'kaffeevoll' },
+    { id:'k4', x:320, y:260, type:'minor', zone:'kasse', name:'Sozialkasse', desc:'Starte mit 3 Suppen.', cost:200, requires:['k3'], effect:'start_suppe:2' },
+    { id:'k5', x:420, y:220, type:'notable', zone:'kasse', name:'Gewerkschaft', desc:'Azubi kostet nur 2000 Pkt. Azubis haben +300px Reichweite.', cost:350, requires:['k4'], effect:'gewerkschaft' },
+    { id:'k_ks', x:460, y:310, type:'keystone', zone:'kasse', name:'BETRIEBSRAT', desc:'Meetings geben 2× Punkte. Aber Gegner-Spawn +20% schneller.', cost:900, requires:['k3','k5'], effect:'ks_betriebsrat' },
+
+    // ═══ CHAOS (unten-links) ═══
+    { id:'c1', x:-110, y:110, type:'minor', zone:'chaos', name:'Glücksprinzip', desc:'Kisten-Dropchance von Gegnern +25%.', cost:100, requires:['start'], effect:'crate_chance:0.25' },
+    { id:'c2', x:-160, y:200, type:'minor', zone:'chaos', name:'Würfelwurf', desc:'7% Chance pro Kill: sofort +5 HP regeneriert.', cost:120, requires:['c1'], effect:'kill_heal:0.07' },
+    { id:'c3', x:-260, y:180, type:'notable', zone:'chaos', name:'Russisches Roulette', desc:'12% Chance: Kill gibt 3× Score statt 1×.', cost:280, requires:['c2'], effect:'triple_score:0.12' },
+    { id:'c4', x:-340, y:250, type:'minor', zone:'chaos', name:'Anarchie', desc:'Raketenwerfer Splash +40px. Rückstoß -30%.', cost:200, requires:['c3'], effect:'rocket_mod' },
+    { id:'c5', x:-430, y:200, type:'notable', zone:'chaos', name:'Doppelt oder Nichts', desc:'25% Chance: Score-Kill gibt 2×. 5% Chance: gibt 0.', cost:350, requires:['c4'], effect:'double_nothing:0.25' },
+    { id:'c_ks', x:-480, y:290, type:'keystone', zone:'chaos', name:'SYSTEMKOLLAPS PRO', desc:'Kollaps startet 30s früher. Score ×1.5 während Kollaps.', cost:900, requires:['c3','c5'], effect:'ks_collapse' },
+
+    // ═══ TECHNIK (links) ═══
+    { id:'t1', x:-130, y:20, type:'minor', zone:'technik', name:'Netzwerk-Ping', desc:'Farm-Einkommen +4 Pkt/Sek.', cost:100, requires:['start'], effect:'farm_income:4' },
+    { id:'t2', x:-220, y:60, type:'minor', zone:'technik', name:'IT-Support', desc:'IDOC-Zeitfenster +8s.', cost:120, requires:['t1'], effect:'idoc_time:480' },
+    { id:'t3', x:-310, y:30, type:'notable', zone:'technik', name:'Netzwerk-Admin', desc:'Max. Server-Farmen +2. Hack-Zeitfenster +3s.', cost:280, requires:['t2'], effect:'farm_slots:2' },
+    { id:'t4', x:-380, y:90, type:'minor', zone:'technik', name:'Azubi-Coaching', desc:'Azubis haben +250px Reichweite und +20% Feuerrate.', cost:180, requires:['t3'], effect:'azubi_boost' },
+    { id:'t5', x:-450, y:30, type:'notable', zone:'technik', name:'Automatisierung', desc:'Azubis feuern doppelt so schnell. Cooldown halbiert.', cost:350, requires:['t4'], effect:'azubi_auto' },
+    { id:'t_ks', x:-500, y:90, type:'keystone', zone:'technik', name:'KÜNSTLICHE INTELLIGENZ', desc:'Azubis priorisieren stärkste Gegner. Max. Turrets +4.', cost:900, requires:['t3','t5'], effect:'ks_ki' },
+
+    // ═══ BEWEGUNG (oben-links) ═══
+    { id:'b1', x:-110, y:-90, type:'minor', zone:'bewegung', name:'Laufschuhe Pro', desc:'+0.4 Grundgeschwindigkeit.', cost:100, requires:['start'], effect:'speed:0.4' },
+    { id:'b2', x:-180, y:-150, type:'minor', zone:'bewegung', name:'Flinke Füße', desc:'Hechtrolle-Cooldown -0.4s.', cost:100, requires:['b1'], effect:'roll_cd:-24' },
+    { id:'b3', x:-270, y:-120, type:'notable', zone:'bewegung', name:'Parkour', desc:'+0.6 Speed. Hechtrolle-Distanz +40%.', cost:280, requires:['b2'], effect:'parkour' },
+    { id:'b4', x:-350, y:-190, type:'minor', zone:'bewegung', name:'Windschatten', desc:'1s nach Hechtrolle: +60% Speed-Burst.', cost:180, requires:['b3'], effect:'windschatten' },
+    { id:'b5', x:-430, y:-150, type:'notable', zone:'bewegung', name:'Geisterläufer', desc:'Während Hechtrolle: passiert Gegner ohne Schaden.', cost:350, requires:['b4'], effect:'ghost_roll' },
+    { id:'b_ks', x:-480, y:-230, type:'keystone', zone:'bewegung', name:'BÜROKRAT', desc:'+2.0 Speed. Aber Schaden dauerhaft -25%.', cost:900, requires:['b3','b5'], effect:'ks_buerokrat' },
+
+    // ═══ CROSS-ZONE BRÜCKEN ═══
+    { id:'x1', x:230, y:-60, type:'minor', zone:'rage', name:'Waffenöl', desc:'+6% Feuerrate und +6% Schaden.', cost:180, requires:['r1','p1'], effect:'waffentoel' },
+    { id:'x2', x:230, y:120, type:'minor', zone:'kasse', name:'Teamwork', desc:'Azubi-Kills zählen für Combo-System.', cost:200, requires:['p1','k1'], effect:'azubi_combo' },
+    { id:'x3', x:-230, y:120, type:'minor', zone:'chaos', name:'Flexible Arbeitszeit', desc:'Wegflexen-Timer +1.5s pro Kill.', cost:200, requires:['c1','b1'], effect:'flex_timer:1.5' },
+    { id:'x4', x:-230, y:-60, type:'notable', zone:'bewegung', name:'Synergie', desc:'Pro aktiver Farm: +0.2 Speed und +3% Schaden.', cost:300, requires:['t1','b1'], effect:'synergy' },
+    { id:'x5', x:0, y:-200, type:'minor', zone:'rage', name:'Präzision', desc:'Kritische Treffer-Chance +8% (×1.5 Schaden).', cost:180, requires:['r2','b2'], effect:'crit:0.08' },
+    { id:'x6', x:0, y:250, type:'minor', zone:'kasse', name:'Lunchpaket', desc:'Start mit +20 HP UND 1 Suppe extra.', cost:220, requires:['k1','c1'], effect:'lunchpaket' },
+];
+
+// Skilltree State
+let stCanvas = null, stCtx = null;
+let stOffX = 0, stOffY = 0, stScale = 1.0;
+let stDragging = false, stDragStartX = 0, stDragStartY = 0, stDragOffX = 0, stDragOffY = 0;
+let stHoverNode = null;
+
+function hasSkill(id) { return id === 'start' || unlockedSkills.includes(id); }
+function countSkills() { return unlockedSkills.filter(id => id !== 'start').length; }
+
+function canUnlockSkill(node) {
+    if(hasSkill(node.id)) return false;
+    if(countSkills() >= ST_MAX_POINTS) return false;
+    if(kaffeebons < node.cost) return false;
+    return node.requires.every(r => hasSkill(r));
+}
+
+function openSkillTree() {
+    document.getElementById('skilltreeOverlay').style.display = 'flex';
+    stCanvas = document.getElementById('skilltreeCanvas');
+    stCtx = stCanvas.getContext('2d');
+    // Canvas füllt den verfügbaren Bereich
+    let container = stCanvas.parentElement;
+    stCanvas.width  = container.clientWidth  || window.innerWidth;
+    stCanvas.height = container.clientHeight || (window.innerHeight - 180);
+    stOffX = stCanvas.width  / 2;
+    stOffY = stCanvas.height / 2;
+    stScale = 1.0;
+    initSkillTreeEvents();
+    renderSkillTree();
+    updateSkillTreeUI();
+}
+
+function closeSkillTree() {
+    document.getElementById('skilltreeOverlay').style.display = 'none';
+    document.getElementById('startKBAmount').innerText = kaffeebons;
+}
+
+function updateSkillTreeUI() {
+    let kbEl = document.getElementById('stKB'); if(kbEl) kbEl.innerText = kaffeebons;
+    let usEl = document.getElementById('stUsed'); if(usEl) usEl.innerText = countSkills();
+    let mxEl = document.getElementById('stMax'); if(mxEl) mxEl.innerText = ST_MAX_POINTS;
+}
+
+function initSkillTreeEvents() {
+    if(stCanvas._stInit) return;
+    stCanvas._stInit = true;
+
+    stCanvas.addEventListener('wheel', e => {
+        e.preventDefault();
+        let delta = e.deltaY > 0 ? 0.9 : 1.1;
+        let rect = stCanvas.getBoundingClientRect();
+        let mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        stOffX = mx - (mx - stOffX) * delta;
+        stOffY = my - (my - stOffY) * delta;
+        stScale = Math.max(0.4, Math.min(2.5, stScale * delta));
+        renderSkillTree();
+    }, { passive: false });
+
+    stCanvas.addEventListener('mousedown', e => {
+        stDragging = true;
+        stDragStartX = e.clientX; stDragStartY = e.clientY;
+        stDragOffX = stOffX; stDragOffY = stOffY;
+        stCanvas.style.cursor = 'grabbing';
+    });
+    window.addEventListener('mousemove', e => {
+        if(!stCanvas || document.getElementById('skilltreeOverlay').style.display === 'none') return;
+        let rect = stCanvas.getBoundingClientRect();
+        let mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        if(stDragging) {
+            stOffX = stDragOffX + (e.clientX - stDragStartX);
+            stOffY = stDragOffY + (e.clientY - stDragStartY);
+            renderSkillTree();
+        }
+        // Hover
+        let prev = stHoverNode;
+        stHoverNode = null;
+        for(let n of SKILL_NODES) {
+            let sx = stOffX + n.x * stScale, sy = stOffY + n.y * stScale;
+            let r = nodeRadius(n) * stScale;
+            if(Math.hypot(mx-sx, my-sy) < r + 4) { stHoverNode = n; break; }
+        }
+        if(stHoverNode !== prev) renderSkillTree();
+        if(stHoverNode) showSkillTooltip(e, stHoverNode);
+        else hideSkillTooltip();
+    });
+    window.addEventListener('mouseup', e => {
+        if(stDragging) {
+            stCanvas.style.cursor = 'grab';
+            // Click (wenig Bewegung)
+            if(Math.hypot(e.clientX-stDragStartX, e.clientY-stDragStartY) < 5 && stHoverNode) {
+                tryUnlockSkill(stHoverNode);
+            }
+        }
+        stDragging = false;
+    });
+}
+
+function nodeRadius(n) {
+    if(n.type === 'keystone') return 28;
+    if(n.type === 'notable')  return 20;
+    if(n.type === 'start')    return 24;
+    return 14;
+}
+
+function renderSkillTree() {
+    if(!stCtx) return;
+    let W = stCanvas.width, H = stCanvas.height;
+    stCtx.clearRect(0, 0, W, H);
+
+    // Hintergrund-Grid
+    stCtx.strokeStyle = 'rgba(255,255,255,0.03)';
+    stCtx.lineWidth = 1;
+    let gridSize = 60 * stScale;
+    let gox = stOffX % gridSize, goy = stOffY % gridSize;
+    for(let x = gox; x < W; x += gridSize) { stCtx.beginPath(); stCtx.moveTo(x,0); stCtx.lineTo(x,H); stCtx.stroke(); }
+    for(let y = goy; y < H; y += gridSize) { stCtx.beginPath(); stCtx.moveTo(0,y); stCtx.lineTo(W,y); stCtx.stroke(); }
+
+    // Verbindungslinien
+    for(let n of SKILL_NODES) {
+        let nx = stOffX + n.x * stScale, ny = stOffY + n.y * stScale;
+        for(let reqId of n.requires) {
+            let req = SKILL_NODES.find(x => x.id === reqId);
+            if(!req) continue;
+            let rx = stOffX + req.x * stScale, ry = stOffY + req.y * stScale;
+            let bothUnlocked = hasSkill(n.id) && hasSkill(req.id);
+            let canUnlock = canUnlockSkill(n) || canUnlockSkill(req);
+            stCtx.beginPath();
+            stCtx.moveTo(rx, ry); stCtx.lineTo(nx, ny);
+            if(bothUnlocked) {
+                stCtx.strokeStyle = ZONE_COLORS[n.zone] || '#fff';
+                stCtx.lineWidth = 3 * stScale;
+                stCtx.shadowColor = ZONE_COLORS[n.zone]; stCtx.shadowBlur = 6;
+            } else if(hasSkill(req.id) && canUnlockSkill(n)) {
+                stCtx.strokeStyle = 'rgba(255,255,255,0.3)';
+                stCtx.lineWidth = 2 * stScale; stCtx.shadowBlur = 0;
+            } else {
+                stCtx.strokeStyle = 'rgba(255,255,255,0.08)';
+                stCtx.lineWidth = 1 * stScale; stCtx.shadowBlur = 0;
+            }
+            stCtx.stroke(); stCtx.shadowBlur = 0;
+        }
+    }
+
+    // Knoten
+    for(let n of SKILL_NODES) {
+        let sx = stOffX + n.x * stScale, sy = stOffY + n.y * stScale;
+        let r = nodeRadius(n) * stScale;
+        let unlocked = hasSkill(n.id);
+        let canUnlock = canUnlockSkill(n);
+        let isHover = stHoverNode === n;
+        let zc = ZONE_COLORS[n.zone] || '#fff';
+
+        // Glow
+        if(unlocked || isHover) {
+            stCtx.shadowColor = zc; stCtx.shadowBlur = isHover ? 20 : 12;
+        }
+
+        // Hintergrund
+        stCtx.beginPath(); stCtx.arc(sx, sy, r, 0, Math.PI*2);
+        if(unlocked) {
+            let g = stCtx.createRadialGradient(sx,sy,0,sx,sy,r);
+            g.addColorStop(0, zc+'aa'); g.addColorStop(1, zc+'44');
+            stCtx.fillStyle = g;
+        } else if(canUnlock) {
+            stCtx.fillStyle = 'rgba(255,255,255,0.08)';
+        } else {
+            stCtx.fillStyle = 'rgba(0,0,0,0.6)';
+        }
+        stCtx.fill();
+
+        // Rand
+        stCtx.strokeStyle = unlocked ? zc : (canUnlock ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)');
+        stCtx.lineWidth = (n.type === 'keystone' ? 3 : (n.type === 'notable' ? 2 : 1.5)) * stScale;
+        if(n.type === 'keystone') {
+            // Hexagon für Keystones
+            stCtx.beginPath();
+            for(let i=0;i<6;i++){
+                let a = i*Math.PI/3 - Math.PI/6;
+                i===0 ? stCtx.moveTo(sx+Math.cos(a)*r, sy+Math.sin(a)*r)
+                      : stCtx.lineTo(sx+Math.cos(a)*r, sy+Math.sin(a)*r);
+            }
+            stCtx.closePath();
+            stCtx.fillStyle = unlocked ? zc+'66' : (canUnlock ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.7)');
+            stCtx.fill();
+            stCtx.stroke();
+        } else {
+            stCtx.stroke();
+        }
+        stCtx.shadowBlur = 0;
+
+        // Icon / Text im Knoten
+        let fs = Math.max(8, (n.type === 'keystone' ? 16 : (n.type === 'notable' ? 13 : 10)) * stScale);
+        stCtx.font = `bold ${fs}px Courier New`;
+        stCtx.textAlign = 'center'; stCtx.textBaseline = 'middle';
+        stCtx.fillStyle = unlocked ? '#fff' : (canUnlock ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.2)');
+        if(n.type === 'start') stCtx.fillText('⚙', sx, sy);
+        else if(n.type === 'keystone') stCtx.fillText('★', sx, sy);
+        else if(n.type === 'notable') stCtx.fillText('◉', sx, sy);
+        else stCtx.fillText('○', sx, sy);
+
+        // Label unter dem Knoten (nur bei ausreichend Zoom)
+        if(stScale > 0.7) {
+            let lfs = Math.max(7, 9 * stScale);
+            stCtx.font = `${lfs}px Courier New`;
+            stCtx.fillStyle = unlocked ? zc : (canUnlock ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)');
+            let label = n.name.length > 12 ? n.name.substring(0,11)+'…' : n.name;
+            stCtx.fillText(label, sx, sy + r + 10*stScale);
+        }
+    }
+}
+
+function showSkillTooltip(e, n) {
+    let tip = document.getElementById('stTooltip');
+    let zc = ZONE_COLORS[n.zone] || '#fff';
+    let typeLabel = n.type === 'keystone' ? '★ KEYSTONE' : (n.type === 'notable' ? '◉ NOTABLE' : '○ MINOR NODE');
+    document.getElementById('stTipName').innerText = n.name;
+    document.getElementById('stTipName').style.color = zc;
+    document.getElementById('stTipType').innerText = typeLabel;
+    document.getElementById('stTipDesc').innerText = n.desc;
+    let unlocked = hasSkill(n.id);
+    let canU = canUnlockSkill(n);
+    document.getElementById('stTipCost').innerText = unlocked ? '✅ FREIGESCHALTET' : (n.cost === 0 ? 'Gratis' : `☕ ${n.cost} KB`);
+    document.getElementById('stTipCost').style.color = unlocked ? '#2ecc71' : (canU ? '#ffd700' : '#e74c3c');
+    let reqEl = document.getElementById('stTipReq');
+    if(!unlocked && !canU && n.id !== 'start') {
+        let missing = n.requires.filter(r => !hasSkill(r)).map(r => SKILL_NODES.find(x=>x.id===r)?.name||r).join(', ');
+        if(kaffeebons < n.cost) { reqEl.innerText = `Zu wenig KB (${kaffeebons}/${n.cost})`; reqEl.style.display='block'; }
+        else if(missing) { reqEl.innerText = `Benötigt: ${missing}`; reqEl.style.display='block'; }
+        else if(countSkills() >= ST_MAX_POINTS) { reqEl.innerText = `Max. Punkte (${ST_MAX_POINTS}) erreicht!`; reqEl.style.display='block'; }
+        else reqEl.style.display='none';
+    } else reqEl.style.display='none';
+    tip.style.border = `2px solid ${zc}`;
+    tip.style.display = 'block';
+    let rect = stCanvas.getBoundingClientRect();
+    let tx = e.clientX - rect.left + 15, ty = e.clientY - rect.top - 20;
+    if(tx + 270 > stCanvas.width)  tx = e.clientX - rect.left - 275;
+    if(ty + 200 > stCanvas.height) ty = e.clientY - rect.top - 200;
+    tip.style.left = tx + 'px'; tip.style.top = ty + 'px';
+}
+
+function hideSkillTooltip() {
+    document.getElementById('stTooltip').style.display = 'none';
+}
+
+function tryUnlockSkill(node) {
+    if(!canUnlockSkill(node)) return;
+    kaffeebons -= node.cost;
+    unlockedSkills.push(node.id);
+    localStorage.setItem('ts_skills', JSON.stringify(unlockedSkills));
+    saveProgress();
+    showToast('🌳 SKILL FREIGESCHALTET!', ZONE_COLORS[node.zone]||'#fff', node.name);
+    renderSkillTree();
+    updateSkillTreeUI();
+}
+
+function resetSkillTree() {
+    if(!confirm('Skilltree zurücksetzen? Du erhältst 50% der KB zurück.')) return;
+    let refund = 0;
+    for(let id of unlockedSkills) {
+        let n = SKILL_NODES.find(x=>x.id===id);
+        if(n) refund += Math.floor(n.cost * 0.5);
+    }
+    unlockedSkills = [];
+    kaffeebons += refund;
+    localStorage.setItem('ts_skills', JSON.stringify(unlockedSkills));
+    saveProgress();
+    showToast('↺ RESET', '#aaa', `+${refund} KB zurückerstattet`);
+    renderSkillTree();
+    updateSkillTreeUI();
+}
+
+function applySkillTree(p) {
+    for(let id of unlockedSkills) {
+        let n = SKILL_NODES.find(x=>x.id===id);
+        if(!n || !n.effect) continue;
+        let ef = n.effect;
+        if(ef.startsWith('dmg_pct:'))      p.dmgBonus += (p.dmgBonus + 10) * parseFloat(ef.split(':')[1]);
+        if(ef.startsWith('maxhp:'))        { p.maxHp += parseInt(ef.split(':')[1]); }
+        if(ef.startsWith('speed:'))        p.speed += parseFloat(ef.split(':')[1]);
+        if(ef.startsWith('kb_rate:'))      p._stKbBonus = (p._stKbBonus||0) + parseFloat(ef.split(':')[1]);
+        if(ef.startsWith('start_suppe:'))  p.suppe += parseInt(ef.split(':')[1]);
+        if(ef.startsWith('farm_income:'))  p._stFarmBonus = (p._stFarmBonus||0) + parseInt(ef.split(':')[1]);
+        if(ef.startsWith('farm_slots:'))   p._stFarmSlots = (p._stFarmSlots||0) + parseInt(ef.split(':')[1]);
+        if(ef.startsWith('roll_cd:'))      p._stRollCD = (p._stRollCD||0) + parseInt(ef.split(':')[1]);
+        if(ef === 'adrenalin')             { p.dmgBonus += 8; p.fireRate = Math.max(2, (p.fireRate||20) - 3); }
+        if(ef === 'schnellschuss')         { p.fireRate = Math.max(2, (p.fireRate||20) - 5); }
+        if(ef === 'parkour')               { p.speed += 0.6; p._rollDistMult = (p._rollDistMult||1) * 1.4; }
+        if(ef === 'arbeitsrecht')          { p.maxHp += 30; p._dmgReduction = (p._dmgReduction||0) + 0.10; }
+        if(ef === 'kaffeevoll')            { p._stKbBonus = (p._stKbBonus||0) + 0.35; }
+        if(ef === 'gewerkschaft')          { p.azubiCost = Math.max(500, (p.azubiCost||5000) - 2000); }
+        if(ef === 'sap_resist')            p._sapResist = true;
+        if(ef === 'ghost_roll')            p._ghostRoll = true;
+        if(ef === 'azubi_combo')           p._azubiCombo = true;
+        if(ef === 'waffentoel')            { p.dmgBonus += 3; }
+        if(ef === 'lunchpaket')            { p.suppe += 1; p.hp = Math.min(p.maxHp, p.hp + 20); }
+        if(ef === 'ks_buerokrat')          { p.speed += 2.0; p.dmgBonus -= Math.floor(p.dmgBonus * 0.25 + 3); }
+        if(ef === 'ks_unantastbar')        p._rollInvFrames = 180; // 3s bei 60fps
+        if(ef === 'ks_ki')                 p._aiTurrets = true;
+    }
+    // HP nach allen Upgrades setzen
+    p.hp = p.maxHp;
+}
+
+
+// ============================================================
 // WAFFENKAMMER — Meta-Shop mit Kaffeebons
 // ============================================================
 const WEAPON_SHOP = [
@@ -1304,6 +1723,7 @@ function buyWeapon(id) {
     kaffeebons -= w.cost;
     unlockedWeapons.push(id);
     localStorage.setItem('ts_weapons', JSON.stringify(unlockedWeapons));
+    localStorage.setItem('ts_skills',  JSON.stringify(unlockedSkills));
     if(favoriteWeapon) localStorage.setItem('ts_favorite', favoriteWeapon);
     saveProgress();
     showToast('🔫 FREIGESCHALTET!', '#e74c3c', w.name + ' — spawnt als erste Kiste!');
@@ -1350,7 +1770,7 @@ function saveProgress() {
         db.collection('playerProfiles').doc(_name).set({
             kb: kaffeebons, upgrades: upgradeProgress,
             prestige: prestigeLevel, trophies: unlockedTrophies,
-            weapons: unlockedWeapons, favorite: favoriteWeapon||null, lastSeen: new Date().toISOString()
+            weapons: unlockedWeapons, favorite: favoriteWeapon||null, skills: unlockedSkills, lastSeen: new Date().toISOString()
         }, {merge:true}).catch(function(){});
     }
 }
@@ -1367,6 +1787,8 @@ async function loadCloudProfile() {
             unlockedTrophies = d.trophies || [];
             unlockedWeapons  = d.weapons   || [];
             favoriteWeapon   = d.favorite  || null;
+            unlockedSkills   = d.skills    || [];
+            localStorage.setItem('ts_skills', JSON.stringify(unlockedSkills));
             localStorage.setItem('ts_trophies', JSON.stringify(unlockedTrophies));
             localStorage.setItem('ts_weapons',  JSON.stringify(unlockedWeapons));
             if(favoriteWeapon) localStorage.setItem('ts_favorite', favoriteWeapon);
@@ -1378,6 +1800,7 @@ async function loadCloudProfile() {
 }
 function earnKaffeebons(sc) {
     let baseRate = 1 + getUpgradeLevel('kb_rate') * 0.2;
+    if(player && player._stKbBonus) baseRate += player._stKbBonus;
     let earned = Math.floor(sc / 100 * baseRate);
     kaffeebons += earned;
     saveProgress();
@@ -1389,8 +1812,9 @@ function applyUpgradesToPlayer(p) {
         if (lvl > 0) upg.apply(p, lvl);
     });
     p.azubiCost = p.azubiCost || 5000;
+    applySkillTree(p); // Skilltree-Effekte anwenden
 }
-function getMaxFarms() { return 3 + getUpgradeLevel('farm_slots'); }
+function getMaxFarms() { return 3 + getUpgradeLevel('farm_slots') + (player && player._stFarmSlots ? player._stFarmSlots : 0); }
 function openShop(fromGameOver=false) { renderShop(); document.getElementById('shopOverlay').style.display = 'block'; }
 function closeShop() { document.getElementById('shopOverlay').style.display = 'none'; document.getElementById('startKBAmount').innerText = kaffeebons; }
 function renderShop() {
@@ -1712,7 +2136,7 @@ function updateFarms(){
         if(hackingTimer <= 0) { showToast("ZEIT ABGELAUFEN! 🔒", "#f00"); closeHacking(); }
     }
     serverFarms=serverFarms.filter(f=>servers.includes(f.serverRef));
-    let income = 3 + getUpgradeLevel('damage') + (hasTrophy('admin_hacker') ? 2 : 0);
+    let income = 3 + getUpgradeLevel('damage') + (hasTrophy('admin_hacker') ? 2 : 0) + (player && player._stFarmBonus ? player._stFarmBonus : 0);
     for(let f of serverFarms){
         f.ticker++;
         if(f.ticker>=60){
@@ -2254,7 +2678,7 @@ class Enemy{
                 // FIX V20: dmg war undeclared → ReferenceError in production
                 let dmg = 0.5;
                 if(player.sapDebuffTimer<=0){
-                    player.sapDebuffTimer=300;
+                    player.sapDebuffTimer = player._sapResist ? 120 : 300;
                     document.getElementById('sapOverlay').style.display='block';
                     playSound('sap'); screenShake=10;
                     showToast("SAP-UPDATE LÄUFT!","#1f618d","Speed massiv reduziert für 5 Sek");
@@ -3172,4 +3596,3 @@ setTimeout(function(){
             if(el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
         } catch(e) {}
         var best = parseInt(localStorag
-
