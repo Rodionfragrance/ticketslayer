@@ -24,8 +24,8 @@ canvas { display:block; cursor:crosshair; }
     justify-content:center; align-items:center;
     z-index:999; gap:20px;
 }
-#loadingScreen h2 { color:#f00; font-size:32px; letter-spacing:6px; margin:0; text-transform:uppercase; }
-#loadingScreen p  { color:#aaa; font-size:14px; margin:0; }
+#loadingScreen h2 { color:#f00; font-size:48px; letter-spacing:6px; margin:0; text-transform:uppercase; }
+#loadingScreen p  { color:#aaa; font-size:18px; margin:0; }
 #loadBar-outer { width:400px; height:14px; background:#111; border:2px solid #444; border-radius:2px; }
 #loadBar-inner { width:0%; height:100%; background:#c0392b; transition:width 0.15s ease; }
 #loadStatus    { color:#666; font-size:12px; font-family:'Courier New',monospace; }
@@ -51,16 +51,16 @@ canvas { display:block; cursor:crosshair; }
     animation:toastIn 0.2s ease, toastOut 0.4s ease 2.2s forwards;
 }
 .toast.persistent { animation:toastIn 0.2s ease; }
-.toast .toast-title { display:block; font-size:48px; font-weight:bold; text-shadow: 2px 2px 0 #000; text-transform:uppercase; } 
-.toast .toast-sub   { display:block; font-size:32px; color:#ffeb3b; margin-top:4px; font-weight:bold; text-shadow: 1px 1px 0 #000; text-transform:uppercase; }
+.toast .toast-title { display:block; font-size:32px; font-weight:bold; text-shadow: 2px 2px 0 #000; text-transform:uppercase; } 
+.toast .toast-sub   { display:block; font-size:20px; color:#ffeb3b; margin-top:2px; font-weight:bold; text-shadow: 1px 1px 0 #000; text-transform:uppercase; }
 @keyframes toastIn  { from{transform:translateX(30px);opacity:0} to{transform:translateX(0);opacity:1} }
 @keyframes toastOut { to  {transform:translateX(30px);opacity:0} }
 
 #status-overlay {
     position:absolute; top:10px; right:10px;
-    font-size:26px; color:rgba(255,255,255,0.8);
+    font-size:16px; color:rgba(255,255,255,0.8);
     pointer-events:none; z-index:50; text-shadow:1px 1px 0 #000;
-    text-align: right;
+    text-align: right; font-family: 'Courier New', monospace;
 }
 .btn-flex {
     background: linear-gradient(45deg, #000, #600) !important;
@@ -86,22 +86,14 @@ canvas { display:block; cursor:crosshair; }
     border-left:2px solid #555; border-right:2px solid #555;
     border-radius:0 0 8px 8px;
 }
-#bossHpName {
-    color:#f00; font-size:16px; font-weight:bold; letter-spacing:3px;
-    text-transform:uppercase; text-shadow:0 0 10px #f00; margin-bottom:5px;
-}
-#bossHpBarOuter {
-    width:100%; height:18px; background:#1a0000; border:2px solid #c0392b;
-    border-radius:2px; overflow:hidden;
-}
+#bossHpName { color:#f00; font-size:20px; font-weight:bold; letter-spacing:4px; text-transform:uppercase; margin-bottom:8px; }
+#bossHpBarOuter { width:100%; height:24px; background:#1a0000; border:3px solid #c0392b; }
 #bossHpBarInner {
     height:100%; background: linear-gradient(90deg, #c0392b, #e74c3c, #ff6b6b);
     transition:width 0.15s ease;
     box-shadow: 0 0 8px rgba(255,50,50,0.6);
 }
-#bossHpPercent {
-    color:#ff8888; font-size:11px; margin-top:3px; font-family:'Courier New',monospace;
-}
+#bossHpPercent { color:#ff8888; font-size:14px; margin-top:4px; font-family:'Courier New',monospace; }
 
 
 
@@ -175,11 +167,11 @@ canvas { display:block; cursor:crosshair; }
 .hud-section { display:flex; align-items:center; gap:30px; width:33%; }
 .hud-center  { justify-content:center; }
 .hud-right   { justify-content:flex-end; text-align:right; }
-.hud-label { color:#aaa; font-size:28px; display:block; margin-bottom:8px; font-weight:bold; letter-spacing:1px; }
-.hud-value { font-size:72px; font-weight:bold; color:#fff; text-shadow:2px 2px 0 #000; }
+.hud-label { color:#aaa; font-size:18px; display:block; margin-bottom:4px; font-weight:bold; letter-spacing:1px; }
+.hud-value { font-size:48px; font-weight:bold; color:#fff; text-shadow:2px 2px 0 #000; }
 .hud-red     { color:#ff3333; }
 .hud-gold    { color:#ffd700; }
-.hud-kb      { color:#00e5ff; font-size:52px; }
+.hud-kb    { color:#00e5ff; font-size:36px; }
 #hud-face-frame { width:90px; height:90px; background:#000; border:4px solid #777; display:flex; justify-content:center; align-items:center; overflow:hidden; }
 #hud-face       { width:80px; height:80px; object-fit:contain; }
 #weapon-bar-container { width:150px; height:12px; background:#000; border:2px solid #555; margin-top:6px; }
@@ -241,11 +233,12 @@ canvas { display:block; cursor:crosshair; }
     pointer-events:auto; display:none;
     box-shadow:0 0 60px rgba(255,0,0,0.25); min-width:520px;
 }
-h1 { margin:0 0 15px; color:#f00; font-size:72px; text-transform:uppercase; letter-spacing:5px; }
-p  { font-size:32px; color:#ccc; line-height:1.5; margin:0 0 10px; }
+h1 { margin:0 0 15px; color:#f00; font-size:56px; text-transform:uppercase; letter-spacing:5px; }
+   p  { font-size:20px; color:#ccc; line-height:1.5; margin:0 0 10px; }
 .btn-group { display:flex; gap:12px; justify-content:center; margin-top:25px; }
-   button { padding:24px 36px; font-size:32px; min-width:260px; }
-button {
+button { padding:16px 24px; font-size:20px; min-width:200px; font-weight:bold; text-transform:uppercase; cursor:pointer; font-family:'Courier New',monospace; }
+   .btn-flex { font-size: 20px; padding: 16px 24px; }
+   button {
     background:#1a1a1a; color:#fff; border:2px solid #555;
     padding:12px 18px; font-size:16px; cursor:pointer;
     font-weight:bold; text-transform:uppercase; transition:0.2s; min-width:130px;
@@ -2572,10 +2565,8 @@ function updateBossRoom() {
     let p = br.player;
     br.frame++;
 
-    // FIX: diffMult definieren, damit Berührungen nicht zum Crash führen
     let diffMult = (1 + lastChosenDifficulty * 0.2); 
 
-    // Phase bestimmen
     let hpPct = b.hp / b.maxHp;
     let newPhase = hpPct > BR_PHASE_THRESHOLDS[0] ? 1 : (hpPct > BR_PHASE_THRESHOLDS[1] ? 2 : 3);
     if(newPhase > br.phase) {
@@ -2589,7 +2580,6 @@ function updateBossRoom() {
     }
     if(br.phaseChangeFlash > 0) br.phaseChangeFlash--;
 
-    // Spieler-Bewegung
     let spd = player ? player.speed : 5;
     if(player && player.speedBoostTimer > 0) spd += 3;
     if(player && player.sapDebuffTimer > 0)  spd = Math.max(1, spd - 3);
@@ -2618,7 +2608,6 @@ function updateBossRoom() {
         }
     }
 
-    // Spieler schießt (mit Audio-Fix)
     let scale_br = Math.min(canvas.width / BR_W, canvas.height / BR_H, 1.0);
     let ox_br = (canvas.width - Math.floor(BR_W * scale_br)) / 2;
     let oy_br = (canvas.height - Math.floor(BR_H * scale_br)) / 2;
@@ -2648,27 +2637,22 @@ function updateBossRoom() {
         }
     }
 
-    // Bullets update
-    for(let i=br.bullets.length-1; i>=0; i--) {
-        let bl = br.bullets[i];
+    for(let bl of br.bullets) {
         bl.x += bl.dx; bl.y += bl.dy; bl.life--;
         if(Math.hypot(bl.x-b.x, bl.y-b.y) < b.radius) {
-            b.hp -= bl.dmg; playSound('hit'); br.bullets.splice(i,1);
-            if(b.hp <= 0) { br.result = 'win'; exitBossRoom(true); return; }
+            b.hp -= bl.dmg; playSound('hit'); br.bullets.splice(br.bullets.indexOf(bl),1);
+            if(b.hp <= 0) { exitBossRoom(true); return; }
         }
     }
 
-    // Bayer Bewegung
     b.x += b.dx * b.speed; b.y += b.dy * b.speed;
     let toPlayerAngle = Math.atan2(p.y - b.y, p.x - b.x);
     b.dx += Math.cos(toPlayerAngle) * 0.08; b.dy += Math.sin(toPlayerAngle) * 0.08;
     let mag = Math.hypot(b.dx, b.dy); if(mag > 1) { b.dx /= mag; b.dy /= mag; }
-    
-    // Stampfer-Angriff mit Buff
+
     b.stampTimer++;
     if(b.stampTimer >= (b.phase === 3 ? 120 : 200)) {
-        b.stampTimer = 0; b.stampCharge = 60;
-        b.stampX = p.x; b.stampY = p.y;
+        b.stampTimer = 0; b.stampCharge = 60; b.stampX = p.x; b.stampY = p.y;
     }
     if(b.stampCharge > 0) {
         b.stampCharge--;
@@ -2682,18 +2666,35 @@ function updateBossRoom() {
         }
     }
 
-    // --- PRIO-1 SPAWNS IN PHASE 3 ---
+    if(b.phase >= 2) {
+        b.laserTimer++;
+        if(b.laserTimer >= (b.phase === 3 ? 150 : 220)) {
+            b.laserTimer = 0; b.laserActive = true;
+            b.laserAngle = Math.atan2(p.y - b.y, p.x - b.x);
+            setTimeout(() => { if(bossRoomState) bossRoomState.bayer.laserActive = false; }, 1200);
+        }
+        if(b.laserActive) {
+            let lx = b.x, ly = b.y;
+            for(let s=0; s<600; s+=8) {
+                lx += Math.cos(b.laserAngle)*8; ly += Math.sin(b.laserAngle)*8;
+                if(Math.hypot(lx-p.x, ly-p.y) < 20) {
+                    if(br._rollTimer <= 0 && player) { player.hp -= (b.phase === 3 ? 2.5 : 1.5) * diffMult; }
+                    break;
+                }
+            }
+        }
+    }
+
     if(b.phase === 3 && br.frame % 180 === 0) {
         b.miniEnemies.push({ x: b.x, y: b.y, hp: 400, maxHp: 400, radius: 30, symbol: '☠', label: 'PRIO 1 (BÜRO)' });
         playSound('alarm');
     }
 
-    // Mini-Gegner Update
     for(let i=b.miniEnemies.length-1; i>=0; i--) {
         let m = b.miniEnemies[i];
         let ma = Math.atan2(p.y-m.y, p.x-m.x);
         m.x += Math.cos(ma)*3; m.y += Math.sin(ma)*3;
-        if(Math.hypot(m.x-p.x, m.y-p.y) < 30 && br._rollTimer <= 0) { if(player) player.hp -= 1; }
+        if(Math.hypot(m.x-p.x, m.y-p.y) < 30 && br._rollTimer <= 0 && player) { player.hp -= isWegflexenMode ? 100 : 2; playSound('hit'); }
         for(let j=br.bullets.length-1; j>=0; j--) {
             if(Math.hypot(br.bullets[j].x-m.x, br.bullets[j].y-m.y) < 30) {
                 m.hp -= br.bullets[j].dmg; br.bullets.splice(j,1);
@@ -5246,7 +5247,9 @@ function startGame(diff=1){
     // Maddin-Job: isMartin aktivieren
     if(currentJob === 'maddin') { 
         player.radius = 28; // Größere Hitbox für den Teamleiter
-    } { player.isMartin = true; player.promoTriggered = true; }
+        player.isMartin = true; 
+        player.promoTriggered = true; 
+    }
     // Favorit-Waffe permanent equippen (kein Timer)
     if(favoriteWeapon && hasWeaponUnlocked(favoriteWeapon)) {
         player.activeWeapons[favoriteWeapon] = Infinity; // kein Timer
@@ -5317,5 +5320,6 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
