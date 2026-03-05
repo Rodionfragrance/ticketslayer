@@ -883,7 +883,8 @@ input[type="text"] {
 </div>
 
 <!-- PASSWORT LOGIK -->
-//<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+//<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+<script>
 var GAME_PASSWORD = 'Vollzeit2025';
 var SESSION_HOURS = 8;
 
@@ -3668,10 +3669,12 @@ function calculateRunRating(sc, kills, timeSec, bossKilled, bestCombo, diff) {
 }
 
 function checkGameOver(){
-    if(player.hp<=0){
-        / --- DER RETTENDE ENGEL ---
+    if(player && player.hp<=0){
+        
+        // --- DER RETTENDE ENGEL ---
         if(player.checkUnkuendbar()) return; // Verhindert das Game Over
         // --------------------------
+
         gameRunning=false;
         unlockTrophy('first_game');
         if(systemCollapse) {
@@ -3883,14 +3886,8 @@ class Player{
         if(hasTrophy('pacifist')) this.speed += 0.2;
         if(hasTrophy('boss_killer')) this.shieldTimer = 600;
         if(hasTrophy('survival_master')) this.dmgBonus += 2;
-        this.hp = this.maxHp;
-        this.runSuppen = 0;
-        this.runHacks = 0;
-        this.runRacheHeal = 0;
-        this.shotsFired = 0;
-        this.runMeetings = 0;
-        this.runIdocs = 0;
-       // --- NEU: CEO PERK START-CHECK ---
+        
+        // --- NEU: CEO PERK START-CHECK ---
         if(hasTrophy('ceo_perk')) { this._hasUnkuendbar = true; this._unkuendbarUsed = false; }
         
         this.hp = this.maxHp;
@@ -3900,7 +3897,7 @@ class Player{
         this.shotsFired = 0;
         this.runMeetings = 0;
         this.runIdocs = 0;
-    }
+    } // <--- Hier endet der Constructor sauber!
 
     // --- NEU: RETTUNGS-FUNKTION (wird vor dem Tod aufgerufen) ---
     checkUnkuendbar() {
@@ -3915,7 +3912,11 @@ class Player{
         }
         return false;
     }
-    }
+    
+    activateVacation(){
+        if(this.yellowSlips>0&&this.vacationTimer<=0){
+            this.yellowSlips--;
+    
     
     activateVacation(){
         if(this.yellowSlips>0&&this.vacationTimer<=0){
@@ -5399,6 +5400,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
