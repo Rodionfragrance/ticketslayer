@@ -2507,7 +2507,7 @@ function enterBossRoom() {
     // Spieler-Power skaliert Bayer (je stärker der Spieler, desto stärker Bayer)
     let powerScore = unlockedSkills.length * 0.5
         + Object.values(upgradeProgress||{}).reduce((s,v)=>s+(v||0),0) * 1.2
-        + (trophies||[]).filter(t=>t.unlocked).length * 2;
+        + unlockedTrophies.length * 2;
     let powerBonus = Math.min(2.0, 1.0 + powerScore * 0.006); // max +100% durch Power
     hpMult  *= powerBonus;
     spdMult *= Math.min(1.5, 1.0 + powerScore * 0.003);
@@ -3039,7 +3039,6 @@ function drawBossRoom() {
         }
         ctx.restore();
     }
-    }
 
     // Bayer HP Bar
     let bw = b.radius * 2.8;
@@ -3095,7 +3094,6 @@ function drawBossRoom() {
                 ctx.restore();
             }
         }
-    }
     }
     ctx.shadowBlur = 0;
     // Spieler HP-Bar über Charakter (Arena-Space)
@@ -3620,12 +3618,12 @@ function checkGameOver(){
         document.getElementById('finalScore').innerText=score;
         document.getElementById('goEarnedKB').innerText=earned;
         // EXP diese Runde — inkl. Zeitbonus
+        let timeSec = (Date.now() - runStartTime) / 1000;
         let timeExpBonus = Math.floor(timeSec / 60) * 20;
         let totalRunExp = runExpGained + timeExpBonus;
         let jobLabel = currentJob ? ` + ${Math.floor(totalRunExp * 0.6)} Job-EXP` : '';
         document.getElementById('goRunExp').innerHTML = `+${totalRunExp} Base-EXP${jobLabel} <span style="color:#888;font-size:10px;">(${runKillCount} Kills + ${Math.floor(timeSec/60)}min Bonus)</span>`;
         // Run-Bewertung
-        let timeSec = (Date.now() - runStartTime) / 1000;
         let rating = calculateRunRating(score, runKillCount, timeSec, runBossKilled, bestComboThisRun, lastChosenDifficulty);
         let rEl = document.getElementById('goRunRating');
         // Highscore-Vergleich aus Firebase
@@ -4049,7 +4047,6 @@ class Player{
                 ctx.fillStyle='gold'; ctx.fillRect(-mW/2,-mH/2,mW,mH);
             }
         }
-        }
         let w=60,h=this.isMartin?90:60;
         if(this.vodkaTimer>0){ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(255,0,0,.3)';ctx.fillRect(-w/2,-h/2,w,h);ctx.globalCompositeOperation='source-over';}
         if(this.shieldTimer>0){ctx.beginPath();ctx.arc(0,0,50,0,Math.PI*2);ctx.strokeStyle=`rgba(0,255,255,${.5+Math.sin(frame*.2)*.5})`;ctx.lineWidth=3;ctx.stroke();this.shieldTimer--;}
@@ -4184,7 +4181,7 @@ class Enemy{
             // Wegflexen bekommt nochmal extra
             if(isWegflexenMode) { scale = { hp: 5.0, spd: 1.7 }; }
             // Spieler-Power-Bonus (Trophäen + Skills + Upgrades skalieren Gegner)
-            let pwr = (unlockedSkills.length * 0.3 + Object.values(upgradeProgress||{}).reduce((s,v)=>s+(v||0),0) * 0.8 + (trophies||[]).filter(t=>t.unlocked).length * 1.2);
+            let pwr = (unlockedSkills.length * 0.3 + Object.values(upgradeProgress||{}).reduce((s,v)=>s+(v||0),0) * 0.8 + unlockedTrophies.length * 1.2);
             let pwrHpBonus = Math.min(1.6, 1.0 + pwr * 0.004);
             this.hp    = Math.round(this.hp    * scale.hp * pwrHpBonus);
             this.maxHp = Math.round(this.maxHp * scale.hp * pwrHpBonus);
@@ -5260,4 +5257,9 @@ setTimeout(function(){
     if(ls && ls.style.display !== 'none') {
         ls.style.display = 'none';
         var ss = document.getElementById('startScreen');
-        if(ss) ss.style.display = 'bl
+        if(ss) ss.style.display = 'block';
+    }
+}, 5000);
+</script>
+</body>
+</html>
