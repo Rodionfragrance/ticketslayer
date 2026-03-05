@@ -883,7 +883,7 @@ input[type="text"] {
 </div>
 
 <!-- PASSWORT LOGIK -->
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+//<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 var GAME_PASSWORD = 'Vollzeit2025';
 var SESSION_HOURS = 8;
 
@@ -2625,8 +2625,9 @@ function updateBossRoom() {
         if(br.frame % stdFR === 0) {
             playSound('shoot'); 
             br.bullets.push({ x: p.x, y: p.y, dx: Math.cos(shootAngle)*16, dy: Math.sin(shootAngle)*16, dmg: baseDmg, life: 90, type:'standard', color:'#ffeb3b', size:4 });
+            player.shotsFired = (player.shotsFired||0) + 1;
         }
-        if(wepKeys.includes('minigun') && br.frame % 4 === 0) {
+        if(wepKeys.includes('minigun') && br.frame % Math.max(2,4) === 0) {
             playSound('shoot');
             let a = shootAngle + (Math.random()-0.5)*0.35;
             br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(a)*18, dy:Math.sin(a)*18, dmg:baseDmg*0.8, life:75, type:'standard', color:'#ff00ff', size:3 });
@@ -2635,40 +2636,118 @@ function updateBossRoom() {
             playSound('shoot');
             for(let si=-2;si<=2;si++) br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(shootAngle+si*0.18)*14, dy:Math.sin(shootAngle+si*0.18)*14, dmg:baseDmg*1.2, life:60, type:'standard', color:'#ff8800', size:5 });
         }
-    }
-
-    for(let bl of br.bullets) {
-        bl.x += bl.dx; bl.y += bl.dy; bl.life--;
-        if(Math.hypot(bl.x-b.x, bl.y-b.y) < b.radius) {
-            b.hp -= bl.dmg; playSound('hit'); br.bullets.splice(br.bullets.indexOf(bl),1);
-            if(b.hp <= 0) { exitBossRoom(true); return; }
+        if(wepKeys.includes('rocket') && br.frame % 60 === 0) {
+            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(shootAngle)*13, dy:Math.sin(shootAngle)*13, dmg:baseDmg*4, life:80, type:'rocket', color:'#ff4444', size:9 });
+        }
+        if(wepKeys.includes('railgun') && br.frame % 50 === 0) {
+            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(shootAngle)*35, dy:Math.sin(shootAngle)*35, dmg:baseDmg*5, life:60, type:'railgun', color:'#00ffff', size:4 });
+        }
+        if(wepKeys.includes('flamer') && br.frame % 3 === 0) {
+            let fa = shootAngle + (Math.random()-0.5)*0.3;
+            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(fa)*11, dy:Math.sin(fa)*11, dmg:baseDmg*0.4, life:45, type:'flame', color:'#ff6600', size:6 });
         }
     }
 
-    b.x += b.dx * b.speed; b.y += b.dy * b.speed;
+    if(player && player.mouseTimer > 0) {
+        let orbitR_br = 120;
+        let mx = p.x + Math.cos(br.frame*0.12)*orbitR_br;
+        let my = p.y + Math.sin(br.frame*0.12)*orbitR_br;
+        if(Math.hypot(mx - b.x, my - b.y) < b.radius + 40) {
+            b.hp -= (0.8 + (player.dmgBonus||0)*0.05);
+            spawnBRParticles(b.x, b.y, '#00ffff', 2);
+        }
+        for(let mi=b.miniEnemies.length-1; mi>=0; mi--) {
+            let m = b.miniEnemies[mi];
+            if(Math.hypot(mx-m.x, my-m.y) < m.radius + 35) {
+                m.hp -= (50 + (player.dmgBonus||0));
+                spawnBRParticles(m.x, m.y, '#00ffff', 3);
+                if(m.hp <= 0) { spawnBRParticles(m.x,m.y,'#e67e22',8); b.miniEnemies.splice(mi,1); score += 150 * comboMult; updateCombo(true); }
+            }
+        }
+    }
+
+    for(let i=br.bullets.length-1; i>=0; i--) {
+        let bl = br.bullets[i];
+        bl.x += bl.dx; bl.y += bl.dy; bl.life--;
+        if(bl.type === 'flame') { bl.dx *= 0.95; bl.dy *= 0.95; }
+        if(bl.life <= 0 || bl.x < -50 || bl.x > BR_W+50 || bl.y < -50 || bl.y > BR_H+50) { 
+            br.bullets.splice(i,1); continue; 
+        }
+        let hitRadius = bl.type === 'rocket' ? b.radius + 20 : b.radius;
+        if(Math.hypot(bl.x-b.x, bl.y-b.y) < hitRadius) {
+            let dmg = bl.dmg;
+            b.hp -= dmg;
+            if(bl.type === 'rocket') { spawnBRParticles(bl.x, bl.y, '#ff4400', 12); screenShake = 8; }
+            else if(bl.type === 'railgun') { spawnBRParticles(bl.x, bl.y, '#00ffff', 6); }
+            else { spawnBRParticles(bl.x, bl.y, '#e74c3c', 3); }
+            br.bullets.splice(i,1);
+            if(b.hp <= 0) { br.result = 'win'; exitBossRoom(true); return; }
+            continue;
+        }
+        for(let mi=b.miniEnemies.length-1; mi>=0; mi--) {
+            let m = b.miniEnemies[mi];
+            if(Math.hypot(bl.x-m.x, bl.y-m.y) < m.radius + (bl.size||4)) {
+                m.hp -= bl.dmg;
+                spawnBRParticles(bl.x, bl.y, '#e67e22', 3);
+                if(bl.type !== 'railgun') { br.bullets.splice(i,1); }
+                if(m.hp <= 0) { spawnBRParticles(m.x, m.y, '#e67e22', 8); b.miniEnemies.splice(mi,1); score += 150 * comboMult; updateCombo(true); floatingTexts.push(new FloatingText(m.x, m.y, '+150', '#e67e22')); }
+                break;
+            }
+        }
+    }
+
+    let spMult = b.phase === 3 ? 1.6 : (b.phase === 2 ? 1.2 : 1.0);
+    b.x += b.dx * b.speed * spMult; 
+    b.y += b.dy * b.speed * spMult;
     let toPlayerAngle = Math.atan2(p.y - b.y, p.x - b.x);
     b.dx += Math.cos(toPlayerAngle) * 0.08; b.dy += Math.sin(toPlayerAngle) * 0.08;
     let mag = Math.hypot(b.dx, b.dy); if(mag > 1) { b.dx /= mag; b.dy /= mag; }
+    
+    let margin = b.radius + 10;
+    if(b.x < margin)       { b.x = margin;       b.dx = Math.abs(b.dx); }
+    if(b.x > BR_W-margin)  { b.x = BR_W-margin;  b.dx = -Math.abs(b.dx); }
+    if(b.y < margin)       { b.y = margin;        b.dy = Math.abs(b.dy); }
+    if(b.y > BR_H*0.65)    { b.y = BR_H*0.65;    b.dy = -Math.abs(b.dy); }
 
     b.stampTimer++;
-    if(b.stampTimer >= (b.phase === 3 ? 120 : 200)) {
-        b.stampTimer = 0; b.stampCharge = 60; b.stampX = p.x; b.stampY = p.y;
+    let stampInterval = b.phase === 3 ? 120 : (b.phase === 2 ? 180 : 250);
+    if(b.stampTimer >= stampInterval) {
+        b.stampTimer = 0; b.stampCharge = 60;
+        b.stampX = p.x + (Math.random()-0.5)*60; b.stampY = p.y + (Math.random()-0.5)*60;
     }
     if(b.stampCharge > 0) {
         b.stampCharge--;
         if(b.stampCharge === 0) {
-            let dmg = (b.phase === 3 ? 45 : 25) * diffMult;
+            let dmg = (b.phase === 3 ? 45 : 32) * diffMult;
             if(isWegflexenMode) dmg = 100;
-            if(Math.hypot(p.x - b.stampX, p.y - b.stampY) < 150) {
-                if(br._rollTimer <= 0 && player) { player.hp -= dmg; playSound('hit'); }
+            if(player && player._bossDmgRed) dmg *= (1 - player._bossDmgRed);
+            let r = b.phase === 3 ? 180 : (b.phase === 2 ? 150 : 120);
+            if(Math.hypot(p.x - b.stampX, p.y - b.stampY) < r) {
+                if(br._rollTimer > 0) {
+                    unlockTrophy('perfect_dodge');
+                    spawnBRParticles(p.x, p.y, '#2ecc71', 8);
+                    floatingTexts.push(new FloatingText(canvas.width/2, canvas.height/2, 'PERFEKT AUSGEWICHEN!', '#2ecc71'));
+                } else if(player && player.shieldTimer > 0) {
+                    player.shieldTimer -= 60;
+                    spawnBRParticles(p.x, p.y, '#00ffff', 6);
+                } else if(player) {
+                    if(isWegflexenMode) player.hp = 0; else player.hp -= dmg;
+                    player.orangeHp = (player.orangeHp||0) + dmg;
+                    player.orangeTimer = 120;
+                    screenShake = 20;
+                    floatingTexts.push(new FloatingText(p.x, p.y - 30, '-' + Math.ceil(dmg) + ' HP', '#ff4444'));
+                    playSound('hit');
+                }
             }
             spawnBRParticles(b.stampX, b.stampY, '#c0392b', 20);
+            br.floorCracks.push({ x: b.stampX, y: b.stampY, r: r, alpha: 1.0, life: 180 });
         }
     }
 
     if(b.phase >= 2) {
         b.laserTimer++;
-        if(b.laserTimer >= (b.phase === 3 ? 150 : 220)) {
+        let laserInterval = b.phase === 3 ? 150 : 220;
+        if(b.laserTimer >= laserInterval) {
             b.laserTimer = 0; b.laserActive = true;
             b.laserAngle = Math.atan2(p.y - b.y, p.x - b.x);
             setTimeout(() => { if(bossRoomState) bossRoomState.bayer.laserActive = false; }, 1200);
@@ -2678,54 +2757,9 @@ function updateBossRoom() {
             for(let s=0; s<600; s+=8) {
                 lx += Math.cos(b.laserAngle)*8; ly += Math.sin(b.laserAngle)*8;
                 if(Math.hypot(lx-p.x, ly-p.y) < 20) {
-                    if(br._rollTimer <= 0 && player) { player.hp -= (b.phase === 3 ? 2.5 : 1.5) * diffMult; }
-                    break;
-                }
-            }
-        }
-    }
-
-    if(b.phase === 3 && br.frame % 180 === 0) {
-        b.miniEnemies.push({ x: b.x, y: b.y, hp: 400, maxHp: 400, radius: 30, symbol: '☠', label: 'PRIO 1 (BÜRO)' });
-        playSound('alarm');
-    }
-
-    for(let i=b.miniEnemies.length-1; i>=0; i--) {
-        let m = b.miniEnemies[i];
-        let ma = Math.atan2(p.y-m.y, p.x-m.x);
-        m.x += Math.cos(ma)*3; m.y += Math.sin(ma)*3;
-        if(Math.hypot(m.x-p.x, m.y-p.y) < 30 && br._rollTimer <= 0 && player) { player.hp -= isWegflexenMode ? 100 : 2; playSound('hit'); }
-        for(let j=br.bullets.length-1; j>=0; j--) {
-            if(Math.hypot(br.bullets[j].x-m.x, br.bullets[j].y-m.y) < 30) {
-                m.hp -= br.bullets[j].dmg; br.bullets.splice(j,1);
-                if(m.hp <= 0) { b.miniEnemies.splice(i,1); score += 500; updateCombo(true); break; }
-            }
-        }
-    }
-
-    if(player && player.hp <= 0) { exitBossRoom(false); }
-}
-    }
-
-    // LASER Phase 2+
-    if(b.phase >= 2) {
-        b.laserTimer++;
-        let laserInterval = b.phase === 3 ? 150 : 220;
-        if(b.laserTimer >= laserInterval) {
-            b.laserTimer = 0;
-            b.laserActive = true;
-            b.laserAngle = Math.atan2(p.y - b.y, p.x - b.x);
-            setTimeout(() => { if(bossRoomState) bossRoomState.bayer.laserActive = false; }, 1200);
-        }
-        if(b.laserActive) {
-            // Laser-Schaden check
-            let lx = b.x, ly = b.y;
-            for(let s=0; s<600; s+=8) {
-                lx += Math.cos(b.laserAngle)*8; ly += Math.sin(b.laserAngle)*8;
-                if(Math.hypot(lx-p.x, ly-p.y) < 20) {
-                    if(br._rollTimer <= 0) {
+                    if(br._rollTimer <= 0 && player) { 
                         let ldmg = (b.phase === 3 ? 2.5 : 1.5) * diffMult;
-                        if(player) { player.hp -= ldmg; }
+                        if(isWegflexenMode) player.hp = 0; else player.hp -= ldmg; 
                     }
                     break;
                 }
@@ -2733,39 +2767,28 @@ function updateBossRoom() {
         }
     }
 
-    // Mini-Gegner Phase 3
     if(b.phase === 3) {
         b.spawnTimer++;
-        if(b.spawnTimer >= 180) {
+        if(b.spawnTimer >= 150) {
             b.spawnTimer = 0;
             let angle = Math.random()*Math.PI*2;
-            b.miniEnemies.push({ x: b.x+Math.cos(angle)*80, y: b.y+Math.sin(angle)*80,
-                dx: 0, dy: 0, hp: 60, maxHp: 60, radius: 15 });
+            b.miniEnemies.push({ x: b.x+Math.cos(angle)*100, y: b.y+Math.sin(angle)*100, dx: 0, dy: 0, hp: 400, maxHp: 400, radius: 30, symbol: '☠', label: 'PRIO 1 (BÜRO)' });
+            playSound('alarm');
         }
     }
 
-    // Mini-Gegner updaten
     for(let i=b.miniEnemies.length-1; i>=0; i--) {
         let m = b.miniEnemies[i];
-        let a = Math.atan2(p.y-m.y, p.x-m.x);
-        m.x += Math.cos(a)*3.5; m.y += Math.sin(a)*3.5;
+        let ma = Math.atan2(p.y-m.y, p.x-m.x);
+        m.x += Math.cos(ma)*3.5; m.y += Math.sin(ma)*3.5;
         m.x = Math.max(15, Math.min(BR_W-15, m.x));
         m.y = Math.max(15, Math.min(BR_H-15, m.y));
-        // Mini trifft Spieler (kein Schaden bei Hechtrolle)
-        if(Math.hypot(m.x-p.x, m.y-p.y) < 25 && br._rollTimer <= 0) {
-            if(player) { player.hp -= 0.5; }
-        }
-        // Spieler-Bullets treffen Mini
-        for(let j=br.bullets.length-1; j>=0; j--) {
-            let bl = br.bullets[j];
-            if(Math.hypot(bl.x-m.x, bl.y-m.y) < m.radius) {
-                m.hp -= bl.dmg; br.bullets.splice(j,1);
-                if(m.hp <= 0) { spawnBRParticles(m.x,m.y,'#e67e22',5); b.miniEnemies.splice(i,1); score += 150 * comboMult; updateCombo(true); break; }
-            }
+        if(Math.hypot(m.x-p.x, m.y-p.y) < 30 && br._rollTimer <= 0 && player) { 
+            if(isWegflexenMode) player.hp = 0; else player.hp -= 2; 
+            playSound('hit'); 
         }
     }
 
-    // Bayer Speech
     if(b.speechTimer > 0) b.speechTimer--;
     if(br.frame % (b.phase === 3 ? 180 : 300) === 0 && b.speechTimer === 0) {
         let pool = br.speeches[b.phase-1];
@@ -2773,28 +2796,21 @@ function updateBossRoom() {
         b.speechTimer = 120;
     }
 
-    // Partikel update
     for(let i=br.particles.length-1; i>=0; i--) {
         let pt = br.particles[i];
-        pt.x+=pt.dx; pt.y+=pt.dy; pt.life--;
-        pt.dy += 0.1;
+        pt.x+=pt.dx; pt.y+=pt.dy; pt.life--; pt.dy += 0.1;
         if(pt.life<=0) br.particles.splice(i,1);
     }
 
-    // Boden-Risse faden
     for(let i=br.floorCracks.length-1; i>=0; i--) {
         br.floorCracks[i].life--;
         br.floorCracks[i].alpha = br.floorCracks[i].life / 180;
         if(br.floorCracks[i].life <= 0) br.floorCracks.splice(i,1);
     }
 
-    // Spieler tot?
     if(player && player.hp <= 0) { br.result = 'lose'; exitBossRoom(false); }
-
-    // HP Bar updaten
     if(activeBoss) { activeBoss.hp = b.hp; activeBoss.maxHp = b.maxHp; }
 }
-
 function spawnBRParticles(x, y, color, count) {
     if(!bossRoomState) return;
     for(let i=0; i<count; i++) {
@@ -5320,6 +5336,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
