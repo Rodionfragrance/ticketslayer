@@ -472,7 +472,7 @@ input[type="text"] {
 <!-- EMAIL OVERLAY -->
 <div id="emailOverlay">
     <div class="email-header">
-        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5539303c212621343b31152f3926783d3438387b3130">[email&#160;protected]</a>&gt;</div>
+        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;leitstand@zls-hamm.de&gt;</div>
         <div class="email-row"><span class="email-label">AN:</span> Alle Mitarbeiter</div>
         <div class="email-row email-subject">PFLICHTLEKTÜRE: Neue Prozessanweisung V20 — Vollständige Revision</div>
     </div>
@@ -567,7 +567,7 @@ input[type="text"] {
         <ul>
             <li><strong>☕ Upgrade-Shop</strong> — 10 permanente Upgrades. Speed, HP, Schaden, Farm-Slots, KB-Rate und mehr.</li>
             <li><strong>🔫 Waffenkammer</strong> — Waffen dauerhaft freischalten, Favorit wählen (startet jeden Run ausgerüstet).</li>
-            <li><strong>🌳 Skilltree</strong> — 173 Knoten, 8 Zonen, Max. 40 Punkte. Pan &amp; Zoom. Keystones ab 18.000 KB. Ultra-Rare-Knoten am äußeren Ring (10.000–18.000 KB). Reset gegen 50% Rückerstattung möglich.</li>
+            <li><strong>🌳 Skilltree</strong> — 173 Knoten, 8 Zonen, Max. 60 Punkte. Pan &amp; Zoom. Keystones ab 18.000 KB. Ultra-Rare-Knoten am äußeren Ring (10.000–18.000 KB). Reset gegen 50% Rückerstattung möglich.</li>
             <li><strong>⚔️ Job-System</strong> — EXP aus Kills &amp; Spielzeit sammeln. Ab Base Level 10: Job wählen. Ab Job Level 25: Prestige-Job. Jeder Job hat eigene Passiv-Fähigkeit + 3–4 Skills mit je 3 Stufen.</li>
             <li><strong>⭐ Prestige</strong> — Alle 17 Trophäen freischalten → Prestige verfügbar. Resettet Upgrades/Skilltree/Job, behält KB &amp; Trophäen. Dauerhafter Bonus: +5% Schaden, +10 HP, +10% KB pro Prestige-Level.</li>
             <li><strong>📅 Tages-Bonus</strong> — Täglich einloggen für KB. 7-Tage-Streak für bis zu +250 KB Bonus.</li>
@@ -613,7 +613,7 @@ input[type="text"] {
             <br><br>
 
             <strong>(4) Skilltree — Punkte nicht verschwenden:</strong><br>
-            40 Punkte klingen nach viel — reichen aber nicht für zwei Zonen. Wähle eine Hauptzone (z.B. Rage) und eine Nebenzone (z.B. Kaffeekasse), verbinde sie mit Cross-Zone-Brücken, und hole dir einen Keystone am Ende. Keystones kosten 18.000 KB — das ist Absicht. Ein Keystone verändert das gesamte Spielgefühl.
+            60 Punkte klingen nach viel — reichen aber nicht für alles. Wähle eine Hauptzone (z.B. Rage) und eine Nebenzone (z.B. Kaffeekasse), verbinde sie mit Cross-Zone-Brücken, und hole dir Keystones. Keystones kosten 18.000 KB — das ist Absicht. Ein Keystone verändert das gesamte Spielgefühl.
             <br><br>
 
             <strong>(5) Job-System — welcher Job für welchen Spielstil:</strong><br>
@@ -883,7 +883,6 @@ input[type="text"] {
 </div>
 
 <!-- PASSWORT LOGIK -->
-//<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 <script>
 var GAME_PASSWORD = 'Vollzeit2025';
 var SESSION_HOURS = 8;
@@ -1476,13 +1475,16 @@ const JOBS = {
 
 function getAvailableJobs() {
     return Object.entries(JOBS).filter(([id, j]) => {
-        if(j.tier === 1) return baseLevel >= j.baseLvReq && !currentJob;
+        if(id === currentJob) return false; // Aktuellen Job nicht nochmal zeigen
+        if(j.tier === 1) return baseLevel >= j.baseLvReq && (!currentJob || currentJob);  // Tier 1 immer wenn Level reicht
         if(j.tier === 2) return baseLevel >= j.baseLvReq && jobLevel >= j.jobLvReq && currentJob === j.prevJob;
         return false;
     });
 }
 
 function chooseJob(jobId) {
+    let isSwitch = !!currentJob;
+    if(isSwitch && !confirm(`Job wechseln zu ${JOBS[jobId].name}?\n\nDein Job-Level, EXP und Skills werden ZURÜCKGESETZT!\nBase-Level und KB bleiben.`)) return;
     currentJob = jobId;
     jobLevel = 0; jobExp = 0; jobSkillPts = 0; jobSkills = {};
     localStorage.setItem('ts_job', currentJob);
@@ -1492,7 +1494,10 @@ function chooseJob(jobId) {
     localStorage.setItem('ts_jobskills', JSON.stringify(jobSkills));
     saveProgress();
     let j = JOBS[jobId];
-    showToast('⚔️ JOB GEWÄHLT!', j.color, j.name + ' — ' + j.passiv);
+    showToast(isSwitch ? '⚔️ JOB GEWECHSELT!' : '⚔️ JOB GEWÄHLT!', j.color, j.name + ' — ' + j.passiv);
+    // Job-Button im Menü aktualisieren
+    let jbtn = document.getElementById('job-menu-btn');
+    if(jbtn) jbtn.innerText = '⚔️ ' + (j.name||'JOB');
     renderJobOverlay();
 }
 
@@ -1705,6 +1710,21 @@ function renderJobOverlay() {
             html += `<div style="margin-top:14px;background:rgba(241,196,15,0.05);border:1px dashed #f1c40f44;padding:10px;border-radius:4px;color:#666;font-size:12px;">
                 🔒 Job 2 bei <strong style="color:#f1c40f;">Job Level 25</strong> verfügbar — noch ${25-jobLevel} Level</div>`;
         }
+
+        // JOB WECHSELN — Andere Tier 1 Jobs anzeigen
+        let switchJobs = Object.entries(JOBS).filter(([id,j])=> j.tier === 1 && id !== currentJob && baseLevel >= j.baseLvReq);
+        if(switchJobs.length > 0) {
+            html += `<div style="margin-top:20px;border-top:1px solid #333;padding-top:16px;">
+                <div style="color:#e67e22;font-size:13px;letter-spacing:2px;margin-bottom:8px;">🔄 JOB WECHSELN <span style="color:#666;font-size:10px;">(Job-Level & Skills werden zurückgesetzt)</span></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">`;
+            switchJobs.forEach(([id,j])=>{
+                html += `<div onclick="chooseJob('${id}')" style="background:#0a0a0a;border:2px solid ${j.color}55;padding:10px;border-radius:4px;cursor:pointer;opacity:0.75;" onmouseover="this.style.opacity='1';this.style.borderColor='${j.color}'" onmouseout="this.style.opacity='0.75';this.style.borderColor='${j.color}55'">
+                    <div style="color:${j.color};font-size:13px;font-weight:bold;">${j.name}</div>
+                    <div style="color:#888;font-size:10px;margin-top:3px;">${j.desc}</div>
+                </div>`;
+            });
+            html += '</div></div>';
+        }
     }
 
     cont.innerHTML = html;
@@ -1716,7 +1736,7 @@ let favoriteWeapon   = localStorage.getItem('ts_favorite') || null;
 // SKILLTREE SYSTEM — POE-STYLE
 // ============================================================
 let unlockedSkills = JSON.parse(localStorage.getItem('ts_skills') || '[]');
-const ST_MAX_POINTS = 40;
+const ST_MAX_POINTS = 60;
 
 const ZONE_COLORS = {
     center: '#ffffff', rage: '#e74c3c', panzer: '#3498db',
@@ -2563,6 +2583,17 @@ function enterBossRoom() {
         ],
         startTime: Date.now()
     };
+    // WAFFEN EINFRIEREN: Alle aktiven Waffen bleiben für den gesamten Boss-Kampf
+    if(player) {
+        for(let w in player.activeWeapons) {
+            if(player.activeWeapons[w] !== Infinity && player.activeWeapons[w] > 0) {
+                player.activeWeapons[w] = Infinity; // Eingefroren bis Boss-Kampf vorbei
+            }
+        }
+        if(player.mouseTimer > 0) player.mouseTimer = Infinity;
+        if(player.shieldTimer > 0) player.shieldTimer = Infinity;
+        if(player.vodkaTimer > 0) player.vodkaTimer = Infinity;
+    }
     // Toast: Zeige was der Spieler mitbringt
     let wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫'};
     let carried = [];
@@ -2675,6 +2706,15 @@ function updateBossRoom() {
         if(wepKeys.includes('flamer') && br.frame % 3 === 0) {
             let fa = aimAngle + (Math.random()-0.5)*0.3;
             br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(fa)*11, dy:Math.sin(fa)*11, dmg:baseDmg*0.4, life:45, type:'flame', color:'#ff6600', size:6 });
+        }
+        // UZI + AK47 — zusätzliche Schnellfeuer-Patronen
+        if(wepKeys.includes('uzi') && br.frame % 7 === 0) {
+            let a = aimAngle + (Math.random()-0.5)*0.1;
+            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(a)*17, dy:Math.sin(a)*17, dmg:baseDmg*0.7, life:70, type:'standard', color:'#aaffaa', size:3 });
+        }
+        if(wepKeys.includes('ak47') && br.frame % 6 === 0) {
+            let a = aimAngle + (Math.random()-0.5)*0.05;
+            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(a)*18, dy:Math.sin(a)*18, dmg:baseDmg*0.9, life:75, type:'standard', color:'#ffdd44', size:4 });
         }
     }
 
@@ -3920,11 +3960,6 @@ class Player{
     activateVacation(){
         if(this.yellowSlips>0&&this.vacationTimer<=0){
             this.yellowSlips--;
-        }
-    
-    activateVacation(){
-        if(this.yellowSlips>0&&this.vacationTimer<=0){
-            this.yellowSlips--;
             this.vacationTimer=300;
             playSound('vacation');
             floatingTexts.push(new FloatingText(this.x,this.y-50,"KRANKGEMELDET!","#ffff00"));
@@ -4092,6 +4127,11 @@ class Player{
         if(type === 'mouse') {
             if(this.mouseTimer !== Infinity) { this.mouseTimer = 1800; showToast("ORBIT-MAUS!", "#0ff", "AKTIVIERT (30 SEK)"); }
             return; 
+        }
+        // Favorit-Waffe nicht überschreiben (Infinity → bleibt Infinity)
+        if(this.activeWeapons[type] === Infinity) {
+            showToast("FAVORIT AKTIV!", "#f1c40f", type.toUpperCase() + " — bereits permanent");
+            return;
         }
         this.activeWeapons[type] = hasTrophy('collapse_survivor') ? 2250 : 1800;
         this.crateFlashTimer=120; flashScreen=10;
@@ -5404,13 +5444,3 @@ setTimeout(function(){
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
