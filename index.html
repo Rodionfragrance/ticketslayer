@@ -51,16 +51,16 @@ canvas { display:block; cursor:crosshair; }
     animation:toastIn 0.2s ease, toastOut 0.4s ease 2.2s forwards;
 }
 .toast.persistent { animation:toastIn 0.2s ease; }
-.toast .toast-title { display:block; font-size:24px; font-weight:bold; text-shadow: 2px 2px 0 #000; text-transform:uppercase; } 
-.toast .toast-sub   { display:block; font-size:16px; color:#ffeb3b; margin-top:2px; font-weight:bold; text-shadow: 1px 1px 0 #000; text-transform:uppercase; } 
+.toast .toast-title { display:block; font-size:48px; font-weight:bold; text-shadow: 2px 2px 0 #000; text-transform:uppercase; } 
+.toast .toast-sub   { display:block; font-size:32px; color:#ffeb3b; margin-top:4px; font-weight:bold; text-shadow: 1px 1px 0 #000; text-transform:uppercase; }
 @keyframes toastIn  { from{transform:translateX(30px);opacity:0} to{transform:translateX(0);opacity:1} }
 @keyframes toastOut { to  {transform:translateX(30px);opacity:0} }
 
 #status-overlay {
     position:absolute; top:10px; right:10px;
-    font-size:13px; color:rgba(255,255,255,0.8);
+    font-size:26px; color:rgba(255,255,255,0.8);
     pointer-events:none; z-index:50; text-shadow:1px 1px 0 #000;
-    text-align: right; font-family: 'Courier New', monospace;
+    text-align: right;
 }
 .btn-flex {
     background: linear-gradient(45deg, #000, #600) !important;
@@ -175,11 +175,11 @@ canvas { display:block; cursor:crosshair; }
 .hud-section { display:flex; align-items:center; gap:30px; width:33%; }
 .hud-center  { justify-content:center; }
 .hud-right   { justify-content:flex-end; text-align:right; }
-.hud-label   { color:#aaa; font-size:14px; display:block; margin-bottom:4px; font-weight:bold; letter-spacing:1px; }
-.hud-value   { font-size:36px; font-weight:bold; color:#fff; text-shadow:2px 2px 0 #000; }
+.hud-label { color:#aaa; font-size:28px; display:block; margin-bottom:8px; font-weight:bold; letter-spacing:1px; }
+.hud-value { font-size:72px; font-weight:bold; color:#fff; text-shadow:2px 2px 0 #000; }
 .hud-red     { color:#ff3333; }
 .hud-gold    { color:#ffd700; }
-.hud-kb      { color:#00e5ff; font-size:26px; }
+.hud-kb      { color:#00e5ff; font-size:52px; }
 #hud-face-frame { width:90px; height:90px; background:#000; border:4px solid #777; display:flex; justify-content:center; align-items:center; overflow:hidden; }
 #hud-face       { width:80px; height:80px; object-fit:contain; }
 #weapon-bar-container { width:150px; height:12px; background:#000; border:2px solid #555; margin-top:6px; }
@@ -241,9 +241,10 @@ canvas { display:block; cursor:crosshair; }
     pointer-events:auto; display:none;
     box-shadow:0 0 60px rgba(255,0,0,0.25); min-width:520px;
 }
-h1 { margin:0 0 15px; color:#f00; font-size:36px; text-transform:uppercase; letter-spacing:5px; }
-p  { font-size:16px; color:#ccc; line-height:1.5; margin:0 0 10px; }
+h1 { margin:0 0 15px; color:#f00; font-size:72px; text-transform:uppercase; letter-spacing:5px; }
+p  { font-size:32px; color:#ccc; line-height:1.5; margin:0 0 10px; }
 .btn-group { display:flex; gap:12px; justify-content:center; margin-top:25px; }
+   button { padding:24px 36px; font-size:32px; min-width:260px; }
 button {
     background:#1a1a1a; color:#fff; border:2px solid #555;
     padding:12px 18px; font-size:16px; cursor:pointer;
@@ -2571,6 +2572,9 @@ function updateBossRoom() {
     let p = br.player;
     br.frame++;
 
+    // FIX: diffMult definieren, damit Berührungen nicht zum Crash führen
+    let diffMult = (1 + lastChosenDifficulty * 0.2); 
+
     // Phase bestimmen
     let hpPct = b.hp / b.maxHp;
     let newPhase = hpPct > BR_PHASE_THRESHOLDS[0] ? 1 : (hpPct > BR_PHASE_THRESHOLDS[1] ? 2 : 3);
@@ -2585,20 +2589,16 @@ function updateBossRoom() {
     }
     if(br.phaseChangeFlash > 0) br.phaseChangeFlash--;
 
-    // Spieler-Bewegung im Boss-Room
+    // Spieler-Bewegung
     let spd = player ? player.speed : 5;
-    // Alle Trophäen-Speed-Boni
     if(player && player.speedBoostTimer > 0) spd += 3;
     if(player && player.sapDebuffTimer > 0)  spd = Math.max(1, spd - 3);
 
-    // Hechtrolle im Boss-Room (SHIFT / RMB)
-    if(!br._rollTimer) br._rollTimer = 0;
-    if(!br._rollCD) br._rollCD = 0;
     if(br._rollTimer > 0) {
         br._rollTimer--;
         p.x = Math.max(20, Math.min(BR_W-20, p.x + br._rollDx));
         p.y = Math.max(20, Math.min(BR_H-20, p.y + br._rollDy));
-        if(player) player.rollTimer = br._rollTimer; // sync für i-frames
+        if(player) player.rollTimer = br._rollTimer;
     } else {
         if(br._rollCD > 0) br._rollCD--;
         let bdx = 0, bdy = 0;
@@ -2606,13 +2606,10 @@ function updateBossRoom() {
         if(input.keys['KeyS']||input.keys['ArrowDown'])  bdy += spd;
         if(input.keys['KeyA']||input.keys['ArrowLeft'])  bdx -= spd;
         if(input.keys['KeyD']||input.keys['ArrowRight']) bdx += spd;
-        // Roll starten
         if((input.keys['ShiftLeft']||input.rightClick) && br._rollCD <= 0 && (bdx!==0||bdy!==0)) {
             let len = Math.hypot(bdx,bdy)||1;
-            br._rollDx = (bdx/len)*18;
-            br._rollDy = (bdy/len)*18;
-            br._rollTimer = 14;
-            br._rollCD = hasTrophy('perfect_dodge') ? 90 : 120;
+            br._rollDx = (bdx/len)*18; br._rollDy = (bdy/len)*18;
+            br._rollTimer = 14; br._rollCD = hasTrophy('perfect_dodge') ? 90 : 120;
             if(player) player.rollTimer = 14;
             input.rightClick = false;
         } else {
@@ -2621,10 +2618,9 @@ function updateBossRoom() {
         }
     }
 
-    // Spieler schießt im Boss-Room — echtes Weapon-System
-    // Mausposition in Arena-Koordinaten umrechnen
+    // Spieler schießt (mit Audio-Fix)
     let scale_br = Math.min(canvas.width / BR_W, canvas.height / BR_H, 1.0);
-    let ox_br = (canvas.width  - Math.floor(BR_W * scale_br)) / 2;
+    let ox_br = (canvas.width - Math.floor(BR_W * scale_br)) / 2;
     let oy_br = (canvas.height - Math.floor(BR_H * scale_br)) / 2;
     let mouseArenaX = (input.x - ox_br) / scale_br;
     let mouseArenaY = (input.y - oy_br) / scale_br;
@@ -2632,56 +2628,23 @@ function updateBossRoom() {
 
     if(input.mouseDown && player) {
         let wepKeys = Object.keys(player.activeWeapons||{});
-        // Auch alle gekauften Waffen aus der Waffenkammer nutzen (Bonus-Arsenal im Boss-Raum)
         for(let w of (unlockedWeapons||[])) { if(!wepKeys.includes(w)) wepKeys.push(w); }
         let baseDmg = 10 + (player.dmgBonus||0);
-        // Feuerrate: Skill-Tree + Upgrades beide berücksichtigen
         let baseFireRate = player.fireRate || 20;
-        let upgFR = Math.max(2, baseFireRate - Math.ceil(baseFireRate * 0.15 * getUpgradeLevel('fire_rate')));
-        let stdFR = Math.max(2, upgFR);
+        let stdFR = Math.max(2, baseFireRate - Math.ceil(baseFireRate * 0.15 * getUpgradeLevel('fire_rate')));
+        
         if(br.frame % stdFR === 0) {
-            br.bullets.push({ x: p.x, y: p.y, 
-                dx: Math.cos(shootAngle)*16, dy: Math.sin(shootAngle)*16,
-                dmg: baseDmg, life: 90, type:'standard', color:'#ffeb3b', size:4 });
-            player.shotsFired = (player.shotsFired||0) + 1;
+            playSound('shoot'); 
+            br.bullets.push({ x: p.x, y: p.y, dx: Math.cos(shootAngle)*16, dy: Math.sin(shootAngle)*16, dmg: baseDmg, life: 90, type:'standard', color:'#ffeb3b', size:4 });
         }
-        // Aktive Waffen
-        if(wepKeys.includes('minigun') && br.frame % Math.max(2,4) === 0) {
+        if(wepKeys.includes('minigun') && br.frame % 4 === 0) {
+            playSound('shoot');
             let a = shootAngle + (Math.random()-0.5)*0.35;
             br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(a)*18, dy:Math.sin(a)*18, dmg:baseDmg*0.8, life:75, type:'standard', color:'#ff00ff', size:3 });
         }
         if(wepKeys.includes('shotgun') && br.frame % 40 === 0) {
+            playSound('shoot');
             for(let si=-2;si<=2;si++) br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(shootAngle+si*0.18)*14, dy:Math.sin(shootAngle+si*0.18)*14, dmg:baseDmg*1.2, life:60, type:'standard', color:'#ff8800', size:5 });
-        }
-        if(wepKeys.includes('rocket') && br.frame % 60 === 0) {
-            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(shootAngle)*13, dy:Math.sin(shootAngle)*13, dmg:baseDmg*4, life:80, type:'rocket', color:'#ff4444', size:9 });
-        }
-        if(wepKeys.includes('railgun') && br.frame % 50 === 0) {
-            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(shootAngle)*35, dy:Math.sin(shootAngle)*35, dmg:baseDmg*5, life:60, type:'railgun', color:'#00ffff', size:4 });
-        }
-        if(wepKeys.includes('flamer') && br.frame % 3 === 0) {
-            let fa = shootAngle + (Math.random()-0.5)*0.3;
-            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(fa)*11, dy:Math.sin(fa)*11, dmg:baseDmg*0.4, life:45, type:'flame', color:'#ff6600', size:6 });
-        }
-    }
-    // Orbit-Maus im Boss-Room
-    if(player && player.mouseTimer > 0) {
-        let orbitR_br = 120;
-        let mx = p.x + Math.cos(br.frame*0.12)*orbitR_br;
-        let my = p.y + Math.sin(br.frame*0.12)*orbitR_br;
-        // Bayer treffen
-        if(Math.hypot(mx - b.x, my - b.y) < b.radius + 40) {
-            b.hp -= (0.8 + (player.dmgBonus||0)*0.05);
-            spawnBRParticles(b.x, b.y, '#00ffff', 2);
-        }
-        // Mini-Gegner treffen
-        for(let mi=b.miniEnemies.length-1; mi>=0; mi--) {
-            let m = b.miniEnemies[mi];
-            if(Math.hypot(mx-m.x, my-m.y) < m.radius + 35) {
-                m.hp -= (50 + (player.dmgBonus||0));
-                spawnBRParticles(m.x, m.y, '#00ffff', 3);
-                if(m.hp <= 0) { spawnBRParticles(m.x,m.y,'#e67e22',8); b.miniEnemies.splice(mi,1); score += 150 * comboMult; updateCombo(true); }
-            }
         }
     }
 
@@ -2689,93 +2652,58 @@ function updateBossRoom() {
     for(let i=br.bullets.length-1; i>=0; i--) {
         let bl = br.bullets[i];
         bl.x += bl.dx; bl.y += bl.dy; bl.life--;
-        if(bl.type === 'flame') { bl.dx *= 0.95; bl.dy *= 0.95; }
-        if(bl.life <= 0 || bl.x < -50 || bl.x > BR_W+50 || bl.y < -50 || bl.y > BR_H+50) { 
-            br.bullets.splice(i,1); continue; 
-        }
-        let hitRadius = bl.type === 'rocket' ? b.radius + 20 : b.radius;
-        if(Math.hypot(bl.x-b.x, bl.y-b.y) < hitRadius) {
-            let dmg = bl.dmg;
-            b.hp -= dmg;
-            // Rocket-Splash Partikel
-            if(bl.type === 'rocket') { spawnBRParticles(bl.x, bl.y, '#ff4400', 12); screenShake = 8; }
-            else if(bl.type === 'railgun') { spawnBRParticles(bl.x, bl.y, '#00ffff', 6); }
-            else { spawnBRParticles(bl.x, bl.y, '#e74c3c', 3); }
-            br.bullets.splice(i,1);
+        if(Math.hypot(bl.x-b.x, bl.y-b.y) < b.radius) {
+            b.hp -= bl.dmg; playSound('hit'); br.bullets.splice(i,1);
             if(b.hp <= 0) { br.result = 'win'; exitBossRoom(true); return; }
-            continue;
-        }
-        // Mini-Gegner treffen (für alle Bullet-Typen)
-        for(let mi=b.miniEnemies.length-1; mi>=0; mi--) {
-            let m = b.miniEnemies[mi];
-            if(Math.hypot(bl.x-m.x, bl.y-m.y) < m.radius + (bl.size||4)) {
-                m.hp -= bl.dmg;
-                spawnBRParticles(bl.x, bl.y, '#e67e22', 3);
-                if(bl.type !== 'railgun') { br.bullets.splice(i,1); }
-                if(m.hp <= 0) { spawnBRParticles(m.x, m.y, '#e67e22', 8); b.miniEnemies.splice(mi,1); score += 150 * comboMult; updateCombo(true); floatingTexts.push(new FloatingText(m.x, m.y, '+150', '#e67e22')); }
-                break;
-            }
         }
     }
 
-    // Bayer Bewegung — bouncy in Arena
-    let spMult = b.phase === 3 ? 1.6 : (b.phase === 2 ? 1.2 : 1.0);
-    b.x += b.dx * b.speed * spMult;
-    b.y += b.dy * b.speed * spMult;
-    // Richtung Spieler drehen
+    // Bayer Bewegung
+    b.x += b.dx * b.speed; b.y += b.dy * b.speed;
     let toPlayerAngle = Math.atan2(p.y - b.y, p.x - b.x);
-    b.dx += Math.cos(toPlayerAngle) * 0.08;
-    b.dy += Math.sin(toPlayerAngle) * 0.08;
-    // Normalisieren
+    b.dx += Math.cos(toPlayerAngle) * 0.08; b.dy += Math.sin(toPlayerAngle) * 0.08;
     let mag = Math.hypot(b.dx, b.dy); if(mag > 1) { b.dx /= mag; b.dy /= mag; }
-    // Wände
-    let margin = b.radius + 10;
-    if(b.x < margin)       { b.x = margin;       b.dx = Math.abs(b.dx); }
-    if(b.x > BR_W-margin)  { b.x = BR_W-margin;  b.dx = -Math.abs(b.dx); }
-    if(b.y < margin)       { b.y = margin;        b.dy = Math.abs(b.dy); }
-    if(b.y > BR_H*0.65)    { b.y = BR_H*0.65;    b.dy = -Math.abs(b.dy); } // Bayer bleibt oben
-
-    // STAMPFER-ANGRIFF
+    
+    // Stampfer-Angriff mit Buff
     b.stampTimer++;
-    let stampInterval = b.phase === 3 ? 120 : (b.phase === 2 ? 180 : 250);
-    if(b.stampTimer >= stampInterval) {
-        b.stampTimer = 0;
-        b.stampCharge = 60; // 1s Vorwarnung
-        b.stampX = p.x + (Math.random()-0.5)*60;
-        b.stampY = p.y + (Math.random()-0.5)*60;
+    if(b.stampTimer >= (b.phase === 3 ? 120 : 200)) {
+        b.stampTimer = 0; b.stampCharge = 60;
+        b.stampX = p.x; b.stampY = p.y;
     }
     if(b.stampCharge > 0) {
         b.stampCharge--;
         if(b.stampCharge === 0) {
-            // Stampf-Einschlag mit Schwierigkeits-Skalierung
-let diffMult = (1 + lastChosenDifficulty * 0.2); // Skaliert den Schaden hoch
-let dmg = (b.phase === 3 ? 45 : (b.phase === 2 ? 32 : 24)) * diffMult; 
-if(isWegflexenMode) dmg = 100; // Wegflexen = Sofort-Tod
-if(player && player._bossDmgRed) dmg *= (1 - player._bossDmgRed);
-            let r = b.phase === 3 ? 180 : (b.phase === 2 ? 150 : 120);
-            if(Math.hypot(p.x - b.stampX, p.y - b.stampY) < r) {
-                if(br._rollTimer > 0) {
-                    // Perfekt ausgewichen!
-                    unlockTrophy('perfect_dodge');
-                    spawnBRParticles(p.x, p.y, '#2ecc71', 8);
-                    floatingTexts.push(new FloatingText(canvas.width/2, canvas.height/2, 'PERFEKT AUSGEWICHEN!', '#2ecc71'));
-                } else if(player && player.shieldTimer > 0) {
-                    // Schutzschild absorbiert
-                    player.shieldTimer -= 60;
-                    spawnBRParticles(p.x, p.y, '#00ffff', 6);
-                } else if(player) {
-                    player.hp -= dmg;
-                    player.orangeHp = (player.orangeHp||0) + dmg;
-                    player.orangeTimer = 120;
-                    screenShake = 20;
-                    floatingTexts.push(new FloatingText(p.x, p.y - 30, '-' + Math.ceil(dmg) + ' HP', '#ff4444'));
-                }
+            let dmg = (b.phase === 3 ? 45 : 25) * diffMult;
+            if(isWegflexenMode) dmg = 100;
+            if(Math.hypot(p.x - b.stampX, p.y - b.stampY) < 150) {
+                if(br._rollTimer <= 0 && player) { player.hp -= dmg; playSound('hit'); }
             }
             spawnBRParticles(b.stampX, b.stampY, '#c0392b', 20);
-            // Boden-Riss
-            br.floorCracks.push({ x: b.stampX, y: b.stampY, r: r, alpha: 1.0, life: 180 });
-            playSound('hit');
         }
+    }
+
+    // --- PRIO-1 SPAWNS IN PHASE 3 ---
+    if(b.phase === 3 && br.frame % 180 === 0) {
+        b.miniEnemies.push({ x: b.x, y: b.y, hp: 400, maxHp: 400, radius: 30, symbol: '☠', label: 'PRIO 1 (BÜRO)' });
+        playSound('alarm');
+    }
+
+    // Mini-Gegner Update
+    for(let i=b.miniEnemies.length-1; i>=0; i--) {
+        let m = b.miniEnemies[i];
+        let ma = Math.atan2(p.y-m.y, p.x-m.x);
+        m.x += Math.cos(ma)*3; m.y += Math.sin(ma)*3;
+        if(Math.hypot(m.x-p.x, m.y-p.y) < 30 && br._rollTimer <= 0) { if(player) player.hp -= 1; }
+        for(let j=br.bullets.length-1; j>=0; j--) {
+            if(Math.hypot(br.bullets[j].x-m.x, br.bullets[j].y-m.y) < 30) {
+                m.hp -= br.bullets[j].dmg; br.bullets.splice(j,1);
+                if(m.hp <= 0) { b.miniEnemies.splice(i,1); score += 500; updateCombo(true); break; }
+            }
+        }
+    }
+
+    if(player && player.hp <= 0) { exitBossRoom(false); }
+}
     }
 
     // LASER Phase 2+
@@ -3055,7 +2983,7 @@ ctx.shadowBlur = 0;
 
 // peter.png zeichnen — PNG primär mit Seitenverhältnis-Fix
 {
-    let _ph = b.radius * 2.8; // Wir behalten die Höhe bei
+    let _ph = b.radius * 4.0; // Wir behalten die Höhe bei
     let _pw = _ph; // Fallback-Breite (quadratisch)
 
     if (peterImg && peterImg.complete && peterImg.naturalHeight !== 0) {
@@ -3071,7 +2999,7 @@ ctx.shadowBlur = 0;
         }
         
         // Zeichne mit der berechneten Breite (_pw)
-        ctx.drawImage(peterImg, -_pw / 2, -_ph * 0.62, _pw, _ph);
+        ctx.drawImage(peterImg, -_pw / 2, -_ph * 0.65, _pw, _ph);
         ctx.restore();
     } else {
         // Canvas-Fallback: drawPeterBayerChar
@@ -4154,16 +4082,37 @@ class Item{
     }
     draw() {
         let bob = Math.sin((frame + this.bobOffset) / 20) * 5;
+        
+        // --- VISUELLER FIX: Hintergrund-Glow ---
+        ctx.save();
+        ctx.translate(this.x, this.y + bob);
+        
+        // Ein pulsierender weißer/goldener Schein hinter dem Item
+        let glow = Math.sin(frame * 0.1) * 5 + 15;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+        ctx.shadowBlur = glow;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.beginPath();
+        ctx.arc(0, 0, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Schatten auf dem Boden (unverändert)
         ctx.fillStyle = 'rgba(0,0,0,0.4)';
         ctx.beginPath();
         ctx.ellipse(this.x, this.y + 18, 12 - bob/2, 5 - bob/4, 0, 0, Math.PI*2);
         ctx.fill();
+
         ctx.save(); ctx.translate(this.x, this.y + bob);
         if(this.life < 120 && this.life % 10 < 5) ctx.globalAlpha = 0.3;
         ctx.font = '40px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.shadowColor = "rgba(0,0,0,.8)"; ctx.shadowBlur = 8;
-        const icons = {chicken:'🍗',vodka:'🍺',crate:'📦',bug:'💾',hammer:'🔨',vacation:'💤',bike:'🚲',shield:'🛡️',nuke:'☢️',briefcase:'💼',suppe:'🥣'};
-        ctx.fillText(icons[this.type] || '?', 0, 0);
+        
+        // --- FIX: Stärkere Kontur für Emojis ---
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+        const icons = {chicken:'🍗',vodka:'🍺',crate:'📦',bug:'💾',hammer:'🔨',vacation:'💤',bike:'🚲',shield:'🛡️',briefcase:'💼',suppe:'🥣'};
+        let icon = icons[this.type] || '?';
+        ctx.strokeText(icon, 0, 0);
+        ctx.fillText(icon, 0, 0);
         ctx.restore();
     }
 }
@@ -4355,7 +4304,8 @@ class Enemy{
         if(this.type===99||this.type===6||!checkWallCollision(this.x,ny,this.radius)) this.y=ny;
 
         let dist=Math.hypot(player.x-this.x,player.y-this.y);
-        if(dist<player.radius+this.radius){
+        // Hitbox-Tuning: Wir ziehen 20% vom Radius ab, damit es sich "fairer" anfühlt
+        if(dist < (player.radius + this.radius) * 0.8) {
             if(player.rollTimer > 0) return;
             if(this.type===6){
                 screenShake=20;
@@ -5075,6 +5025,14 @@ function loop(){
         for(let i=items.length-1; i>=0; i--){
             let item = items[i];
             if(!item) { items.splice(i, 1); continue; }
+
+            // --- NEU: Item-Magnetismus ---
+            let distToPlayer = Math.hypot(player.x - item.x, player.y - item.y);
+            if(distToPlayer < 150) { // Einzugsbereich 150 Pixel
+                let angle = Math.atan2(player.y - item.y, player.x - item.x);
+                item.x += Math.cos(angle) * 7; // Geschwindigkeit des Ansaugens
+                item.y += Math.sin(angle) * 7;
+            }
             if(item.life !== Infinity){ item.life--; if(item.life <= 0){ items.splice(i, 1); continue; } }
             if(Math.hypot(player.x-item.x, player.y-item.y) < player.radius + item.radius){
                 switch(item.type){
@@ -5286,7 +5244,9 @@ function startGame(diff=1){
     }
     generateWorld();
     // Maddin-Job: isMartin aktivieren
-    if(currentJob === 'maddin') { player.isMartin = true; player.promoTriggered = true; }
+    if(currentJob === 'maddin') { 
+        player.radius = 28; // Größere Hitbox für den Teamleiter
+    } { player.isMartin = true; player.promoTriggered = true; }
     // Favorit-Waffe permanent equippen (kein Timer)
     if(favoriteWeapon && hasWeaponUnlocked(favoriteWeapon)) {
         player.activeWeapons[favoriteWeapon] = Infinity; // kein Timer
@@ -5357,4 +5317,5 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
