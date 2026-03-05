@@ -878,7 +878,7 @@ input[type="text"] {
         <div><span class="hud-label">MODUS</span><span id="hud-mode" class="hud-value" style="font-size:15px;">–</span></div>
     </div>
     <div class="hud-section hud-center">
-        <div id="hud-face-frame"><img id="hud-face" src="wurml.png" alt="Face"></div>
+        <div id="hud-face-frame"><img id="hud-face" src="wurmr.png" alt="Face"></div>
     </div>
     <div class="hud-section hud-right">
         <div><span class="hud-label">SUPPE 🥣</span><span id="hud-suppe" class="hud-value" style="color:#ff9f43;">0</span></div>
@@ -2490,6 +2490,8 @@ function enterBossRoom() {
     if(gamePhase !== 'normal') return;
     gamePhase = 'transitioning_in';
     fadeAlpha = 0; fadeDir = 1;
+    // Eingabe-Reset damit Spieler nicht gleich schießt
+    input.mouseDown = false; input.rightClick = false; input.keys = {};
     playSound('boss');
     // Schwierigkeit: Basis von lastChosenDifficulty
     const diffHpScale  = { 1:0.6,  3:1.0,  6:1.5,  9:2.2 };
@@ -3017,21 +3019,26 @@ function drawBossRoom() {
         ctx.beginPath(); ctx.arc(pt.x, pt.y, 4, 0, Math.PI*2); ctx.fill();
     }
     ctx.globalAlpha = 1;
-
-    // PETER BAYER — peter.png Sprite (immer PNG, kein Canvas-Fallback)
+    // PETER BAYER — peter.png primär, Canvas-Fallback wenn PNG nicht geladen
     ctx.shadowColor = phaseColor; ctx.shadowBlur = 25 + Math.sin(br.frame*0.1)*8;
     // Pulsierender Glow-Ring
     ctx.strokeStyle = phaseColor; ctx.lineWidth = b.phase===3 ? 5 : 3;
     ctx.beginPath(); ctx.arc(b.x, b.y, b.radius+4, 0, Math.PI*2); ctx.stroke();
     ctx.shadowBlur = 0;
-    // peter.png zeichnen — immer PNG
+    // peter.png zeichnen — PNG primär, Canvas-Fallback
     {
         let _pw = b.radius * 2.4, _ph = b.radius * 2.8;
         ctx.save();
         if(b.phase===3) { ctx.translate(b.x + Math.sin(br.frame*0.25)*4, b.y); }
         else { ctx.translate(b.x, b.y); }
-        ctx.drawImage(peterImg, -_pw/2, -_ph*0.62, _pw, _ph);
+        if(peterImg && peterImg.complete && peterImg.naturalHeight !== 0) {
+            ctx.drawImage(peterImg, -_pw/2, -_ph*0.62, _pw, _ph);
+        } else {
+            // Canvas-Fallback: drawPeterBayerChar
+            drawPeterBayerChar(ctx, 0, 0, b.radius, b.phase, br.frame);
+        }
         ctx.restore();
+    }
     }
 
     // Bayer HP Bar
@@ -3069,19 +3076,26 @@ function drawBossRoom() {
     let facingRight_br = mouseArenaX > p.x;
     let pr = 22;
     let playerHpPct = player ? player.hp/player.maxHp : 1;
-    if(playerHpPct < 0.3) { ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 15; }
-    // Spieler — immer wurmr.png / wurml.png (1.8x Größe in Boss-Arena)
+    // Spieler — wurmr.png / wurml.png (1.8x), Canvas-Fallback wenn PNG nicht geladen
     {
         let wImg = facingRight_br ? wormImgRight : wormImgLeft;
         let wW = 60 * 1.8, wH = 60 * 1.8;
+        let pngOk = wImg && wImg.complete && wImg.naturalHeight !== 0;
         if(br._rollTimer > 0) {
             ctx.save(); ctx.translate(p.x,p.y); ctx.globalAlpha=0.5;
             ctx.rotate(br._rollTimer*0.4);
-            ctx.drawImage(wImg, -wW/2, -wH/2, wW, wH);
+            if(pngOk) { ctx.drawImage(wImg, -wW/2, -wH/2, wW, wH); }
+            else { ctx.scale(1.8,1.8); drawWormChar(ctx, 0, 0, facingRight_br, true, br.frame); }
             ctx.restore();
         } else {
-            ctx.drawImage(wImg, p.x-wW/2, p.y-wH/2, wW, wH);
+            if(pngOk) { ctx.drawImage(wImg, p.x-wW/2, p.y-wH/2, wW, wH); }
+            else {
+                ctx.save(); ctx.translate(p.x,p.y); ctx.scale(1.8,1.8);
+                drawWormChar(ctx, 0, 0, facingRight_br, false, br.frame);
+                ctx.restore();
+            }
         }
+    }
     }
     ctx.shadowBlur = 0;
     // Spieler HP-Bar über Charakter (Arena-Space)
@@ -4014,17 +4028,27 @@ class Player{
         if(this.bikeTimer>0) ctx.translate(0,Math.sin(frame*.5)*3);
         if(this.bugTimer>0){ ctx.translate((Math.random()-.5)*5,(Math.random()-.5)*5); ctx.filter="hue-rotate("+Math.random()*360+"deg)"; }
         if(this.vacationTimer>0) ctx.globalAlpha=.5;
-        if(rolling) { ctx.globalAlpha=0.5; ctx.rotate(this.rollTimer*0.5); }
         if(!this.isMartin) {
-            // SPIELER — immer wurmr.png / wurml.png
+            // SPIELER — wurmr.png / wurml.png, Canvas-Wurm als Fallback
             let wImg = facingRight ? wormImgRight : wormImgLeft;
             let wW=60, wH=60;
-            ctx.drawImage(wImg, -wW/2, -wH/2, wW, wH);
+            if(wImg && wImg.complete && wImg.naturalHeight !== 0) {
+                ctx.drawImage(wImg, -wW/2, -wH/2, wW, wH);
+            } else {
+                ctx.restore(); ctx.save();
+                drawWormChar(ctx, this.x, this.y, facingRight, rolling, frame);
+                ctx.translate(this.x, this.y);
+            }
         } else {
-            // MADDIN (Job)
+            // MADDIN — maddinr/l.png, Fallback gold box
             let mImg = facingRight ? martinImgRight : martinImgLeft;
             let mW=60, mH=90;
-            ctx.drawImage(mImg, -mW/2, -mH/2, mW, mH);
+            if(mImg && mImg.complete && mImg.naturalHeight !== 0) {
+                ctx.drawImage(mImg, -mW/2, -mH/2, mW, mH);
+            } else {
+                ctx.fillStyle='gold'; ctx.fillRect(-mW/2,-mH/2,mW,mH);
+            }
+        }
         }
         let w=60,h=this.isMartin?90:60;
         if(this.vodkaTimer>0){ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(255,0,0,.3)';ctx.fillRect(-w/2,-h/2,w,h);ctx.globalCompositeOperation='source-over';}
