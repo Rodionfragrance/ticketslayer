@@ -1336,7 +1336,7 @@ let jobSkills    = JSON.parse(localStorage.getItem('ts_jobskills') || '{}');
 
 // EXP-Kurven
 function baseExpNeeded(lv) { return Math.floor(100 * Math.pow(lv, 1.6)); }
-function jobExpNeeded(lv)  { return Math.floor(80  * Math.pow(lv, 1.5)); }
+function jobExpNeeded(lv)  { return Math.floor(100 * Math.pow(lv, 1.55)); } // ~100 Runs bis Job 2
 
 // EXP-Quellen pro Gegner-Typ
 const EXP_TABLE = { 5:3, 4:5, 3:8, 2:12, 1:20, 7:10, 8:15, 99:0 };
