@@ -2549,6 +2549,19 @@ function enterBossRoom() {
         ],
         startTime: Date.now()
     };
+    // Toast: Zeige was der Spieler mitbringt
+    let wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫'};
+    let carried = [];
+    if(player) {
+        let wk = Object.keys(player.activeWeapons||{});
+        for(let w of (unlockedWeapons||[])) { if(!wk.includes(w)) wk.push(w); }
+        if(wk.length > 0) carried.push(wk.map(w => wepIcons[w]||w.toUpperCase()).join(' '));
+        if(player.shieldTimer > 0) carried.push('🛡️');
+        if(player.vodkaTimer > 0)  carried.push('🍺');
+        if(player.mouseTimer > 0)  carried.push('🖱️ ORBIT');
+    }
+    let sub = carried.length > 0 ? ('ARSENAL: ' + carried.join(' ')) : 'Standard-Bewaffnung';
+    setTimeout(() => showToast('⚠ BAYERS BÜRO BETRETEN', '#c0392b', sub), 900);
 }
 
 function updateBossRoom() {
@@ -2653,11 +2666,22 @@ function updateBossRoom() {
     }
     // Orbit-Maus im Boss-Room
     if(player && player.mouseTimer > 0) {
-        let mx = p.x + Math.cos(br.frame*0.12)*180;
-        let my = p.y + Math.sin(br.frame*0.12)*180;
+        let orbitR_br = 120;
+        let mx = p.x + Math.cos(br.frame*0.12)*orbitR_br;
+        let my = p.y + Math.sin(br.frame*0.12)*orbitR_br;
+        // Bayer treffen
         if(Math.hypot(mx - b.x, my - b.y) < b.radius + 40) {
             b.hp -= (0.8 + (player.dmgBonus||0)*0.05);
             spawnBRParticles(b.x, b.y, '#00ffff', 2);
+        }
+        // Mini-Gegner treffen
+        for(let mi=b.miniEnemies.length-1; mi>=0; mi--) {
+            let m = b.miniEnemies[mi];
+            if(Math.hypot(mx-m.x, my-m.y) < m.radius + 35) {
+                m.hp -= (50 + (player.dmgBonus||0));
+                spawnBRParticles(m.x, m.y, '#00ffff', 3);
+                if(m.hp <= 0) { spawnBRParticles(m.x,m.y,'#e67e22',8); b.miniEnemies.splice(mi,1); score += 150 * comboMult; updateCombo(true); }
+            }
         }
     }
 
@@ -3066,7 +3090,7 @@ function drawBossRoom() {
         ctx.globalAlpha = 1;
     }
 
-    // SPIELER — Wurm-Canvas-Drawing in Arena-Space
+    // SPIELER — Sprite + Buffs in Arena-Space
     let _scale_br = Math.min(cw / BR_W, ch / BR_H, 1.0);
     let _ox_br = (cw - Math.floor(BR_W * _scale_br)) / 2;
     let _oy_br = (ch - Math.floor(BR_H * _scale_br)) / 2;
@@ -3075,20 +3099,33 @@ function drawBossRoom() {
     let facingRight_br = mouseArenaX > p.x;
     let pr = 22;
     let playerHpPct = player ? player.hp/player.maxHp : 1;
-    // Spieler — wurmr.png / wurml.png (1.8x), Canvas-Fallback wenn PNG nicht geladen
+    // Spieler-Charakter zeichnen — Maddin ODER Wurm, PNG mit Canvas-Fallback
     {
-        let wImg = facingRight_br ? wormImgRight : wormImgLeft;
-        let wW = 60 * 1.8, wH = 60 * 1.8;
+        let isM = player && player.isMartin;
+        let wImg, wW, wH;
+        if(isM) {
+            wImg = facingRight_br ? martinImgRight : martinImgLeft;
+            wW = 60 * 1.8; wH = 90 * 1.8;
+        } else {
+            wImg = facingRight_br ? wormImgRight : wormImgLeft;
+            wW = 60 * 1.8; wH = 60 * 1.8;
+        }
         let pngOk = wImg && wImg.complete && wImg.naturalHeight !== 0;
         if(br._rollTimer > 0) {
             ctx.save(); ctx.translate(p.x,p.y); ctx.globalAlpha=0.5;
             ctx.rotate(br._rollTimer*0.4);
             if(pngOk) { ctx.drawImage(wImg, -wW/2, -wH/2, wW, wH); }
+            else if(isM) { ctx.fillStyle='gold'; ctx.fillRect(-30,-45,60,90); ctx.fillStyle='#000'; ctx.font='bold 14px Courier'; ctx.textAlign='center'; ctx.fillText('MADDIN',0,5); }
             else { ctx.scale(1.8,1.8); drawWormChar(ctx, 0, 0, facingRight_br, true, br.frame); }
             ctx.restore();
         } else {
             if(pngOk) { ctx.drawImage(wImg, p.x-wW/2, p.y-wH/2, wW, wH); }
-            else {
+            else if(isM) {
+                ctx.save(); ctx.translate(p.x,p.y);
+                ctx.fillStyle='gold'; ctx.fillRect(-30,-45,60,90);
+                ctx.fillStyle='#000'; ctx.font='bold 14px Courier'; ctx.textAlign='center'; ctx.fillText('MADDIN',0,5);
+                ctx.restore();
+            } else {
                 ctx.save(); ctx.translate(p.x,p.y); ctx.scale(1.8,1.8);
                 drawWormChar(ctx, 0, 0, facingRight_br, false, br.frame);
                 ctx.restore();
@@ -3096,18 +3133,49 @@ function drawBossRoom() {
         }
     }
     ctx.shadowBlur = 0;
+    // --- BUFF-VISUALS auf Spieler ---
+    if(player) {
+        // Schutzschild-Ring
+        if(player.shieldTimer > 0) {
+            ctx.beginPath(); ctx.arc(p.x, p.y, 35, 0, Math.PI*2);
+            ctx.strokeStyle=`rgba(0,255,255,${0.5+Math.sin(br.frame*0.2)*0.5})`; ctx.lineWidth=3; ctx.stroke();
+        }
+        // Vodka-Glow
+        if(player.vodkaTimer > 0) {
+            ctx.beginPath(); ctx.arc(p.x, p.y, 30, 0, Math.PI*2);
+            ctx.fillStyle=`rgba(${player.isMartin?'0,255,0':'255,0,0'},${0.15+Math.sin(br.frame*0.15)*0.1})`;
+            ctx.fill();
+        }
+        // SAP-Debuff
+        if(player.sapDebuffTimer > 0) {
+            ctx.beginPath(); ctx.arc(p.x, p.y, 38, 0, Math.PI*2);
+            ctx.strokeStyle=`rgba(31,97,141,${0.6+Math.sin(br.frame*0.3)*0.4})`; ctx.lineWidth=4; ctx.stroke();
+        }
+    }
     // Spieler HP-Bar über Charakter (Arena-Space)
     let phbw = 40;
     ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(p.x-phbw/2, p.y-pr-14, phbw, 5);
     ctx.fillStyle=playerHpPct<0.3?'#ff0000':(playerHpPct<0.6?'#f39c12':'#2ecc71');
     ctx.fillRect(p.x-phbw/2, p.y-pr-14, phbw*playerHpPct, 5);
-    // Orbit-Maus im Boss-Room zeichnen
+    // Orbit-Maus im Boss-Room zeichnen (180px Radius wie im Hauptspiel)
     if(player && player.mouseTimer > 0) {
         let ma = br.frame*0.12;
-        let mx2 = p.x + Math.cos(ma)*60, my2 = p.y + Math.sin(ma)*60;
+        let orbitR = 120; // angepasst an Arena-Größe
+        let mx2 = p.x + Math.cos(ma)*orbitR, my2 = p.y + Math.sin(ma)*orbitR;
         ctx.strokeStyle='rgba(0,255,255,0.4)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(mx2,my2); ctx.stroke();
-        ctx.font='20px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#fff';
-        ctx.fillText('🖱️', mx2, my2);
+        ctx.fillStyle='#ccc'; ctx.save(); ctx.translate(mx2,my2); ctx.rotate(ma+Math.PI/2);
+        ctx.fillRect(-6,-10,12,20); ctx.fillStyle='#f00'; ctx.fillRect(-2,-8,4,4); ctx.restore();
+    }
+    // Aktive Waffen-Anzeige unten links in Arena
+    if(player) {
+        let wk = Object.keys(player.activeWeapons||{});
+        for(let w of (unlockedWeapons||[])) { if(!wk.includes(w)) wk.push(w); }
+        if(wk.length > 0) {
+            let wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫'};
+            let txt = wk.map(w => wepIcons[w]||w).join(' ');
+            ctx.font='16px Arial'; ctx.textAlign='left'; ctx.fillStyle='rgba(255,255,255,0.8)';
+            ctx.fillText('🔫 '+txt, 12, BR_H-36);
+        }
     }
 
     // Boden-Label
@@ -3780,7 +3848,7 @@ class Turret{
 class Player{
     constructor(){
         this.x=WORLD_WIDTH/2; this.y=300;
-        this.radius=22; this.speed=5;
+        this.radius=22; this.speed=5; this.fireRate=20;
         this.hp=100; this.maxHp=100;
         this.dmgBonus=0;
         this.isMartin=false; this.promoTriggered=false;
