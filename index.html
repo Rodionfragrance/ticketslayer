@@ -5061,7 +5061,7 @@ function loop(){
 
             // --- NEU: Item-Magnetismus ---
             let distToPlayer = Math.hypot(player.x - item.x, player.y - item.y);
-            if(distToPlayer < 150) { // Einzugsbereich 150 Pixel
+            if(distToPlayer < 50) { // Einzugsbereich 150 Pixel
                 let angle = Math.atan2(player.y - item.y, player.x - item.x);
                 item.x += Math.cos(angle) * 7; // Geschwindigkeit des Ansaugens
                 item.y += Math.sin(angle) * 7;
@@ -5352,6 +5352,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
