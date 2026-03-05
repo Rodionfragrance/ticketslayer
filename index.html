@@ -2747,9 +2747,11 @@ function updateBossRoom() {
     if(b.stampCharge > 0) {
         b.stampCharge--;
         if(b.stampCharge === 0) {
-            // Stampf-Einschlag
-            let dmg = b.phase === 3 ? 35 : (b.phase === 2 ? 25 : 18);
-            if(player && player._bossDmgRed) dmg *= (1 - player._bossDmgRed);
+            // Stampf-Einschlag mit Schwierigkeits-Skalierung
+let diffMult = (1 + lastChosenDifficulty * 0.2); // Skaliert den Schaden hoch
+let dmg = (b.phase === 3 ? 45 : (b.phase === 2 ? 32 : 24)) * diffMult; 
+if(isWegflexenMode) dmg = 100; // Wegflexen = Sofort-Tod
+if(player && player._bossDmgRed) dmg *= (1 - player._bossDmgRed);
             let r = b.phase === 3 ? 180 : (b.phase === 2 ? 150 : 120);
             if(Math.hypot(p.x - b.stampX, p.y - b.stampY) < r) {
                 if(br._rollTimer > 0) {
@@ -2793,7 +2795,7 @@ function updateBossRoom() {
                 lx += Math.cos(b.laserAngle)*8; ly += Math.sin(b.laserAngle)*8;
                 if(Math.hypot(lx-p.x, ly-p.y) < 20) {
                     if(br._rollTimer <= 0) {
-                        let ldmg = b.phase === 3 ? 1.5 : 1.0;
+                        let ldmg = (b.phase === 3 ? 2.5 : 1.5) * diffMult;
                         if(player) { player.hp -= ldmg; }
                     }
                     break;
@@ -3043,27 +3045,42 @@ function drawBossRoom() {
         ctx.beginPath(); ctx.arc(pt.x, pt.y, 4, 0, Math.PI*2); ctx.fill();
     }
     ctx.globalAlpha = 1;
-    // PETER BAYER — peter.png primär, Canvas-Fallback wenn PNG nicht geladen
-    ctx.shadowColor = phaseColor; ctx.shadowBlur = 25 + Math.sin(br.frame*0.1)*8;
-    // Pulsierender Glow-Ring
-    ctx.strokeStyle = phaseColor; ctx.lineWidth = b.phase===3 ? 5 : 3;
-    ctx.beginPath(); ctx.arc(b.x, b.y, b.radius+4, 0, Math.PI*2); ctx.stroke();
-    ctx.shadowBlur = 0;
-    // peter.png zeichnen — PNG primär, Canvas-Fallback
-    {
-        let _pw = b.radius * 2.4, _ph = b.radius * 2.8;
+    /// PETER BAYER — peter.png primär, Canvas-Fallback wenn PNG nicht geladen
+ctx.shadowColor = phaseColor; ctx.shadowBlur = 25 + Math.sin(br.frame * 0.1) * 8;
+
+// Pulsierender Glow-Ring
+ctx.strokeStyle = phaseColor; ctx.lineWidth = b.phase === 3 ? 5 : 3;
+ctx.beginPath(); ctx.arc(b.x, b.y, b.radius + 4, 0, Math.PI * 2); ctx.stroke();
+ctx.shadowBlur = 0;
+
+// peter.png zeichnen — PNG primär mit Seitenverhältnis-Fix
+{
+    let _ph = b.radius * 2.8; // Wir behalten die Höhe bei
+    let _pw = _ph; // Fallback-Breite (quadratisch)
+
+    if (peterImg && peterImg.complete && peterImg.naturalHeight !== 0) {
+        // FIX: Berechne das echte Seitenverhältnis des Bildes
+        let ratio = peterImg.naturalWidth / peterImg.naturalHeight;
+        _pw = _ph * ratio; // Passt die Breite an die Höhe an
+
         ctx.save();
-        if(b.phase===3) { ctx.translate(b.x + Math.sin(br.frame*0.25)*4, b.y); }
-        else { ctx.translate(b.x, b.y); }
-        if(peterImg && peterImg.complete && peterImg.naturalHeight !== 0) {
-            ctx.drawImage(peterImg, -_pw/2, -_ph*0.62, _pw, _ph);
+        if (b.phase === 3) {
+            ctx.translate(b.x + Math.sin(br.frame * 0.25) * 4, b.y);
         } else {
-            // Canvas-Fallback: drawPeterBayerChar
-            drawPeterBayerChar(ctx, 0, 0, b.radius, b.phase, br.frame);
+            ctx.translate(b.x, b.y);
         }
+        
+        // Zeichne mit der berechneten Breite (_pw)
+        ctx.drawImage(peterImg, -_pw / 2, -_ph * 0.62, _pw, _ph);
+        ctx.restore();
+    } else {
+        // Canvas-Fallback: drawPeterBayerChar
+        ctx.save();
+        ctx.translate(b.x, b.y);
+        drawPeterBayerChar(ctx, 0, 0, b.radius, b.phase, br.frame);
         ctx.restore();
     }
-
+}
     // Bayer HP Bar
     let bw = b.radius * 2.8;
     ctx.fillStyle = '#222'; ctx.fillRect(b.x-bw/2, b.y-b.radius-20, bw, 10);
@@ -4488,12 +4505,13 @@ function spawnLogic(){
         showToast("⚠ BOSS ERSCHIENEN!","#e74c3c",bd.name+" — "+bd.subtitle);
         { let _bhc=document.getElementById('bossHpContainer'); if(_bhc) _bhc.style.display='block'; }
     }
-    // Peter Bayer Büro: NUR wenn Janski besiegt wurde (Boss-Stage 4 = alle 4 Bosse tot)
-    if(!bueroDoor && currentBossStage >= 4 && !activeBoss && gamePhase === 'normal' && !systemCollapse) {
-        bueroDoor = { x: WORLD_WIDTH/2 - 60, y: 250, w: 120, h: 160, active: true, pulse: 0 };
-        playSound('alarm');
-        showToast('📞 PETER BAYER RUFT!', '#c0392b', 'Janski besiegt! Bürotür erschienen → [E]', true);
-    }
+    // Peter Bayer Büro: NUR wenn Janski (Boss 4) besiegt wurde
+if(!bueroDoor && currentBossStage >= 4 && !activeBoss && gamePhase === 'normal' && !systemCollapse) {
+    // Doppelte Größe: 240x320 statt 120x160
+    bueroDoor = { x: WORLD_WIDTH/2 - 120, y: 150, w: 240, h: 320, active: true, pulse: 0 };
+    playSound('alarm');
+    showToast('📞 PETER BAYER RUFT!', '#c0392b', 'Janski besiegt! Betrete die Direktion [E]', true);
+}
 
     let sr=Math.max(15,60-difficulty*4);
     if(activeBoss) sr*=2;
@@ -4709,22 +4727,30 @@ function updateHUD(){
         wb.style.backgroundColor = '#ffeb3b';
     }
 
-    // --- NEU V20: BOSS HP BAR ---
-    let bossBar = document.getElementById('bossHpContainer');
-    if(activeBoss && activeBoss.hp > 0) {
-        bossBar.style.display = 'block';
-        document.getElementById('bossHpName').innerText = `☠ ${activeBoss.label} ☠`;
-        let pct = Math.max(0, activeBoss.hp / activeBoss.maxHp * 100);
-        { let _bi=document.getElementById('bossHpBarInner'); if(_bi) _bi.style.width = pct+'%'; }
-        document.getElementById('bossHpPercent').innerText = `${Math.ceil(pct)}%  —  ${Math.ceil(activeBoss.hp)} / ${activeBoss.maxHp} HP`;
-        // Farbe bei niedrigem HP
-        let bar = document.getElementById('bossHpBarInner');
-        if(pct < 25) bar.style.background = 'linear-gradient(90deg, #8b0000, #c0392b, #ff4444)';
-        else if(pct < 50) bar.style.background = 'linear-gradient(90deg, #c0392b, #e74c3c, #ff6b6b)';
-        else bar.style.background = 'linear-gradient(90deg, #c0392b, #e74c3c, #ff6b6b)';
+    // --- BOSS HP BAR (Fix für Büro & Welt) ---
+let bossBar = document.getElementById('bossHpContainer');
+if ((activeBoss && activeBoss.hp > 0) || (gamePhase === 'bossroom' && bossRoomState)) {
+    bossBar.style.display = 'block';
+    let currentHp, maxHp, label;
+
+    if(gamePhase === 'bossroom' && bossRoomState) {
+        currentHp = bossRoomState.bayer.hp;
+        maxHp = bossRoomState.bayer.maxHp;
+        label = `☠ PETER BAYER — PHASE ${bossRoomState.bayer.phase} ☠`;
     } else {
-        bossBar.style.display = 'none';
+        currentHp = activeBoss.hp;
+        maxHp = activeBoss.maxHp;
+        label = `☠ ${activeBoss.label} ☠`;
     }
+
+    document.getElementById('bossHpName').innerText = label;
+    let pct = Math.max(0, currentHp / maxHp * 100);
+    let _bi = document.getElementById('bossHpBarInner');
+    if(_bi) _bi.style.width = pct + '%';
+    document.getElementById('bossHpPercent').innerText = `${Math.ceil(pct)}% — ${Math.ceil(currentHp)} / ${maxHp} HP`;
+} else {
+    bossBar.style.display = 'none';
+}
 
     // Status Overlay
     let statusHtml = "<span style='color:#fff;text-decoration:underline;font-size:14px;font-weight:bold;'>📡 LEITSTAND-SYSTEME:</span><br>";
@@ -5331,3 +5357,4 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
