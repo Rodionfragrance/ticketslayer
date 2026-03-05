@@ -2255,12 +2255,12 @@ function applySkillTree(p) {
 // WAFFENKAMMER — Meta-Shop mit Kaffeebons
 // ============================================================
 const WEAPON_SHOP = [
-    { id:'minigun',  icon:'🌀', name:'Minigun',       desc:'Sehr hohe Feuerrate, leichte Streuung.',        cost:200 },
-    { id:'shotgun',  icon:'💥', name:'Schrotflinte',  desc:'5-Pellet Fächer. Brutal auf kurze Distanz.',    cost:250 },
-    { id:'flamer',   icon:'🔥', name:'Flammenwerfer', desc:'Setzt Gegner in Brand (DoT). Kurze Reichweite.',cost:350 },
-    { id:'mouse',    icon:'🖱️', name:'Orbit-Maus',    desc:'Kreist um dich, knockt zurück (50 Dmg).',       cost:300 },
-    { id:'rocket',   icon:'🚀', name:'Raketenwerfer', desc:'Splash-Damage 150px. Rückstoß schiebt zurück.', cost:400 },
-    { id:'railgun',  icon:'⚡', name:'Railgun',        desc:'Durchdringt Gegner in einer Linie. Stark.',     cost:500 },
+    { id:'minigun',  icon:'🌀', name:'Minigun',       desc:'Sehr hohe Feuerrate, leichte Streuung.',        cost:20000 },
+    { id:'shotgun',  icon:'💥', name:'Schrotflinte',  desc:'5-Pellet Fächer. Brutal auf kurze Distanz.',    cost:25000 },
+    { id:'flamer',   icon:'🔥', name:'Flammenwerfer', desc:'Setzt Gegner in Brand (DoT). Kurze Reichweite.',cost:35000 },
+    { id:'mouse',    icon:'🖱️', name:'Orbit-Maus',    desc:'Kreist um dich, knockt zurück (50 Dmg).',       cost:30000 },
+    { id:'rocket',   icon:'🚀', name:'Raketenwerfer', desc:'Splash-Damage 150px. Rückstoß schiebt zurück.', cost:40000 },
+    { id:'railgun',  icon:'⚡', name:'Railgun',        desc:'Durchdringt Gegner in einer Linie. Stark.',     cost:50000 },
 ];
 
 function hasWeaponUnlocked(id) { return unlockedWeapons.includes(id); }
@@ -3526,6 +3526,15 @@ class Player{
         // if(score>=2500&&!this.isMartin&&!this.promoTriggered) this.triggerEvolution(); // DEAKTIVIERT — Maddin wird Job-System Klasse
 
         if(input.keys['KeyE']){
+            // Büro-Tür: Peter Bayer Boss-Room betreten
+            if(bueroDoor && bueroDoor.active && gamePhase === 'normal') {
+                let doorCenterX = bueroDoor.x + bueroDoor.w / 2;
+                let doorBottomY = bueroDoor.y + bueroDoor.h;
+                if(Math.hypot(this.x - doorCenterX, this.y - doorBottomY) < 130) {
+                    enterBossRoom();
+                    input.keys['KeyE'] = false;
+                }
+            }
             for(let s of stations){
                 if(s.type==='hardware_store' && Math.hypot(this.x-s.x-s.w/2, this.y-s.y-s.h/2) < 150){ openKloskaShop(); input.keys['KeyE'] = false; }
                 if(s.type==='chicken_truck'&&Math.hypot(this.x-s.x-s.w/2,this.y-s.y-s.h/2)<150&&this.hp<this.maxHp && currentDiffLabel !== "SURVIVAL"){
@@ -4042,7 +4051,7 @@ function spawnLogic(){
         document.getElementById('bossHpContainer').style.display = 'block';
     }
     // Peter Bayer Büro-Ruf bei Score 50000
-    if(!bueroDoor && !bueroDoor && score >= 50000 && gamePhase === 'normal' && !systemCollapse) {
+    if(!bueroDoor && score >= 50000 && gamePhase === 'normal' && !systemCollapse) {
         bueroDoor = { x: WORLD_WIDTH/2 - 60, y: 250, w: 120, h: 160, active: true, pulse: 0 };
         playSound('alarm');
         showToast('📞 PETER BAYER RUFT!', '#c0392b', 'Gehe zur markierten Bürotür → [E]', true);
