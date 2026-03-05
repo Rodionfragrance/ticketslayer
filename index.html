@@ -1041,6 +1041,15 @@ function saveHighscoreAndRestart() {
     let name = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim().substring(0,10);
     let timeSec = (Date.now() - runStartTime) / 1000;
     let rat = calculateRunRating(score, runKillCount, timeSec, runBossKilled, bestComboThisRun, lastChosenDifficulty);
+    // --- NEU: S-Rang Trophäen Tracking ---
+    if(rat.grade === 'S') {
+        let sRanks = JSON.parse(localStorage.getItem('ts_s_ranks') || '[]');
+        if(!sRanks.includes(currentDiffLabel)) {
+            sRanks.push(currentDiffLabel);
+            localStorage.setItem('ts_s_ranks', JSON.stringify(sRanks));
+            if(sRanks.length >= 5) unlockTrophy('ceo_perk');
+        }
+    }
     if(db && score > 0) {
         db.collection("highscores").add({
             name: name, 
@@ -1071,6 +1080,15 @@ function saveHighscoreAndMainMenu() {
     let name = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim().substring(0,10);
     let timeSec2 = (Date.now() - runStartTime) / 1000;
     let rat2 = calculateRunRating(score, runKillCount, timeSec2, runBossKilled, bestComboThisRun, lastChosenDifficulty);
+    // --- NEU: S-Rang Trophäen Tracking ---
+    if(rat2.grade === 'S') {
+        let sRanks = JSON.parse(localStorage.getItem('ts_s_ranks') || '[]');
+        if(!sRanks.includes(currentDiffLabel)) {
+            sRanks.push(currentDiffLabel);
+            localStorage.setItem('ts_s_ranks', JSON.stringify(sRanks));
+            if(sRanks.length >= 5) unlockTrophy('ceo_perk');
+        }
+    }
     if(db && score > 0) {
         db.collection("highscores").add({
             name: name, 
@@ -1322,7 +1340,8 @@ const TROPHIES_DEF = [
     { id:'picobello',       icon:'✨', name:'Picobello',           desc:'Erreiche eine 100er Combo in einem Run.', perk:'Treffsicher: Combo reißt erst nach 5 Treffern ab' },
     { id:'picobellooo',     icon:'💫', name:'Picobellooo',         desc:'Erreiche eine 1000er Combo in einem Run.', perk:'Unaufhaltbar: Combo reißt erst nach 20 Treffern ab' },
     { id:'nervensaege',     icon:'😤', name:'Nervensäge',          desc:'Verscheuche Kloska 3× in einem Run.', perk:'Respekt: Kloska erscheint 25% seltener' },
-    { id:'speedster',       icon:'⚡', name:'Speedster',           desc:'Besiege Peter Bayer in unter 5 Sekunden im Boss-Room.', perk:'Präzision: +5% Schaden auf alle Waffen' }
+    { id:'speedster',       icon:'⚡', name:'Speedster',           desc:'Besiege Peter Bayer in unter 5 Sekunden im Boss-Room.', perk:'Präzision: +5% Schaden auf alle Waffen' },
+    { id:'ceo_perk',        icon:'👑', name:'Vorstandsvorsitzender',desc:'Schließe alle 5 Ligen mit dem S-Rang ab.', perk:'Unkündbar: Überlebe 1 tödlichen Treffer mit 1 HP (3s Schild)' }
 ];
 
 let unlockedTrophies = JSON.parse(localStorage.getItem('ts_trophies') || '[]');
@@ -3650,6 +3669,9 @@ function calculateRunRating(sc, kills, timeSec, bossKilled, bestCombo, diff) {
 
 function checkGameOver(){
     if(player.hp<=0){
+        / --- DER RETTENDE ENGEL ---
+        if(player.checkUnkuendbar()) return; // Verhindert das Game Over
+        // --------------------------
         gameRunning=false;
         unlockTrophy('first_game');
         if(systemCollapse) {
@@ -3868,8 +3890,33 @@ class Player{
         this.shotsFired = 0;
         this.runMeetings = 0;
         this.runIdocs = 0;
+       // --- NEU: CEO PERK START-CHECK ---
+        if(hasTrophy('ceo_perk')) { this._hasUnkuendbar = true; this._unkuendbarUsed = false; }
+        
+        this.hp = this.maxHp;
+        this.runSuppen = 0;
+        this.runHacks = 0;
+        this.runRacheHeal = 0;
+        this.shotsFired = 0;
+        this.runMeetings = 0;
+        this.runIdocs = 0;
     }
 
+    // --- NEU: RETTUNGS-FUNKTION (wird vor dem Tod aufgerufen) ---
+    checkUnkuendbar() {
+        if (this.hp <= 0 && this._hasUnkuendbar && !this._unkuendbarUsed) {
+            this.hp = 1;
+            this._unkuendbarUsed = true;
+            this.shieldTimer = 180; // 3 Sekunden Unverwundbarkeit (60fps)
+            playSound('powerup');
+            showToast("UNKÜNDBAR!", "#f1c40f", "Vorstand-Perk gerettet!");
+            floatingTexts.push(new FloatingText(this.x, this.y, "UNKÜNDBAR!", "#f1c40f"));
+            return true; 
+        }
+        return false;
+    }
+    }
+    
     activateVacation(){
         if(this.yellowSlips>0&&this.vacationTimer<=0){
             this.yellowSlips--;
@@ -5352,6 +5399,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
