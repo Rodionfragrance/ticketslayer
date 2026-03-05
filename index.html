@@ -2761,97 +2761,96 @@ function drawBossRoom() {
     let b = br.bayer;
     let p = br.player;
     let cw = canvas.width, ch = canvas.height;
-    let ox = (cw - BR_W) / 2, oy = (ch - BR_H) / 2;
 
-    // Hintergrund dimmen
-    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    // Arena zentrieren — passt sich an Fenstergröße an
+    let scale = Math.min(cw / BR_W, ch / BR_H, 1.0);
+    let arenaW = Math.floor(BR_W * scale);
+    let arenaH = Math.floor(BR_H * scale);
+    let ox = Math.floor((cw - arenaW) / 2);
+    let oy = Math.floor((ch - arenaH) / 2);
+
+    // Schwarzer Hintergrund
+    ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, cw, ch);
 
-    // Arena-Boden — Büro-Raum
+    // Roter Rand-Glow (Phase abhängig)
+    let phaseColor = b.phase === 3 ? '#ff0000' : (b.phase === 2 ? '#e67e22' : '#c0392b');
+    ctx.strokeStyle = phaseColor;
+    ctx.lineWidth = b.phase === 3 ? 6 : 3;
+    ctx.strokeRect(ox, oy, arenaW, arenaH);
+
     ctx.save();
     ctx.translate(ox, oy);
+    ctx.scale(scale, scale);
 
     // Boden
-    let floorGrad = ctx.createLinearGradient(0, 0, BR_W, BR_H);
-    floorGrad.addColorStop(0, '#1a0a0a');
-    floorGrad.addColorStop(1, '#0d0505');
-    ctx.fillStyle = floorGrad;
+    ctx.fillStyle = '#1a0a0a';
     ctx.fillRect(0, 0, BR_W, BR_H);
 
-    // Boden-Kacheln
-    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    // Kacheln
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
     ctx.lineWidth = 1;
-    for(let x=0; x<BR_W; x+=60) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,BR_H); ctx.stroke(); }
-    for(let y=0; y<BR_H; y+=60) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(BR_W,y); ctx.stroke(); }
+    for(let x=0;x<BR_W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,BR_H);ctx.stroke();}
+    for(let y=0;y<BR_H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(BR_W,y);ctx.stroke();}
 
-    // Arena-Rand
-    ctx.strokeStyle = br.phase === 3 ? '#c0392b' : (br.phase === 2 ? '#e67e22' : '#555');
-    ctx.lineWidth = 4;
-    ctx.strokeRect(2, 2, BR_W-4, BR_H-4);
+    // Phase-Flash
     if(br.phaseChangeFlash > 0) {
-        ctx.strokeStyle = `rgba(255,50,50,${br.phaseChangeFlash/60})`;
-        ctx.lineWidth = 10;
-        ctx.strokeRect(0, 0, BR_W, BR_H);
+        ctx.fillStyle = 'rgba(255,0,0,'+(br.phaseChangeFlash/120)+')';
+        ctx.fillRect(0, 0, BR_W, BR_H);
     }
 
-    // Büro-Deko (Schreibtisch oben)
-    ctx.fillStyle = '#3d2b1f';
-    ctx.fillRect(BR_W/2-120, 30, 240, 50); // Schreibtisch
-    ctx.fillStyle = '#2c1f10';
-    ctx.fillRect(BR_W/2-100, 35, 60, 40); // Monitor
-    ctx.fillStyle = '#1a3a1a';
-    ctx.fillRect(50, 50, 40, 80); // Pflanze links
-    ctx.fillRect(BR_W-90, 50, 40, 80); // Pflanze rechts
-    ctx.fillStyle = '#2d4a2d';
-    ctx.beginPath(); ctx.arc(70, 45, 35, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(BR_W-70, 45, 35, 0, Math.PI*2); ctx.fill();
+    // Büro-Deko
+    ctx.fillStyle = '#3d2b1f'; ctx.fillRect(BR_W/2-120, 30, 240, 50);
+    ctx.fillStyle = '#2c1f10'; ctx.fillRect(BR_W/2-100, 35, 60, 40);
+    ctx.fillStyle = '#2d4a2d'; 
+    ctx.beginPath(); ctx.arc(70, 50, 35, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(BR_W-70, 50, 35, 0, Math.PI*2); ctx.fill();
 
     // Boden-Risse (Stampf-Einschläge)
     for(let cr of br.floorCracks) {
-        ctx.globalAlpha = cr.alpha * 0.6;
-        ctx.strokeStyle = '#c0392b';
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(cr.x, cr.y, cr.r, 0, Math.PI*2); ctx.stroke();
-        ctx.globalAlpha = cr.alpha * 0.15;
-        ctx.fillStyle = '#c0392b';
-        ctx.fill();
+        let r = b.phase === 3 ? 180 : (b.phase === 2 ? 150 : 120);
+        ctx.globalAlpha = cr.alpha * 0.4;
+        ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(cr.x, cr.y, r, 0, Math.PI*2); ctx.stroke();
         ctx.globalAlpha = 1;
     }
 
     // Stampf-Vorwarnung
     if(b.stampCharge > 0) {
-        let prog = 1 - b.stampCharge/60;
+        let prog = 1 - b.stampCharge / 60;
         let r = b.phase === 3 ? 180 : (b.phase === 2 ? 150 : 120);
-        ctx.globalAlpha = 0.15 + prog * 0.35;
-        ctx.fillStyle = '#c0392b';
+        ctx.globalAlpha = 0.12 + prog * 0.30;
+        ctx.fillStyle = '#ff0000';
         ctx.beginPath(); ctx.arc(b.stampX, b.stampY, r, 0, Math.PI*2); ctx.fill();
-        ctx.globalAlpha = 0.8;
-        ctx.strokeStyle = '#ff0000';
-        ctx.lineWidth = 3;
+        ctx.globalAlpha = 0.9;
+        ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 3;
         ctx.beginPath(); ctx.arc(b.stampX, b.stampY, r, 0, Math.PI*2); ctx.stroke();
         ctx.globalAlpha = 1;
-        // Countdown
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Courier New'; ctx.textAlign = 'center';
-        ctx.fillText('⚠', b.stampX, b.stampY + 6);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 22px Arial';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('⚠', b.stampX, b.stampY);
     }
 
     // Laser
     if(b.laserActive) {
-        ctx.save();
-        ctx.globalAlpha = 0.9;
-        ctx.strokeStyle = '#ff0000';
-        ctx.lineWidth = 5;
+        ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 5;
         ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 20;
         ctx.beginPath();
         ctx.moveTo(b.x, b.y);
-        ctx.lineTo(b.x + Math.cos(b.laserAngle)*800, b.y + Math.sin(b.laserAngle)*800);
+        ctx.lineTo(b.x + Math.cos(b.laserAngle)*900, b.y + Math.sin(b.laserAngle)*900);
         ctx.stroke();
-        ctx.lineWidth = 2; ctx.strokeStyle = '#fff';
+        ctx.strokeStyle = 'rgba(255,200,200,0.6)'; ctx.lineWidth = 2; ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.moveTo(b.x, b.y);
-        ctx.lineTo(b.x + Math.cos(b.laserAngle)*800, b.y + Math.sin(b.laserAngle)*800);
+        ctx.lineTo(b.x + Math.cos(b.laserAngle)*900, b.y + Math.sin(b.laserAngle)*900);
         ctx.stroke();
-        ctx.restore();
+    }
+    ctx.shadowBlur = 0;
+
+    // Spieler-Bullets
+    ctx.fillStyle = '#f1c40f';
+    for(let bl of br.bullets) {
+        ctx.beginPath(); ctx.arc(bl.x, bl.y, 5, 0, Math.PI*2); ctx.fill();
     }
 
     // Mini-Gegner
@@ -2859,84 +2858,77 @@ function drawBossRoom() {
         ctx.fillStyle = '#e74c3c';
         ctx.beginPath(); ctx.arc(m.x, m.y, m.radius, 0, Math.PI*2); ctx.fill();
         ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
-        // HP
-        ctx.fillStyle = '#555';
-        ctx.fillRect(m.x - 15, m.y - m.radius - 8, 30, 4);
+        ctx.fillStyle = '#333'; ctx.fillRect(m.x-15, m.y-m.radius-8, 30, 4);
         ctx.fillStyle = '#e74c3c';
-        ctx.fillRect(m.x - 15, m.y - m.radius - 8, 30 * (m.hp/m.maxHp), 4);
+        ctx.fillRect(m.x-15, m.y-m.radius-8, 30*(m.hp/m.maxHp), 4);
     }
 
     // Partikel
     for(let pt of br.particles) {
-        ctx.globalAlpha = pt.life / 50;
+        ctx.globalAlpha = Math.max(0, pt.life / 50);
         ctx.fillStyle = pt.color;
         ctx.beginPath(); ctx.arc(pt.x, pt.y, 4, 0, Math.PI*2); ctx.fill();
     }
     ctx.globalAlpha = 1;
 
-    // PETER BAYER zeichnen
-    let phaseColor = b.phase === 3 ? '#ff0000' : (b.phase === 2 ? '#e67e22' : '#c0392b');
-    // Glow
-    ctx.shadowColor = phaseColor; ctx.shadowBlur = b.phase === 3 ? 30 : 15;
+    // PETER BAYER
+    ctx.shadowColor = phaseColor; ctx.shadowBlur = 20;
     ctx.fillStyle = phaseColor;
     ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.fill();
     ctx.shadowBlur = 0;
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
-    // Face
-    ctx.fillStyle = '#2c0a0a';
-    ctx.beginPath(); ctx.arc(b.x, b.y, b.radius * 0.65, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(b.radius*0.55)}px Arial`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(b.phase === 3 ? '😡' : (b.phase === 2 ? '😤' : '👔'), b.x, b.y);
-    // HP Bar über Bayer
-    let hpBarW = b.radius * 2.5;
-    ctx.fillStyle = '#333'; ctx.fillRect(b.x - hpBarW/2, b.y - b.radius - 18, hpBarW, 10);
-    let hpPct = b.hp / b.maxHp;
-    let hpColor = hpPct > 0.6 ? '#e74c3c' : (hpPct > 0.3 ? '#e67e22' : '#f1c40f');
-    ctx.fillStyle = hpColor;
-    ctx.fillRect(b.x - hpBarW/2, b.y - b.radius - 18, hpBarW * hpPct, 10);
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.strokeRect(b.x - hpBarW/2, b.y - b.radius - 18, hpBarW, 10);
-    // Phase-Label
-    ctx.fillStyle = phaseColor; ctx.font = 'bold 11px Courier New'; ctx.textAlign = 'center';
-    ctx.fillText(`PHASE ${b.phase} — ${Math.ceil(hpPct*100)}%`, b.x, b.y - b.radius - 25);
-    // Speech Bubble
+    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(b.x, b.y, b.radius*0.65, 0, Math.PI*2); ctx.fill();
+    ctx.font = 'bold '+(b.radius*0.55|0)+'px Arial';
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(b.phase===3?'😡':(b.phase===2?'😤':'👔'), b.x, b.y);
+
+    // Bayer HP Bar
+    let bw = b.radius * 2.8;
+    ctx.fillStyle = '#222'; ctx.fillRect(b.x-bw/2, b.y-b.radius-20, bw, 10);
+    let hpPct = b.hp/b.maxHp;
+    ctx.fillStyle = hpPct>0.6?'#e74c3c':(hpPct>0.3?'#e67e22':'#f1c40f');
+    ctx.fillRect(b.x-bw/2, b.y-b.radius-20, bw*hpPct, 10);
+    ctx.strokeStyle='#fff'; ctx.lineWidth=1; ctx.strokeRect(b.x-bw/2, b.y-b.radius-20, bw, 10);
+    ctx.fillStyle=phaseColor; ctx.font='bold 11px Courier New'; ctx.textAlign='center';
+    ctx.fillText('PHASE '+b.phase+' — '+Math.ceil(hpPct*100)+'%', b.x, b.y-b.radius-26);
+
+    // Speech
     if(b.speechTimer > 0 && b.speech) {
-        ctx.globalAlpha = Math.min(1, b.speechTimer / 30);
-        ctx.fillStyle = 'rgba(0,0,0,0.85)';
-        let sw = ctx.measureText(b.speech).width + 20;
-        let sx = Math.max(5, Math.min(BR_W - sw - 5, b.x - sw/2));
-        ctx.fillRect(sx, b.y - b.radius - 65, sw, 28);
-        ctx.strokeStyle = phaseColor; ctx.lineWidth = 2; ctx.strokeRect(sx, b.y - b.radius - 65, sw, 28);
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'left';
-        ctx.fillText(b.speech, sx + 10, b.y - b.radius - 47);
+        ctx.globalAlpha = Math.min(1, b.speechTimer/30);
+        ctx.font = 'bold 14px Courier New';
+        let sw = ctx.measureText(b.speech).width + 24;
+        let sx = Math.max(4, Math.min(BR_W-sw-4, b.x-sw/2));
+        let sy = b.y - b.radius - 70;
+        ctx.fillStyle = 'rgba(0,0,0,0.9)';
+        ctx.fillRect(sx, sy, sw, 32);
+        ctx.strokeStyle = phaseColor; ctx.lineWidth = 2;
+        ctx.strokeRect(sx, sy, sw, 32);
+        ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
+        ctx.fillText(b.speech, sx+12, sy+21);
         ctx.globalAlpha = 1;
     }
 
-    // SPIELER in Boss-Room
+    // SPIELER
     let pr = 18;
-    let playerCol = player ? (player.hp < 30 ? '#ff4444' : '#e67e22') : '#e67e22';
-    ctx.shadowColor = playerCol; ctx.shadowBlur = 10;
-    ctx.fillStyle = playerCol;
+    let playerHpPct = player ? player.hp/player.maxHp : 1;
+    let pc = playerHpPct < 0.3 ? '#ff4444' : '#e67e22';
+    ctx.shadowColor = pc; ctx.shadowBlur = 12;
+    ctx.fillStyle = pc;
     ctx.beginPath(); ctx.arc(p.x, p.y, pr, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
     ctx.shadowBlur = 0;
-    ctx.fillStyle = '#fff'; ctx.font = `bold ${pr}px Arial`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.font = 'bold '+pr+'px Arial';
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('🪱', p.x, p.y);
 
-    // Phase-Banner
-    ctx.fillStyle = '#111'; ctx.textAlign = 'center';
-    ctx.font = 'bold 16px Courier New';
+    // Boden-Label
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = 'bold 15px Courier New'; ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(0, BR_H-28, BR_W, 28);
     ctx.fillStyle = phaseColor;
-    ctx.fillText(`☠ PETER BAYER — PHASE ${b.phase} ☠`, BR_W/2, BR_H - 18);
+    ctx.fillText('☠ PETER BAYER — PHASE '+b.phase+' ☠', BR_W/2, BR_H-10);
 
-    ctx.restore(); // translate(ox, oy)
-
-    // Fade Overlay
-    if(fadeAlpha > 0) {
-        ctx.fillStyle = `rgba(0,0,0,${fadeAlpha})`;
-        ctx.fillRect(0, 0, cw, ch);
-    }
+    ctx.restore();
 }
 
 function drawBueroDoor() {
@@ -4340,6 +4332,7 @@ function loop(){
 
         // Boss-Room Modus
         if(gamePhase === 'bossroom') {
+            frame++;
             updateBossRoom();
             // HUD Boss-HP
             if(bossRoomState) {
@@ -4352,13 +4345,21 @@ function loop(){
                 if(_hb) _hb.style.width = pct + '%';
                 if(_hp) _hp.innerText = `${Math.ceil(pct)}%  —  ${Math.ceil(b.hp)} / ${b.maxHp} HP`;
             }
-            // Nur Canvas zeichnen
-            ctx.save();
-            ctx.translate(canvas.width/2 - (900/2), canvas.height/2 - (620/2));
-            // Wird in drawBossRoom mit eigenem translate gehandhabt
-            ctx.restore();
+            // Canvas komplett neu zeichnen
             ctx.setTransform(1,0,0,1,0,0);
-            drawBossRoom();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            try { drawBossRoom(); } catch(brErr) { 
+                // Fallback: zumindest schwarzen Hintergrund + Text
+                ctx.fillStyle='#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+                ctx.fillStyle='#f00'; ctx.font='20px monospace'; ctx.textAlign='center';
+                ctx.fillText('BOSS ROOM ERROR: '+brErr.message, canvas.width/2, canvas.height/2);
+                console.error('drawBossRoom error:', brErr);
+            }
+            // Fade overlay
+            if(fadeAlpha > 0) {
+                ctx.fillStyle = 'rgba(0,0,0,'+fadeAlpha+')';
+                ctx.fillRect(0,0,canvas.width,canvas.height);
+            }
             updateHUD();
             requestAnimationFrame(loop);
             return;
