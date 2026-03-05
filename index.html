@@ -2874,7 +2874,11 @@ function updateBossRoom() {
         if(br.floorCracks[i].life <= 0) br.floorCracks.splice(i,1);
     }
 
-    if(player && player.hp <= 0) { br.result = 'lose'; exitBossRoom(false); }
+    // --- FIX: Rettungs-Check auch im Boss-Room! ---
+    if(player && player.hp <= 0) { 
+        if(!player.checkUnkuendbar()) { br.result = 'lose'; exitBossRoom(false); }
+    }
+
     if(activeBoss) { activeBoss.hp = b.hp; activeBoss.maxHp = b.maxHp; }
 }
 function spawnBRParticles(x, y, color, count) {
@@ -3916,7 +3920,7 @@ class Player{
     activateVacation(){
         if(this.yellowSlips>0&&this.vacationTimer<=0){
             this.yellowSlips--;
-    
+        }
     
     activateVacation(){
         if(this.yellowSlips>0&&this.vacationTimer<=0){
@@ -5400,6 +5404,7 @@ setTimeout(function(){
 </script>
 </body>
 </html>
+
 
 
 
