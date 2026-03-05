@@ -2750,7 +2750,7 @@ function exitBossRoom(won) {
         }
         gamePhase = won ? 'normal' : 'normal';
         fadeDir = -1;
-        document.getElementById('bossHpContainer').style.display = 'none';
+        { let _bhc=document.getElementById('bossHpContainer'); if(_bhc) _bhc.style.display='none'; }
         activeBoss = null;
     }, 800);
 }
@@ -3245,7 +3245,7 @@ function quitToMenu() {
     let kbDisplay = document.getElementById('startKBAmount');
     if(kbDisplay) kbDisplay.innerText = kaffeebons;
     // Boss-Bar ausblenden
-    document.getElementById('bossHpContainer').style.display = 'none';
+    { let _bhc=document.getElementById('bossHpContainer'); if(_bhc) _bhc.style.display='none'; }
     
 }
 
@@ -3309,7 +3309,7 @@ function checkGameOver(){
         document.getElementById('meeting-bar-container').style.display='none';
         document.getElementById('meeting-text').style.display='none';
         document.getElementById('sapOverlay').style.display='none';
-        document.getElementById('bossHpContainer').style.display='none';
+        { let _bhc=document.getElementById('bossHpContainer'); if(_bhc) _bhc.style.display='none'; }
         
         clearAllToasts();
         bgMusic.pause();
@@ -4048,7 +4048,7 @@ function spawnLogic(){
         let bd=bosses[currentBossStage]; activeBoss=new Enemy(bd); enemies.push(activeBoss);
         playSound('boss'); screenShake=30; player.bossSpawnTimer=240; currentBossStage++;
         showToast("⚠ BOSS ERSCHIENEN!","#e74c3c",bd.name+" — "+bd.subtitle);
-        document.getElementById('bossHpContainer').style.display = 'block';
+        { let _bhc=document.getElementById('bossHpContainer'); if(_bhc) _bhc.style.display='block'; }
     }
     // Peter Bayer Büro-Ruf bei Score 50000
     if(!bueroDoor && score >= 50000 && gamePhase === 'normal' && !systemCollapse) {
@@ -4277,7 +4277,7 @@ function updateHUD(){
         bossBar.style.display = 'block';
         document.getElementById('bossHpName').innerText = `☠ ${activeBoss.label} ☠`;
         let pct = Math.max(0, activeBoss.hp / activeBoss.maxHp * 100);
-        document.getElementById('bossHpBarInner').style.width = pct + '%';
+        { let _bi=document.getElementById('bossHpBarInner'); if(_bi) _bi.style.width = pct+'%'; }
         document.getElementById('bossHpPercent').innerText = `${Math.ceil(pct)}%  —  ${Math.ceil(activeBoss.hp)} / ${activeBoss.maxHp} HP`;
         // Farbe bei niedrigem HP
         let bar = document.getElementById('bossHpBarInner');
@@ -4333,7 +4333,7 @@ function loop(){
             fadeAlpha = Math.max(0, Math.min(1, fadeAlpha + fadeDir * 0.04));
             if(fadeDir === 1 && fadeAlpha >= 1) {
                 fadeDir = 0;
-                if(gamePhase === 'transitioning_in') { gamePhase = 'bossroom'; activeBoss = { hp:1, maxHp:1, label:'PETER BAYER' }; document.getElementById('bossHpContainer').style.display='block'; }
+                if(gamePhase === 'transitioning_in') { gamePhase = 'bossroom'; activeBoss = { hp:1, maxHp:1, label:'PETER BAYER' }; (document.getElementById('bossHpContainer')||{style:{}}).style.display='block'; }
             }
             if(fadeDir === -1 && fadeAlpha <= 0) { fadeDir = 0; }
         }
@@ -4344,10 +4344,13 @@ function loop(){
             // HUD Boss-HP
             if(bossRoomState) {
                 let b = bossRoomState.bayer;
-                document.getElementById('bossHpName').innerText = `☠ PETER BAYER — PHASE ${b.phase} ☠`;
+                let _hn = document.getElementById('bossHpName');
+                let _hb = document.getElementById('bossHpBarInner');
+                let _hp = document.getElementById('bossHpPercent');
                 let pct = Math.max(0, b.hp / b.maxHp * 100);
-                document.getElementById('bossHpBar').style.width = pct + '%';
-                document.getElementById('bossHpPercent').innerText = `${Math.ceil(pct)}%  —  ${Math.ceil(b.hp)} / ${b.maxHp} HP`;
+                if(_hn) _hn.innerText = `☠ PETER BAYER — PHASE ${b.phase} ☠`;
+                if(_hb) _hb.style.width = pct + '%';
+                if(_hp) _hp.innerText = `${Math.ceil(pct)}%  —  ${Math.ceil(b.hp)} / ${b.maxHp} HP`;
             }
             // Nur Canvas zeichnen
             ctx.save();
@@ -4563,7 +4566,7 @@ function loop(){
                 
                 if(e.type===99){
                     activeBoss = null;
-                    document.getElementById('bossHpContainer').style.display = 'none';
+                    { let _bhc=document.getElementById('bossHpContainer'); if(_bhc) _bhc.style.display='none'; }
                     if(e.label === "PETER BAYER") {
                         systemCollapse = true;
                         if(currentDiffLabel === "BURNOUT" || currentDiffLabel === "SURVIVAL") unlockTrophy('boss_killer');
@@ -4778,7 +4781,7 @@ function startGame(diff=1){
     document.getElementById('shopOverlay').style.display='none';
     document.getElementById('sapOverlay').style.display='none';
     document.getElementById('pauseOverlay').classList.remove('active');
-    document.getElementById('bossHpContainer').style.display='none';
+    { let _bhc=document.getElementById('bossHpContainer'); if(_bhc) _bhc.style.display='none'; }
     
 
     input.keys={};input.mouseDown=false;
