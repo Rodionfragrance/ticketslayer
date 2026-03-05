@@ -478,9 +478,9 @@ input[type="text"] {
 <!-- EMAIL OVERLAY -->
 <div id="emailOverlay">
     <div class="email-header">
-        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="98f4fdf1ecebecf9f6fcd8e2f4ebb5f0f9f5f5b6fcfd">[email&#160;protected]</a>&gt;</div>
+        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;leitstand@zls-hamm.de&gt;</div>
         <div class="email-row"><span class="email-label">AN:</span> Alle Mitarbeiter</div>
-        <div class="email-row email-subject">PFLICHTLEKTÜRE: Neue Prozessanweisung V20 (Wegflexen-Update)</div>
+        <div class="email-row email-subject">PFLICHTLEKTÜRE: Neue Prozessanweisung V20 — Vollständige Revision</div>
     </div>
     <div class="email-content">
         <p>Hallo Team,</p>
@@ -489,78 +489,113 @@ input[type="text"] {
 
         <h3>1. BASIS-STEUERUNG</h3>
         <ul>
-            <li><span class="key-hint">WASD</span> + <span class="key-hint">Maus</span>: Bewegung &amp; Ticket-Bearbeitung. Diagonalbewegung ist schneller — immer zwei Tasten gleichzeitig halten.</li>
-            <li><span class="key-hint">SHIFT</span> / <span class="key-hint">Rechtsklick</span>: Hechtrolle — kurzzeitige Unverwundbarkeit (i-Frames). Richtung = Mauszeiger. <strong>Pflicht bei Boss-Angriffen.</strong></li>
-            <li><span class="key-hint">E</span>: Interaktion — Heilen an Witwe Bolte / IDOC-Alarm fixen / Hardwarelager betreten / Kloska verjagen.</li>
-            <li><span class="key-hint">B</span>: <strong>Azubi einsetzen.</strong> Kostet 5.000 Punkte (reduzierbar im Shop). Platziert einen Geschützturm der automatisch schießt.</li>
-            <li><span class="key-hint">F</span>: <strong>Server-Farm aktivieren</strong> — Hacking-Puzzle lösen → passives Einkommen bis Kloska sabotiert.</li>
-            <li><span class="key-hint">G</span>: <strong>Krankmeldung einlösen</strong> — Urlaubstag verbrauchen für langsame Heilung über 5 Sekunden.</li>
-            <li><span class="key-hint">Q</span>: <strong>Kaffee zapfen</strong> — an der Kaffeemaschine stehen für temporären Speed-Boost.</li>
-            <li><span class="key-hint">ESC</span>: <strong>Pause</strong> — Spiel einfrieren, Steuerung nachlesen, aufgeben.</li>
+            <li><span class="key-hint">WASD</span> + <span class="key-hint">Maus</span>: Bewegung &amp; Ticket-Bearbeitung. Diagonalbewegung ist schneller.</li>
+            <li><span class="key-hint">SHIFT</span> / <span class="key-hint">Rechtsklick</span>: Hechtrolle — kurzzeitige Unverwundbarkeit (i-Frames). <strong>Pflicht bei Boss-Angriffen.</strong></li>
+            <li><span class="key-hint">E</span>: Interaktion — Heilen / IDOC fixen / Hardwarelager / Kloska verjagen / <strong>Bürotür betreten</strong>.</li>
+            <li><span class="key-hint">B</span>: Azubi einsetzen (kostet Punkte, platziert Turret).</li>
+            <li><span class="key-hint">F</span>: Server-Farm aktivieren — Hacking-Puzzle lösen → passiv Suppen generieren.</li>
+            <li><span class="key-hint">G</span>: Krankmeldung einlösen — Urlaubstag für langsame Heilung.</li>
+            <li><span class="key-hint">Q</span>: Kaffee zapfen — temporärer Speed-Boost an der Kaffeemaschine.</li>
+            <li><span class="key-hint">ESC</span>: Pause.</li>
         </ul>
 
         <h3>2. SCHWIERIGKEITSGRADE</h3>
         <ul>
-            <li><strong style="color:#2ecc71;">PRAKTIKANT</strong> — Einarbeitung. Gegner schwach, Spawns langsam. Ideal zum Kennenlernen der Karte und Waffen.</li>
-            <li><strong style="color:#f1c40f;">VOLLZEIT</strong> — Normalbetrieb. Schichtarbeit inklusive. Empfohlener Einstieg für erfahrene Mitarbeiter.</li>
-            <li><strong style="color:#c0392b;">BURNOUT</strong> — Überstunden ohne Ende. Gegner eskalieren schneller, Bosse haben mehr HP. Kein Erbarmen.</li>
-            <li><strong style="color:#8e44ad;">SURVIVAL</strong> — Endlosmodus. Kein Rache-Heilen. Keine Heilung durch Hähnchen. Witwe Bolte verweigert den Dienst.</li>
-            <li><strong style="color:#f00;">☠ WEGFLEXEN</strong> — 1 HP. One-Hit-Kill durch alles. 5-Sekunden Kill-Timer der bei Kills zurückgesetzt wird. SAP = sofortiger Tod. 10× Score-Multiplikator.</li>
+            <li><strong style="color:#2ecc71;">PRAKTIKANT</strong> — Einarbeitung. Gegner schwach, Spawns langsam.</li>
+            <li><strong style="color:#f1c40f;">VOLLZEIT</strong> — Normalbetrieb mit Schichtarbeit. Empfohlener Einstieg.</li>
+            <li><strong style="color:#c0392b;">BURNOUT</strong> — Überstunden ohne Ende. Gegner eskalieren schneller.</li>
+            <li><strong style="color:#8e44ad;">SURVIVAL</strong> — Endlosmodus. Kein Rache-Heilen, keine Heilung durch Hähnchen.</li>
+            <li><strong style="color:#f00;">☠ WEGFLEXEN</strong> — 1 HP. One-Hit-Kill. 5-Sek Kill-Timer. 10× Score-Multiplikator.</li>
         </ul>
 
-        <h3>3. COMBO-SYSTEM (NEU V20)</h3>
-        <p>Mehrere Kills in schneller Folge aktivieren einen Score-Multiplikator. Das Fenster beträgt <strong>3 Sekunden</strong> — wer aufhört zu töten, verliert den Combo.</p>
+        <h3>3. COMBO-SYSTEM</h3>
+        <p>Mehrere Kills in schneller Folge (Fenster: 3 Sekunden) aktivieren einen Score-Multiplikator:</p>
         <ul>
-            <li><strong style="color:#f1c40f;">×2 COMBO</strong> — ab 5 Kills hintereinander. Score pro Kill verdoppelt.</li>
-            <li><strong style="color:#e67e22;">×3 COMBO</strong> — ab 10 Kills. Dreifacher Score.</li>
-            <li><strong style="color:#e74c3c;">×5 COMBO</strong> — ab 20 Kills. Fünffacher Score. Bester Weg für Highscores.</li>
+            <li><strong style="color:#f1c40f;">×2 COMBO</strong> — ab 5 Kills hintereinander.</li>
+            <li><strong style="color:#e67e22;">×3 COMBO</strong> — ab 10 Kills.</li>
+            <li><strong style="color:#e74c3c;">×5 COMBO</strong> — ab 20 Kills. Bester Weg für Highscores.</li>
         </ul>
+        <p>Trophäen-Perks: <em>Picobello</em> (100er Combo → Combo reißt erst nach 5 Treffern ab), <em>Picobellooo</em> (1000er Combo → erst nach 20 Treffern).</p>
 
         <h3>4. WAFFEN-ARSENAL</h3>
-        <p>Eingesammelte Spezialwaffen werden <strong>gestapelt</strong> — alle aktiven Waffen feuern gleichzeitig, solange ihr Timer läuft. Waffenkisten droppen vom Boden oder aus besiegten Gegnern.</p>
+        <p>Spezialwaffen stapeln sich — alle aktiven Waffen feuern gleichzeitig. In der <strong>🔫 Waffenkammer</strong> (Menü) kannst du Waffen permanent freischalten und eine als <strong>Favorit</strong> setzen — sie startet jeden Run dauerhaft ausgerüstet.</p>
         <ul>
-            <li>🔫 <strong>Standard</strong> — Immer aktiv. Solider Allrounder. Kein Timer.</li>
-            <li>🌀 <strong>Minigun</strong> — Sehr hohe Feuerrate, leichte Streuung. Gut für dichte Gruppen.</li>
-            <li>💥 <strong>Schrotflinte</strong> — 5-Pellet Fächerschuss. Brutal auf kurze Distanz. Ideal für enge Korridore.</li>
-            <li>🚀 <strong>Raketenwerfer</strong> — Splash-Damage 150px Radius. Rückstoß schiebt dich zurück. Tötet versehentlich eigene Azubis.</li>
-            <li>⚡ <strong>Railgun</strong> — Durchdringt mehrere Gegner in einer Linie. Perfekt für Reihen. Starker Rückstoß + Screenshake.</li>
-            <li>🔥 <strong>Flammenwerfer</strong> — Setzt Gegner in Brand (DoT 1.5 Sek). Synergiert mit Brand-Munitions-Upgrade. Kurze Reichweite.</li>
-            <li>🖱️ <strong>Orbit-Maus</strong> — Kreist automatisch um dich, knockt zurück (50 Schaden + 40px Push). Permanent kaufbar im Hardwarelager.</li>
+            <li>🔫 <strong>Standard</strong> — Immer aktiv, kein Timer.</li>
+            <li>🌀 <strong>Minigun</strong> — Hohe Feuerrate, leichte Streuung. Gut für Gruppen.</li>
+            <li>💥 <strong>Schrotflinte</strong> — 5-Pellet Fächer. Brutal auf kurze Distanz.</li>
+            <li>🚀 <strong>Raketenwerfer</strong> — Splash 150px. Rückstoß schiebt dich zurück.</li>
+            <li>⚡ <strong>Railgun</strong> — Durchdringt mehrere Gegner in einer Linie.</li>
+            <li>🔥 <strong>Flammenwerfer</strong> — Brand-DoT 1.5s. Kurze Reichweite.</li>
+            <li>🖱️ <strong>Orbit-Maus</strong> — Kreist automatisch, knockt zurück. Im Kloska-Shop permanent kaufbar.</li>
         </ul>
 
-        <h3>5. RACHE-SYSTEM (ARBEITSZEITERFASSUNG)</h3>
-        <p>Erlittener Schaden wird im HUD <strong>orange markiert</strong> (erscheint hinter dem HP-Wert als <em>+XX</em>). Töte innerhalb von 2 Sekunden einen Gegner → orange HP wird anteilig wiederhergestellt. <em>Deaktiviert im Survival- und Wegflexen-Modus.</em></p>
+        <h3>5. RACHE-SYSTEM</h3>
+        <p>Erlittener Schaden wird orange markiert. Töte innerhalb von 2 Sekunden einen Gegner → orange HP wird zurückgewonnen. <em>Deaktiviert in Survival und Wegflexen.</em></p>
 
         <h3>6. GEGNER &amp; GEFAHREN</h3>
         <ul>
-            <li><strong>🪱 PRIO 5–3</strong> — Standardtickets. Klein (10 HP), mittel (25 HP), groß (50 HP). Massenmaterial für Combos.</li>
-            <li><strong>⚡ PRIO 2 / ☠ PRIO 1</strong> — Tanks. Langsam aber zäh (120 / 400 HP). Boss-Laser upgrades Prio5 zu Prio2.</li>
-            <li><strong>🧑 DER ANWENDER</strong> — Teleportiert sich alle 3 Sek zufällig in deiner Nähe. Immer in Bewegung halten, nicht nachlaufen.</li>
-            <li><strong>💿 SAP-UPDATE</strong> — Massiver Speed-Debuff bei Berührung für 5 Sekunden. Im Wegflexen sofortiger Tod. Aus der Distanz eliminieren.</li>
-            <li><strong>👻 TEICHMANN</strong> — Einmaliger Spezial-Gegner. Bei Berührung: alle normalen Gegner werden zu Prio1. Sofort töten oder meiden.</li>
-            <li><strong>KLOSKA-SABOTAGE</strong> — Kloska greift aktive Server-Farmen an. 30 Sekunden Zeit ihn mit <span class="key-hint">E</span> zu verjagen, sonst Farm dauerhaft zerstört.</li>
-            <li><strong>👔 PETER BAYER (BOSS)</strong> — Stampfer-Angriff alle 5 Sek (roter Radius + Sprung-Animation sichtbar). Spawnt Ticket-Fluten. Löst bei Tod den <em>System-Kollaps</em> aus.</li>
+            <li><strong>🪱 PRIO 5–3</strong> — Standardtickets (10/25/50 HP). Massenmaterial für Combos.</li>
+            <li><strong>⚡ PRIO 2 / ☠ PRIO 1</strong> — Tanks (120/400 HP). Langsam aber zäh.</li>
+            <li><strong>🧑 DER ANWENDER</strong> — Teleportiert sich alle 3 Sek zufällig. Nicht nachlaufen.</li>
+            <li><strong>💿 SAP-UPDATE</strong> — Speed-Debuff 5 Sek bei Berührung. Im Wegflexen sofortiger Tod.</li>
+            <li><strong>👻 TEICHMANN</strong> — Berührung: alle normalen Gegner → PRIO1. Sofort töten.</li>
+            <li><strong>🚜 GABELSTAPLER / 🚛 LKW</strong> — Fahrzeuge die durch das Level fahren. Schaden dir, nicht den Gegnern.</li>
+            <li><strong>KLOSKA-SABOTAGE</strong> — Greift aktive Server-Farmen an. 30 Sek Zeit zum Verjagen per <span class="key-hint">E</span>.</li>
         </ul>
 
-        <h3>7. SYSTEM-KOLLAPS</h3>
-        <p>Nach Bayers Tod: Arena wird vollständig geleert (Gegner, Obstacles, Stationen, Azubis — alles weg). Du stehst allein. Nur noch Prio1-Totalausfälle spawnen, werden mit der Zeit schneller. Überlebe 3 Minuten → Trophäe <em>„Feuerprobe"</em> + dauerhafter Arsenal-Experte-Perk.</p>
-
-        <h3>8. SERVER-FARM &amp; HACKING</h3>
-        <p>Steh nah an einem Server und drücke <span class="key-hint">F</span>. Ein Hacking-Puzzle erscheint: Wähle die korrekte IP-Adresse (Tipp: sie beginnt nicht mit 192). Du hast <strong>5 Sekunden</strong>. Erfolg → passives Einkommen +3 Punkte/Sek. Max. 3 Farmen gleichzeitig (erweiterbar im Shop).</p>
-
-        <h3>9. HARDWARELAGER (KLOSKA SHOP)</h3>
-        <p>Betritt das Lager auf der Karte mit <span class="key-hint">E</span>. Spiel pausiert automatisch. Zahlungsmittel: Suppe (🥣).</p>
+        <h3>7. PETER BAYER — BOSS-ROOM</h3>
+        <p>Ab <strong>50.000 Score</strong> erscheint eine rote Bürotür im Office-Bereich. Nähere dich ihr und drücke <span class="key-hint">E</span>. Du betrittst Bayers Büro — ein eigener Kampfraum, aus dem es kein Entkommen gibt.</p>
         <ul>
-            <li>🖱️ <strong>Orbit-Maus (Permanent)</strong> — Kreist bis Rundenende. Kein Timer. [10 🥣]</li>
+            <li><strong>Phase 1 (100–60% HP):</strong> Stampfer-Angriff mit rotem Warnkreis (1s Vorwarnung). Hechtrolle im richtigen Moment!</li>
+            <li><strong>Phase 2 (60–30% HP):</strong> Zusätzlich Laser-Strahl. Bayer wird schneller.</li>
+            <li><strong>Phase 3 (&lt;30% HP):</strong> Stampfer-Regen, Laser, Mini-Gegner spawnen. Volle Konzentration.</li>
+        </ul>
+        <p>Nach Bayers Tod: Fade-Out → zurück zur normalen Welt → <strong>System-Kollaps startet sofort.</strong></p>
+        <p><em>Trophäe Speedster: Bayer in unter 5 Sekunden besiegen. Trophäe Gott des Leitstands: Bayer im Wegflexen-Modus.</em></p>
+
+        <h3>8. SYSTEM-KOLLAPS</h3>
+        <p>Alle Gegner, Obstacles und Stationen werden geleert. Nur noch PRIO1 spawnt, immer schneller. Überlebe 3 Minuten → Trophäe <em>Feuerprobe.</em></p>
+
+        <h3>9. SERVER-FARMEN</h3>
+        <p>Steh nah an einem Server und drücke <span class="key-hint">F</span>. Hacking-Puzzle: korrekte IP wählen (nicht 192.x). Erfolg → Farm aktiv. Alle <strong>~20 Sekunden</strong> erscheint eine Suppe neben dem Server (Intervall mit Skilltree verkürzbar). Kloska sabotiert aktive Farmen — verjage ihn mit <span class="key-hint">E</span>. <em>Trophäe Nervensäge: Kloska 3× in einem Run verjagen.</em></p>
+
+        <h3>10. KLOSKA-SHOP (HARDWARELAGER)</h3>
+        <p>Betritt das Lager mit <span class="key-hint">E</span>. Zahlungsmittel: Suppe (🥣).</p>
+        <ul>
+            <li>🖱️ <strong>Orbit-Maus (Permanent)</strong> — Kein Timer bis Rundenende. [10 🥣]</li>
             <li>🖥️ <strong>Defekter ThinClient</strong> — Blockiert alle IDOC-Alarme für den Rest des Runs. [12 🥣]</li>
-            <li>👷 <strong>Azubi-Armee</strong> — Spawnt sofort 3 Geschütze direkt um dich. [8 🥣]</li>
-            <li>☢️ <strong>System-Reboot</strong> — Löscht ALLE normalen Gegner auf der Map. Boss verliert nur 1500 HP. [20 🥣]</li>
+            <li>👷 <strong>Azubi-Armee</strong> — Spawnt sofort 3 Turrets. [8 🥣]</li>
+            <li>☢️ <strong>System-Reboot</strong> — Löscht ALLE normalen Gegner. Boss verliert nur 1500 HP. [20 🥣]</li>
         </ul>
 
-        <h3>10. META-PROGRESSION</h3>
-        <p><strong>☕ Upgrade-Shop</strong> (Kaffeebons): Permanente Verbesserungen zwischen den Runs. Kaffeebons = Score ÷ 100. Upgrades bleiben rundenübergreifend erhalten. Freischaltbare Endgame-Upgrades ab 30k / 50k Allzeit-Score.</p>
-        <p><strong>🏆 Trophäenschrank</strong>: 13 Trophäen mit passiven Perks. Jede Trophäe gibt einen dauerhaften Vorteil für alle zukünftigen Runs. Höchste Trophäe: <em>„Gott des Leitstands"</em> — Besiege Peter Bayer im Wegflexen-Modus.</p>
-        <p><strong>☁️ Cloud-Profile</strong>: Namen eingeben → „Lade Profil" drücken. Kaffeebons, Upgrades und Trophäen werden Firebase-gesichert und auf jedem Gerät geladen.</p>
+        <h3>11. META-PROGRESSION — ÜBERSICHT</h3>
+        <p><strong>☕ Kaffeebons (KB)</strong> sind die universelle Währung. Du verdienst sie nach jedem Run basierend auf deinem Score. KB werden geräteübergreifend in der Cloud gesichert.</p>
+        <ul>
+            <li><strong>☕ Upgrade-Shop</strong> — 10 permanente Upgrades. Speed, HP, Schaden, Farm-Slots, KB-Rate und mehr.</li>
+            <li><strong>🔫 Waffenkammer</strong> — Waffen dauerhaft freischalten, Favorit wählen (startet jeden Run ausgerüstet).</li>
+            <li><strong>🌳 Skilltree</strong> — 173 Knoten, 8 Zonen, Max. 40 Punkte. Pan &amp; Zoom. Keystones ab 18.000 KB. Ultra-Rare-Knoten am äußeren Ring (10.000–18.000 KB). Reset gegen 50% Rückerstattung möglich.</li>
+            <li><strong>⚔️ Job-System</strong> — EXP aus Kills &amp; Spielzeit sammeln. Ab Base Level 10: Job wählen. Ab Job Level 25: Prestige-Job. Jeder Job hat eigene Passiv-Fähigkeit + 3–4 Skills mit je 3 Stufen.</li>
+            <li><strong>⭐ Prestige</strong> — Alle 17 Trophäen freischalten → Prestige verfügbar. Resettet Upgrades/Skilltree/Job, behält KB &amp; Trophäen. Dauerhafter Bonus: +5% Schaden, +10 HP, +10% KB pro Prestige-Level.</li>
+            <li><strong>📅 Tages-Bonus</strong> — Täglich einloggen für KB. 7-Tage-Streak für bis zu +250 KB Bonus.</li>
+            <li><strong>📋 Tages-Challenge</strong> — Täglich wechselnde Aufgabe (14 Varianten). Belohnung: 100–250 KB.</li>
+        </ul>
+
+        <h3>12. JOB-SYSTEM — DETAILS</h3>
+        <p>EXP gibt es für: Kills nach Gegner-Typ (PRIO5 = wenig, PRIO1 = viel, Boss = sehr viel), überlebte Spielzeit und gelöste IDOCs. Base EXP und Job EXP werden separat geführt.</p>
+        <ul>
+            <li>📦 <strong>Lagermitarbeiter</strong> — Hechtrolle macht Schaden, Überstunden-Kraft, Lagerhaltung.</li>
+            <li>💻 <strong>Sachbearbeiter</strong> — Ticketsystem-Farm, Formular 27b (Slow), Eskalation gegen Bosse.</li>
+            <li>🔧 <strong>Techniker</strong> — Turrets aus Kills, Farm-Reparatur, Azubi-Rabatt.</li>
+            <li>📞 <strong>Supporter</strong> — Suppe heilt mehr, Kill-Regen, automatische Unverwundbarkeit.</li>
+            <li>👔 <strong>MADDIN (Teamleiter)</strong> — Sachbearbeiter Job Lv 25. Azubis kostenlos, Vodka-Buff, Stampfer-Angriff, Beine-weg-Speed.</li>
+            <li>🚜 <strong>Gabelstaplerfahrer</strong> — Lagermitarbeiter Job Lv 25. Fahrzeugimmunität, Stapler mähen Gegner.</li>
+            <li>🖥️ <strong>Entwickler</strong> — Techniker Job Lv 25. Farm-Overdrive, Auto-Turret-Deploy.</li>
+            <li>⚡ <strong>Hacker</strong> — Techniker Job Lv 25. SQL-Injection, Gegner hacken, Zero-Day-Freeze.</li>
+            <li>😤 <strong>Burnout-Spezialist</strong> — Supporter Job Lv 25. Schmerz als Stärke, HP als Ressource.</li>
+        </ul>
+
+        <h3>13. TROPHÄEN (17 Stück)</h3>
+        <p>Jede Trophäe gibt einen dauerhaften Perk für alle zukünftigen Runs. Alle 17 sammeln → <strong>Prestige</strong> freigeschaltet.</p>
 
         <hr class="email-hr">
 
@@ -569,46 +604,61 @@ input[type="text"] {
             <br><em style="font-size:10px; color:#888;">Gesammelte Erfahrungswerte aus 847 dokumentierten Schichtausfällen. Kein Ersatz für eigenverantwortliches Sterben.</em>
             <br><br>
 
-            <strong>(1) Bayers Stampfer als Massenvernichtungswaffe:</strong><br>
-            Peter Bayer vernichtet bei seinem Sprung ALLE Tickets in seinem roten 250px-Radius — inklusive seiner eigenen Ticket-Flut-Spawns. Die optimale Strategie: Eine große Horde hinter dir sammeln, sie in den Stampfer-Radius locken, im exakten Einschlagsmoment <span class="key-hint">SHIFT</span> drücken. Du nimmst durch i-Frames keinen Schaden, er killt 8–15 Gegner auf einmal, du kassierst den vollen Combo-Multiplikator. Bei ×5-Combo und 15 Prio3-Kills = +3.750 Punkte in einem Frame.
+            <strong>(1) Bayers Büro — wie man überlebt:</strong><br>
+            Der Warnkreis erscheint 1 Sekunde vor dem Stampfer. Das ist dein Fenster. Hechtrolle <em>weg</em> vom Kreismittelpunkt, nicht quer durch. In Phase 3 immer in Bewegung bleiben — Bayer zielt auf deine letzte Position, nicht deine aktuelle. Laser: sofort senkrecht zur Laser-Richtung ausweichen, nicht rückwärts. Mini-Gegner zuerst: sie stauen den Raum zu und machen den Stampfer unvermeidlich.
             <br><br>
 
-            <strong>(2) Combo-Maximierung — die 3 besten Setups:</strong><br>
-            <em>Setup A (Flächenkontrolle):</em> Orbit-Maus (permanent) + Flammenwerfer. Die Maus knockt Gegner kontinuierlich zurück, der Flammenwerfer zieht DoT. Kills passieren halbautomatisch — ×5-Combo ist mit dieser Kombo Normalzustand.<br>
-            <em>Setup B (Einzel-Burst):</em> Railgun + Schrotflinte. Railgun für Linien, Schrotflinte für Nahkampfgruppen. Alternierend feuern = keine Feuerpause = Combo hält.<br>
-            <em>Setup C (Chaos-Run):</em> Minigun + Raketenwerfer. Minigun hält den Combo am Leben, Raketen räumen Cluster. Achtung: Rückstoß kombiniert mit Minigun-Recoil kann dich in Gegner schieben.
+            <strong>(2) Server-Farmen — Suppen-Optimierung:</strong><br>
+            Eine aktive Farm liefert alle ~20 Sekunden eine Suppe neben dem Server. Mit 3 Farmen gleichzeitig und voll ausgebautem Technik-Skilltree sinkt das Intervall auf unter 8 Sekunden. Das bedeutet: du kannst den Kloska-Shop theoretisch unendlich befüllen ohne einen einzigen Gegner zu töten. Praktische Konsequenz: ThinClient (12🥣) so früh wie möglich kaufen — danach nie wieder IDOC-Stress.
             <br><br>
 
-            <strong>(3) Suppe nie verschwenden — Timing ist alles:</strong><br>
-            Suppen despawnen nie (anders als Waffenkisten oder Wodka). Lass sie in heißen Phasen ruhig liegen. Erst einsammeln wenn du ohnehin in Richtung Hardwarelager läufst oder die Welle abflacht. Priorität: ThinClient (12🥣) vor allem anderen kaufen — er schaltet IDOC-Alarme für den gesamten Rest des Runs ab. Den System-Reboot (20🥣) als absoluten Panik-Knopf aufheben für den Moment wo du vollständig eingekreist bist oder Peter Bayer seine Ticket-Flut spammt.
+            <strong>(3) Combo-Maximierung — bewährteste Setups:</strong><br>
+            <em>Orbit-Maus + Flammenwerfer:</em> Die Maus knockt Gegner weg, der Flammenwerfer zieht DoT. Kills passieren halbautomatisch — ×5-Combo ist Normalzustand.<br>
+            <em>Railgun + Schrotflinte:</em> Railgun für Linien, Schrotflinte für Nahkampfgruppen. Alternierend feuern, keine Feuerpause.<br>
+            Mit Trophäe <em>Picobello</em>: Combo reißt erst nach 5 Treffern ab — das verlängert die ×5-Phase massiv und macht 1000er-Combos erreichbar.
             <br><br>
 
-            <strong>(4) IDOC-Alarm — Adrenalin-Perk ausnutzen:</strong><br>
-            Mit der Trophäe „Prozess-Retter" bekommst du +10% Speed während aktiver IDOC-Alarme. Das klingt wenig, ist aber der entscheidende Vorteil gegen SAP-Update-Gegner: Normaler Speed − SAP-Debuff + Adrenalin-Perk = du kannst dem SAP-Gegner noch knapp entkommen. Ohne Perk bist du bei SAP praktisch eingefroren.
+            <strong>(4) Skilltree — Punkte nicht verschwenden:</strong><br>
+            40 Punkte klingen nach viel — reichen aber nicht für zwei Zonen. Wähle eine Hauptzone (z.B. Rage) und eine Nebenzone (z.B. Kaffeekasse), verbinde sie mit Cross-Zone-Brücken, und hole dir einen Keystone am Ende. Keystones kosten 18.000 KB — das ist Absicht. Ein Keystone verändert das gesamte Spielgefühl.
             <br><br>
 
-            <strong>(5) Azubi-Turrets intelligent platzieren:</strong><br>
-            Azubis schießen auf den nächsten Gegner in 800px Radius. Platziere sie <em>nicht</em> direkt neben dir — dort überschneiden sie mit deinem eigenen Feuer und verschwenden Schüsse auf bereits sterbende Gegner. Optimal: 200–300px vor dir in Laufrichtung platzieren, damit sie die Nachhut übernehmen während du nach vorne drückst. Im System-Kollaps: Azubis vom Kloska-Shop sofort nach dem Boss kaufen — sie sind die einzige Feuerhilfe wenn alle Stationen weg sind.
+            <strong>(5) Job-System — welcher Job für welchen Spielstil:</strong><br>
+            <em>Aggro:</em> Lagermitarbeiter → Gabelstaplerfahrer. Hechtrolle als Waffe, Fahrzeuge als Verbündete.<br>
+            <em>Passiv/Farm:</em> Techniker → Entwickler. Farmen und Azubis machen die Arbeit.<br>
+            <em>Chaos/Score:</em> Sachbearbeiter → Maddin. Azubis gratis, Vodka als Unverwundbarkeit, der Stampfer tötet ganze Gruppen.<br>
+            <em>Hardcore:</em> Supporter → Burnout-Spezialist. HP als Ressource opfern für massiven Schaden. Nur für erfahrene Spieler.
             <br><br>
 
-            <strong>(6) Wegflexen-Strategie — Bewegung ist Leben:</strong><br>
-            Der 5-Sekunden Kill-Timer wird bei JEDEM Kill zurückgesetzt — also auch durch Azubi-Kills, Orbit-Maus-Kills und Brand-DoT-Kills. Das bedeutet: Einmal die Orbit-Maus aktiv + Gegner in der Nähe = Timer läuft quasi nie ab. Das eigentliche Problem ist Peter Bayer: Im Wegflexen-Modus ist sein Stampfer ein One-Hit-Kill. Die einzige Lösung ist die <strong>perfekte Hechtrolle</strong> im exakten Einschlagsmoment. Die Gefahrenzone (roter Kreis) erscheint 1 Sekunde vorher — das ist dein Zeitfenster. Übe den Dodge-Timing vorher in Burnout.
+            <strong>(6) Wegflexen-Strategie:</strong><br>
+            Der Kill-Timer wird durch JEDEN Kill zurückgesetzt — auch Azubi-Kills und Brand-DoT. Orbit-Maus aktiv + Gegner in der Nähe = Timer läuft quasi nie ab. Im Boss-Room: Bayer tötet in Phase 3 in einem Stampfer. Die einzige Lösung ist die perfekte Hechtrolle im exakten Einschlagsmoment.
             <br><br>
 
-            <strong>(7) Arsenal-Eskalation für den Endscore:</strong><br>
-            Raketenwerfer + Flammenwerfer kombinieren: Der Rückstoß der Raketen schiebt dich automatisch aus der Gefahrenzone, während die Flammen den Bereich vor dir abbrennen. Mit dem Brand-Munitions-Upgrade (ab 30k Score im Shop) brennt danach alles von selbst — du musst nur noch die Richtung vorgeben. Railgun dazu = eine Kugel trifft 4 Gegner in einer Linie, alle brennen, alle sterben im Combo-Fenster. Maximaler theoretischer Multiplier: ×5 Combo × Nachtschicht-Bonus (+50%) = ×7.5 effektiver Score.
+            <strong>(7) Tages-Challenge und Streak nicht vergessen:</strong><br>
+            Der Streak bricht ab wenn du einen Tag aussetzt. Tag 7 gibt +250 KB. Bei regelmäßigem Einloggen kommen allein durch Streak und Daily-Challenges pro Woche ~1.500 KB zusammen — ohne einen einzigen Run zu spielen. Das finanziert einen halben Keystone.
             <br><br>
 
-            <strong>(8) Aggressiv heilen statt flüchten (außer Wegflexen):</strong><br>
-            Wenn das SAP-Update dich verlangsamt hat: nicht wegrennen — das funktioniert sowieso nicht. Sofort alle Waffen auf die nächsten Gegner, das Rache-System heilt dich durch die Kills und du überlebst die 5 langsamen Sekunden durch rohe Gewalt. Gleiches Prinzip bei Prio1-Umzingelung: Nicht die Lücke suchen, sondern in die Masse schießen und durch Rache-Kills die HP zurückholen.
+            <strong>(8) Prestige — wann lohnt es sich?</strong><br>
+            Prestige erst starten wenn du alle 17 Trophäen hast UND genug KB für die ersten Upgrades danach. Der Reset schmerzt, aber die permanenten Boni (+5% Schaden, +10 HP, +10% KB pro Prestige-Level) stapeln sich über Prestige-Level. Ab Prestige 3 spürt man beim Start der nächsten Wertung einen deutlichen Unterschied.
             <br><br>
 
-            <strong>(9) Nachtschicht-Farming für Highscores:</strong><br>
-            Nachtschicht gibt +50% Score auf alle Kills UND reduziert die Sichtweite. Nutze die eingeschränkte Sicht als <em>Vorteil</em>: Gegner kommen näher ran bevor sie sichtbar werden → kürzere Reaktionszeit nötig → höhere Kill-Dichte im Nahkampf → leichterer ×5-Combo. Mit Flammenwerfer in der Nachtschicht ist der Score-Output pro Minute maximal.
+            <strong>(9) Nervensäge-Trophäe — Kloska 3× verjagen:</strong><br>
+            Kloska erscheint nur wenn du aktive Server-Farmen hast. Hacke alle 3 verfügbaren Server, warte auf Kloska, verjage ihn per <span class="key-hint">E</span>. Wiederhole bis zur Trophäe. Perk danach: Kloska erscheint 25% seltener — dauerhaft für alle Runs.
             <br><br>
 
-            <strong>(10) Meeting-Punkte skalieren mit Trophäe:</strong><br>
-            Ein Meeting gibt 3.000 Punkte — mit der „Bullshit-Bingo"-Trophäe (3 Meetings in einem Run) sogar 4.000. Drei Meetings pro Run = 12.000 gratis Punkte, die keinerlei Risiko bedeuten außer 10 Sekunden Stillstand. In BURNOUT und SURVIVAL: Meeting-Zone aufsuchen sobald sie erscheint, kurz abstehen, Punkte kassieren, weiter. Die Gegner warten.
+            <strong>(10) Speedster-Trophäe — Bayer in unter 5 Sekunden:</strong><br>
+            Das klingt unmöglich, ist es aber nicht. Vorbereitung vor dem Boss-Room: Alle 6 Waffen gleichzeitig aktiv, voll aufgeladen. Railgun + Raketenwerfer + Minigun + Flammenwerfer + Schrotflinte + Orbit-Maus. Im Skilltree Rage-Zone maximal ausgebaut, Überstunden-Rage Keystone aktiv (unter 30% HP: +100% Schaden). Mit Absicht Schaden nehmen bevor man die Tür betritt → Keystone aktiviert → Bayer schmilzt in Sekunden.
+            <br><br>
+
+            <strong>★ (11) WIE MAN KOMPLETT OP WIRD — DIE VOLLSTÄNDIGE ANLEITUNG ★</strong><br>
+            <em style="font-size:10px; color:#888;">Achtung: Diese Information kann das Spiel dauerhaft zu einfach machen. Eigenverantwortung.</em>
+            <br><br>
+            <strong>Schritt 1 — Trophäen-Grundlage:</strong> Zuerst <em>Suppenkasper</em> und <em>Netzwerk-Admin</em> holen. Diese beiden Perks (Gratis-Suppe + Farm-Bonus) beschleunigen alles andere massiv.<br><br>
+            <strong>Schritt 2 — Skilltree-Kern:</strong> Kaffeekasse-Zone bis zum Keystone <em>Betriebsrat</em> ausbauen. Ja, Gegner spawnen 20% schneller — aber Meetings geben 2× Punkte und deine KB-Rate ist so hoch, dass du jeden anderen Knoten danach viel schneller kaufen kannst. Parallel: Technik-Zone bis <em>Netzwerk-Admin</em> Notable für +2 Farm-Slots.<br><br>
+            <strong>Schritt 3 — Job-Wahl:</strong> Sachbearbeiter nehmen, auf Job Level 25 hochleveln, zu <em>Maddin</em> wechseln. Azubis kosten ab dann nichts. Skills: Volle Pulle (Lv 3) + Maddin-Stampfer (Lv 3) + Teampower (Lv 3). Ergebnis: du hast permanent 5 kostenlose Azubis, Vodka macht dich unverwundbar, und der Stampfer tötet ganze Bildschirme auf einmal.<br><br>
+            <strong>Schritt 4 — Waffenkammer-Favorit:</strong> Orbit-Maus als Favorit setzen. Sie startet dauerhaft ausgerüstet, braucht keinen Timer und kombiniert mit Maddin-Azubis zur absoluten Crowd-Control. Du musst buchstäblich nichts mehr aktiv tun.<br><br>
+            <strong>Schritt 5 — Skilltree-Finale:</strong> Rage-Zone bis <em>Überstunden-Rage</em> Keystone (18.000 KB) ausbauen. Bewegung-Zone bis <em>Geisterläufer</em> Notable. Cross-Zone-Brücke <em>Synergie</em> kaufen (pro aktiver Farm: +Speed und +Schaden). Mit 3 Farmen aktiv, Maddin-Job und Rage-Keystone: dein Schaden unter 30% HP ist absurd hoch.<br><br>
+            <strong>Schritt 6 — Prestige Loop:</strong> Alle 17 Trophäen holen, Prestige starten. Beim zweiten Durchgang mit +5% Schaden und +10 HP von Anfang an. Schritt 1–5 wiederholen, diesmal schneller weil du die Trophäen-Perks behältst. Ab Prestige 3 beginnt der echte Endgame-Loop: Ultra-Rare Knoten kaufen, Transcendenz-Keystone (Score ×3), Kaffee-Imperium (KB ×2). <br><br>
+            <strong>Endresultat:</strong> Maddin-Job + Orbit-Maus (Favorit) + Rage-Keystone + Betriebsrat-Keystone + Synergie-Brücke + Prestige 3+ = du tust nichts, alles stirbt, der Score explodiert, die Kaffeebons fließen. Willkommen im Leitstand.
         </div>
     </div>
     <div class="close-hint" onclick="hideEmail()">ZURÜCK ZUM HAUPTMENÜ</div>
@@ -650,6 +700,7 @@ input[type="text"] {
             <button onclick="openTrophies()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🏆 TROPHÄEN</button>
             <button onclick="openWaffenkammer()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#e74c3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#e74c3c'">🔫 WAFFEN</button>
             <button onclick="openDailyOverlay()" id="daily-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;">☕ TAGES-BONUS</button>
+            <button onclick="openJobOverlay()" id="job-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">⚔️ JOB</button>
             <button onclick="showEmail()" style="background:#111;color:#3498db;border:2px solid #3498db;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#3498db';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#3498db'">[I] ANLEITUNG</button>
             <button onclick="openSkillTree()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🌳 SKILLTREE</button>
         </div>
@@ -758,6 +809,7 @@ input[type="text"] {
         <span style="font-size:11px;color:#aaa;border:1px solid #333;padding:2px 8px;border-radius:10px;">○ Minor</span>
         <span style="font-size:11px;color:#aaa;border:1px solid #555;padding:2px 8px;border-radius:10px;">◉ Notable</span>
         <span style="font-size:11px;color:#f1c40f;border:1px solid #f1c40f;padding:2px 8px;border-radius:10px;">★ Keystone</span>
+        <span style="font-size:11px;color:#ff6b6b;border:1px dashed #ff6b6b;padding:2px 8px;border-radius:10px;">⚠️ Ultra-Rare (10k-18k KB)</span>
     </div>
     <div style="position:relative;flex:1;width:100%;overflow:hidden;">
         <canvas id="skilltreeCanvas" style="cursor:grab;display:block;"></canvas>
@@ -773,6 +825,16 @@ input[type="text"] {
     <div style="padding:12px 30px;display:flex;gap:10px;flex-shrink:0;border-top:1px solid #1a1a1a;">
         <button onclick="resetSkillTree()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:10px 20px;font-size:13px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;">↺ ZURÜCKSETZEN (50% Rückerstattung)</button>
         <button onclick="closeSkillTree()" style="background:#c0392b;color:#fff;border:none;padding:10px 30px;font-size:13px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
+    </div>
+</div>
+
+<!-- JOB OVERLAY -->
+<div id="jobOverlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.93);z-index:555;font-family:'Courier New',monospace;justify-content:center;align-items:flex-start;overflow-y:auto;">
+    <div style="max-width:700px;width:90%;margin:30px auto;padding:28px;border:3px solid #f1c40f;background:#0a0a0a;border-radius:4px;">
+        <h2 style="color:#f1c40f;font-size:22px;letter-spacing:4px;margin:0 0 4px;">⚔️ JOB-SYSTEM</h2>
+        <div style="color:#666;font-size:11px;margin-bottom:20px;">EXP sammeln → Level aufsteigen → Job wählen → Skills freischalten</div>
+        <div id="jobContent"></div>
+        <button onclick="closeJobOverlay()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
     </div>
 </div>
 
@@ -895,6 +957,9 @@ function startPreloader() {
                 var el = document.getElementById('startKBAmount');
                 if (el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
                 updateDailyMenuBtn();
+                // Job-Button aktualisieren
+                let jbtn = document.getElementById('job-menu-btn');
+                if(jbtn) jbtn.innerText = currentJob ? ('⚔️ ' + (JOBS[currentJob]?.name||'JOB')) : '⚔️ JOB';
             } catch(e) {}
             
             let best = parseInt(localStorage.getItem('ts_best_score') || '0');
@@ -1248,11 +1313,377 @@ const TROPHIES_DEF = [
     { id:'boss_killer', icon:'👑', name:'Vorstandswechsel', desc:'Besiege Peter Bayer im Burnout/Survival.', perk:'Chef-Aura: 10s Schutzschild beim Start' },
     { id:'collapse_survivor', icon:'🔥', name:'Feuerprobe', desc:'Überlebe 3 Minuten im System-Kollaps.', perk:'Arsenal-Experte: Spezialwaffen halten 25% länger' },
     { id:'survival_master', icon:'💀', name:'Der wahre Kern', desc:'Erreiche 250k Punkte im Survival-Modus.', perk:'Gnadenlos: Basis-Schaden dauerhaft +2' },
-    { id:'god_of_leitstand', icon:'🌌', name:'Gott des Leitstands', desc:'Besiege Peter Bayer im Wegflexen-Modus.', perk:'Omnipotenz: Alle Waffen halten 50% länger' }
+    { id:'god_of_leitstand', icon:'🌌', name:'Gott des Leitstands', desc:'Besiege Peter Bayer im Wegflexen-Modus.', perk:'Omnipotenz: Alle Waffen halten 50% länger' },
+    { id:'picobello',       icon:'✨', name:'Picobello',           desc:'Erreiche eine 100er Combo in einem Run.', perk:'Treffsicher: Combo reißt erst nach 5 Treffern ab' },
+    { id:'picobellooo',     icon:'💫', name:'Picobellooo',         desc:'Erreiche eine 1000er Combo in einem Run.', perk:'Unaufhaltbar: Combo reißt erst nach 20 Treffern ab' },
+    { id:'nervensaege',     icon:'😤', name:'Nervensäge',          desc:'Verscheuche Kloska 3× in einem Run.', perk:'Respekt: Kloska erscheint 25% seltener' },
+    { id:'speedster',       icon:'⚡', name:'Speedster',           desc:'Besiege Peter Bayer in unter 5 Sekunden im Boss-Room.', perk:'Präzision: +5% Schaden auf alle Waffen' }
 ];
 
 let unlockedTrophies = JSON.parse(localStorage.getItem('ts_trophies') || '[]');
 let unlockedWeapons  = JSON.parse(localStorage.getItem('ts_weapons') || '[]');
+
+// ============================================================
+// JOB-SYSTEM — RAGNARÖK-STYLE
+// ============================================================
+let baseExp      = parseInt(localStorage.getItem('ts_baseexp') || '0');
+let jobExp       = parseInt(localStorage.getItem('ts_jobexp')  || '0');
+let baseLevel    = parseInt(localStorage.getItem('ts_baselv')  || '1');
+let jobLevel     = parseInt(localStorage.getItem('ts_joblv')   || '0');
+let currentJob   = localStorage.getItem('ts_job') || null;     // z.B. 'sachbearbeiter'
+let jobSkillPts  = parseInt(localStorage.getItem('ts_jobspts') || '0');
+let jobSkills    = JSON.parse(localStorage.getItem('ts_jobskills') || '{}');
+
+// EXP-Kurven
+function baseExpNeeded(lv) { return Math.floor(100 * Math.pow(lv, 1.6)); }
+function jobExpNeeded(lv)  { return Math.floor(80  * Math.pow(lv, 1.5)); }
+
+// EXP-Quellen pro Gegner-Typ
+const EXP_TABLE = { 5:3, 4:5, 3:8, 2:12, 1:20, 7:10, 8:15, 99:0 };
+const JOB_EXP_TABLE = { 5:2, 4:3, 3:5, 2:8, 1:13, 7:7, 8:10, 99:0 };
+
+// Job-Definitionen
+const JOBS = {
+    // ── EBENE 1 (ab Base Level 10) ──────────────────────
+    lagermitarbeiter: {
+        name: '📦 Lagermitarbeiter', tier: 1, baseLvReq: 10,
+        color: '#e67e22',
+        desc: 'Stärke-Build. Hechtrolle macht Schaden. Mehr Items.',
+        passiv: 'Schwere Items spawnen 20% häufiger.',
+        skills: {
+            palettenramme:  { name:'Palettenramme',   desc:'Hechtrolle macht 30/50/80 Schaden an Gegnern.',    maxLv:3, cost:[1,2,3] },
+            ueberstundenk:  { name:'Überstunden-Kraft',desc:'Unter 40% HP: +15/25/40% Schaden.',               maxLv:3, cost:[1,2,3] },
+            lagerhaltung:   { name:'Lagerhaltung',     desc:'Trage 1/1/2 Waffen extra gleichzeitig.',           maxLv:3, cost:[2,3,4], minJobLv:10 },
+        }
+    },
+    sachbearbeiter: {
+        name: '💻 Sachbearbeiter', tier: 1, baseLvReq: 10,
+        color: '#3498db',
+        desc: 'Support/Farm-Build. IDOC-Boni, Ticket-Einkommen.',
+        passiv: 'IDOC-Alarme geben +300 Bonus-Score.',
+        skills: {
+            ticketsystem:   { name:'Ticketsystem',     desc:'Kill-Streak: +2/3/5 Pkt/Sek Bonus-Farm-Income.',  maxLv:3, cost:[1,2,3] },
+            formular27b:    { name:'Formular 27b',     desc:'Getroffen: Gegner 1/2/3s verlangsamt.',            maxLv:3, cost:[1,2,3] },
+            eskalation:     { name:'Eskalation',       desc:'Boss verliert 0.2/0.4/0.8% HP/Sek extra.',        maxLv:3, cost:[2,3,4], minJobLv:10 },
+        }
+    },
+    techniker: {
+        name: '🔧 Techniker', tier: 1, baseLvReq: 10,
+        color: '#1abc9c',
+        desc: 'Technik-Build. Farmen, Azubis, Turrets.',
+        passiv: 'Server-Farmen produzieren 30% schneller.',
+        skills: {
+            codereview:     { name:'Code-Review',      desc:'10/15/20% Chance pro Kill: Turret spawnt.',       maxLv:3, cost:[1,2,3] },
+            hotfix:         { name:'Hotfix',           desc:'Kaputte Farm repariert in 15/10/5s.',             maxLv:3, cost:[1,2,3] },
+            deployment:     { name:'Deployment',       desc:'Azubis kosten 30/50/70% weniger.',                maxLv:3, cost:[2,3,4], minJobLv:10 },
+        }
+    },
+    supporter: {
+        name: '📞 Supporter', tier: 1, baseLvReq: 10,
+        color: '#9b59b6',
+        desc: 'Heal-Build. Suppe stärker, Regen, Defensiv.',
+        passiv: 'Suppe heilt 30% mehr HP.',
+        skills: {
+            ticketschliessen:{ name:'Ticket schließen', desc:'Alle 10 Kills: +3/5/8 HP Regen-Burst.',          maxLv:3, cost:[1,2,3] },
+            eskalation3:    { name:'Eskalationsstufe 3',desc:'Gegner-Angriff 0.3/0.5/0.8s vorher sichtbar.',  maxLv:3, cost:[1,2,3] },
+            pausenregel:    { name:'Pausenregelung',    desc:'Alle 90/70/50s: 3s Unverwundbarkeit.',           maxLv:3, cost:[2,3,4], minJobLv:10 },
+        }
+    },
+
+    // ── EBENE 2 (ab Job Level 25) ────────────────────────
+    maddin: {
+        name: '👔 MADDIN (Teamleiter)', tier: 2, baseLvReq: 10, jobLvReq: 25, prevJob: 'sachbearbeiter',
+        color: '#f1c40f',
+        desc: 'Maddin führt das Team. Vodka, Azubis, Stampfer.',
+        passiv: 'Azubis kosten nichts. Vodka gibt Unverwundbarkeit.',
+        skills: {
+            vollpulle:      { name:'Volle Pulle!',     desc:'Vodka-Buff dauert 2/3/5s länger.',                maxLv:3, cost:[2,3,4] },
+            maddinstampfer: { name:'Maddin-Stampfer',  desc:'[SHIFT] macht 50/80/120 AoE Schaden (5s CD).',   maxLv:3, cost:[2,3,5] },
+            teampower:      { name:'Teampower',        desc:'Pro Azubi aktiv: +5/8/12% Schaden.',             maxLv:3, cost:[2,3,4] },
+            beinweg:        { name:'Beine weg!',       desc:'Nach Vodka: Speed +40/60/80% für 5s.',           maxLv:3, cost:[3,4,5], minJobLv:10 },
+        }
+    },
+    gabelstapler: {
+        name: '🚜 Gabelstaplerfahrer', tier: 2, baseLvReq: 10, jobLvReq: 25, prevJob: 'lagermitarbeiter',
+        color: '#e67e22',
+        desc: 'Fahrzeuge mähen Gegner nieder. Ultimative Bewegung.',
+        passiv: 'Gabelstapler & LKW schaden dir nicht.',
+        skills: {
+            staplerSense:   { name:'Stapler-Sense',    desc:'Fahrzeuge killen Gegner (80/150/250 Schaden).',   maxLv:3, cost:[2,3,4] },
+            schmalgang:     { name:'Schmalgang',        desc:'Hechtrolle-CD auf 1.5/1.0/0.5s.',               maxLv:3, cost:[2,3,5] },
+            eigenerStapler: { name:'Eigener Stapler',  desc:'Alle 90/60/45s: Eigener Stapler spawnt für dich.',maxLv:3, cost:[3,4,5], minJobLv:10 },
+        }
+    },
+    entwickler: {
+        name: '🖥️ Entwickler', tier: 2, baseLvReq: 10, jobLvReq: 25, prevJob: 'techniker',
+        color: '#2ecc71',
+        desc: 'Farmen ×2, Turrets überall, Automation.',
+        passiv: 'Server-Farmen produzieren Suppen 50% schneller.',
+        skills: {
+            farmDouble:     { name:'Farm Overdrive',   desc:'Farm-Output ×1.5/×2.0/×2.5.',                   maxLv:3, cost:[2,3,4] },
+            autoTurret:     { name:'Auto-Deploy',      desc:'Alle 45/30/20s: Turret spawnt automatisch.',     maxLv:3, cost:[2,3,4] },
+            infiniteAzubi:  { name:'Unbegrenzt Azubis',desc:'Max. 3/5/∞ Azubis gleichzeitig.',               maxLv:3, cost:[3,4,5], minJobLv:10 },
+        }
+    },
+    hacker: {
+        name: '⚡ Hacker', tier: 2, baseLvReq: 10, jobLvReq: 25, prevJob: 'techniker',
+        color: '#e74c3c',
+        desc: 'Chaos-Build. Gegner hacken, SQL-Injection.',
+        passiv: 'Gegner 5% Chance sich gegenseitig anzugreifen.',
+        skills: {
+            sqlInjection:   { name:'SQL-Injection',    desc:'Jeder Schuss trifft +1/2/3 Zufallsgegner.',      maxLv:3, cost:[2,3,4] },
+            rootAccess:     { name:'Root-Access',      desc:'Kloska 10/20/30s für dich arbeiten.',            maxLv:3, cost:[2,3,4] },
+            zeroDay:        { name:'Zero-Day',         desc:'1/2/3× pro Run: alle Gegner 5s einfrieren.',     maxLv:3, cost:[3,4,5], minJobLv:10 },
+        }
+    },
+    burnout_spezialist: {
+        name: '😤 Burnout-Spezialist', tier: 2, baseLvReq: 10, jobLvReq: 25, prevJob: 'supporter',
+        color: '#e74c3c',
+        desc: 'Schmerz ist Stärke. HP als Ressource nutzen.',
+        passiv: 'Alle 60s: Adrenalinschub +50% Schaden für 8s.',
+        skills: {
+            schmerztoleran: { name:'Schmerztoleranz',  desc:'Schaden -15/25/35% wenn unter 50% HP.',          maxLv:3, cost:[2,3,4] },
+            adrenalinjunkie:{ name:'Adrenalin-Junkie', desc:'Nach Treffer: +10/15/20% Speed für 3s.',         maxLv:3, cost:[2,3,4] },
+            aufbrennen:     { name:'Aufbrennen',       desc:'Verbrenne 5 HP: nächster Angriff ×2/×3/×4.',    maxLv:3, cost:[3,4,5], minJobLv:10 },
+        }
+    },
+};
+
+function getAvailableJobs() {
+    return Object.entries(JOBS).filter(([id, j]) => {
+        if(j.tier === 1) return baseLevel >= j.baseLvReq && !currentJob;
+        if(j.tier === 2) return baseLevel >= j.baseLvReq && jobLevel >= j.jobLvReq && currentJob === j.prevJob;
+        return false;
+    });
+}
+
+function chooseJob(jobId) {
+    currentJob = jobId;
+    jobLevel = 0; jobExp = 0; jobSkillPts = 0; jobSkills = {};
+    localStorage.setItem('ts_job', currentJob);
+    localStorage.setItem('ts_joblv', jobLevel);
+    localStorage.setItem('ts_jobexp', jobExp);
+    localStorage.setItem('ts_jobspts', jobSkillPts);
+    localStorage.setItem('ts_jobskills', JSON.stringify(jobSkills));
+    saveProgress();
+    let j = JOBS[jobId];
+    showToast('⚔️ JOB GEWÄHLT!', j.color, j.name + ' — ' + j.passiv);
+    renderJobOverlay();
+}
+
+function earnExp(enemyType, isBoss) {
+    if(!gameRunning) return;
+    let bexp = (EXP_TABLE[enemyType] || 5);
+    let jexp = currentJob ? (JOB_EXP_TABLE[enemyType] || 3) : 0;
+    // Spielzeit-Bonus: alle 60s +10 Base EXP
+    baseExp += bexp;
+    jobExp  += jexp;
+    checkLevelUp();
+}
+
+function earnTimeExp() {
+    // Wird im Game Loop jede Minute aufgerufen
+    baseExp += 20;
+    if(currentJob) jobExp += 10;
+    checkLevelUp();
+}
+
+function checkLevelUp() {
+    let leveled = false;
+    // Base Level
+    while(baseLevel < 50 && baseExp >= baseExpNeeded(baseLevel)) {
+        baseExp -= baseExpNeeded(baseLevel);
+        baseLevel++;
+        leveled = true;
+        floatingTexts.push(new FloatingText(player.x, player.y - 40, `⬆ BASE LV ${baseLevel}!`, '#f1c40f'));
+        playSound('delivery');
+        // Job-Auswahl bei Level 10
+        if(baseLevel === 10 && !currentJob) {
+            setTimeout(() => openJobOverlay(), 500);
+            showToast('⚔️ LEVEL 10!', '#f1c40f', 'Job-Auswahl verfügbar! Menü → JOB');
+        }
+    }
+    // Job Level
+    if(currentJob) {
+        while(jobLevel < 40 && jobExp >= jobExpNeeded(jobLevel + 1)) {
+            jobExp -= jobExpNeeded(jobLevel + 1);
+            jobLevel++;
+            jobSkillPts++;
+            leveled = true;
+            floatingTexts.push(new FloatingText(player.x, player.y - 60, `⚔️ JOB LV ${jobLevel}!`, JOBS[currentJob]?.color || '#fff'));
+            // Job 2 Auswahl bei Job Level 25
+            if(jobLevel === 25) {
+                showToast('⚔️ JOB LEVEL 25!', '#f1c40f', 'Job 2 verfügbar! Menü → JOB');
+            }
+        }
+    }
+    if(leveled) {
+        localStorage.setItem('ts_baseexp', baseExp);
+        localStorage.setItem('ts_jobexp',  jobExp);
+        localStorage.setItem('ts_baselv',  baseLevel);
+        localStorage.setItem('ts_joblv',   jobLevel);
+        localStorage.setItem('ts_jobspts', jobSkillPts);
+        saveProgress();
+    }
+}
+
+function upgradeJobSkill(skillId) {
+    if(!currentJob) return;
+    let job = JOBS[currentJob];
+    let sk = job.skills[skillId];
+    if(!sk) return;
+    let curLv = jobSkills[skillId] || 0;
+    if(curLv >= sk.maxLv) return;
+    let cost = sk.cost[curLv];
+    if(jobSkillPts < cost) { showToast('ZU WENIG SKILLPUNKTE', '#e74c3c'); return; }
+    if(sk.minJobLv && jobLevel < sk.minJobLv) { showToast(`JOB LV ${sk.minJobLv} BENÖTIGT`, '#e74c3c'); return; }
+    jobSkillPts -= cost;
+    jobSkills[skillId] = curLv + 1;
+    localStorage.setItem('ts_jobskills', JSON.stringify(jobSkills));
+    localStorage.setItem('ts_jobspts',  jobSkillPts);
+    saveProgress();
+    showToast('⚔️ SKILL UPGRADED!', job.color, sk.name + ' → Lv ' + jobSkills[skillId]);
+    renderJobOverlay();
+}
+
+function applyJobEffects(p) {
+    if(!currentJob) return;
+    let job = JOBS[currentJob];
+    // Passiv-Effekte
+    if(currentJob === 'supporter' || currentJob === 'burnout_spezialist') p._suppeHealBonus = (p._suppeHealBonus||0) + 15;
+    if(currentJob === 'techniker' || currentJob === 'entwickler') p._farmIntervalMult = (p._farmIntervalMult||1) * 0.7;
+    if(currentJob === 'gabelstapler') p._vehicleImmune = true;
+    if(currentJob === 'maddin') { p.azubiCost = 0; p._maddingMode = true; }
+    if(currentJob === 'hacker') p._hackerPassiv = true;
+
+    // Skill-Effekte
+    let sk = jobSkills;
+    let lv = (id) => sk[id] || 0;
+
+    if(lv('palettenramme') > 0)   p._rollDmg = [0,30,50,80][lv('palettenramme')];
+    if(lv('ueberstundenk') > 0)   p._lowHpDmg = [0,0.15,0.25,0.40][lv('ueberstundenk')];
+    if(lv('lagerhaltung') > 0)    p._extraWeaponSlots = [0,1,1,2][lv('lagerhaltung')];
+    if(lv('formular27b') > 0)     p._hitSlowEnemy = [0,60,120,180][lv('formular27b')];
+    if(lv('ticketschliessen') > 0)p._killRegenBurst = [0,3,5,8][lv('ticketschliessen')];
+    if(lv('deployment') > 0)      p.azubiCost = Math.floor((p.azubiCost||5000) * [1,0.7,0.5,0.3][lv('deployment')]);
+    if(lv('vollpulle') > 0)       p._vodkaTimeBonus = [0,120,180,300][lv('vollpulle')];
+    if(lv('maddinstampfer') > 0)  p._maddingStampfer = [0,50,80,120][lv('maddinstampfer')];
+    if(lv('teampower') > 0)       p._azubiDmgBonus = [0,0.05,0.08,0.12][lv('teampower')];
+    if(lv('staplerSense') > 0)    p._vehicleKillDmg = [0,80,150,250][lv('staplerSense')];
+    if(lv('schmerztoleran') > 0)  p._lowHpDefense = [0,0.15,0.25,0.35][lv('schmerztoleran')];
+    if(lv('farmDouble') > 0)      p._farmIntervalMult = (p._farmIntervalMult||1) * [1,0.67,0.5,0.4][lv('farmDouble')];
+    if(lv('sqlInjection') > 0)    p._sqlInjection = lv('sqlInjection');
+    if(lv('pausenregel') > 0)     p._autoInvuln = [0,5400,4200,3000][lv('pausenregel')]; // Frames
+}
+
+// ── JOB OVERLAY UI ───────────────────────────────────────────
+function openJobOverlay() {
+    renderJobOverlay();
+    document.getElementById('jobOverlay').style.display = 'flex';
+}
+function closeJobOverlay() {
+    document.getElementById('jobOverlay').style.display = 'none';
+    document.getElementById('startKBAmount').innerText = kaffeebons;
+}
+
+function renderJobOverlay() {
+    let cont = document.getElementById('jobContent');
+    if(!cont) return;
+    let j = currentJob ? JOBS[currentJob] : null;
+    let bexpNext = baseExpNeeded(baseLevel);
+    let jexpNext = currentJob ? jobExpNeeded(jobLevel+1) : 0;
+    let bPct = Math.min(100, Math.round(baseExp / bexpNext * 100));
+    let jPct = currentJob ? Math.min(100, Math.round(jobExp / jexpNext * 100)) : 0;
+
+    let html = `
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;">
+        <div style="flex:1;min-width:200px;background:#111;border:2px solid #f1c40f;padding:14px;border-radius:4px;">
+            <div style="color:#f1c40f;font-size:13px;letter-spacing:2px;margin-bottom:6px;">⚔️ BASE LEVEL</div>
+            <div style="color:#fff;font-size:28px;font-weight:bold;">${baseLevel} <span style="font-size:14px;color:#888;">/ 50</span></div>
+            <div style="background:#222;height:8px;border-radius:4px;margin:8px 0;">
+                <div style="background:#f1c40f;height:8px;border-radius:4px;width:${bPct}%;transition:0.3s;"></div>
+            </div>
+            <div style="color:#888;font-size:11px;">${baseExp} / ${bexpNext} EXP</div>
+        </div>
+        <div style="flex:1;min-width:200px;background:#111;border:2px solid ${j?j.color:'#333'};padding:14px;border-radius:4px;">
+            <div style="color:${j?j.color:'#555'};font-size:13px;letter-spacing:2px;margin-bottom:6px;">💼 JOB LEVEL</div>
+            <div style="color:#fff;font-size:28px;font-weight:bold;">${jobLevel} <span style="font-size:14px;color:#888;">/ 40</span></div>
+            <div style="background:#222;height:8px;border-radius:4px;margin:8px 0;">
+                <div style="background:${j?j.color:'#333'};height:8px;border-radius:4px;width:${jPct}%;transition:0.3s;"></div>
+            </div>
+            <div style="color:#888;font-size:11px;">${currentJob?`${jobExp} / ${jexpNext} Job-EXP`:'Kein Job'} ${jobSkillPts>0?`<span style="color:#2ecc71;font-weight:bold;">● ${jobSkillPts} Skillpkt</span>`:''}</div>
+        </div>
+    </div>`;
+
+    if(!currentJob) {
+        // Job-Auswahl
+        if(baseLevel < 10) {
+            html += `<div style="text-align:center;color:#666;padding:30px;border:2px dashed #333;border-radius:4px;">
+                🔒 Job-Auswahl bei <strong style="color:#f1c40f;">Base Level 10</strong><br>
+                <span style="font-size:12px;">Noch ${10-baseLevel} Level bis zur Auswahl</span></div>`;
+        } else {
+            html += `<div style="color:#f1c40f;font-size:14px;margin-bottom:12px;letter-spacing:2px;">⚔️ WÄHLE DEINEN JOB (Ebene 1):</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">`;
+            Object.entries(JOBS).filter(([,j])=>j.tier===1).forEach(([id,j])=>{
+                html += `<div onclick="chooseJob('${id}')" style="background:#0a0a0a;border:2px solid ${j.color};padding:14px;border-radius:4px;cursor:pointer;transition:0.15s;" onmouseover="this.style.background='${j.color}22'" onmouseout="this.style.background='#0a0a0a'">
+                    <div style="color:${j.color};font-size:15px;font-weight:bold;">${j.name}</div>
+                    <div style="color:#aaa;font-size:11px;margin:6px 0;">${j.desc}</div>
+                    <div style="color:#2ecc71;font-size:11px;">✦ ${j.passiv}</div>
+                </div>`;
+            });
+            html += '</div>';
+        }
+    } else {
+        // Aktueller Job + Skills
+        let job = JOBS[currentJob];
+        html += `<div style="background:#0a0a0a;border:2px solid ${job.color};padding:14px;border-radius:4px;margin-bottom:16px;">
+            <div style="color:${job.color};font-size:16px;font-weight:bold;">${job.name}</div>
+            <div style="color:#aaa;font-size:12px;margin:4px 0;">${job.desc}</div>
+            <div style="color:#2ecc71;font-size:12px;">✦ Passiv: ${job.passiv}</div>
+        </div>`;
+
+        // Skills
+        html += `<div style="color:#fff;font-size:13px;letter-spacing:2px;margin-bottom:10px;">⚡ JOB-SKILLS <span style="color:#f1c40f;">(${jobSkillPts} Pkt verfügbar)</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">`;
+        Object.entries(job.skills).forEach(([id, sk]) => {
+            let curLv = jobSkills[id] || 0;
+            let maxed = curLv >= sk.maxLv;
+            let cost = !maxed ? sk.cost[curLv] : 0;
+            let canUp = !maxed && jobSkillPts >= cost && (!sk.minJobLv || jobLevel >= sk.minJobLv);
+            let locked = sk.minJobLv && jobLevel < sk.minJobLv;
+            let borderCol = maxed ? '#2ecc71' : (canUp ? job.color : '#333');
+            let dots = '';
+            for(let i=0;i<sk.maxLv;i++) dots += `<span style="color:${i<curLv?job.color:'#333'};margin-right:3px;">●</span>`;
+            html += `<div onclick="${canUp?`upgradeJobSkill('${id}')`:''}" style="background:#111;border:2px solid ${borderCol};padding:12px;border-radius:4px;cursor:${canUp?'pointer':'default'};opacity:${locked?0.4:1};">
+                <div style="color:${maxed?'#2ecc71':job.color};font-size:13px;font-weight:bold;">${sk.name} ${maxed?'✅':''}</div>
+                <div style="color:#888;font-size:11px;margin:4px 0;">${sk.desc.split('/')[0]}${sk.maxLv>1?'/…':''}</div>
+                <div style="margin-top:6px;">${dots}</div>
+                <div style="color:${canUp?'#f1c40f':'#555'};font-size:11px;margin-top:4px;">${locked?`🔒 Job Lv ${sk.minJobLv}`:(maxed?'MAX':'⚡ '+cost+' Pkt')}</div>
+            </div>`;
+        });
+        html += '</div>';
+
+        // Job 2 verfügbar?
+        let job2s = Object.entries(JOBS).filter(([,j])=>j.tier===2 && j.prevJob===currentJob);
+        if(job2s.length && jobLevel >= 25) {
+            html += `<div style="margin-top:16px;color:#f1c40f;font-size:13px;letter-spacing:2px;margin-bottom:10px;">🌟 JOB 2 VERFÜGBAR:</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">`;
+            job2s.forEach(([id,j])=>{
+                html += `<div onclick="chooseJob('${id}')" style="background:#0a0a0a;border:2px solid ${j.color};padding:12px;border-radius:4px;cursor:pointer;" onmouseover="this.style.background='${j.color}22'" onmouseout="this.style.background='#0a0a0a'">
+                    <div style="color:${j.color};font-size:14px;font-weight:bold;">${j.name}</div>
+                    <div style="color:#aaa;font-size:11px;margin:4px 0;">${j.desc}</div>
+                    <div style="color:#2ecc71;font-size:11px;">✦ ${j.passiv}</div>
+                </div>`;
+            });
+            html += '</div>';
+        } else if(job2s.length) {
+            html += `<div style="margin-top:14px;background:rgba(241,196,15,0.05);border:1px dashed #f1c40f44;padding:10px;border-radius:4px;color:#666;font-size:12px;">
+                🔒 Job 2 bei <strong style="color:#f1c40f;">Job Level 25</strong> verfügbar — noch ${25-jobLevel} Level</div>`;
+        }
+    }
+
+    cont.innerHTML = html;
+}
+
 let favoriteWeapon   = localStorage.getItem('ts_favorite') || null;
 
 // ============================================================
@@ -1285,13 +1716,13 @@ const SKILL_NODES = [
     { id:'r3b', x:255,  y:-210, type:'minor',    zone:'rage', name:'Überarbeitet',       desc:'+10% Schaden. Regeneriere 1 HP pro 5 Kills.',              cost:1500,  requires:['r2'],          effect:'dmg_pct:0.10' },
     { id:'r4',  x:330,  y:-185, type:'minor',    zone:'rage', name:'Überstunden',        desc:'+6% Schaden pro aktiver Waffe im Arsenal.',                cost:1500,  requires:['r3'],          effect:'dmg_per_weapon:0.06' },
     { id:'r4b', x:340,  y:-85,  type:'minor',    zone:'rage', name:'Konzentration',      desc:'Stehend (keine Bewegung): +15% Schaden.',                  cost:1500,  requires:['r3'],          effect:'dmg_pct:0.05' },
-    { id:'r5',  x:415,  y:-155, type:'notable',  zone:'rage', name:'Schnellschuss',      desc:'Feuerrate +25%. Streuung +10%.',                           cost:3000,  requires:['r4'],          effect:'schnellschuss' },
-    { id:'r6',  x:375,  y:-265, type:'minor',    zone:'rage', name:'Explosive Wut',      desc:'15% Chance pro Treffer: kleiner Splash-Effekt (+30px).',   cost:2000,  requires:['r3b'],         effect:'explosive_chance:0.15' },
-    { id:'r7',  x:475,  y:-280, type:'minor',    zone:'rage', name:'Splittermunition',   desc:'Jede Kugel hat 20% Chance zu splitten (2 Splitter).',      cost:2500,  requires:['r6'],          effect:'split_chance:0.20' },
-    { id:'r8',  x:500,  y:-185, type:'notable',  zone:'rage', name:'Dauerfeuer',         desc:'+30% Feuerrate. Nach 3s Dauerschießen: +20% Schaden.',     cost:3500,  requires:['r5'],          effect:'dauerfeuer' },
-    { id:'r9',  x:560,  y:-130, type:'minor',    zone:'rage', name:'Waffenmeister',      desc:'Waffenwechsel-Cooldown -50%.',                             cost:2000,  requires:['r8'],          effect:'weapon_swap:0.5' },
-    { id:'r10', x:550,  y:-260, type:'minor',    zone:'rage', name:'Durchschlag',        desc:'Kugeln durchdringen 1 zusätzlichen Gegner.',               cost:3000,  requires:['r7'],          effect:'pierce:1' },
-    { id:'r_ks',x:620,  y:-220, type:'keystone', zone:'rage', name:'ÜBERSTUNDEN-RAGE',   desc:'+100% Schaden unter 30% HP. Kein Schutzschild-Item wirkt.',cost:9000,  requires:['r8','r10'],    effect:'ks_rage' },
+    { id:'r5',  x:415,  y:-155, type:'notable',  zone:'rage', name:'Schnellschuss',      desc:'Feuerrate +25%. Streuung +10%.',                           cost:6000,  requires:['r4'],          effect:'schnellschuss' },
+    { id:'r6',  x:375,  y:-265, type:'minor',    zone:'rage', name:'Explosive Wut',      desc:'15% Chance pro Treffer: kleiner Splash-Effekt (+30px).',   cost:4000,  requires:['r3b'],         effect:'explosive_chance:0.15' },
+    { id:'r7',  x:475,  y:-280, type:'minor',    zone:'rage', name:'Splittermunition',   desc:'Jede Kugel hat 20% Chance zu splitten (2 Splitter).',      cost:5000,  requires:['r6'],          effect:'split_chance:0.20' },
+    { id:'r8',  x:500,  y:-185, type:'notable',  zone:'rage', name:'Dauerfeuer',         desc:'+30% Feuerrate. Nach 3s Dauerschießen: +20% Schaden.',     cost:7000,  requires:['r5'],          effect:'dauerfeuer' },
+    { id:'r9',  x:560,  y:-130, type:'minor',    zone:'rage', name:'Waffenmeister',      desc:'Waffenwechsel-Cooldown -50%.',                             cost:4500,  requires:['r8'],          effect:'weapon_swap:0.5' },
+    { id:'r10', x:550,  y:-260, type:'minor',    zone:'rage', name:'Durchschlag',        desc:'Kugeln durchdringen 1 zusätzlichen Gegner.',               cost:6000,  requires:['r7'],          effect:'pierce:1' },
+    { id:'r_ks',x:620,  y:-220, type:'keystone', zone:'rage', name:'ÜBERSTUNDEN-RAGE',   desc:'+100% Schaden unter 30% HP. Kein Schutzschild-Item wirkt.',cost:18000, requires:['r8','r10'],    effect:'ks_rage' },
 
     // ═══════════════════════════════════════════
     // 🔵 PANZER — HP, Resistenzen, Heilung
@@ -1299,16 +1730,16 @@ const SKILL_NODES = [
     { id:'p1',  x:130,  y:20,   type:'minor',    zone:'panzer', name:'Schutzweste',       desc:'+20 Max-HP.',                                             cost:1000,  requires:['start'],       effect:'maxhp:20' },
     { id:'p2',  x:210,  y:65,   type:'minor',    zone:'panzer', name:'Dicke Haut',         desc:'Kontaktschaden von Gegnern -15%.',                        cost:1200,  requires:['p1'],          effect:'dmg_reduction:0.15' },
     { id:'p2b', x:200,  y:-20,  type:'minor',    zone:'panzer', name:'Erste Hilfe',        desc:'Start-HP +15. Erster Treffer im Run: ignoriert.',         cost:1200,  requires:['p1'],          effect:'maxhp:15' },
-    { id:'p3',  x:305,  y:35,   type:'notable',  zone:'panzer', name:'Arbeitnehmerrechte', desc:'+30 Max-HP. Alle Schadenquellen -10%.',                   cost:2800,  requires:['p2'],          effect:'arbeitsrecht' },
+    { id:'p3',  x:305,  y:35,   type:'notable',  zone:'panzer', name:'Arbeitnehmerrechte', desc:'+30 Max-HP. Alle Schadenquellen -10%.',                   cost:5500,  requires:['p2'],          effect:'arbeitsrecht' },
     { id:'p3b', x:295,  y:115,  type:'minor',    zone:'panzer', name:'Regeneration',       desc:'Regeneriere 2 HP alle 5 Sekunden.',                       cost:1800,  requires:['p2'],          effect:'regen:2' },
     { id:'p4',  x:375,  y:95,   type:'minor',    zone:'panzer', name:'Immunsystem',        desc:'SAP-Debuff dauert nur 2s statt 5s.',                      cost:1800,  requires:['p3'],          effect:'sap_resist' },
     { id:'p4b', x:380,  y:10,   type:'minor',    zone:'panzer', name:'Zähigkeit',          desc:'Unter 20% HP: Schaden -25%.',                            cost:2000,  requires:['p3'],          effect:'low_hp_def:0.25' },
-    { id:'p5',  x:445,  y:40,   type:'notable',  zone:'panzer', name:'Stahlnerven',        desc:'Stun-Dauer halbiert. Knockback -30%.',                    cost:3500,  requires:['p4'],          effect:'stun_resist' },
+    { id:'p5',  x:445,  y:40,   type:'notable',  zone:'panzer', name:'Stahlnerven',        desc:'Stun-Dauer halbiert. Knockback -30%.',                    cost:7000,  requires:['p4'],          effect:'stun_resist' },
     { id:'p5b', x:460,  y:130,  type:'minor',    zone:'panzer', name:'Wundpflaster',       desc:'Kill heilt 3 HP.',                                        cost:2500,  requires:['p3b'],         effect:'kill_heal_hp:3' },
-    { id:'p6',  x:530,  y:80,   type:'notable',  zone:'panzer', name:'Schildwall',         desc:'Alle 45s: automatisch +20 HP-Schild (max 1× aktiv).',     cost:4000,  requires:['p5'],          effect:'auto_shield' },
+    { id:'p6',  x:530,  y:80,   type:'notable',  zone:'panzer', name:'Schildwall',         desc:'Alle 45s: automatisch +20 HP-Schild (max 1× aktiv).',     cost:8000,  requires:['p5'],          effect:'auto_shield' },
     { id:'p7',  x:560,  y:165,  type:'minor',    zone:'panzer', name:'Erste Hilfe Pro',    desc:'Suppe heilt +15 extra HP.',                               cost:2500,  requires:['p5b'],         effect:'suppe_heal:15' },
-    { id:'p8',  x:610,  y:100,  type:'minor',    zone:'panzer', name:'Unerschütterlich',   desc:'+40 Max-HP.',                                             cost:3000,  requires:['p6'],          effect:'maxhp:40' },
-    { id:'p_ks',x:670,  y:130,  type:'keystone', zone:'panzer', name:'UNANTASTBAR',        desc:'Hechtrolle gibt 3s Unverwundbarkeit. Cooldown +0.5s.',    cost:9000,  requires:['p6','p8'],     effect:'ks_unantastbar' },
+    { id:'p8',  x:610,  y:100,  type:'minor',    zone:'panzer', name:'Unerschütterlich',   desc:'+40 Max-HP.',                                             cost:6000,  requires:['p6'],          effect:'maxhp:40' },
+    { id:'p_ks',x:670,  y:130,  type:'keystone', zone:'panzer', name:'UNANTASTBAR',        desc:'Hechtrolle gibt 3s Unverwundbarkeit. Cooldown +0.5s.',    cost:18000, requires:['p6','p8'],     effect:'ks_unantastbar' },
 
     // ═══════════════════════════════════════════
     // 🟡 KAFFEEKASSE — Bons, Economy, Suppe
@@ -1316,16 +1747,16 @@ const SKILL_NODES = [
     { id:'k1',  x:110,  y:115,  type:'minor',    zone:'kasse', name:'Sparsamkeit',        desc:'+20% Kaffeebons nach jedem Run.',                         cost:1000,  requires:['start'],       effect:'kb_rate:0.20' },
     { id:'k2',  x:165,  y:205,  type:'minor',    zone:'kasse', name:'Marktkenntnis',      desc:'Starte jeden Run mit 1 Suppe.',                           cost:1200,  requires:['k1'],          effect:'start_suppe:1' },
     { id:'k2b', x:185,  y:120,  type:'minor',    zone:'kasse', name:'Buchhaltung',        desc:'+15% Kaffeebons. Score-Multiplikator +0.05.',             cost:1200,  requires:['k1'],          effect:'kb_rate:0.15' },
-    { id:'k3',  x:265,  y:185,  type:'notable',  zone:'kasse', name:'Kaffeevollautomatik',desc:'+35% Kaffeebons. Suppe-Dropchance +25%.',                 cost:2800,  requires:['k2'],          effect:'kaffeevoll' },
+    { id:'k3',  x:265,  y:185,  type:'notable',  zone:'kasse', name:'Kaffeevollautomatik',desc:'+35% Kaffeebons. Suppe-Dropchance +25%.',                 cost:5500,  requires:['k2'],          effect:'kaffeevoll' },
     { id:'k3b', x:270,  y:100,  type:'minor',    zone:'kasse', name:'Investition',        desc:'Pro freigeschaltetem Upgrade: +5% KB-Bonus.',             cost:2000,  requires:['k2b'],         effect:'upgrade_kb:0.05' },
     { id:'k4',  x:330,  y:270,  type:'minor',    zone:'kasse', name:'Sozialkasse',        desc:'Starte mit 2 Suppen extra.',                              cost:2000,  requires:['k3'],          effect:'start_suppe:2' },
     { id:'k4b', x:350,  y:175,  type:'minor',    zone:'kasse', name:'Steueroptimierung',  desc:'Kaffeebons aus Trophäen +50%.',                           cost:2200,  requires:['k3'],          effect:'kb_rate:0.20' },
-    { id:'k5',  x:430,  y:230,  type:'notable',  zone:'kasse', name:'Gewerkschaft',       desc:'Azubi kostet 2000 weniger Pkt. Reichweite +300px.',       cost:3500,  requires:['k4'],          effect:'gewerkschaft' },
+    { id:'k5',  x:430,  y:230,  type:'notable',  zone:'kasse', name:'Gewerkschaft',       desc:'Azubi kostet 2000 weniger Pkt. Reichweite +300px.',       cost:7000,  requires:['k4'],          effect:'gewerkschaft' },
     { id:'k5b', x:440,  y:145,  type:'minor',    zone:'kasse', name:'Mengenrabatt',       desc:'Zweite Suppe im Run: 50% günstiger.',                     cost:2500,  requires:['k4b'],         effect:'suppe_discount' },
-    { id:'k6',  x:510,  y:195,  type:'notable',  zone:'kasse', name:'Schwarzmarkt',       desc:'Kloska-Shop: alle Preise -20%.',                          cost:4000,  requires:['k5'],          effect:'kloska_discount:0.20' },
+    { id:'k6',  x:510,  y:195,  type:'notable',  zone:'kasse', name:'Schwarzmarkt',       desc:'Kloska-Shop: alle Preise -20%.',                          cost:8000,  requires:['k5'],          effect:'kloska_discount:0.20' },
     { id:'k7',  x:550,  y:280,  type:'minor',    zone:'kasse', name:'Betriebsausflug',    desc:'Pro Meeting: +200 KB.',                                   cost:3000,  requires:['k5'],          effect:'meeting_kb:200' },
-    { id:'k8',  x:610,  y:220,  type:'minor',    zone:'kasse', name:'Jahresbonus',        desc:'+50% KB wenn Score über 500.000.',                        cost:3500,  requires:['k6'],          effect:'score_kb_bonus' },
-    { id:'k_ks',x:650,  y:315,  type:'keystone', zone:'kasse', name:'BETRIEBSRAT',        desc:'Meetings geben 2× Punkte. Gegner-Spawn +20% schneller.', cost:9000,  requires:['k6','k7'],     effect:'ks_betriebsrat' },
+    { id:'k8',  x:610,  y:220,  type:'minor',    zone:'kasse', name:'Jahresbonus',        desc:'+50% KB wenn Score über 500.000.',                        cost:7000,  requires:['k6'],          effect:'score_kb_bonus' },
+    { id:'k_ks',x:650,  y:315,  type:'keystone', zone:'kasse', name:'BETRIEBSRAT',        desc:'Meetings geben 2× Punkte. Gegner-Spawn +20% schneller.', cost:18000, requires:['k6','k7'],     effect:'ks_betriebsrat' },
 
     // ═══════════════════════════════════════════
     // 🟣 CHAOS — RNG, Glück, verrückte Effekte
@@ -1333,32 +1764,32 @@ const SKILL_NODES = [
     { id:'c1',  x:-110, y:115,  type:'minor',    zone:'chaos', name:'Glücksprinzip',      desc:'Kisten-Dropchance von Gegnern +25%.',                     cost:1000,  requires:['start'],       effect:'crate_chance:0.25' },
     { id:'c2',  x:-165, y:205,  type:'minor',    zone:'chaos', name:'Würfelwurf',         desc:'7% Chance pro Kill: sofort +5 HP regeneriert.',           cost:1200,  requires:['c1'],          effect:'kill_heal:0.07' },
     { id:'c2b', x:-185, y:120,  type:'minor',    zone:'chaos', name:'Schmetterling',      desc:'3% Chance: Kill gibt sofort ein zufälliges Item.',        cost:1200,  requires:['c1'],          effect:'kill_item:0.03' },
-    { id:'c3',  x:-265, y:185,  type:'notable',  zone:'chaos', name:'Russisches Roulette',desc:'12% Chance: Kill gibt 3× Score.',                         cost:2800,  requires:['c2'],          effect:'triple_score:0.12' },
+    { id:'c3',  x:-265, y:185,  type:'notable',  zone:'chaos', name:'Russisches Roulette',desc:'12% Chance: Kill gibt 3× Score.',                         cost:5500,  requires:['c2'],          effect:'triple_score:0.12' },
     { id:'c3b', x:-270, y:100,  type:'minor',    zone:'chaos', name:'Glückssträhne',      desc:'Nach 10 Kills ohne Schaden: +30% Score für 15s.',        cost:2000,  requires:['c2b'],         effect:'lucky_streak' },
     { id:'c4',  x:-345, y:255,  type:'minor',    zone:'chaos', name:'Anarchie',           desc:'Raketenwerfer Splash +40px. Rückstoß -30%.',             cost:2000,  requires:['c3'],          effect:'rocket_mod' },
     { id:'c4b', x:-355, y:165,  type:'minor',    zone:'chaos', name:'Zufallsgenerator',   desc:'Beim Spielstart: zufälliger +10-50 HP Bonus.',           cost:2000,  requires:['c3'],          effect:'random_hp_bonus' },
-    { id:'c5',  x:-435, y:210,  type:'notable',  zone:'chaos', name:'Doppelt oder Nichts',desc:'25% Chance: 2× Score-Kill. 5% Chance: 0 Score.',         cost:3500,  requires:['c4'],          effect:'double_nothing:0.25' },
+    { id:'c5',  x:-435, y:210,  type:'notable',  zone:'chaos', name:'Doppelt oder Nichts',desc:'25% Chance: 2× Score-Kill. 5% Chance: 0 Score.',         cost:7000,  requires:['c4'],          effect:'double_nothing:0.25' },
     { id:'c5b', x:-445, y:130,  type:'minor',    zone:'chaos', name:'Joker',              desc:'1× pro Run: nächster Treffer macht keinen Schaden.',     cost:3000,  requires:['c4b'],         effect:'joker_block' },
-    { id:'c6',  x:-510, y:180,  type:'notable',  zone:'chaos', name:'Chaostheorie',       desc:'Zufällige Waffe alle 30s gratis aktiv (15s).',           cost:4000,  requires:['c5'],          effect:'chaos_weapon' },
+    { id:'c6',  x:-510, y:180,  type:'notable',  zone:'chaos', name:'Chaostheorie',       desc:'Zufällige Waffe alle 30s gratis aktiv (15s).',           cost:8000,  requires:['c5'],          effect:'chaos_weapon' },
     { id:'c7',  x:-555, y:270,  type:'minor',    zone:'chaos', name:'Glücksklee',         desc:'Item-Drop-Qualität +20%. Seltene Items häufiger.',        cost:3000,  requires:['c5'],          effect:'item_quality:0.20' },
-    { id:'c8',  x:-610, y:210,  type:'minor',    zone:'chaos', name:'Würfelkönig',        desc:'Alle Zufalls-Chancen +5% additiv.',                       cost:3500,  requires:['c6'],          effect:'luck_all:0.05' },
-    { id:'c_ks',x:-655, y:300,  type:'keystone', zone:'chaos', name:'SYSTEMKOLLAPS PRO',  desc:'Kollaps 30s früher. Score ×1.5 während Kollaps.',        cost:9000,  requires:['c6','c7'],     effect:'ks_collapse' },
+    { id:'c8',  x:-610, y:210,  type:'minor',    zone:'chaos', name:'Würfelkönig',        desc:'Alle Zufalls-Chancen +5% additiv.',                       cost:7000,  requires:['c6'],          effect:'luck_all:0.05' },
+    { id:'c_ks',x:-655, y:300,  type:'keystone', zone:'chaos', name:'SYSTEMKOLLAPS PRO',  desc:'Kollaps 30s früher. Score ×1.5 während Kollaps.',        cost:18000, requires:['c6','c7'],     effect:'ks_collapse' },
 
     // ═══════════════════════════════════════════
     // ⚪ TECHNIK — Farmen, Azubis, IT
     // ═══════════════════════════════════════════
-    { id:'t1',  x:-130, y:20,   type:'minor',    zone:'technik', name:'Netzwerk-Ping',    desc:'Farm-Einkommen +4 Pkt/Sek.',                             cost:1000,  requires:['start'],       effect:'farm_income:4' },
+    { id:'t1',  x:-130, y:20,   type:'minor',    zone:'technik', name:'Netzwerk-Ping',    desc:'Suppe erscheint 6s früher pro Farm.',                             cost:1000,  requires:['start'],       effect:'farm_income:4' },
     { id:'t2',  x:-220, y:65,   type:'minor',    zone:'technik', name:'IT-Support',        desc:'IDOC-Zeitfenster +8s.',                                  cost:1200,  requires:['t1'],          effect:'idoc_time:480' },
-    { id:'t2b', x:-205, y:-20,  type:'minor',    zone:'technik', name:'Ping-Optimierung',  desc:'Farm-Einkommen +6 Pkt/Sek.',                             cost:1200,  requires:['t1'],          effect:'farm_income:6' },
-    { id:'t3',  x:-315, y:35,   type:'notable',  zone:'technik', name:'Netzwerk-Admin',    desc:'Max. Server-Farmen +2. Hack-Zeitfenster +3s.',           cost:2800,  requires:['t2'],          effect:'farm_slots:2' },
+    { id:'t2b', x:-205, y:-20,  type:'minor',    zone:'technik', name:'Ping-Optimierung',  desc:'Suppe erscheint 9s früher pro Farm.',                             cost:1200,  requires:['t1'],          effect:'farm_income:6' },
+    { id:'t3',  x:-315, y:35,   type:'notable',  zone:'technik', name:'Netzwerk-Admin',    desc:'Max. Server-Farmen +2. Hack-Zeitfenster +3s.',           cost:5500,  requires:['t2'],          effect:'farm_slots:2' },
     { id:'t3b', x:-300, y:115,  type:'minor',    zone:'technik', name:'Backup-System',     desc:'Server-Farm hält 50% länger wenn angegriffen.',          cost:1800,  requires:['t2'],          effect:'farm_defense:0.50' },
     { id:'t4',  x:-385, y:95,   type:'minor',    zone:'technik', name:'Azubi-Coaching',    desc:'Azubis haben +250px Reichweite und +20% Feuerrate.',     cost:1800,  requires:['t3'],          effect:'azubi_boost' },
-    { id:'t4b', x:-375, y:15,   type:'minor',    zone:'technik', name:'Firmennetzwerk',    desc:'Alle Farmen geben +3 Pkt/Sek extra.',                    cost:2000,  requires:['t3'],          effect:'farm_income:3' },
-    { id:'t5',  x:-455, y:40,   type:'notable',  zone:'technik', name:'Automatisierung',   desc:'Azubis feuern doppelt so schnell. Cooldown halbiert.',   cost:3500,  requires:['t4'],          effect:'azubi_auto' },
+    { id:'t4b', x:-375, y:15,   type:'minor',    zone:'technik', name:'Firmennetzwerk',    desc:'Suppe erscheint 4.5s früher pro Farm.',                    cost:2000,  requires:['t3'],          effect:'farm_income:3' },
+    { id:'t5',  x:-455, y:40,   type:'notable',  zone:'technik', name:'Automatisierung',   desc:'Azubis feuern doppelt so schnell. Cooldown halbiert.',   cost:7000,  requires:['t4'],          effect:'azubi_auto' },
     { id:'t5b', x:-465, y:130,  type:'minor',    zone:'technik', name:'Cloud-Backup',      desc:'Bei Farm-Zerstörung: 50% Chance Wiederherstellung.',     cost:3000,  requires:['t3b'],         effect:'farm_revive:0.50' },
-    { id:'t6',  x:-530, y:75,   type:'notable',  zone:'technik', name:'Quantencomputer',   desc:'Farm-Einkommen ×2. Max. gleichzeitige Farmen +1.',       cost:4000,  requires:['t5'],          effect:'farm_double' },
+    { id:'t6',  x:-530, y:75,   type:'notable',  zone:'technik', name:'Quantencomputer',   desc:'Farm-Einkommen ×2. Max. gleichzeitige Farmen +1.',       cost:8000,  requires:['t5'],          effect:'farm_double' },
     { id:'t7',  x:-565, y:165,  type:'minor',    zone:'technik', name:'Turret-Upgrade',    desc:'Turrets haben +40% Reichweite und +20% Feuerrate.',      cost:3000,  requires:['t4'],          effect:'turret_boost' },
-    { id:'t8',  x:-615, y:95,   type:'minor',    zone:'technik', name:'Server-Farm XL',    desc:'Jede Farm gibt +8 Pkt/Sek bonus.',                       cost:3500,  requires:['t6'],          effect:'farm_income:8' },
+    { id:'t8',  x:-615, y:95,   type:'minor',    zone:'technik', name:'Server-Farm XL',    desc:'Suppe erscheint 12s früher pro Farm.',                       cost:7000,  requires:['t6'],          effect:'farm_income:8' },
     { id:'t_ks',x:-660, y:125,  type:'keystone', zone:'technik', name:'KÜNSTLICHE INTELLIGENZ', desc:'Azubis priorisieren stärkste Gegner. Max. Turrets +4.', cost:9000, requires:['t5','t7'],   effect:'ks_ki' },
 
     // ═══════════════════════════════════════════
@@ -1367,16 +1798,16 @@ const SKILL_NODES = [
     { id:'b1',  x:-110, y:-90,  type:'minor',    zone:'bewegung', name:'Laufschuhe Pro',  desc:'+0.4 Grundgeschwindigkeit.',                             cost:1000,  requires:['start'],       effect:'speed:0.4' },
     { id:'b2',  x:-185, y:-150, type:'minor',    zone:'bewegung', name:'Flinke Füße',      desc:'Hechtrolle-Cooldown -0.4s.',                             cost:1000,  requires:['b1'],          effect:'roll_cd:-24' },
     { id:'b2b', x:-175, y:-55,  type:'minor',    zone:'bewegung', name:'Sprint',           desc:'+0.3 Speed. Nach Kill: 1s Speed-Burst +40%.',           cost:1200,  requires:['b1'],          effect:'speed:0.3' },
-    { id:'b3',  x:-275, y:-125, type:'notable',  zone:'bewegung', name:'Parkour',          desc:'+0.6 Speed. Hechtrolle-Distanz +40%.',                   cost:2800,  requires:['b2'],          effect:'parkour' },
+    { id:'b3',  x:-275, y:-125, type:'notable',  zone:'bewegung', name:'Parkour',          desc:'+0.6 Speed. Hechtrolle-Distanz +40%.',                   cost:5500,  requires:['b2'],          effect:'parkour' },
     { id:'b3b', x:-265, y:-45,  type:'minor',    zone:'bewegung', name:'Slalom',           desc:'Während Bewegung: Trefferzone -15%.',                    cost:1800,  requires:['b2b'],         effect:'move_dodge:0.15' },
     { id:'b4',  x:-355, y:-195, type:'minor',    zone:'bewegung', name:'Windschatten',     desc:'1s nach Hechtrolle: +60% Speed-Burst.',                 cost:1800,  requires:['b3'],          effect:'windschatten' },
     { id:'b4b', x:-350, y:-110, type:'minor',    zone:'bewegung', name:'Katzenreflexe',    desc:'Hechtrolle lädt 20% schneller auf.',                     cost:2000,  requires:['b3'],          effect:'roll_cd:-12' },
-    { id:'b5',  x:-435, y:-155, type:'notable',  zone:'bewegung', name:'Geisterläufer',    desc:'Während Hechtrolle: passiert Gegner ohne Schaden.',     cost:3500,  requires:['b4'],          effect:'ghost_roll' },
+    { id:'b5',  x:-435, y:-155, type:'notable',  zone:'bewegung', name:'Geisterläufer',    desc:'Während Hechtrolle: passiert Gegner ohne Schaden.',     cost:7000,  requires:['b4'],          effect:'ghost_roll' },
     { id:'b5b', x:-440, y:-70,  type:'minor',    zone:'bewegung', name:'Trägheitsgesetz',  desc:'+0.8 Speed für 2s nach Hechtrolle.',                     cost:2500,  requires:['b4b'],         effect:'speed:0.2' },
-    { id:'b6',  x:-510, y:-120, type:'notable',  zone:'bewegung', name:'Teleportation',    desc:'Hechtrolle überwindet doppelte Distanz.',                cost:4000,  requires:['b5'],          effect:'roll_dist:2.0' },
+    { id:'b6',  x:-510, y:-120, type:'notable',  zone:'bewegung', name:'Teleportation',    desc:'Hechtrolle überwindet doppelte Distanz.',                cost:8000,  requires:['b5'],          effect:'roll_dist:2.0' },
     { id:'b7',  x:-555, y:-210, type:'minor',    zone:'bewegung', name:'Warpantrieb',      desc:'+1.0 Speed. Aber HP-Regen -50%.',                        cost:3500,  requires:['b5'],          effect:'speed:1.0' },
-    { id:'b8',  x:-610, y:-155, type:'minor',    zone:'bewegung', name:'Lichtgeschwindigkeit', desc:'Max. Speed +2.0 (Cap erhöhen).',                    cost:4000,  requires:['b6'],          effect:'speed_cap:2.0' },
-    { id:'b_ks',x:-655, y:-245, type:'keystone', zone:'bewegung', name:'BÜROKRAT',         desc:'+2.0 Speed. Aber Schaden dauerhaft -25%.',              cost:9000,  requires:['b6','b7'],     effect:'ks_buerokrat' },
+    { id:'b8',  x:-610, y:-155, type:'minor',    zone:'bewegung', name:'Lichtgeschwindigkeit', desc:'Max. Speed +2.0 (Cap erhöhen).',                    cost:8000,  requires:['b6'],          effect:'speed_cap:2.0' },
+    { id:'b_ks',x:-655, y:-245, type:'keystone', zone:'bewegung', name:'BÜROKRAT',         desc:'+2.0 Speed. Aber Schaden dauerhaft -25%.',              cost:18000, requires:['b6','b7'],     effect:'ks_buerokrat' },
 
     // ═══════════════════════════════════════════
     // 🟠 ERFAHRUNG — Trophäen, Prestige, Run-Boni
@@ -1384,16 +1815,16 @@ const SKILL_NODES = [
     { id:'e1',  x:30,   y:-135, type:'minor',    zone:'erfahrung', name:'Arbeitserfahrung', desc:'+5% Score für jede freigeschaltete Trophäe.',          cost:1200,  requires:['start'],       effect:'trophy_score:0.05' },
     { id:'e2',  x:80,   y:-195, type:'minor',    zone:'erfahrung', name:'Lernkurve',        desc:'Nach jedem Run: +2% permanenter KB-Bonus (max +20%).', cost:1500,  requires:['e1'],          effect:'kb_rate:0.02' },
     { id:'e2b', x:-30,  y:-170, type:'minor',    zone:'erfahrung', name:'Intuition',        desc:'Gegner-Angriffsmuster +0.3s früher sichtbar.',          cost:1200,  requires:['e1'],          effect:'enemy_warn:18' },
-    { id:'e3',  x:100,  y:-280, type:'notable',  zone:'erfahrung', name:'Veteran',          desc:'Pro Prestige-Level: +5% Schaden und +10 HP.',           cost:2800,  requires:['e2'],          effect:'prestige_bonus' },
+    { id:'e3',  x:100,  y:-280, type:'notable',  zone:'erfahrung', name:'Veteran',          desc:'Pro Prestige-Level: +5% Schaden und +10 HP.',           cost:5500,  requires:['e2'],          effect:'prestige_bonus' },
     { id:'e3b', x:-20,  y:-260, type:'minor',    zone:'erfahrung', name:'Muskelgedächtnis', desc:'Bekannte Gegner-Typen machen -8% Schaden.',             cost:2000,  requires:['e2b'],         effect:'dmg_reduction:0.08' },
     { id:'e4',  x:165,  y:-310, type:'minor',    zone:'erfahrung', name:'Karriereleiter',   desc:'Score-Multiplikator +0.1 für Burnout+ Modus.',         cost:2000,  requires:['e3'],          effect:'score_mult:0.10' },
     { id:'e4b', x:40,   y:-345, type:'minor',    zone:'erfahrung', name:'Nachtschicht',     desc:'+15% KB nach 22:00 Uhr (Systemzeit).',                  cost:2000,  requires:['e3'],          effect:'nightshift_kb' },
-    { id:'e5',  x:240,  y:-300, type:'notable',  zone:'erfahrung', name:'Seniorität',       desc:'Combo-Multiplikator baut 50% langsamer ab.',            cost:3500,  requires:['e4'],          effect:'combo_decay:0.50' },
+    { id:'e5',  x:240,  y:-300, type:'notable',  zone:'erfahrung', name:'Seniorität',       desc:'Combo-Multiplikator baut 50% langsamer ab.',            cost:7000,  requires:['e4'],          effect:'combo_decay:0.50' },
     { id:'e5b', x:100,  y:-420, type:'minor',    zone:'erfahrung', name:'Jubiläum',         desc:'Jeder 100. Kill im Run: +500 Bonus-Score.',             cost:3000,  requires:['e4b'],         effect:'milestone_score:500' },
-    { id:'e6',  x:330,  y:-340, type:'notable',  zone:'erfahrung', name:'Meisterschaft',    desc:'+25% Score. Combo zählt ab ×2 statt ×3.',              cost:4000,  requires:['e5'],          effect:'combo_start:2' },
+    { id:'e6',  x:330,  y:-340, type:'notable',  zone:'erfahrung', name:'Meisterschaft',    desc:'+25% Score. Combo zählt ab ×2 statt ×3.',              cost:8000,  requires:['e5'],          effect:'combo_start:2' },
     { id:'e7',  x:200,  y:-410, type:'minor',    zone:'erfahrung', name:'Lebenswerk',       desc:'Trophäen-Belohnungen ×1.5.',                            cost:3500,  requires:['e5b'],         effect:'trophy_kb:1.5' },
-    { id:'e8',  x:380,  y:-430, type:'minor',    zone:'erfahrung', name:'Legende',          desc:'+10% aller Stats für jeden Keystone-Skill aktiv.',      cost:5000,  requires:['e6'],          effect:'keystone_bonus:0.10' },
-    { id:'e_ks',x:460,  y:-380, type:'keystone', zone:'erfahrung', name:'LEBENDE LEGENDE',  desc:'Score ×2 im gesamten Run. Nur 1 Leben.',                cost:9000,  requires:['e6','e8'],     effect:'ks_legende' },
+    { id:'e8',  x:380,  y:-430, type:'minor',    zone:'erfahrung', name:'Legende',          desc:'+10% aller Stats für jeden Keystone-Skill aktiv.',      cost:10000, requires:['e6'],          effect:'keystone_bonus:0.10' },
+    { id:'e_ks',x:460,  y:-380, type:'keystone', zone:'erfahrung', name:'LEBENDE LEGENDE',  desc:'Score ×2 im gesamten Run. Nur 1 Leben.',                cost:18000, requires:['e6','e8'],     effect:'ks_legende' },
 
     // ═══════════════════════════════════════════
     // 🔶 BOSS — Peter Bayer, Spezial-Perks
@@ -1401,15 +1832,15 @@ const SKILL_NODES = [
     { id:'bo1', x:-30,  y:165,  type:'minor',    zone:'boss', name:'Respekt verdient',    desc:'Boss-HP -5% pro Run den du überlebt hast (max -25%).',  cost:1500,  requires:['start'],       effect:'boss_hp_red:0.05' },
     { id:'bo2', x:-80,  y:235,  type:'minor',    zone:'boss', name:'Schwachstellenanalyse',desc:'Bosse haben 10% Trefferzone auf Rücken: ×2 Schaden.',  cost:1500,  requires:['bo1'],         effect:'boss_weak' },
     { id:'bo2b',x:30,   y:210,  type:'minor',    zone:'boss', name:'Bossbeobachtung',     desc:'Boss-Angriffe sind 0.5s früher angekündigt.',           cost:1500,  requires:['bo1'],         effect:'boss_warn' },
-    { id:'bo3', x:-100, y:320,  type:'notable',  zone:'boss', name:'Petermanager',        desc:'Peter Bayer hat 15% weniger HP und Speed.',             cost:3000,  requires:['bo2'],         effect:'bayer_nerf:0.15' },
+    { id:'bo3', x:-100, y:320,  type:'notable',  zone:'boss', name:'Petermanager',        desc:'Peter Bayer hat 15% weniger HP und Speed.',             cost:6000,  requires:['bo2'],         effect:'bayer_nerf:0.15' },
     { id:'bo3b',x:30,   y:320,  type:'minor',    zone:'boss', name:'Taktiker',            desc:'Nach Bayer-Kill: alle Stats +10% für 30s.',             cost:2500,  requires:['bo2b'],        effect:'boss_kill_buff' },
     { id:'bo4', x:-155, y:390,  type:'minor',    zone:'boss', name:'Laser-Abwehr',        desc:'Laser-Schaden -30%.',                                    cost:2500,  requires:['bo3'],         effect:'laser_resist:0.30' },
     { id:'bo4b',x:55,   y:405,  type:'minor',    zone:'boss', name:'Bossbeute',           desc:'Boss-Kill gibt +2000 Bonus-Score.',                     cost:2500,  requires:['bo3b'],        effect:'boss_score:2000' },
-    { id:'bo5', x:-200, y:460,  type:'notable',  zone:'boss', name:'Bayer-Flüsterer',     desc:'Alle Boss-Angriffe -25% Schaden.',                      cost:4000,  requires:['bo4'],         effect:'boss_dmg_red:0.25' },
+    { id:'bo5', x:-200, y:460,  type:'notable',  zone:'boss', name:'Bayer-Flüsterer',     desc:'Alle Boss-Angriffe -25% Schaden.',                      cost:8000,  requires:['bo4'],         effect:'boss_dmg_red:0.25' },
     { id:'bo5b',x:90,   y:465,  type:'minor',    zone:'boss', name:'Kopfgeld',            desc:'Boss-Kill gibt +500 KB sofort.',                        cost:3500,  requires:['bo4b'],        effect:'boss_kb:500' },
-    { id:'bo6', x:-120, y:495,  type:'notable',  zone:'boss', name:'Bayer-Chroniken',     desc:'Bosse haben 20% Chance Loot-Drop.',                     cost:4500,  requires:['bo5'],         effect:'boss_loot:0.20' },
+    { id:'bo6', x:-120, y:495,  type:'notable',  zone:'boss', name:'Bayer-Chroniken',     desc:'Bosse haben 20% Chance Loot-Drop.',                     cost:9000,  requires:['bo5'],         effect:'boss_loot:0.20' },
     { id:'bo7', x:30,   y:530,  type:'minor',    zone:'boss', name:'Siegestaumel',        desc:'Nach Boss-Kill: Unverwundbarkeit 5s.',                  cost:4000,  requires:['bo5b'],        effect:'boss_invuln:300' },
-    { id:'bo_ks',x:-50, y:565,  type:'keystone', zone:'boss', name:'BAYER BESIEGER',      desc:'Bosse haben -40% HP. Du startest mit -30 HP.',          cost:9000,  requires:['bo6','bo7'],   effect:'ks_bayerbesieger' },
+    { id:'bo_ks',x:-50, y:565,  type:'keystone', zone:'boss', name:'BAYER BESIEGER',      desc:'Bosse haben -40% HP. Du startest mit -30 HP.',          cost:18000, requires:['bo6','bo7'],   effect:'ks_bayerbesieger' },
 
     // ═══════════════════════════════════════════
     // CROSS-ZONE BRÜCKEN — Synergien
@@ -1417,7 +1848,7 @@ const SKILL_NODES = [
     { id:'x1',  x:235,  y:-65,  type:'minor',    zone:'rage',     name:'Waffenöl',         desc:'+6% Feuerrate und +6% Schaden.',                        cost:1800,  requires:['r1','p1'],     effect:'waffentoel' },
     { id:'x2',  x:235,  y:125,  type:'minor',    zone:'kasse',    name:'Teamwork',          desc:'Azubi-Kills zählen für Combo-System.',                  cost:2000,  requires:['p1','k1'],     effect:'azubi_combo' },
     { id:'x3',  x:-235, y:125,  type:'minor',    zone:'chaos',    name:'Flexible Arbeitszeit', desc:'Wegflexen-Timer +1.5s pro Kill.',                   cost:2000,  requires:['c1','b1'],     effect:'flex_timer:1.5' },
-    { id:'x4',  x:-235, y:-65,  type:'notable',  zone:'bewegung', name:'Synergie',          desc:'Pro aktiver Farm: +0.2 Speed und +3% Schaden.',        cost:3000,  requires:['t1','b1'],     effect:'synergy' },
+    { id:'x4',  x:-235, y:-65,  type:'notable',  zone:'bewegung', name:'Synergie',          desc:'Pro aktiver Farm: +0.2 Speed und +3% Schaden.',        cost:6000,  requires:['t1','b1'],     effect:'synergy' },
     { id:'x5',  x:0,    y:-225, type:'minor',    zone:'rage',     name:'Präzision',         desc:'Kritische Treffer-Chance +8% (×1.5 Schaden).',         cost:1800,  requires:['r2','b2'],     effect:'crit:0.08' },
     { id:'x6',  x:0,    y:270,  type:'minor',    zone:'kasse',    name:'Lunchpaket',        desc:'Start mit +20 HP UND 1 Suppe extra.',                  cost:2200,  requires:['k1','c1'],     effect:'lunchpaket' },
     { id:'x7',  x:170,  y:-240, type:'minor',    zone:'erfahrung',name:'Kampferfahrung',    desc:'Pro Notable-Skill: +3% Schaden.',                      cost:2500,  requires:['r3','e1'],     effect:'notable_dmg:0.03' },
@@ -1425,10 +1856,51 @@ const SKILL_NODES = [
     { id:'x9',  x:120,  y:310,  type:'minor',    zone:'boss',     name:'Bosskenner',        desc:'Boss-Phase: +10% Schaden und -10% erlittener Schaden.',cost:3000,  requires:['k2','bo1'],    effect:'boss_phase_buff' },
     { id:'x10', x:-130, y:300,  type:'minor',    zone:'boss',     name:'Notfallprotokoll',  desc:'Unter 25% HP gegen Boss: +20% Speed.',                 cost:3000,  requires:['p2','bo1'],    effect:'boss_low_speed:0.20' },
     { id:'x11', x:310,  y:-260, type:'minor',    zone:'rage',     name:'Waffenmeister Pro', desc:'Waffenwechsel gibt 3s +15% Schaden.',                  cost:3000,  requires:['r5','x1'],     effect:'swap_dmg:0.15' },
-    { id:'x12', x:-310, y:-185, type:'notable',  zone:'technik',  name:'Drohnenflotte',     desc:'Pro Turret: +2% Schaden für dich.',                    cost:3500,  requires:['t4','b3'],     effect:'turret_dmg_share:0.02' },
+    { id:'x12', x:-310, y:-185, type:'notable',  zone:'technik',  name:'Drohnenflotte',     desc:'Pro Turret: +2% Schaden für dich.',                    cost:7000,  requires:['t4','b3'],     effect:'turret_dmg_share:0.02' },
     { id:'x13', x:0,    y:400,  type:'notable',  zone:'boss',     name:'Finale Konfrontation', desc:'Letzter Boss im Run: +30% Schaden und keine Kosten.', cost:4000, requires:['bo3','k3'],   effect:'final_boss_buff' },
     { id:'x14', x:-300, y:300,  type:'minor',    zone:'chaos',    name:'Kaffee-Rausch',     desc:'Suppe trinken: 5s +25% Speed und +10% Schaden.',       cost:2500,  requires:['c2','k2'],     effect:'suppe_rush' },
     { id:'x15', x:300,  y:220,  type:'minor',    zone:'kasse',    name:'Effizienz',         desc:'Jede freigeschaltete Zone: +5% KB-Bonus.',             cost:3000,  requires:['k3b','t2'],    effect:'zone_kb:0.05' },
+
+    // ═══════════════════════════════════════════
+    // ⚠️  ULTRA-RARE — Äußerer Ring (sehr teuer)
+    // ═══════════════════════════════════════════
+    // RAGE Ultra
+    { id:'ur1',  x:700,  y:-300, type:'keystone', zone:'rage',     name:'TOTALE VERNICHTUNG',   desc:'Schaden +50%. Jede 5. Kugel ist automatisch kritisch.',   cost:15000, requires:['r_ks','x11'],  effect:'total_annihilation' },
+    { id:'ur2',  x:650,  y:-380, type:'notable',  zone:'rage',     name:'Kugelregen',            desc:'Feuerrate ×2. Munition unbegrenzt für 8s alle 30s.',      cost:12000, requires:['r_ks'],        effect:'bulletstorm' },
+
+    // PANZER Ultra
+    { id:'up1',  x:750,  y:80,   type:'keystone', zone:'panzer',   name:'STAHLHAUT',             desc:'Max-HP ×1.5. Alle 60s: voll heilen. Schaden -20%.',       cost:15000, requires:['p_ks','p8'],   effect:'stahlhaut' },
+    { id:'up2',  x:700,  y:200,  type:'notable',  zone:'panzer',   name:'Gegenschlag',           desc:'20% Chance: Treffer reflektiert 50% Schaden zurück.',     cost:12000, requires:['p_ks'],        effect:'reflect:0.50' },
+
+    // KAFFEEKASSE Ultra
+    { id:'uk1',  x:720,  y:360,  type:'keystone', zone:'kasse',    name:'KAFFEE-IMPERIUM',       desc:'KB aus allen Quellen ×2. Max. Farmen +3.',                cost:15000, requires:['k_ks','k8'],   effect:'kaffee_imperium' },
+    { id:'uk2',  x:650,  y:430,  type:'notable',  zone:'kasse',    name:'Schwarzer Markt Pro',   desc:'Alle Shop-Preise -40%. Suppe heilt +50% mehr.',           cost:12000, requires:['k_ks'],        effect:'black_market_pro' },
+
+    // CHAOS Ultra
+    { id:'uc1',  x:-730, y:340,  type:'keystone', zone:'chaos',    name:'PURE ANARCHIE',         desc:'Alle Zufalls-Effekte ×3. 1% Chance: instant 10× Score.',  cost:15000, requires:['c_ks','c8'],   effect:'pure_anarchy' },
+    { id:'uc2',  x:-660, y:420,  type:'notable',  zone:'chaos',    name:'Quantenfluktuartion',   desc:'Pro Kill: 15% Chance zufällige Waffe gratis (10s).',      cost:12000, requires:['c_ks'],        effect:'quantum_flux:0.15' },
+
+    // TECHNIK Ultra
+    { id:'ut1',  x:-750, y:60,   type:'keystone', zone:'technik',  name:'VOLLAUTOMATIK',         desc:'Alle Farmen, Azubis und Turrets haben ×2 Output.',        cost:15000, requires:['t_ks','t8'],   effect:'full_auto' },
+    { id:'ut2',  x:-700, y:200,  type:'notable',  zone:'technik',  name:'Quantennetzwerk',       desc:'Farmen geben auch +1 KB/Sek direkt.',                     cost:12000, requires:['t_ks'],        effect:'farm_kb:1' },
+
+    // BEWEGUNG Ultra
+    { id:'ub1',  x:-740, y:-300, type:'keystone', zone:'bewegung', name:'LICHTGESCHWINDIGKEIT',  desc:'Speed ×1.5. Hechtrolle teleportiert 400px. Kein CD.',     cost:15000, requires:['b_ks','b8'],   effect:'light_speed' },
+    { id:'ub2',  x:-670, y:-380, type:'notable',  zone:'bewegung', name:'Zeitverzerrung',        desc:'Während Hechtrolle: Gegner 2s eingefroren.',              cost:12000, requires:['b_ks'],        effect:'time_warp' },
+
+    // ERFAHRUNG Ultra
+    { id:'ue1',  x:540,  y:-460, type:'keystone', zone:'erfahrung',name:'TRANSCENDENZ',          desc:'Score ×3 bei Prestige 2+. EXP ×2 immer.',                cost:15000, requires:['e_ks','e7'],   effect:'transcendenz' },
+    { id:'ue2',  x:460,  y:-500, type:'notable',  zone:'erfahrung',name:'Meisterstratege',       desc:'Alle Combo-Multiplikatoren +1. Basis ×2 statt ×1.',       cost:12000, requires:['e_ks'],        effect:'combo_boost_all' },
+
+    // BOSS Ultra
+    { id:'ubo1', x:-50,  y:650,  type:'keystone', zone:'boss',     name:'BAYER-FLUCH',           desc:'Bayer hat -60% HP. Du auch. Boss-Kill: +10.000 Score.',   cost:15000, requires:['bo_ks'],       effect:'bayer_fluch' },
+    { id:'ubo2', x:100,  y:620,  type:'notable',  zone:'boss',     name:'Loot-Goblin',           desc:'Jeder Boss-Kill: 3 Items, +1000 KB sofort.',              cost:12000, requires:['bo_ks'],       effect:'loot_goblin' },
+
+    // CROSS-ZONE Ultra-Bridges
+    { id:'ux1',  x:0,    y:-550, type:'notable',  zone:'erfahrung',name:'Universaltalent',       desc:'1 Punkt freischalten = alle Stats +1% (kumulativ).',     cost:10000, requires:['r3','p3','b3','e3'], effect:'universal_talent' },
+    { id:'ux2',  x:0,    y:550,  type:'notable',  zone:'boss',     name:'Leitstands-Protokoll',  desc:'Nach Boss-Kill: alle Gegner 10s eingefroren + +20% Speed.', cost:10000, requires:['k3','c3','bo3'], effect:'leitstand_protocol' },
+    { id:'ux3',  x:-550, y:0,    type:'notable',  zone:'technik',  name:'Netzwerk-Supremacy',    desc:'Pro aktive Farm: +5% aller Stats (kumulativ, max 5 Farmen).', cost:10000, requires:['t3','b3','c3'], effect:'network_supremacy' },
+    { id:'ux4',  x:550,  y:0,    type:'notable',  zone:'rage',     name:'Vorstandsmacht',        desc:'+30% Schaden wenn Prestige > 0. Stapelt mit allem.',      cost:10000, requires:['r3','p3','k3'], effect:'board_power' },
 ];
 
 // Skilltree State
@@ -1744,6 +2216,27 @@ function applySkillTree(p) {
         if(ef.startsWith('boss_dmg_red:')) p._bossDmgRed = (p._bossDmgRed||0) + parseFloat(ef.split(':')[1]);
         if(ef === 'ks_legende')            { p._scoreMult = (p._scoreMult||1) * 2; p.maxHp = 1; }
         if(ef === 'ks_bayerbesieger')      { p._bossHpRed = (p._bossHpRed||0) + 0.40; p.maxHp = Math.max(10, p.maxHp - 30); }
+        // Ultra-Rare Effekte
+        if(ef === 'total_annihilation')    { p.dmgBonus += p.dmgBonus * 0.5 + 10; p._everyFifthCrit = true; }
+        if(ef === 'bulletstorm')           { p.fireRate = Math.max(2, (p.fireRate||20) / 2); }
+        if(ef === 'stahlhaut')             { p.maxHp = Math.floor(p.maxHp * 1.5); p._autoHealInterval = 3600; p._dmgReduction = (p._dmgReduction||0) + 0.20; }
+        if(ef === 'reflect:0.50')          { p._reflectChance = 0.20; p._reflectMult = 0.50; }
+        if(ef === 'kaffee_imperium')       { p._stKbBonus = (p._stKbBonus||0) + 1.0; p._stFarmSlots = (p._stFarmSlots||0) + 3; }
+        if(ef === 'black_market_pro')      { p._shopDiscount = (p._shopDiscount||0) + 0.40; p._suppeHealBonus = (p._suppeHealBonus||0) + 25; }
+        if(ef === 'pure_anarchy')          { p._luckMult = (p._luckMult||1) * 3; }
+        if(ef === 'quantum_flux:0.15')     { p._quantumFlux = true; }
+        if(ef === 'full_auto')             { p._farmDouble = true; p._turretBoost = true; p._azubiAuto = true; }
+        if(ef === 'farm_kb:1')             { p._farmKbPerSec = (p._farmKbPerSec||0) + 1; }
+        if(ef === 'light_speed')           { p.speed = Math.min(20, p.speed * 1.5); p._rollDistMult = (p._rollDistMult||1) * 3; p._rollCDZero = true; }
+        if(ef === 'time_warp')             { p._rollFreezeEnemies = true; }
+        if(ef === 'transcendenz')          { if(prestigeLevel >= 2) p._scoreMult = (p._scoreMult||1) * 3; p._expMult = 2; }
+        if(ef === 'combo_boost_all')       { p._comboBoostAll = true; }
+        if(ef === 'bayer_fluch')           { p._bossHpRed = (p._bossHpRed||0) + 0.60; p.maxHp = Math.max(5, Math.floor(p.maxHp * 0.5)); }
+        if(ef === 'loot_goblin')           { p._lootGoblin = true; }
+        if(ef === 'universal_talent')      { let n = unlockedSkills.length; p.dmgBonus += n; p.speed += n*0.01; p.maxHp += n; }
+        if(ef === 'leitstand_protocol')    { p._leitstandProtocol = true; }
+        if(ef === 'network_supremacy')     { p._networkSupremacy = true; }
+        if(ef === 'board_power')           { if(prestigeLevel > 0) p.dmgBonus += p.dmgBonus * 0.30; }
         if(ef === 'ks_collapse')           { p._collapseEarly = true; p._collapseMult = 1.5; }
         if(ef === 'azubi_combo')           p._azubiCombo = true;
         if(ef === 'waffentoel')            { p.dmgBonus += 3; }
@@ -1849,6 +2342,13 @@ function buyWeapon(id) {
     unlockedWeapons.push(id);
     localStorage.setItem('ts_weapons', JSON.stringify(unlockedWeapons));
     localStorage.setItem('ts_skills',  JSON.stringify(unlockedSkills));
+    localStorage.setItem('ts_baseexp', baseExp);
+    localStorage.setItem('ts_jobexp',  jobExp);
+    localStorage.setItem('ts_baselv',  baseLevel);
+    localStorage.setItem('ts_joblv',   jobLevel);
+    localStorage.setItem('ts_job',     currentJob||'');
+    localStorage.setItem('ts_jobspts', jobSkillPts);
+    localStorage.setItem('ts_jobskills', JSON.stringify(jobSkills));
     if(favoriteWeapon) localStorage.setItem('ts_favorite', favoriteWeapon);
     saveProgress();
     showToast('🔫 FREIGESCHALTET!', '#e74c3c', w.name + ' — spawnt als erste Kiste!');
@@ -1868,6 +2368,18 @@ function unlockTrophy(id) {
 function openTrophies() {
     let grid = document.getElementById('trophyGrid');
     grid.innerHTML = '';
+    // Prestige-Button oben
+    let allTrophies = TROPHIES_DEF.every(t => hasTrophy(t.id));
+    let prestigeHtml = `<div style="grid-column:1/-1;background:rgba(241,196,15,0.08);border:2px solid #f1c40f;padding:16px;border-radius:4px;margin-bottom:8px;text-align:center;">
+        <div style="color:#f1c40f;font-size:16px;font-weight:bold;letter-spacing:3px;">⭐ PRESTIGE LEVEL ${prestigeLevel}</div>
+        <div style="color:#aaa;font-size:11px;margin:6px 0;">Pro Prestige: +5% Schaden, +10 HP, +10% KB dauerhaft.</div>
+        ${prestigeLevel > 0 ? `<div style="color:#f1c40f;font-size:12px;">Aktive Boni: +${prestigeLevel*5}% Schaden · +${prestigeLevel*10} HP · +${prestigeLevel*10}% KB</div>` : ''}
+        <button onclick="doPrestige()" style="margin-top:10px;background:${allTrophies?'#f1c40f':'#333'};color:${allTrophies?'#000':'#666'};border:none;padding:10px 24px;font-family:'Courier New',monospace;font-weight:bold;font-size:13px;text-transform:uppercase;cursor:${allTrophies?'pointer':'default'};border-radius:2px;">
+            ${allTrophies ? '🔄 PRESTIGE STARTEN' : '🔒 Alle Trophäen benötigt'}
+        </button>
+        ${!allTrophies ? `<div style="color:#666;font-size:11px;margin-top:6px;">${TROPHIES_DEF.filter(t=>!hasTrophy(t.id)).length} Trophäen fehlen noch</div>` : ''}
+    </div>`;
+    grid.innerHTML = prestigeHtml;
     TROPHIES_DEF.forEach(t => {
         let unlocked = hasTrophy(t.id);
         let cls = 'trophy-item' + (unlocked ? ' unlocked' : '');
@@ -1876,6 +2388,28 @@ function openTrophies() {
     document.getElementById('trophyOverlay').style.display = 'block';
 }
 function closeTrophies() { document.getElementById('trophyOverlay').style.display = 'none'; }
+
+function doPrestige() {
+    if(!TROPHIES_DEF.every(t => hasTrophy(t.id))) { showToast('NICHT MÖGLICH', '#e74c3c', 'Alle Trophäen zuerst freischalten!'); return; }
+    if(!confirm(`Prestige ${prestigeLevel+1} starten? Upgrades, Skills und Job werden RESETTET. Trophäen, KB und permanente Boni bleiben!`)) return;
+    prestigeLevel++;
+    // Reset: Upgrades, Skilltree, Job
+    upgradeProgress = {};
+    unlockedSkills = [];
+    currentJob = null; jobLevel = 0; jobExp = 0; baseLevel = 1; baseExp = 0; jobSkillPts = 0; jobSkills = {};
+    // KB Bonus für Prestige
+    kaffeebons += prestigeLevel * 500;
+    localStorage.setItem('ts_prestige', prestigeLevel);
+    localStorage.setItem('ts_upgrades', JSON.stringify(upgradeProgress));
+    localStorage.setItem('ts_skills', JSON.stringify(unlockedSkills));
+    localStorage.setItem('ts_job', '');
+    localStorage.setItem('ts_baselv', 1);
+    localStorage.setItem('ts_joblv', 0);
+    saveProgress();
+    showToast(`⭐ PRESTIGE ${prestigeLevel}!`, '#f1c40f', `+${prestigeLevel*500} KB Bonus · Boni: +${prestigeLevel*5}% Schaden, +${prestigeLevel*10} HP`);
+    closeTrophies();
+    document.getElementById('startKBAmount').innerText = kaffeebons;
+}
 
 function getUpgradeLevel(id) { return upgradeProgress[id] || 0; }
 function getUpgradeCost(upg) {
@@ -1898,6 +2432,8 @@ function saveProgress() {
             kb: kaffeebons, upgrades: upgradeProgress,
             prestige: prestigeLevel, trophies: unlockedTrophies,
             weapons: unlockedWeapons, favorite: favoriteWeapon||null, skills: unlockedSkills,
+            baseLevel, jobLevel, baseExp, jobExp, currentJob: currentJob||null,
+            jobSkillPts, jobSkills,
             daily: _daily, bestScore: _best,
             lastSeen: new Date().toISOString()
         }, {merge:true}).catch(function(){});
@@ -1930,8 +2466,524 @@ async function loadCloudProfile() {
         } else { showToast('NEUES PROFIL','#2ecc71',name+' — Viel Erfolg!'); }
     } catch(e){ showToast('LADEFEHLER','#f00','Firebase nicht erreichbar'); }
 }
+
+// ============================================================
+// BOSS ROOM — PETER BAYER BÜRO
+// ============================================================
+const BR_W = 900, BR_H = 620; // Arena-Größe
+const BR_PHASE_THRESHOLDS = [0.60, 0.30]; // Phase 2 bei 60%, Phase 3 bei 30%
+
+function enterBossRoom() {
+    if(gamePhase !== 'normal') return;
+    gamePhase = 'transitioning_in';
+    fadeAlpha = 0; fadeDir = 1;
+    playSound('boss');
+    // Initialisiere Boss-Room
+    let hpMult = player._bossHpRed ? Math.max(0.3, 1.0 - player._bossHpRed) : 1.0;
+    let spdMult = player._bayerNerf ? Math.max(0.5, 1.0 - player._bayerNerf) : 1.0;
+    bossRoomState = {
+        bayer: {
+            x: BR_W/2, y: 120,
+            hp: Math.round(BAYER_STATS.hp * hpMult),
+            maxHp: Math.round(BAYER_STATS.hp * hpMult),
+            speed: BAYER_STATS.speed * spdMult,
+            radius: BAYER_STATS.radius,
+            phase: 1,         // 1, 2, 3
+            dx: 2, dy: 1,     // Bewegungsrichtung
+            attackTimer: 0,
+            stampTimer: 0,
+            stampCharge: 0,   // Stampf-Vorwarnung
+            stampX: 0, stampY: 0,
+            laserAngle: 0,
+            laserActive: false,
+            laserTimer: 0,
+            spawnTimer: 0,
+            miniEnemies: [],
+            speechTimer: 0,
+            speech: '',
+            flashTimer: 0,
+            enrageTimer: 0,
+        },
+        player: { x: BR_W/2, y: BR_H - 80 },
+        bullets: [],
+        particles: [],
+        phase: 1,
+        phaseChangeFlash: 0,
+        result: null, // 'win' | 'lose'
+        frame: 0,
+        floorCracks: [],
+        speeches: [
+            ["SIE SIND GEFEUERT!", "TICKET FOKUSSIERT!", "WAS IST DAS?!", "ICH WILL ERGEBNISSE!"],
+            ["MEHR TEMPO!", "INAKZEPTABEL!", "HABEN SIE KEINEN RESPEKT?!"],
+            ["DAS WAR EIN FEHLER!", "ALLE FEUERN!", "ICH BIN UNSTERBLICH!", "SYSTEM IST IHR FREUND!"]
+        ]
+    };
+}
+
+function updateBossRoom() {
+    if(!bossRoomState) return;
+    let br = bossRoomState;
+    let b = br.bayer;
+    let p = br.player;
+    br.frame++;
+
+    // Phase bestimmen
+    let hpPct = b.hp / b.maxHp;
+    let newPhase = hpPct > BR_PHASE_THRESHOLDS[0] ? 1 : (hpPct > BR_PHASE_THRESHOLDS[1] ? 2 : 3);
+    if(newPhase > br.phase) {
+        br.phase = newPhase; b.phase = newPhase;
+        br.phaseChangeFlash = 60;
+        b.speech = ['', 'JETZT WIRD ES ERNST!', 'IHR HABT MICH WÜTEND GEMACHT!!!'][newPhase-1];
+        b.speechTimer = 180;
+        b.speed *= 1.3;
+        screenShake = 40;
+        playSound('alarm');
+    }
+    if(br.phaseChangeFlash > 0) br.phaseChangeFlash--;
+
+    // Spieler-Bewegung im Boss-Room
+    let spd = player ? player.speed : 5;
+    let bdx = 0, bdy = 0;
+    if(input.keys['KeyW']||input.keys['ArrowUp'])    bdy -= spd;
+    if(input.keys['KeyS']||input.keys['ArrowDown'])  bdy += spd;
+    if(input.keys['KeyA']||input.keys['ArrowLeft'])  bdx -= spd;
+    if(input.keys['KeyD']||input.keys['ArrowRight']) bdx += spd;
+    p.x = Math.max(20, Math.min(BR_W-20, p.x + bdx));
+    p.y = Math.max(20, Math.min(BR_H-20, p.y + bdy));
+
+    // Spieler schießt im Boss-Room
+    if(br.frame % Math.max(3, 15 - (player ? Object.keys(player.activeWeapons||{}).length*2 : 0)) === 0) {
+        let angle = Math.atan2(b.y - p.y, b.x - p.x);
+        let dmg = player ? (10 + (player.dmgBonus||0)) : 10;
+        br.bullets.push({ x: p.x, y: p.y, dx: Math.cos(angle)*12, dy: Math.sin(angle)*12, dmg, life: 80 });
+    }
+
+    // Bullets update
+    for(let i=br.bullets.length-1; i>=0; i--) {
+        let bl = br.bullets[i];
+        bl.x += bl.dx; bl.y += bl.dy; bl.life--;
+        if(bl.life <= 0 || bl.x<0||bl.x>BR_W||bl.y<0||bl.y>BR_H) { br.bullets.splice(i,1); continue; }
+        // Treffer auf Bayer
+        if(Math.hypot(bl.x-b.x, bl.y-b.y) < b.radius) {
+            let dmg = bl.dmg;
+            if(player && player._bossDmgRed) dmg *= (1 - player._bossDmgRed); // wait this is wrong direction
+            // Actually boss dmg red reduces boss incoming? No. Let me reconsider.
+            // _bossDmgRed reduces damage Bayer does to player, not player dmg to Bayer
+            b.hp -= dmg;
+            spawnBRParticles(bl.x, bl.y, '#e74c3c', 4);
+            br.bullets.splice(i,1);
+            if(b.hp <= 0) { br.result = 'win'; exitBossRoom(true); return; }
+            continue;
+        }
+    }
+
+    // Bayer Bewegung — bouncy in Arena
+    let spMult = b.phase === 3 ? 1.6 : (b.phase === 2 ? 1.2 : 1.0);
+    b.x += b.dx * b.speed * spMult;
+    b.y += b.dy * b.speed * spMult;
+    // Richtung Spieler drehen
+    let toPlayerAngle = Math.atan2(p.y - b.y, p.x - b.x);
+    b.dx += Math.cos(toPlayerAngle) * 0.08;
+    b.dy += Math.sin(toPlayerAngle) * 0.08;
+    // Normalisieren
+    let mag = Math.hypot(b.dx, b.dy); if(mag > 1) { b.dx /= mag; b.dy /= mag; }
+    // Wände
+    let margin = b.radius + 10;
+    if(b.x < margin)       { b.x = margin;       b.dx = Math.abs(b.dx); }
+    if(b.x > BR_W-margin)  { b.x = BR_W-margin;  b.dx = -Math.abs(b.dx); }
+    if(b.y < margin)       { b.y = margin;        b.dy = Math.abs(b.dy); }
+    if(b.y > BR_H*0.65)    { b.y = BR_H*0.65;    b.dy = -Math.abs(b.dy); } // Bayer bleibt oben
+
+    // STAMPFER-ANGRIFF
+    b.stampTimer++;
+    let stampInterval = b.phase === 3 ? 120 : (b.phase === 2 ? 180 : 250);
+    if(b.stampTimer >= stampInterval) {
+        b.stampTimer = 0;
+        b.stampCharge = 60; // 1s Vorwarnung
+        b.stampX = p.x + (Math.random()-0.5)*60;
+        b.stampY = p.y + (Math.random()-0.5)*60;
+    }
+    if(b.stampCharge > 0) {
+        b.stampCharge--;
+        if(b.stampCharge === 0) {
+            // Stampf-Einschlag
+            let dmg = b.phase === 3 ? 35 : (b.phase === 2 ? 25 : 18);
+            if(player && player._bossDmgRed) dmg *= (1 - player._bossDmgRed);
+            let r = b.phase === 3 ? 180 : (b.phase === 2 ? 150 : 120);
+            if(Math.hypot(p.x - b.stampX, p.y - b.stampY) < r) {
+                if(player) {
+                    player.hp -= dmg;
+                    player.orangeHp = (player.orangeHp||0) + dmg;
+                    player.orangeTimer = 120;
+                }
+                screenShake = 20;
+            }
+            spawnBRParticles(b.stampX, b.stampY, '#c0392b', 20);
+            // Boden-Riss
+            br.floorCracks.push({ x: b.stampX, y: b.stampY, r: r, alpha: 1.0, life: 180 });
+            playSound('hit');
+        }
+    }
+
+    // LASER Phase 2+
+    if(b.phase >= 2) {
+        b.laserTimer++;
+        let laserInterval = b.phase === 3 ? 150 : 220;
+        if(b.laserTimer >= laserInterval) {
+            b.laserTimer = 0;
+            b.laserActive = true;
+            b.laserAngle = Math.atan2(p.y - b.y, p.x - b.x);
+            setTimeout(() => { if(bossRoomState) bossRoomState.bayer.laserActive = false; }, 1200);
+        }
+        if(b.laserActive) {
+            // Laser-Schaden check
+            let lx = b.x, ly = b.y;
+            for(let s=0; s<600; s+=8) {
+                lx += Math.cos(b.laserAngle)*8; ly += Math.sin(b.laserAngle)*8;
+                if(Math.hypot(lx-p.x, ly-p.y) < 20) {
+                    let ldmg = b.phase === 3 ? 1.5 : 1.0;
+                    if(player) { player.hp -= ldmg; }
+                    break;
+                }
+            }
+        }
+    }
+
+    // Mini-Gegner Phase 3
+    if(b.phase === 3) {
+        b.spawnTimer++;
+        if(b.spawnTimer >= 180) {
+            b.spawnTimer = 0;
+            let angle = Math.random()*Math.PI*2;
+            b.miniEnemies.push({ x: b.x+Math.cos(angle)*80, y: b.y+Math.sin(angle)*80,
+                dx: 0, dy: 0, hp: 60, maxHp: 60, radius: 15 });
+        }
+    }
+
+    // Mini-Gegner updaten
+    for(let i=b.miniEnemies.length-1; i>=0; i--) {
+        let m = b.miniEnemies[i];
+        let a = Math.atan2(p.y-m.y, p.x-m.x);
+        m.x += Math.cos(a)*3.5; m.y += Math.sin(a)*3.5;
+        m.x = Math.max(15, Math.min(BR_W-15, m.x));
+        m.y = Math.max(15, Math.min(BR_H-15, m.y));
+        // Mini trifft Spieler
+        if(Math.hypot(m.x-p.x, m.y-p.y) < 25) {
+            if(player) { player.hp -= 0.5; }
+        }
+        // Spieler-Bullets treffen Mini
+        for(let j=br.bullets.length-1; j>=0; j--) {
+            let bl = br.bullets[j];
+            if(Math.hypot(bl.x-m.x, bl.y-m.y) < m.radius) {
+                m.hp -= bl.dmg; br.bullets.splice(j,1);
+                if(m.hp <= 0) { spawnBRParticles(m.x,m.y,'#e67e22',5); b.miniEnemies.splice(i,1); break; }
+            }
+        }
+    }
+
+    // Bayer Speech
+    if(b.speechTimer > 0) b.speechTimer--;
+    if(br.frame % (b.phase === 3 ? 180 : 300) === 0 && b.speechTimer === 0) {
+        let pool = br.speeches[b.phase-1];
+        b.speech = pool[Math.floor(Math.random()*pool.length)];
+        b.speechTimer = 120;
+    }
+
+    // Partikel update
+    for(let i=br.particles.length-1; i>=0; i--) {
+        let pt = br.particles[i];
+        pt.x+=pt.dx; pt.y+=pt.dy; pt.life--;
+        pt.dy += 0.1;
+        if(pt.life<=0) br.particles.splice(i,1);
+    }
+
+    // Boden-Risse faden
+    for(let i=br.floorCracks.length-1; i>=0; i--) {
+        br.floorCracks[i].life--;
+        br.floorCracks[i].alpha = br.floorCracks[i].life / 180;
+        if(br.floorCracks[i].life <= 0) br.floorCracks.splice(i,1);
+    }
+
+    // Spieler tot?
+    if(player && player.hp <= 0) { br.result = 'lose'; exitBossRoom(false); }
+
+    // HP Bar updaten
+    if(activeBoss) { activeBoss.hp = b.hp; activeBoss.maxHp = b.maxHp; }
+}
+
+function spawnBRParticles(x, y, color, count) {
+    if(!bossRoomState) return;
+    for(let i=0; i<count; i++) {
+        let a = Math.random()*Math.PI*2, s = Math.random()*4+1;
+        bossRoomState.particles.push({ x, y, dx:Math.cos(a)*s, dy:Math.sin(a)*s, color, life:30+Math.floor(Math.random()*20) });
+    }
+}
+
+function exitBossRoom(won) {
+    gamePhase = 'transitioning_out';
+    fadeAlpha = 0; fadeDir = 1;
+    setTimeout(() => {
+        if(won) {
+            // Speedster Trophäe: Bayer in unter 5 Sekunden besiegt
+            if(bossRoomState && bossRoomState.startTime) {
+                let elapsed = (Date.now() - bossRoomState.startTime) / 1000;
+                if(elapsed < 5) unlockTrophy('speedster');
+            }
+            // Sieg — Kollaps starten
+            systemCollapse = true;
+            collapseTimer = 0;
+            bueroDoor = null;
+            bossRoomState = null;
+            enemies = []; obstacles = []; stations = []; servers = [];
+            serverFarms = []; turrets = []; items = [];
+            idocEvent = null; kloskaEvent = null;
+            flashScreen = 100; playSound('alarm');
+            if(currentDiffLabel === 'BURNOUT' || currentDiffLabel === 'SURVIVAL') unlockTrophy('boss_killer');
+            if(isWegflexenMode) unlockTrophy('god_of_leitstand');
+            showToast('PETER BAYER BESIEGT!', '#f1c40f', 'SYSTEM-KOLLAPS BEGINNT! ÜBERLEBE!');
+            if(player) { score += 5000; } // Bonus-Score
+            // Skill-Buff nach Boss-Kill
+            if(player && hasSkill('bo3b')) { player._bossKillBuff = 1800; }
+        } else {
+            player.hp = 0;
+        }
+        gamePhase = won ? 'normal' : 'normal';
+        fadeDir = -1;
+        document.getElementById('bossHpContainer').style.display = 'none';
+        activeBoss = null;
+    }, 800);
+}
+
+function drawBossRoom() {
+    if(!bossRoomState) return;
+    let br = bossRoomState;
+    let b = br.bayer;
+    let p = br.player;
+    let cw = canvas.width, ch = canvas.height;
+    let ox = (cw - BR_W) / 2, oy = (ch - BR_H) / 2;
+
+    // Hintergrund dimmen
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.fillRect(0, 0, cw, ch);
+
+    // Arena-Boden — Büro-Raum
+    ctx.save();
+    ctx.translate(ox, oy);
+
+    // Boden
+    let floorGrad = ctx.createLinearGradient(0, 0, BR_W, BR_H);
+    floorGrad.addColorStop(0, '#1a0a0a');
+    floorGrad.addColorStop(1, '#0d0505');
+    ctx.fillStyle = floorGrad;
+    ctx.fillRect(0, 0, BR_W, BR_H);
+
+    // Boden-Kacheln
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 1;
+    for(let x=0; x<BR_W; x+=60) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,BR_H); ctx.stroke(); }
+    for(let y=0; y<BR_H; y+=60) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(BR_W,y); ctx.stroke(); }
+
+    // Arena-Rand
+    ctx.strokeStyle = br.phase === 3 ? '#c0392b' : (br.phase === 2 ? '#e67e22' : '#555');
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, BR_W-4, BR_H-4);
+    if(br.phaseChangeFlash > 0) {
+        ctx.strokeStyle = `rgba(255,50,50,${br.phaseChangeFlash/60})`;
+        ctx.lineWidth = 10;
+        ctx.strokeRect(0, 0, BR_W, BR_H);
+    }
+
+    // Büro-Deko (Schreibtisch oben)
+    ctx.fillStyle = '#3d2b1f';
+    ctx.fillRect(BR_W/2-120, 30, 240, 50); // Schreibtisch
+    ctx.fillStyle = '#2c1f10';
+    ctx.fillRect(BR_W/2-100, 35, 60, 40); // Monitor
+    ctx.fillStyle = '#1a3a1a';
+    ctx.fillRect(50, 50, 40, 80); // Pflanze links
+    ctx.fillRect(BR_W-90, 50, 40, 80); // Pflanze rechts
+    ctx.fillStyle = '#2d4a2d';
+    ctx.beginPath(); ctx.arc(70, 45, 35, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(BR_W-70, 45, 35, 0, Math.PI*2); ctx.fill();
+
+    // Boden-Risse (Stampf-Einschläge)
+    for(let cr of br.floorCracks) {
+        ctx.globalAlpha = cr.alpha * 0.6;
+        ctx.strokeStyle = '#c0392b';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(cr.x, cr.y, cr.r, 0, Math.PI*2); ctx.stroke();
+        ctx.globalAlpha = cr.alpha * 0.15;
+        ctx.fillStyle = '#c0392b';
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+
+    // Stampf-Vorwarnung
+    if(b.stampCharge > 0) {
+        let prog = 1 - b.stampCharge/60;
+        let r = b.phase === 3 ? 180 : (b.phase === 2 ? 150 : 120);
+        ctx.globalAlpha = 0.15 + prog * 0.35;
+        ctx.fillStyle = '#c0392b';
+        ctx.beginPath(); ctx.arc(b.stampX, b.stampY, r, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha = 0.8;
+        ctx.strokeStyle = '#ff0000';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(b.stampX, b.stampY, r, 0, Math.PI*2); ctx.stroke();
+        ctx.globalAlpha = 1;
+        // Countdown
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Courier New'; ctx.textAlign = 'center';
+        ctx.fillText('⚠', b.stampX, b.stampY + 6);
+    }
+
+    // Laser
+    if(b.laserActive) {
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.strokeStyle = '#ff0000';
+        ctx.lineWidth = 5;
+        ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.moveTo(b.x, b.y);
+        ctx.lineTo(b.x + Math.cos(b.laserAngle)*800, b.y + Math.sin(b.laserAngle)*800);
+        ctx.stroke();
+        ctx.lineWidth = 2; ctx.strokeStyle = '#fff';
+        ctx.beginPath();
+        ctx.moveTo(b.x, b.y);
+        ctx.lineTo(b.x + Math.cos(b.laserAngle)*800, b.y + Math.sin(b.laserAngle)*800);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // Mini-Gegner
+    for(let m of b.miniEnemies) {
+        ctx.fillStyle = '#e74c3c';
+        ctx.beginPath(); ctx.arc(m.x, m.y, m.radius, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+        // HP
+        ctx.fillStyle = '#555';
+        ctx.fillRect(m.x - 15, m.y - m.radius - 8, 30, 4);
+        ctx.fillStyle = '#e74c3c';
+        ctx.fillRect(m.x - 15, m.y - m.radius - 8, 30 * (m.hp/m.maxHp), 4);
+    }
+
+    // Partikel
+    for(let pt of br.particles) {
+        ctx.globalAlpha = pt.life / 50;
+        ctx.fillStyle = pt.color;
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, 4, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // PETER BAYER zeichnen
+    let phaseColor = b.phase === 3 ? '#ff0000' : (b.phase === 2 ? '#e67e22' : '#c0392b');
+    // Glow
+    ctx.shadowColor = phaseColor; ctx.shadowBlur = b.phase === 3 ? 30 : 15;
+    ctx.fillStyle = phaseColor;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
+    // Face
+    ctx.fillStyle = '#2c0a0a';
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.radius * 0.65, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(b.radius*0.55)}px Arial`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(b.phase === 3 ? '😡' : (b.phase === 2 ? '😤' : '👔'), b.x, b.y);
+    // HP Bar über Bayer
+    let hpBarW = b.radius * 2.5;
+    ctx.fillStyle = '#333'; ctx.fillRect(b.x - hpBarW/2, b.y - b.radius - 18, hpBarW, 10);
+    let hpPct = b.hp / b.maxHp;
+    let hpColor = hpPct > 0.6 ? '#e74c3c' : (hpPct > 0.3 ? '#e67e22' : '#f1c40f');
+    ctx.fillStyle = hpColor;
+    ctx.fillRect(b.x - hpBarW/2, b.y - b.radius - 18, hpBarW * hpPct, 10);
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.strokeRect(b.x - hpBarW/2, b.y - b.radius - 18, hpBarW, 10);
+    // Phase-Label
+    ctx.fillStyle = phaseColor; ctx.font = 'bold 11px Courier New'; ctx.textAlign = 'center';
+    ctx.fillText(`PHASE ${b.phase} — ${Math.ceil(hpPct*100)}%`, b.x, b.y - b.radius - 25);
+    // Speech Bubble
+    if(b.speechTimer > 0 && b.speech) {
+        ctx.globalAlpha = Math.min(1, b.speechTimer / 30);
+        ctx.fillStyle = 'rgba(0,0,0,0.85)';
+        let sw = ctx.measureText(b.speech).width + 20;
+        let sx = Math.max(5, Math.min(BR_W - sw - 5, b.x - sw/2));
+        ctx.fillRect(sx, b.y - b.radius - 65, sw, 28);
+        ctx.strokeStyle = phaseColor; ctx.lineWidth = 2; ctx.strokeRect(sx, b.y - b.radius - 65, sw, 28);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'left';
+        ctx.fillText(b.speech, sx + 10, b.y - b.radius - 47);
+        ctx.globalAlpha = 1;
+    }
+
+    // SPIELER in Boss-Room
+    let pr = 18;
+    let playerCol = player ? (player.hp < 30 ? '#ff4444' : '#e67e22') : '#e67e22';
+    ctx.shadowColor = playerCol; ctx.shadowBlur = 10;
+    ctx.fillStyle = playerCol;
+    ctx.beginPath(); ctx.arc(p.x, p.y, pr, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff'; ctx.font = `bold ${pr}px Arial`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🪱', p.x, p.y);
+
+    // Phase-Banner
+    ctx.fillStyle = '#111'; ctx.textAlign = 'center';
+    ctx.font = 'bold 16px Courier New';
+    ctx.fillStyle = phaseColor;
+    ctx.fillText(`☠ PETER BAYER — PHASE ${b.phase} ☠`, BR_W/2, BR_H - 18);
+
+    ctx.restore(); // translate(ox, oy)
+
+    // Fade Overlay
+    if(fadeAlpha > 0) {
+        ctx.fillStyle = `rgba(0,0,0,${fadeAlpha})`;
+        ctx.fillRect(0, 0, cw, ch);
+    }
+}
+
+function drawBueroDoor() {
+    if(!bueroDoor || !bueroDoor.active) return;
+    bueroDoor.pulse = (bueroDoor.pulse||0) + 0.05;
+    let px = bueroDoor.x, py = bueroDoor.y, pw = bueroDoor.w, ph = bueroDoor.h;
+    let glow = Math.sin(bueroDoor.pulse) * 0.5 + 0.5;
+
+    // Tür-Rahmen
+    ctx.shadowColor = '#c0392b'; ctx.shadowBlur = 15 + glow * 20;
+    ctx.fillStyle = '#3d1f1f';
+    ctx.fillRect(px, py, pw, ph);
+    ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 4;
+    ctx.strokeRect(px, py, pw, ph);
+    ctx.shadowBlur = 0;
+
+    // Tür-Griff
+    ctx.fillStyle = '#f1c40f';
+    ctx.beginPath(); ctx.arc(px + pw - 18, py + ph/2, 6, 0, Math.PI*2); ctx.fill();
+
+    // Schild "DIREKTION"
+    ctx.fillStyle = '#c0392b';
+    ctx.fillRect(px + 10, py + 20, pw - 20, 30);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Courier New'; ctx.textAlign = 'center';
+    ctx.fillText('DIREKTION', px + pw/2, py + 41);
+
+    // "👔 PETER BAYER" Text
+    ctx.fillStyle = '#c0392b'; ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'center';
+    ctx.shadowColor = '#c0392b'; ctx.shadowBlur = 10;
+    ctx.fillText('📞 BAYER RUFT!', px + pw/2, py - 30);
+    ctx.fillText('[E] EINTRETEN', px + pw/2, py - 12);
+    ctx.shadowBlur = 0;
+
+    // Proximity-Check — Pfeil wenn nah
+    if(player) {
+        let dx = Math.abs(player.x - (px + pw/2));
+        let dy = Math.abs(player.y - (py + ph));
+        if(dx < 200 && dy < 200) {
+            // Pulsierender Pfeil
+            ctx.fillStyle = `rgba(192,57,43,${0.6 + glow * 0.4})`;
+            ctx.font = '30px Arial'; ctx.textAlign = 'center';
+            ctx.fillText('⬆', px + pw/2, py - 50 + Math.sin(bueroDoor.pulse*3)*5);
+        }
+    }
+}
+
 function earnKaffeebons(sc) {
-    let baseRate = 1 + getUpgradeLevel('kb_rate') * 0.2;
+    let baseRate = 0.5 + getUpgradeLevel('kb_rate') * 0.1; // Basis halbiert
     if(player && player._stKbBonus) baseRate += player._stKbBonus;
     let earned = Math.floor(sc / 100 * baseRate);
     kaffeebons += earned;
@@ -1944,7 +2996,14 @@ function applyUpgradesToPlayer(p) {
         if (lvl > 0) upg.apply(p, lvl);
     });
     p.azubiCost = p.azubiCost || 5000;
+    // Prestige-Boni (permanent, stapeln sich)
+    if(prestigeLevel > 0) {
+        p.dmgBonus  += p.dmgBonus * prestigeLevel * 0.05;
+        p.maxHp     += prestigeLevel * 10;
+        p._stKbBonus = (p._stKbBonus||0) + prestigeLevel * 0.10;
+    }
     applySkillTree(p); // Skilltree-Effekte anwenden
+    applyJobEffects(p); // Job-Effekte anwenden
 }
 function getMaxFarms() { return 3 + getUpgradeLevel('farm_slots') + (player && player._stFarmSlots ? player._stFarmSlots : 0); }
 function openShop(fromGameOver=false) { renderShop(); document.getElementById('shopOverlay').style.display = 'block'; }
@@ -2057,6 +3116,11 @@ let currentDiffLabel="PRAKTIKANT", lastChosenDifficulty=1;
 let screenShake=0, flashScreen=0;
 let currentShift=0, shiftTimer=0;
 let currentBossStage=0, activeBoss=null;
+let gamePhase = 'normal'; // 'normal' | 'bossroom' | 'collapse'
+let bueroDoor = null;     // { x, y, w, h, triggered, active }
+let bossRoomState = null; // Boss-Room State
+let fadeAlpha = 0;        // für Fade-Transition
+let fadeDir = 0;          // 1=fade in, -1=fade out
 let idocEvent=null, meetingZone=null, kloskaEvent=null;
 
 let player=null;
@@ -2082,6 +3146,11 @@ let bestComboThisRun = 1;
 function updateCombo(kill=true) {
     if(!kill) {
         // Combo ist ausgelaufen
+        // Picobello/Picobellooo Perk: Combo nicht bei erstem Treffer abreißen
+        this._comboHits = (this._comboHits||0) + 1;
+        let breakThreshold = hasTrophy('picobellooo') ? 20 : (hasTrophy('picobello') ? 5 : 1);
+        if(this._comboHits < breakThreshold) return; // Combo hält noch
+        this._comboHits = 0;
         combo = 0; comboMult = 1; comboTimer = 0;
         
         return;
@@ -2097,6 +3166,8 @@ function updateCombo(kill=true) {
     else                  comboMult = 1;
 
     if(comboMult > bestComboThisRun) bestComboThisRun = comboMult;
+    if(combo >= 100)  unlockTrophy('picobello');
+    if(combo >= 1000) unlockTrophy('picobellooo');
 
     // Wenn Multiplikator gestiegen → Toast + Sound
     if(comboMult > oldMult) {
@@ -2109,12 +3180,14 @@ function updateCombo(kill=true) {
 
 // Boss definitions
 const bosses=[
-    {score:5000,  name:"RIAN",        subtitle:"Update!",            hp:1500,  color:'#8e44ad',radius:60, speed:2.5},
-    {score:10000, name:"TIM",         subtitle:"Update!",            hp:3000,  color:'#2980b9',radius:70, speed:3.0},
-    {score:15000, name:"FLOF",        subtitle:"Prozesse!",          hp:5000,  color:'#27ae60',radius:80, speed:3.5},
-    {score:20000, name:"JANSKI",      subtitle:"Dienstag!",          hp:8000,  color:'#d35400',radius:90, speed:4.0},
-    {score:50000, name:"PETER BAYER", subtitle:"TICKET FOKUSSIERT!", hp:20000, color:'#c0392b',radius:130,speed:4.5}
+    {score:5000,  name:"RIAN",   subtitle:"Update!",   hp:1500, color:'#8e44ad',radius:60, speed:2.5},
+    {score:10000, name:"TIM",    subtitle:"Update!",   hp:3000, color:'#2980b9',radius:70, speed:3.0},
+    {score:15000, name:"FLOF",   subtitle:"Prozesse!", hp:5000, color:'#27ae60',radius:80, speed:3.5},
+    {score:20000, name:"JANSKI", subtitle:"Dienstag!", hp:8000, color:'#d35400',radius:90, speed:4.0},
+    // PETER BAYER ist KEIN normaler Boss mehr — er hat sein eigenes Büro-Level!
 ];
+// Bayer-Stats für den Boss-Room
+const BAYER_STATS = { hp:20000, speed:3.5, radius:55, color:'#c0392b' };
 
 // ============================================================
 // SECTION 7 — INPUT
@@ -2268,17 +3341,34 @@ function updateFarms(){
         if(hackingTimer <= 0) { showToast("ZEIT ABGELAUFEN! 🔒", "#f00"); closeHacking(); }
     }
     serverFarms=serverFarms.filter(f=>servers.includes(f.serverRef));
-    let income = 3 + getUpgradeLevel('damage') + (hasTrophy('admin_hacker') ? 2 : 0) + (player && player._stFarmBonus ? player._stFarmBonus : 0);
+    // Farm-Intervall: Basis 20s, schneller mit Upgrades/Skills
+    let farmInterval = 1200; // 20s bei 60fps
+    farmInterval -= getUpgradeLevel('damage') * 60;           // Upgrade: bis -5s
+    farmInterval -= (player && player._stFarmBonus ? player._stFarmBonus * 30 : 0); // Skilltree
+    farmInterval = Math.max(300, farmInterval);                // Minimum 5s
     for(let f of serverFarms){
-        f.ticker++;
-        if(f.ticker>=60){
-            f.ticker=0; score+=income;
-            if(frame%180===0) floatingTexts.push(new FloatingText(f.serverRef.x+f.serverRef.w/2, f.serverRef.y-10, `+${income}`, "#00ff88"));
+        f.ticker = (f.ticker||0) + 1;
+        if(f.ticker >= farmInterval){
+            f.ticker = 0;
+            // Suppe neben dem Server spawnen
+            let sx = f.serverRef.x + f.serverRef.w/2 + (Math.random()-0.5)*80;
+            let sy = f.serverRef.y + f.serverRef.h + 30;
+            items.push(new Item('suppe', sx, sy));
+            floatingTexts.push(new FloatingText(f.serverRef.x+f.serverRef.w/2, f.serverRef.y-15, '🍜 SUPPE!', '#f39c12'));
+            playSound('delivery');
         }
+        // Fortschrittsbalken visuell (0-1)
+        f.progress = f.ticker / farmInterval;
     }
     let fi=document.getElementById('farmIndicator');
-    if(serverFarms.length>0){ fi.style.display='block'; fi.innerText=`🖥️ ${serverFarms.length}/${getMaxFarms()} Server-Farmen aktiv`; } 
-    else { fi.style.display='none'; }
+    if(serverFarms.length>0){
+        fi.style.display='block';
+        let nextIn = serverFarms.reduce((best,f) => {
+            let remaining = Math.ceil(((f.progress?1-f.progress:1) * (1200 - getUpgradeLevel('damage')*60)) / 60);
+            return Math.min(best, remaining);
+        }, 999);
+        fi.innerText=`🖥️ ${serverFarms.length}/${getMaxFarms()} Farmen — nächste 🍜 in ~${nextIn}s`;
+    } else { fi.style.display='none'; }
 }
 
 function startHackingPuzzle(server) {
@@ -2369,7 +3459,8 @@ class Player{
         this.rollDx = 0;         
         this.rollDy = 0;         
         applyUpgradesToPlayer(this);
-        if(hasTrophy('first_game')) this.maxHp += 5;
+        if(hasTrophy('first_game'))   this.maxHp += 5;
+        if(hasTrophy('speedster'))     this.dmgBonus += Math.floor(this.dmgBonus * 0.05 + 1);
         if(hasTrophy('soup_king')) this.suppe += 1;
         if(hasTrophy('pacifist')) this.speed += 0.2;
         if(hasTrophy('boss_killer')) this.shieldTimer = 600;
@@ -2430,7 +3521,7 @@ class Player{
             input.keys['KeyB']=false;
         }
         if(input.keys['KeyF']){tryActivateFarm();input.keys['KeyF']=false;}
-        if(score>=2500&&!this.isMartin&&!this.promoTriggered) this.triggerEvolution();
+        // if(score>=2500&&!this.isMartin&&!this.promoTriggered) this.triggerEvolution(); // DEAKTIVIERT — Maddin wird Job-System Klasse
 
         if(input.keys['KeyE']){
             for(let s of stations){
@@ -2445,7 +3536,9 @@ class Player{
                 player.runIdocs++;
                 if(player.runIdocs === 5) unlockTrophy('idoc_savior'); 
                 score+=2000; removePersistentToast(); floatingTexts.push(new FloatingText(this.x,this.y,"PROBLEM GELÖST!","#0f0")); showToast("PROBLEM GELÖST!","#00ff00","+2000 Punkte — Gegner eingefroren"); enemies.forEach(e=>e.freezeTimer=300); }
-            if(kloskaEvent&&Math.hypot(this.x-kloskaEvent.x,this.y-kloskaEvent.y)<120){ kloskaEvent=null; score+=1500; removePersistentToast(); floatingTexts.push(new FloatingText(this.x,this.y,"KLOSKA VERJAGT!","#0f0")); showToast("KLOSKA VERJAGT!","#00ff00","Server gerettet! (+1500 Pkt)"); }
+            if(kloskaEvent&&Math.hypot(this.x-kloskaEvent.x,this.y-kloskaEvent.y)<120){ kloskaEvent=null; score+=1500; removePersistentToast(); floatingTexts.push(new FloatingText(this.x,this.y,"KLOSKA VERJAGT!","#0f0")); showToast("KLOSKA VERJAGT!","#00ff00","Server gerettet! (+1500 Pkt)");
+                this._kloskaVerjagt = (this._kloskaVerjagt||0) + 1;
+                if(this._kloskaVerjagt >= 3) unlockTrophy('nervensaege'); }
         }
         
         if(input.keys['KeyG']&&this.vacationTimer<=0) this.activateVacation();
@@ -2946,6 +4039,12 @@ function spawnLogic(){
         showToast("⚠ BOSS ERSCHIENEN!","#e74c3c",bd.name+" — "+bd.subtitle);
         document.getElementById('bossHpContainer').style.display = 'block';
     }
+    // Peter Bayer Büro-Ruf bei Score 50000
+    if(!bueroDoor && !bueroDoor && score >= 50000 && gamePhase === 'normal' && !systemCollapse) {
+        bueroDoor = { x: WORLD_WIDTH/2 - 60, y: 250, w: 120, h: 160, active: true, pulse: 0 };
+        playSound('alarm');
+        showToast('📞 PETER BAYER RUFT!', '#c0392b', 'Gehe zur markierten Bürotür → [E]', true);
+    }
 
     let sr=Math.max(15,60-difficulty*4);
     if(activeBoss) sr*=2;
@@ -2973,7 +4072,8 @@ function spawnLogic(){
         }
     }
     // Kloska hat eigenen unabhängigen Timer — FIX: war vorher im IDOC-Block gefangen
-    if(!kloskaEvent && serverFarms.length > 0 && frame % 2800 === 0) {
+    let kloskaChance = hasTrophy('nervensaege') ? (frame % 3733 === 0) : (frame % 2800 === 0);
+    if(!kloskaEvent && serverFarms.length > 0 && kloskaChance) {
         let farm = serverFarms[Math.floor(Math.random() * serverFarms.length)];
         kloskaEvent = { serverRef: farm.serverRef, x: farm.serverRef.x - 40, y: farm.serverRef.y + 10, timer: 1800 };
         playSound('alarm');
@@ -3008,7 +4108,7 @@ function spawnLogic(){
         });
     }
 
-    if(frame%3600===0){ currentShift=(currentShift+1)%3; shiftTimer=0; playSound('delivery'); }
+    if(frame%3600===0){ currentShift=(currentShift+1)%3; shiftTimer=0; playSound('delivery'); earnTimeExp(); }
     if(!player.inMeeting&&frame%4500===2000){
         meetingZone={x:Math.random()*(WORLD_WIDTH-400)+200,y:Math.random()*(WORLD_HEIGHT-400)+200,r:150,active:true};
     }
@@ -3217,6 +4317,39 @@ function loop(){
     if(gamePaused) { requestAnimationFrame(loop); return; }
     
     try{
+        // Fade-Transition
+        if(fadeDir !== 0) {
+            fadeAlpha = Math.max(0, Math.min(1, fadeAlpha + fadeDir * 0.04));
+            if(fadeDir === 1 && fadeAlpha >= 1) {
+                fadeDir = 0;
+                if(gamePhase === 'transitioning_in') { gamePhase = 'bossroom'; activeBoss = { hp:1, maxHp:1, label:'PETER BAYER' }; document.getElementById('bossHpContainer').style.display='block'; }
+            }
+            if(fadeDir === -1 && fadeAlpha <= 0) { fadeDir = 0; }
+        }
+
+        // Boss-Room Modus
+        if(gamePhase === 'bossroom') {
+            updateBossRoom();
+            // HUD Boss-HP
+            if(bossRoomState) {
+                let b = bossRoomState.bayer;
+                document.getElementById('bossHpName').innerText = `☠ PETER BAYER — PHASE ${b.phase} ☠`;
+                let pct = Math.max(0, b.hp / b.maxHp * 100);
+                document.getElementById('bossHpBar').style.width = pct + '%';
+                document.getElementById('bossHpPercent').innerText = `${Math.ceil(pct)}%  —  ${Math.ceil(b.hp)} / ${b.maxHp} HP`;
+            }
+            // Nur Canvas zeichnen
+            ctx.save();
+            ctx.translate(canvas.width/2 - (900/2), canvas.height/2 - (620/2));
+            // Wird in drawBossRoom mit eigenem translate gehandhabt
+            ctx.restore();
+            ctx.setTransform(1,0,0,1,0,0);
+            drawBossRoom();
+            updateHUD();
+            requestAnimationFrame(loop);
+            return;
+        }
+
         frame++; shiftTimer++;
         spawnLogic();
         player.update();
@@ -3402,6 +4535,7 @@ function loop(){
 
                 // NEU V20: Combo-System bei jedem Kill
                 updateCombo(true);
+                earnExp(e.type, e.type===99); // Job-System EXP
 
                 // Score mit Combo-Multiplikator
                 let earnedScore = e.score * comboMult;
@@ -3536,6 +4670,9 @@ function loop(){
         items.forEach(it=>it.draw());
 
         // Vehicles zeichnen
+        // Büro-Tür zeichnen
+        drawBueroDoor();
+
         vehicles.forEach(v => {
             ctx.save();
             // Schatten
@@ -3642,6 +4779,7 @@ function startGame(diff=1){
     gamePaused=false;idocEvent=null;meetingZone=null;kloskaEvent=null;
     systemCollapse = false; collapseTimer = 0;
     enemies=[];bullets=[];particles=[];items=[];splatters=[];floatingTexts=[];turrets=[];shells=[];serverFarms=[];vehicles=[];
+    gamePhase='normal'; bueroDoor=null; bossRoomState=null; fadeAlpha=0; fadeDir=0;
     
     // Reset Combo
     combo = 0; comboTimer = 0; comboMult = 1; bestComboThisRun = 1;
@@ -3658,6 +4796,8 @@ function startGame(diff=1){
         showToast("MODUS: WEGFLEXEN", "#f00", "1 HP | 5S KILL-TIMER | 10X PUNKTE");
     }
     generateWorld();
+    // Maddin-Job: isMartin aktivieren
+    if(currentJob === 'maddin') { player.isMartin = true; player.promoTriggered = true; }
     // Favorit-Waffe permanent equippen (kein Timer)
     if(favoriteWeapon && hasWeaponUnlocked(favoriteWeapon)) {
         player.activeWeapons[favoriteWeapon] = Infinity; // kein Timer
