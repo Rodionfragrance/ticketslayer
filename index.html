@@ -478,7 +478,7 @@ input[type="text"] {
 <!-- EMAIL OVERLAY -->
 <div id="emailOverlay">
     <div class="email-header">
-        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;leitstand@zls-hamm.de&gt;</div>
+        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5539303c212621343b31152f3926783d3438387b3130">[email&#160;protected]</a>&gt;</div>
         <div class="email-row"><span class="email-label">AN:</span> Alle Mitarbeiter</div>
         <div class="email-row email-subject">PFLICHTLEKTÜRE: Neue Prozessanweisung V20 — Vollständige Revision</div>
     </div>
@@ -887,7 +887,7 @@ input[type="text"] {
 </div>
 
 <!-- PASSWORT LOGIK -->
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 var GAME_PASSWORD = 'Vollzeit2025';
 var SESSION_HOURS = 8;
 
@@ -2015,7 +2015,7 @@ function renderSkillTree() {
     stCtx.clearRect(0, 0, W, H);
 
     // Hintergrund-Grid
-    stCtx.strokeStyle = 'rgba(255,255,255,0.03)';
+    stCtx.strokeStyle = 'rgba(255,255,255,0.07)';
     stCtx.lineWidth = 1;
     let gridSize = 60 * stScale;
     let gox = stOffX % gridSize, goy = stOffY % gridSize;
@@ -2038,11 +2038,11 @@ function renderSkillTree() {
                 stCtx.lineWidth = 3 * stScale;
                 stCtx.shadowColor = ZONE_COLORS[n.zone]; stCtx.shadowBlur = 6;
             } else if(hasSkill(req.id) && canUnlockSkill(n)) {
-                stCtx.strokeStyle = 'rgba(255,255,255,0.3)';
-                stCtx.lineWidth = 2 * stScale; stCtx.shadowBlur = 0;
+                stCtx.strokeStyle = 'rgba(255,255,255,0.7)';
+                stCtx.lineWidth = 2.5 * stScale; stCtx.shadowBlur = 0;
             } else {
-                stCtx.strokeStyle = 'rgba(255,255,255,0.08)';
-                stCtx.lineWidth = 1 * stScale; stCtx.shadowBlur = 0;
+                stCtx.strokeStyle = 'rgba(255,255,255,0.25)';
+                stCtx.lineWidth = 1.5 * stScale; stCtx.shadowBlur = 0;
             }
             stCtx.stroke(); stCtx.shadowBlur = 0;
         }
@@ -2069,14 +2069,15 @@ function renderSkillTree() {
             g.addColorStop(0, zc+'aa'); g.addColorStop(1, zc+'44');
             stCtx.fillStyle = g;
         } else if(canUnlock) {
-            stCtx.fillStyle = 'rgba(255,255,255,0.08)';
+            stCtx.fillStyle = 'rgba(255,255,255,0.18)';
         } else {
-            stCtx.fillStyle = 'rgba(0,0,0,0.6)';
+            // Leichter Zonen-Tint damit man die Zonen erkennt
+            stCtx.fillStyle = zc + '22';
         }
         stCtx.fill();
 
         // Rand
-        stCtx.strokeStyle = unlocked ? zc : (canUnlock ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)');
+        stCtx.strokeStyle = unlocked ? zc : (canUnlock ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)');
         stCtx.lineWidth = (n.type === 'keystone' ? 3 : (n.type === 'notable' ? 2 : 1.5)) * stScale;
         if(n.type === 'keystone') {
             // Hexagon für Keystones
@@ -2087,7 +2088,7 @@ function renderSkillTree() {
                       : stCtx.lineTo(sx+Math.cos(a)*r, sy+Math.sin(a)*r);
             }
             stCtx.closePath();
-            stCtx.fillStyle = unlocked ? zc+'66' : (canUnlock ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.7)');
+            stCtx.fillStyle = unlocked ? zc+'66' : (canUnlock ? 'rgba(255,255,255,0.18)' : 'rgba(50,50,50,0.85)');
             stCtx.fill();
             stCtx.stroke();
         } else {
@@ -2099,17 +2100,17 @@ function renderSkillTree() {
         let fs = Math.max(8, (n.type === 'keystone' ? 16 : (n.type === 'notable' ? 13 : 10)) * stScale);
         stCtx.font = `bold ${fs}px Courier New`;
         stCtx.textAlign = 'center'; stCtx.textBaseline = 'middle';
-        stCtx.fillStyle = unlocked ? '#fff' : (canUnlock ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.2)');
+        stCtx.fillStyle = unlocked ? '#fff' : (canUnlock ? '#ffffff' : 'rgba(255,255,255,0.55)');
         if(n.type === 'start') stCtx.fillText('⚙', sx, sy);
         else if(n.type === 'keystone') stCtx.fillText('★', sx, sy);
         else if(n.type === 'notable') stCtx.fillText('◉', sx, sy);
         else stCtx.fillText('○', sx, sy);
 
         // Label unter dem Knoten (nur bei ausreichend Zoom)
-        if(stScale > 0.7) {
+        if(stScale > 0.45) {
             let lfs = Math.max(7, 9 * stScale);
             stCtx.font = `${lfs}px Courier New`;
-            stCtx.fillStyle = unlocked ? zc : (canUnlock ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)');
+            stCtx.fillStyle = unlocked ? zc : (canUnlock ? '#ffffff' : 'rgba(200,200,200,0.5)');
             let label = n.name.length > 12 ? n.name.substring(0,11)+'…' : n.name;
             stCtx.fillText(label, sx, sy + r + 10*stScale);
         }
@@ -2254,12 +2255,12 @@ function applySkillTree(p) {
 // WAFFENKAMMER — Meta-Shop mit Kaffeebons
 // ============================================================
 const WEAPON_SHOP = [
-    { id:'minigun',  icon:'🌀', name:'Minigun',       desc:'Sehr hohe Feuerrate, leichte Streuung.',        cost:20000 },
-    { id:'shotgun',  icon:'💥', name:'Schrotflinte',  desc:'5-Pellet Fächer. Brutal auf kurze Distanz.',    cost:25000 },
-    { id:'flamer',   icon:'🔥', name:'Flammenwerfer', desc:'Setzt Gegner in Brand (DoT). Kurze Reichweite.',cost:35000 },
-    { id:'mouse',    icon:'🖱️', name:'Orbit-Maus',    desc:'Kreist um dich, knockt zurück (50 Dmg).',       cost:30000 },
-    { id:'rocket',   icon:'🚀', name:'Raketenwerfer', desc:'Splash-Damage 150px. Rückstoß schiebt zurück.', cost:40000 },
-    { id:'railgun',  icon:'⚡', name:'Railgun',        desc:'Durchdringt Gegner in einer Linie. Stark.',     cost:50000 },
+    { id:'minigun',  icon:'🌀', name:'Minigun',       desc:'Sehr hohe Feuerrate, leichte Streuung.',        cost:200 },
+    { id:'shotgun',  icon:'💥', name:'Schrotflinte',  desc:'5-Pellet Fächer. Brutal auf kurze Distanz.',    cost:250 },
+    { id:'flamer',   icon:'🔥', name:'Flammenwerfer', desc:'Setzt Gegner in Brand (DoT). Kurze Reichweite.',cost:350 },
+    { id:'mouse',    icon:'🖱️', name:'Orbit-Maus',    desc:'Kreist um dich, knockt zurück (50 Dmg).',       cost:300 },
+    { id:'rocket',   icon:'🚀', name:'Raketenwerfer', desc:'Splash-Damage 150px. Rückstoß schiebt zurück.', cost:400 },
+    { id:'railgun',  icon:'⚡', name:'Railgun',        desc:'Durchdringt Gegner in einer Linie. Stark.',     cost:500 },
 ];
 
 function hasWeaponUnlocked(id) { return unlockedWeapons.includes(id); }
@@ -3138,6 +3139,7 @@ let collapseTimer = 0;
 // COMBO SYSTEM — NEU in V20
 // ============================================================
 let combo = 0;           // Aktuelle Kill-Streak
+let comboHitCount = 0;   // Treffer-Zähler für Picobello-Perk
 let comboTimer = 0;      // Frames bis Combo verfällt (180 = 3 Sek)
 let comboMult = 1;       // Aktueller Multiplikator (1, 2, 3 oder 5)
 let bestComboThisRun = 1;
@@ -3147,10 +3149,10 @@ function updateCombo(kill=true) {
     if(!kill) {
         // Combo ist ausgelaufen
         // Picobello/Picobellooo Perk: Combo nicht bei erstem Treffer abreißen
-        this._comboHits = (this._comboHits||0) + 1;
+        comboHitCount = (comboHitCount||0) + 1;
         let breakThreshold = hasTrophy('picobellooo') ? 20 : (hasTrophy('picobello') ? 5 : 1);
-        if(this._comboHits < breakThreshold) return; // Combo hält noch
-        this._comboHits = 0;
+        if(comboHitCount < breakThreshold) return; // Combo hält noch
+        comboHitCount = 0;
         combo = 0; comboMult = 1; comboTimer = 0;
         
         return;
@@ -4782,7 +4784,7 @@ function startGame(diff=1){
     gamePhase='normal'; bueroDoor=null; bossRoomState=null; fadeAlpha=0; fadeDir=0;
     
     // Reset Combo
-    combo = 0; comboTimer = 0; comboMult = 1; bestComboThisRun = 1;
+    combo = 0; comboTimer = 0; comboMult = 1; bestComboThisRun = 1; comboHitCount = 0;
     
     clearAllToasts();
 
@@ -4862,9 +4864,4 @@ setTimeout(function(){
     if(ls && ls.style.display !== 'none') {
         ls.style.display = 'none';
         var ss = document.getElementById('startScreen');
-        if(ss) ss.style.display = 'block';
-        try {
-            var el = document.getElementById('startKBAmount');
-            if(el) el.innerText = (typeof kaffeebons !== 'undefined') ? kaffeebons : 0;
-        } catch(e) {}
-        var best = parseInt(localStorag
+        if(ss) ss.style.display = 'bl
