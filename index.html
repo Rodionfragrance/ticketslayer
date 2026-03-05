@@ -4325,7 +4325,7 @@ function loop(){
             fadeAlpha = Math.max(0, Math.min(1, fadeAlpha + fadeDir * 0.04));
             if(fadeDir === 1 && fadeAlpha >= 1) {
                 fadeDir = 0;
-                if(gamePhase === 'transitioning_in') { gamePhase = 'bossroom'; activeBoss = { hp:1, maxHp:1, label:'PETER BAYER' }; (document.getElementById('bossHpContainer')||{style:{}}).style.display='block'; }
+                if(gamePhase === 'transitioning_in') { gamePhase = 'bossroom'; fadeAlpha = 0; activeBoss = { hp:1, maxHp:1, label:'PETER BAYER' }; (document.getElementById('bossHpContainer')||{style:{}}).style.display='block'; }
             }
             if(fadeDir === -1 && fadeAlpha <= 0) { fadeDir = 0; }
         }
@@ -4355,8 +4355,8 @@ function loop(){
                 ctx.fillText('BOSS ROOM ERROR: '+brErr.message, canvas.width/2, canvas.height/2);
                 console.error('drawBossRoom error:', brErr);
             }
-            // Fade overlay
-            if(fadeAlpha > 0) {
+            // Fade overlay NUR während aktiver Transition
+            if(fadeAlpha > 0 && fadeDir !== 0) {
                 ctx.fillStyle = 'rgba(0,0,0,'+fadeAlpha+')';
                 ctx.fillRect(0,0,canvas.width,canvas.height);
             }
