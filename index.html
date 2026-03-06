@@ -613,7 +613,7 @@ input[type="text"] {
             <br><br>
 
             <strong>(4) Skilltree — Punkte nicht verschwenden:</strong><br>
-            60 Punkte klingen nach viel — reichen aber nicht für alles. Wähle eine Hauptzone (z.B. Rage) und eine Nebenzone (z.B. Kaffeekasse), verbinde sie mit Cross-Zone-Brücken, und hole dir Keystones. Keystones kosten 18.000 KB — das ist Absicht. Ein Keystone verändert das gesamte Spielgefühl.
+            60 Punkte klingen nach viel — reichen aber nicht für alles. Wähle eine Hauptzone (z.B. Rage) und eine Nebenzone (z.B. Kaffeekasse), verbinde sie mit Cross-Zone-Brücken, und hole dir einen Keystone am Ende. Keystones kosten 18.000 KB — das ist Absicht. Ein Keystone verändert das gesamte Spielgefühl.
             <br><br>
 
             <strong>(5) Job-System — welcher Job für welchen Spielstil:</strong><br>
@@ -689,7 +689,7 @@ input[type="text"] {
         </div>
 
         <!-- MENÜ-GRID 3x2 -->
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:14px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-top:14px;">
             <button onclick="openShop()" style="background:#111;color:#00e5ff;border:2px solid #00e5ff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#00e5ff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#00e5ff'">☕ UPGRADES</button>
             <button onclick="openTrophies()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🏆 TROPHÄEN</button>
             <button onclick="openWaffenkammer()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#e74c3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#e74c3c'">🔫 WAFFEN</button>
@@ -697,6 +697,7 @@ input[type="text"] {
             <button onclick="openJobOverlay()" id="job-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">⚔️ JOB</button>
             <button onclick="showEmail()" style="background:#111;color:#3498db;border:2px solid #3498db;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#3498db';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#3498db'">[I] ANLEITUNG</button>
             <button onclick="openSkillTree()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🌳 SKILLTREE</button>
+            <button onclick="openHighscoreMenu()" style="background:#111;color:#fff;border:2px solid #fff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#fff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#fff'">🏆 RANGLISTE</button>
         </div>
     </div>
     
@@ -778,6 +779,19 @@ input[type="text"] {
         
         <button onclick="claimDailyReward()" id="daily-claim-btn" style="width:100%; background:#f1c40f; color:#000; border:none; padding:14px; font-size:16px; font-weight:bold; font-family:'Courier New',monospace; text-transform:uppercase; letter-spacing:3px; cursor:pointer; border-radius:2px;">EINLOGGEN & KASSIEREN</button>
         <button onclick="closeDailyOverlay()" style="width:100%; background:transparent; color:#555; border:1px solid #333; padding:10px; font-size:13px; font-family:'Courier New',monospace; text-transform:uppercase; cursor:pointer; margin-top:8px; border-radius:2px;">SPÄTER</button>
+    </div>
+</div>
+
+<!-- HIGHSCORE MENU OVERLAY -->
+<div id="hsMenuOverlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.93);z-index:580;font-family:'Courier New',monospace;overflow-y:auto;">
+    <div style="max-width:800px;margin:30px auto;padding:28px;border:3px solid #fff;background:#0a0a0a;border-radius:4px;box-shadow:0 0 60px rgba(255,255,255,0.1);">
+        <h2 style="color:#fff;font-size:22px;letter-spacing:4px;margin:0 0 4px;text-transform:uppercase;text-align:center;">🏆 RANGLISTE</h2>
+        <div style="display:flex;justify-content:center;gap:8px;margin:16px 0;">
+            <button onclick="renderHsMenu('alltime')" id="hsTab-alltime" style="background:#fff;color:#000;border:none;padding:8px 20px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;font-size:13px;">ALLTIME</button>
+            <button onclick="renderHsMenu('weekly')" id="hsTab-weekly" style="background:#222;color:#aaa;border:1px solid #444;padding:8px 20px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;font-size:13px;">WÖCHENTLICH</button>
+        </div>
+        <div id="hsMenuContent" style="color:#aaa;font-size:12px;">Lade...</div>
+        <button onclick="closeHsMenu()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
     </div>
 </div>
 
@@ -1032,6 +1046,71 @@ function loadHighscores() {
         });
         document.getElementById('highscore-overlay').innerHTML = html;
     }).catch(e => console.error(e));
+}
+
+// ============================================================
+// HIGHSCORE MENU — Alltime & Wöchentlich
+// ============================================================
+let _hsCache = null;
+function openHighscoreMenu() {
+    document.getElementById('hsMenuOverlay').style.display = 'block';
+    renderHsMenu('alltime');
+}
+function closeHsMenu() {
+    document.getElementById('hsMenuOverlay').style.display = 'none';
+}
+function getWeeklyResetDate() {
+    // Letzter Sonntag 22:00 CET (Berlin)
+    let now = new Date();
+    let d = new Date(now.toLocaleString('en-US', {timeZone:'Europe/Berlin'}));
+    let day = d.getDay(); // 0=So
+    let diff = day === 0 && d.getHours() >= 22 ? 0 : (day === 0 ? 7 : day);
+    let lastSun = new Date(d); lastSun.setDate(d.getDate() - diff);
+    lastSun.setHours(22,0,0,0);
+    if(lastSun > d) lastSun.setDate(lastSun.getDate() - 7);
+    return lastSun;
+}
+function renderHsMenu(tab) {
+    let at = document.getElementById('hsTab-alltime');
+    let wt = document.getElementById('hsTab-weekly');
+    if(at) { at.style.background = tab==='alltime'?'#fff':'#222'; at.style.color = tab==='alltime'?'#000':'#aaa'; }
+    if(wt) { wt.style.background = tab==='weekly'?'#fff':'#222'; wt.style.color = tab==='weekly'?'#000':'#aaa'; }
+    let cont = document.getElementById('hsMenuContent');
+    if(!db) { cont.innerHTML = '<div style="text-align:center;color:#f00;padding:20px;">Firebase nicht verbunden</div>'; return; }
+    cont.innerHTML = '<div style="text-align:center;padding:20px;color:#555;">Lade Daten...</div>';
+    db.collection("highscores").orderBy("score","desc").limit(500).get().then(snap => {
+        let all = []; snap.forEach(doc => all.push(doc.data()));
+        let weekStart = getWeeklyResetDate();
+        let entries = tab === 'weekly' ? all.filter(d => d.date && new Date(d.date) >= weekStart) : all;
+        let modes = ["WEGFLEXEN","SURVIVAL","BURNOUT","VOLLZEIT","PRAKTIKANT"];
+        let modeColors = {WEGFLEXEN:'#f00',SURVIVAL:'#8e44ad',BURNOUT:'#c0392b',VOLLZEIT:'#f1c40f',PRAKTIKANT:'#2ecc71'};
+        const TIME_BONUS = 3000;
+        let html = tab === 'weekly' ? `<div style="text-align:center;color:#555;font-size:11px;margin-bottom:12px;">Reset: Sonntag 22:00 CET</div>` : '';
+        modes.forEach(mode => {
+            let scores = entries.filter(d => d.difficulty === mode);
+            scores.sort((a,b) => ((b.score||0)+(parseFloat(b.collapseTime)||0)*TIME_BONUS) - ((a.score||0)+(parseFloat(a.collapseTime)||0)*TIME_BONUS));
+            let top = scores.slice(0, 10);
+            if(top.length === 0) return;
+            html += `<div style="margin-bottom:16px;"><div style="color:${modeColors[mode]};font-size:14px;font-weight:bold;letter-spacing:2px;margin-bottom:6px;border-bottom:1px solid ${modeColors[mode]}33;padding-bottom:4px;">[${mode}] — ${top.length} von ${scores.length}</div>`;
+            top.forEach((d,i) => {
+                let rank = i+1;
+                let c = rank===1?'gold':(rank===2?'silver':(rank===3?'#cd7f32':'#777'));
+                let medal = rank<=3?['🥇','🥈','🥉'][rank-1]:(rank+'.');
+                let coll = parseFloat(d.collapseTime)>0?` · 🔥${d.collapseTime}s`:'';
+                let boss = d.bossKilled?' · 💀':'';
+                let grade = d.grade?`<span style="color:${({S:'#f1c40f',A:'#2ecc71',B:'#3498db',C:'#9b59b6',D:'#e67e22',E:'#e74c3c',F:'#555'})[d.grade]||'#aaa'};font-weight:bold;">[${d.grade}]</span> `:'';
+                html += `<div style="color:${c};font-size:12px;padding:3px 0;display:flex;align-items:center;gap:8px;">
+                    <span style="width:28px;text-align:right;">${medal}</span>
+                    <span style="flex:1;">${grade}${(d.name||'???').substring(0,10)}</span>
+                    <span style="color:#fff;font-weight:bold;">${d.score}</span>
+                    <span style="color:#555;font-size:10px;">${coll}${boss}</span>
+                </div>`;
+            });
+            html += '</div>';
+        });
+        if(!html || entries.length === 0) html = '<div style="text-align:center;color:#555;padding:20px;">Keine Einträge' + (tab==='weekly'?' diese Woche':'') + '</div>';
+        cont.innerHTML = html;
+    }).catch(e => { cont.innerHTML = '<div style="text-align:center;color:#f00;padding:20px;">Fehler: '+e.message+'</div>'; });
 }
 
 function saveHighscoreAndRestart() {
@@ -1341,7 +1420,9 @@ const TROPHIES_DEF = [
     { id:'picobellooo',     icon:'💫', name:'Picobellooo',         desc:'Erreiche eine 1000er Combo in einem Run.', perk:'Unaufhaltbar: Combo reißt erst nach 20 Treffern ab' },
     { id:'nervensaege',     icon:'😤', name:'Nervensäge',          desc:'Verscheuche Kloska 3× in einem Run.', perk:'Respekt: Kloska erscheint 25% seltener' },
     { id:'speedster',       icon:'⚡', name:'Speedster',           desc:'Besiege Peter Bayer in unter 5 Sekunden im Boss-Room.', perk:'Präzision: +5% Schaden auf alle Waffen' },
-    { id:'ceo_perk',        icon:'👑', name:'Vorstandsvorsitzender',desc:'Schließe alle 5 Ligen mit dem S-Rang ab.', perk:'Unkündbar: Überlebe 1 tödlichen Treffer mit 1 HP (3s Schild)' }
+    { id:'ceo_perk',        icon:'👑', name:'Vorstandsvorsitzender',desc:'Schließe alle 5 Ligen mit dem S-Rang ab.', perk:'Unkündbar: Überlebe 1 tödlichen Treffer mit 1 HP (3s Schild)' },
+    { id:'ueberqualifiziert', icon:'🎓', name:'Überqualifiziert',   desc:'Schließe alle 9 Jobs durch Rebirth ab.', perk:'Universalgenie: Alle Job-Passivs gleichzeitig aktiv' },
+    { id:'meister_hand',    icon:'✋', name:'Meister Hand',         desc:'Besiege die geheime Hand im Logistics-Bereich.', perk:'Phantomgriff: [V] Vernichtet alle Gegner auf der Map (60s CD)' }
 ];
 
 let unlockedTrophies = JSON.parse(localStorage.getItem('ts_trophies') || '[]');
@@ -1357,6 +1438,8 @@ let jobLevel     = parseInt(localStorage.getItem('ts_joblv')   || '0');
 let currentJob   = localStorage.getItem('ts_job') || null;     // z.B. 'sachbearbeiter'
 let jobSkillPts  = parseInt(localStorage.getItem('ts_jobspts') || '0');
 let jobSkills    = JSON.parse(localStorage.getItem('ts_jobskills') || '{}');
+let completedJobs = JSON.parse(localStorage.getItem('ts_completed_jobs') || '[]');
+let rebirthSkills = JSON.parse(localStorage.getItem('ts_rebirth_skills') || '{}');
 
 // EXP-Kurven
 function baseExpNeeded(lv) { return Math.floor(100 * Math.pow(lv, 1.6)); }
@@ -1475,16 +1558,15 @@ const JOBS = {
 
 function getAvailableJobs() {
     return Object.entries(JOBS).filter(([id, j]) => {
-        if(id === currentJob) return false; // Aktuellen Job nicht nochmal zeigen
-        if(j.tier === 1) return baseLevel >= j.baseLvReq && (!currentJob || currentJob);  // Tier 1 immer wenn Level reicht
-        if(j.tier === 2) return baseLevel >= j.baseLvReq && jobLevel >= j.jobLvReq && currentJob === j.prevJob;
+        if(id === currentJob) return false;
+        if(completedJobs.includes(id)) return false;
+        if(j.tier === 1) return baseLevel >= j.baseLvReq && !currentJob;
+        if(j.tier === 2) return baseLevel >= j.baseLvReq && !currentJob && completedJobs.includes(j.prevJob);
         return false;
     });
 }
 
 function chooseJob(jobId) {
-    let isSwitch = !!currentJob;
-    if(isSwitch && !confirm(`Job wechseln zu ${JOBS[jobId].name}?\n\nDein Job-Level, EXP und Skills werden ZURÜCKGESETZT!\nBase-Level und KB bleiben.`)) return;
     currentJob = jobId;
     jobLevel = 0; jobExp = 0; jobSkillPts = 0; jobSkills = {};
     localStorage.setItem('ts_job', currentJob);
@@ -1494,10 +1576,37 @@ function chooseJob(jobId) {
     localStorage.setItem('ts_jobskills', JSON.stringify(jobSkills));
     saveProgress();
     let j = JOBS[jobId];
-    showToast(isSwitch ? '⚔️ JOB GEWECHSELT!' : '⚔️ JOB GEWÄHLT!', j.color, j.name + ' — ' + j.passiv);
-    // Job-Button im Menü aktualisieren
+    showToast('⚔️ JOB GEWÄHLT!', j.color, j.name + ' — ' + j.passiv);
     let jbtn = document.getElementById('job-menu-btn');
     if(jbtn) jbtn.innerText = '⚔️ ' + (j.name||'JOB');
+    renderJobOverlay();
+}
+
+function rebirthJob() {
+    if(!currentJob || jobLevel < 40) return;
+    let jobName = JOBS[currentJob]?.name || currentJob;
+    if(!confirm('⚔️ REBIRTH: ' + jobName + '\n\nAlle Skills werden PERMANENT behalten!\nDu kannst danach einen neuen Job wählen.\n\nFortfahren?')) return;
+    let job = JOBS[currentJob];
+    if(job) {
+        Object.entries(jobSkills).forEach(([skillId, lv]) => {
+            rebirthSkills[currentJob + ':' + skillId] = Math.max(lv, rebirthSkills[currentJob + ':' + skillId] || 0);
+        });
+    }
+    if(!completedJobs.includes(currentJob)) completedJobs.push(currentJob);
+    let rebirthKB = 500 + completedJobs.length * 250;
+    kaffeebons += rebirthKB;
+    currentJob = null; jobLevel = 0; jobExp = 0; jobSkillPts = 0; jobSkills = {};
+    localStorage.setItem('ts_completed_jobs', JSON.stringify(completedJobs));
+    localStorage.setItem('ts_rebirth_skills', JSON.stringify(rebirthSkills));
+    localStorage.setItem('ts_job', '');
+    localStorage.setItem('ts_joblv', 0); localStorage.setItem('ts_jobexp', 0);
+    localStorage.setItem('ts_jobspts', 0); localStorage.setItem('ts_jobskills', '{}');
+    saveProgress();
+    if(Object.keys(JOBS).every(id => completedJobs.includes(id))) unlockTrophy('ueberqualifiziert');
+    showToast('🔄 REBIRTH!', '#f1c40f', jobName + ' gemeistert! +' + rebirthKB + ' KB · Skills permanent');
+    playSound('evolve');
+    let jbtn = document.getElementById('job-menu-btn');
+    if(jbtn) jbtn.innerText = '⚔️ JOB WÄHLEN';
     renderJobOverlay();
 }
 
@@ -1544,7 +1653,11 @@ function checkLevelUp() {
             floatingTexts.push(new FloatingText(player.x, player.y - 60, `⚔️ JOB LV ${jobLevel}!`, JOBS[currentJob]?.color || '#fff'));
             // Job 2 Auswahl bei Job Level 25
             if(jobLevel === 25) {
-                showToast('⚔️ JOB LEVEL 25!', '#f1c40f', 'Job 2 verfügbar! Menü → JOB');
+                showToast('⚔️ JOB LEVEL 25!', '#f1c40f', 'Tier-2 Jobs bald möglich!');
+            }
+            if(jobLevel === 40) {
+                showToast('🔄 MAX LEVEL!', '#f1c40f', 'REBIRTH verfügbar! Menü → JOB');
+                playSound('evolve');
             }
         }
     }
@@ -1578,33 +1691,43 @@ function upgradeJobSkill(skillId) {
 }
 
 function applyJobEffects(p) {
-    if(!currentJob) return;
-    let job = JOBS[currentJob];
-    // Passiv-Effekte
-    if(currentJob === 'supporter' || currentJob === 'burnout_spezialist') p._suppeHealBonus = (p._suppeHealBonus||0) + 15;
-    if(currentJob === 'techniker' || currentJob === 'entwickler') p._farmIntervalMult = (p._farmIntervalMult||1) * 0.7;
-    if(currentJob === 'gabelstapler') p._vehicleImmune = true;
-    if(currentJob === 'maddin') { p.azubiCost = 0; p._maddingMode = true; }
-    if(currentJob === 'hacker') p._hackerPassiv = true;
-
-    // Skill-Effekte
-    let sk = jobSkills;
-    let lv = (id) => sk[id] || 0;
-
-    if(lv('palettenramme') > 0)   p._rollDmg = [0,30,50,80][lv('palettenramme')];
-    if(lv('ueberstundenk') > 0)   p._lowHpDmg = [0,0.15,0.25,0.40][lv('ueberstundenk')];
-    if(lv('lagerhaltung') > 0)    p._extraWeaponSlots = [0,1,1,2][lv('lagerhaltung')];
-    if(lv('formular27b') > 0)     p._hitSlowEnemy = [0,60,120,180][lv('formular27b')];
-    if(lv('ticketschliessen') > 0)p._killRegenBurst = [0,3,5,8][lv('ticketschliessen')];
-    if(lv('deployment') > 0)      p.azubiCost = Math.floor((p.azubiCost||5000) * [1,0.7,0.5,0.3][lv('deployment')]);
-    if(lv('vollpulle') > 0)       p._vodkaTimeBonus = [0,120,180,300][lv('vollpulle')];
-    if(lv('maddinstampfer') > 0)  p._maddingStampfer = [0,50,80,120][lv('maddinstampfer')];
-    if(lv('teampower') > 0)       p._azubiDmgBonus = [0,0.05,0.08,0.12][lv('teampower')];
-    if(lv('staplerSense') > 0)    p._vehicleKillDmg = [0,80,150,250][lv('staplerSense')];
-    if(lv('schmerztoleran') > 0)  p._lowHpDefense = [0,0.15,0.25,0.35][lv('schmerztoleran')];
-    if(lv('farmDouble') > 0)      p._farmIntervalMult = (p._farmIntervalMult||1) * [1,0.67,0.5,0.4][lv('farmDouble')];
-    if(lv('sqlInjection') > 0)    p._sqlInjection = lv('sqlInjection');
-    if(lv('pausenregel') > 0)     p._autoInvuln = [0,5400,4200,3000][lv('pausenregel')]; // Frames
+    function _applyPassiv(jid) {
+        if(jid === 'supporter' || jid === 'burnout_spezialist') p._suppeHealBonus = (p._suppeHealBonus||0) + 15;
+        if(jid === 'techniker' || jid === 'entwickler') p._farmIntervalMult = (p._farmIntervalMult||1) * 0.7;
+        if(jid === 'gabelstapler') p._vehicleImmune = true;
+        if(jid === 'maddin') { p.azubiCost = 0; p._maddingMode = true; }
+        if(jid === 'hacker') p._hackerPassiv = true;
+    }
+    function _applySkills(sk) {
+        let lv = (id) => sk[id] || 0;
+        if(lv('palettenramme') > 0) p._rollDmg = Math.max(p._rollDmg||0, [0,30,50,80][lv('palettenramme')]);
+        if(lv('ueberstundenk') > 0) p._lowHpDmg = Math.max(p._lowHpDmg||0, [0,0.15,0.25,0.40][lv('ueberstundenk')]);
+        if(lv('lagerhaltung') > 0)  p._extraWeaponSlots = (p._extraWeaponSlots||0) + [0,1,1,2][lv('lagerhaltung')];
+        if(lv('formular27b') > 0)   p._hitSlowEnemy = Math.max(p._hitSlowEnemy||0, [0,60,120,180][lv('formular27b')]);
+        if(lv('ticketschliessen')>0)p._killRegenBurst = Math.max(p._killRegenBurst||0, [0,3,5,8][lv('ticketschliessen')]);
+        if(lv('deployment') > 0)    p.azubiCost = Math.floor((p.azubiCost||5000) * [1,0.7,0.5,0.3][lv('deployment')]);
+        if(lv('vollpulle') > 0)     p._vodkaTimeBonus = Math.max(p._vodkaTimeBonus||0, [0,120,180,300][lv('vollpulle')]);
+        if(lv('maddinstampfer') > 0)p._maddingStampfer = Math.max(p._maddingStampfer||0, [0,50,80,120][lv('maddinstampfer')]);
+        if(lv('teampower') > 0)     p._azubiDmgBonus = Math.max(p._azubiDmgBonus||0, [0,0.05,0.08,0.12][lv('teampower')]);
+        if(lv('staplerSense') > 0)  p._vehicleKillDmg = Math.max(p._vehicleKillDmg||0, [0,80,150,250][lv('staplerSense')]);
+        if(lv('schmerztoleran') > 0)p._lowHpDefense = Math.max(p._lowHpDefense||0, [0,0.15,0.25,0.35][lv('schmerztoleran')]);
+        if(lv('farmDouble') > 0)    p._farmIntervalMult = (p._farmIntervalMult||1) * [1,0.67,0.5,0.4][lv('farmDouble')];
+        if(lv('sqlInjection') > 0)  p._sqlInjection = Math.max(p._sqlInjection||0, lv('sqlInjection'));
+        if(lv('pausenregel') > 0)   p._autoInvuln = Math.min(p._autoInvuln||99999, [0,5400,4200,3000][lv('pausenregel')]);
+    }
+    // Rebirth-Skills (permanent)
+    for(let cj of completedJobs) {
+        _applyPassiv(cj);
+        let rsk = {};
+        for(let key in rebirthSkills) { if(key.startsWith(cj+':')) rsk[key.split(':')[1]] = rebirthSkills[key]; }
+        _applySkills(rsk);
+    }
+    // Aktueller Job
+    if(currentJob) { _applyPassiv(currentJob); _applySkills(jobSkills); }
+    // Trophäe Überqualifiziert: alle Passivs
+    if(hasTrophy('ueberqualifiziert')) Object.keys(JOBS).forEach(jid => _applyPassiv(jid));
+    // Trophäe Meister Hand: Unsichtbarkeit
+    if(hasTrophy('meister_hand')) p._phantomGriff = true;
 }
 
 // ── JOB OVERLAY UI ───────────────────────────────────────────
@@ -1647,35 +1770,29 @@ function renderJobOverlay() {
     </div>`;
 
     if(!currentJob) {
-        // Job-Auswahl
         if(baseLevel < 10) {
             html += `<div style="text-align:center;color:#666;padding:30px;border:2px dashed #333;border-radius:4px;">
                 🔒 Job-Auswahl bei <strong style="color:#f1c40f;">Base Level 10</strong><br>
                 <span style="font-size:12px;">Noch ${10-baseLevel} Level bis zur Auswahl</span></div>`;
         } else {
-            html += `<div style="color:#f1c40f;font-size:14px;margin-bottom:12px;letter-spacing:2px;">⚔️ WÄHLE DEINEN JOB (Ebene 1):</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">`;
-            Object.entries(JOBS).filter(([,j])=>j.tier===1).forEach(([id,j])=>{
-                html += `<div onclick="chooseJob('${id}')" style="background:#0a0a0a;border:2px solid ${j.color};padding:14px;border-radius:4px;cursor:pointer;transition:0.15s;" onmouseover="this.style.background='${j.color}22'" onmouseout="this.style.background='#0a0a0a'">
-                    <div style="color:${j.color};font-size:15px;font-weight:bold;">${j.name}</div>
-                    <div style="color:#aaa;font-size:11px;margin:6px 0;">${j.desc}</div>
-                    <div style="color:#2ecc71;font-size:11px;">✦ ${j.passiv}</div>
-                </div>`;
-            });
-            html += '</div>';
+            let avT1 = Object.entries(JOBS).filter(([id,j])=>j.tier===1 && !completedJobs.includes(id));
+            let avT2 = Object.entries(JOBS).filter(([id,j])=>j.tier===2 && !completedJobs.includes(id) && completedJobs.includes(j.prevJob));
+            if(avT1.length > 0) {
+                html += `<div style="color:#f1c40f;font-size:14px;margin-bottom:12px;letter-spacing:2px;">⚔️ WÄHLE DEINEN JOB:</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">`;
+                avT1.forEach(([id,j])=>{ html += `<div onclick="chooseJob('${id}')" style="background:#0a0a0a;border:2px solid ${j.color};padding:14px;border-radius:4px;cursor:pointer;" onmouseover="this.style.background='${j.color}22'" onmouseout="this.style.background='#0a0a0a'"><div style="color:${j.color};font-size:15px;font-weight:bold;">${j.name}</div><div style="color:#aaa;font-size:11px;margin:6px 0;">${j.desc}</div><div style="color:#2ecc71;font-size:11px;">✦ ${j.passiv}</div></div>`; });
+                html += '</div>';
+            }
+            if(avT2.length > 0) {
+                html += `<div style="color:#e67e22;font-size:14px;margin:16px 0 12px;letter-spacing:2px;">🌟 TIER-2 (via Rebirth):</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">`;
+                avT2.forEach(([id,j])=>{ html += `<div onclick="chooseJob('${id}')" style="background:#0a0a0a;border:2px solid ${j.color};padding:14px;border-radius:4px;cursor:pointer;" onmouseover="this.style.background='${j.color}22'" onmouseout="this.style.background='#0a0a0a'"><div style="color:${j.color};font-size:15px;font-weight:bold;">${j.name} <span style="font-size:10px;color:#e67e22;">T2</span></div><div style="color:#aaa;font-size:11px;margin:6px 0;">${j.desc}</div><div style="color:#2ecc71;font-size:11px;">✦ ${j.passiv}</div></div>`; });
+                html += '</div>';
+            }
+            if(avT1.length===0 && avT2.length===0) html += `<div style="text-align:center;color:#2ecc71;padding:20px;border:2px solid #2ecc71;border-radius:4px;">🎓 ALLE JOBS ABGESCHLOSSEN!</div>`;
         }
     } else {
-        // Aktueller Job + Skills
         let job = JOBS[currentJob];
-        html += `<div style="background:#0a0a0a;border:2px solid ${job.color};padding:14px;border-radius:4px;margin-bottom:16px;">
-            <div style="color:${job.color};font-size:16px;font-weight:bold;">${job.name}</div>
-            <div style="color:#aaa;font-size:12px;margin:4px 0;">${job.desc}</div>
-            <div style="color:#2ecc71;font-size:12px;">✦ Passiv: ${job.passiv}</div>
-        </div>`;
-
-        // Skills
-        html += `<div style="color:#fff;font-size:13px;letter-spacing:2px;margin-bottom:10px;">⚡ JOB-SKILLS <span style="color:#f1c40f;">(${jobSkillPts} Pkt verfügbar)</span></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">`;
+        html += `<div style="background:#0a0a0a;border:2px solid ${job.color};padding:14px;border-radius:4px;margin-bottom:16px;"><div style="color:${job.color};font-size:16px;font-weight:bold;">${job.name}</div><div style="color:#aaa;font-size:12px;margin:4px 0;">${job.desc}</div><div style="color:#2ecc71;font-size:12px;">✦ Passiv: ${job.passiv}</div></div>`;
+        html += `<div style="color:#fff;font-size:13px;letter-spacing:2px;margin-bottom:10px;">⚡ JOB-SKILLS <span style="color:#f1c40f;">(${jobSkillPts} Pkt verfügbar)</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">`;
         Object.entries(job.skills).forEach(([id, sk]) => {
             let curLv = jobSkills[id] || 0;
             let maxed = curLv >= sk.maxLv;
@@ -1683,48 +1800,20 @@ function renderJobOverlay() {
             let canUp = !maxed && jobSkillPts >= cost && (!sk.minJobLv || jobLevel >= sk.minJobLv);
             let locked = sk.minJobLv && jobLevel < sk.minJobLv;
             let borderCol = maxed ? '#2ecc71' : (canUp ? job.color : '#333');
-            let dots = '';
-            for(let i=0;i<sk.maxLv;i++) dots += `<span style="color:${i<curLv?job.color:'#333'};margin-right:3px;">●</span>`;
-            html += `<div onclick="${canUp?`upgradeJobSkill('${id}')`:''}" style="background:#111;border:2px solid ${borderCol};padding:12px;border-radius:4px;cursor:${canUp?'pointer':'default'};opacity:${locked?0.4:1};">
-                <div style="color:${maxed?'#2ecc71':job.color};font-size:13px;font-weight:bold;">${sk.name} ${maxed?'✅':''}</div>
-                <div style="color:#888;font-size:11px;margin:4px 0;">${sk.desc.split('/')[0]}${sk.maxLv>1?'/…':''}</div>
-                <div style="margin-top:6px;">${dots}</div>
-                <div style="color:${canUp?'#f1c40f':'#555'};font-size:11px;margin-top:4px;">${locked?`🔒 Job Lv ${sk.minJobLv}`:(maxed?'MAX':'⚡ '+cost+' Pkt')}</div>
-            </div>`;
+            let dots = ''; for(let i=0;i<sk.maxLv;i++) dots += `<span style="color:${i<curLv?job.color:'#333'};margin-right:3px;">●</span>`;
+            html += `<div onclick="${canUp?`upgradeJobSkill('${id}')`:''}" style="background:#111;border:2px solid ${borderCol};padding:12px;border-radius:4px;cursor:${canUp?'pointer':'default'};opacity:${locked?0.4:1};"><div style="color:${maxed?'#2ecc71':job.color};font-size:13px;font-weight:bold;">${sk.name} ${maxed?'✅':''}</div><div style="color:#888;font-size:11px;margin:4px 0;">${sk.desc.split('/')[0]}${sk.maxLv>1?'/…':''}</div><div style="margin-top:6px;">${dots}</div><div style="color:${canUp?'#f1c40f':'#555'};font-size:11px;margin-top:4px;">${locked?'🔒 Job Lv '+sk.minJobLv:(maxed?'MAX':'⚡ '+cost+' Pkt')}</div></div>`;
         });
         html += '</div>';
-
-        // Job 2 verfügbar?
-        let job2s = Object.entries(JOBS).filter(([,j])=>j.tier===2 && j.prevJob===currentJob);
-        if(job2s.length && jobLevel >= 25) {
-            html += `<div style="margin-top:16px;color:#f1c40f;font-size:13px;letter-spacing:2px;margin-bottom:10px;">🌟 JOB 2 VERFÜGBAR:</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">`;
-            job2s.forEach(([id,j])=>{
-                html += `<div onclick="chooseJob('${id}')" style="background:#0a0a0a;border:2px solid ${j.color};padding:12px;border-radius:4px;cursor:pointer;" onmouseover="this.style.background='${j.color}22'" onmouseout="this.style.background='#0a0a0a'">
-                    <div style="color:${j.color};font-size:14px;font-weight:bold;">${j.name}</div>
-                    <div style="color:#aaa;font-size:11px;margin:4px 0;">${j.desc}</div>
-                    <div style="color:#2ecc71;font-size:11px;">✦ ${j.passiv}</div>
-                </div>`;
-            });
-            html += '</div>';
-        } else if(job2s.length) {
-            html += `<div style="margin-top:14px;background:rgba(241,196,15,0.05);border:1px dashed #f1c40f44;padding:10px;border-radius:4px;color:#666;font-size:12px;">
-                🔒 Job 2 bei <strong style="color:#f1c40f;">Job Level 25</strong> verfügbar — noch ${25-jobLevel} Level</div>`;
+        // REBIRTH
+        if(jobLevel >= 40) {
+            html += `<div style="margin-top:20px;background:linear-gradient(135deg,rgba(241,196,15,0.1),rgba(231,76,60,0.1));border:3px solid #f1c40f;padding:20px;border-radius:6px;text-align:center;"><div style="font-size:36px;">🔄</div><div style="color:#f1c40f;font-size:18px;font-weight:bold;letter-spacing:3px;">REBIRTH VERFÜGBAR</div><div style="color:#aaa;font-size:12px;margin:8px 0;">Alle Skills werden <strong style="color:#2ecc71;">PERMANENT</strong> behalten!</div><div style="color:#ffd700;font-size:12px;margin-bottom:12px;">Bonus: +${500 + (completedJobs.length+1)*250} KB</div><button onclick="rebirthJob()" style="background:#f1c40f;color:#000;border:none;padding:14px 40px;font-size:16px;font-weight:bold;font-family:'Courier New',monospace;text-transform:uppercase;cursor:pointer;letter-spacing:3px;border-radius:3px;">🔄 REBIRTH STARTEN</button></div>`;
         }
-
-        // JOB WECHSELN — Andere Tier 1 Jobs anzeigen
-        let switchJobs = Object.entries(JOBS).filter(([id,j])=> j.tier === 1 && id !== currentJob && baseLevel >= j.baseLvReq);
-        if(switchJobs.length > 0) {
-            html += `<div style="margin-top:20px;border-top:1px solid #333;padding-top:16px;">
-                <div style="color:#e67e22;font-size:13px;letter-spacing:2px;margin-bottom:8px;">🔄 JOB WECHSELN <span style="color:#666;font-size:10px;">(Job-Level & Skills werden zurückgesetzt)</span></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">`;
-            switchJobs.forEach(([id,j])=>{
-                html += `<div onclick="chooseJob('${id}')" style="background:#0a0a0a;border:2px solid ${j.color}55;padding:10px;border-radius:4px;cursor:pointer;opacity:0.75;" onmouseover="this.style.opacity='1';this.style.borderColor='${j.color}'" onmouseout="this.style.opacity='0.75';this.style.borderColor='${j.color}55'">
-                    <div style="color:${j.color};font-size:13px;font-weight:bold;">${j.name}</div>
-                    <div style="color:#888;font-size:10px;margin-top:3px;">${j.desc}</div>
-                </div>`;
-            });
-            html += '</div></div>';
-        }
+    }
+    // Abgeschlossene Jobs
+    if(completedJobs.length > 0) {
+        html += `<div style="margin-top:20px;border-top:2px solid #222;padding-top:16px;"><div style="color:#2ecc71;font-size:13px;letter-spacing:2px;margin-bottom:10px;">🎓 ABGESCHLOSSENE JOBS (${completedJobs.length}/${Object.keys(JOBS).length})</div><div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+        completedJobs.forEach(jid => { let j=JOBS[jid]; if(j) html += `<span style="background:${j.color}22;border:1px solid ${j.color};color:${j.color};padding:4px 10px;border-radius:12px;font-size:11px;font-weight:bold;">${j.name} ✅</span>`; });
+        html += '</div></div>';
     }
 
     cont.innerHTML = html;
@@ -2197,6 +2286,25 @@ function hideSkillTooltip() {
 }
 
 function tryUnlockSkill(node) {
+    // Bereits freigeschaltet? → REFUND (Rechtsklick-Verhalten über normalen Klick)
+    if(hasSkill(node.id) && node.id !== 'start') {
+        let refund = Math.floor(node.cost * 0.5);
+        let dependents = SKILL_NODES.filter(n => n.requires.includes(node.id) && hasSkill(n.id));
+        if(dependents.length > 0) {
+            showToast('NICHT MÖGLICH', '#e74c3c', 'Abhängige Skills zuerst entfernen: ' + dependents.map(d=>d.name).join(', '));
+            return;
+        }
+        if(!confirm('Skill "' + node.name + '" zurücksetzen?\n\nRefund: +' + refund + ' KB (50% von ' + node.cost + ')')) return;
+        unlockedSkills = unlockedSkills.filter(id => id !== node.id);
+        kaffeebons += refund;
+        localStorage.setItem('ts_skills', JSON.stringify(unlockedSkills));
+        saveProgress();
+        playSound('hit');
+        showToast('SKILL ZURÜCKGESETZT', '#e67e22', node.name + ' → +' + refund + ' KB');
+        renderSkillTree();
+        updateSkillTreeUI();
+        return;
+    }
     if(!canUnlockSkill(node)) return;
     kaffeebons -= node.cost;
     unlockedSkills.push(node.id);
@@ -2480,7 +2588,7 @@ function saveProgress() {
             prestige: prestigeLevel, trophies: unlockedTrophies,
             weapons: unlockedWeapons, favorite: favoriteWeapon||null, skills: unlockedSkills,
             baseLevel, jobLevel, baseExp, jobExp, currentJob: currentJob||null,
-            jobSkillPts, jobSkills,
+            jobSkillPts, jobSkills, completedJobs, rebirthSkills,
             daily: _daily, bestScore: _best,
             lastSeen: new Date().toISOString()
         }, {merge:true}).catch(function(){});
@@ -2507,6 +2615,10 @@ async function loadCloudProfile() {
             localStorage.setItem('ts_trophies', JSON.stringify(unlockedTrophies));
             localStorage.setItem('ts_weapons',  JSON.stringify(unlockedWeapons));
             if(favoriteWeapon) localStorage.setItem('ts_favorite', favoriteWeapon);
+            completedJobs = d.completedJobs || [];
+            rebirthSkills = d.rebirthSkills || {};
+            localStorage.setItem('ts_completed_jobs', JSON.stringify(completedJobs));
+            localStorage.setItem('ts_rebirth_skills', JSON.stringify(rebirthSkills));
             var el2 = document.getElementById('startKBAmount');
             if(el2) el2.innerText = kaffeebons;
             showToast('PROFIL GELADEN','#00e5ff','Willkommen zurück, '+name+'!');
@@ -2583,30 +2695,24 @@ function enterBossRoom() {
         ],
         startTime: Date.now()
     };
-    // WAFFEN EINFRIEREN: Alle aktiven Waffen bleiben für den gesamten Boss-Kampf
+    // WAFFEN EINFRIEREN: Alle aktiven Waffen/Buffs bleiben für den gesamten Boss-Kampf
     if(player) {
         for(let w in player.activeWeapons) {
-            if(player.activeWeapons[w] !== Infinity && player.activeWeapons[w] > 0) {
-                player.activeWeapons[w] = Infinity; // Eingefroren bis Boss-Kampf vorbei
-            }
+            if(player.activeWeapons[w] !== Infinity && player.activeWeapons[w] > 0) player.activeWeapons[w] = Infinity;
         }
         if(player.mouseTimer > 0) player.mouseTimer = Infinity;
         if(player.shieldTimer > 0) player.shieldTimer = Infinity;
         if(player.vodkaTimer > 0) player.vodkaTimer = Infinity;
     }
-    // Toast: Zeige was der Spieler mitbringt
-    let wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫'};
-    let carried = [];
+    let _wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫'};
+    let _carried = [];
     if(player) {
         let wk = Object.keys(player.activeWeapons||{});
         for(let w of (unlockedWeapons||[])) { if(!wk.includes(w)) wk.push(w); }
-        if(wk.length > 0) carried.push(wk.map(w => wepIcons[w]||w.toUpperCase()).join(' '));
-        if(player.shieldTimer > 0) carried.push('🛡️');
-        if(player.vodkaTimer > 0)  carried.push('🍺');
-        if(player.mouseTimer > 0)  carried.push('🖱️ ORBIT');
+        if(wk.length > 0) _carried.push(wk.map(w => _wepIcons[w]||w.toUpperCase()).join(' '));
     }
-    let sub = carried.length > 0 ? ('ARSENAL: ' + carried.join(' ')) : 'Standard-Bewaffnung';
-    setTimeout(() => showToast('⚠ BAYERS BÜRO BETRETEN', '#c0392b', sub), 900);
+    let _sub = _carried.length > 0 ? ('ARSENAL: ' + _carried.join(' ')) : 'Standard-Bewaffnung';
+    setTimeout(() => showToast('⚠ BAYERS BÜRO BETRETEN', '#c0392b', _sub), 900);
 }
 
 function updateBossRoom() {
@@ -2707,7 +2813,6 @@ function updateBossRoom() {
             let fa = aimAngle + (Math.random()-0.5)*0.3;
             br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(fa)*11, dy:Math.sin(fa)*11, dmg:baseDmg*0.4, life:45, type:'flame', color:'#ff6600', size:6 });
         }
-        // UZI + AK47 — zusätzliche Schnellfeuer-Patronen
         if(wepKeys.includes('uzi') && br.frame % 7 === 0) {
             let a = aimAngle + (Math.random()-0.5)*0.1;
             br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(a)*17, dy:Math.sin(a)*17, dmg:baseDmg*0.7, life:70, type:'standard', color:'#aaffaa', size:3 });
@@ -3527,6 +3632,10 @@ let currentShift=0, shiftTimer=0;
 let currentBossStage=0, activeBoss=null;
 let gamePhase = 'normal'; // 'normal' | 'bossroom' | 'collapse'
 let bueroDoor = null;     // { x, y, w, h, triggered, active }
+let secretWall = null;    // Geheime Wand in Logistics
+let secretBossActive = false; // Meister Hand aktiv
+let phantomTimer = 0;     // Unsichtbarkeits-Timer (Phantom Grip)
+let phantomCooldown = 0;  // Cooldown
 let bossRoomState = null; // Boss-Room State
 let fadeAlpha = 0;        // für Fade-Transition
 let fadeDir = 0;          // 1=fade in, -1=fade out
@@ -3682,7 +3791,7 @@ window.addEventListener('resize',resize); resize();
 function showEmail(){ document.getElementById('startScreen').style.display='none'; document.getElementById('emailOverlay').style.display='block'; }
 function hideEmail(){ document.getElementById('emailOverlay').style.display='none'; document.getElementById('startScreen').style.display='block'; }
 function checkWallCollision(x,y,r){
-    for(let o of obstacles) if(x+r>o.x&&x-r<o.x+o.w&&y+r>o.y&&y-r<o.y+o.h) return true;
+    for(let o of obstacles) { if(o.type==='secretwall') continue; if(x+r>o.x&&x-r<o.x+o.w&&y+r>o.y&&y-r<o.y+o.h) return true; }
     for(let s of stations)  if(x+r>s.x&&x-r<s.x+s.w&&y+r>s.y&&y-r<s.y+s.h) return true;
     for(let sv of servers)  if(x+r>sv.x&&x-r<sv.x+sv.w&&y+r>sv.y&&y-r<sv.y+sv.h) return true;
     return false;
@@ -4010,8 +4119,8 @@ class Player{
             // Büro-Tür: Peter Bayer Boss-Room betreten
             if(bueroDoor && bueroDoor.active && gamePhase === 'normal') {
                 let doorCenterX = bueroDoor.x + bueroDoor.w / 2;
-                let doorBottomY = bueroDoor.y + bueroDoor.h;
-                if(Math.hypot(this.x - doorCenterX, this.y - doorBottomY) < 130) {
+                let doorCenterY = bueroDoor.y + bueroDoor.h / 2;
+                if(Math.hypot(this.x - doorCenterX, this.y - doorCenterY) < 250) {
                     enterBossRoom();
                     input.keys['KeyE'] = false;
                 }
@@ -4031,9 +4140,52 @@ class Player{
             if(kloskaEvent&&Math.hypot(this.x-kloskaEvent.x,this.y-kloskaEvent.y)<120){ kloskaEvent=null; score+=1500; removePersistentToast(); floatingTexts.push(new FloatingText(this.x,this.y,"KLOSKA VERJAGT!","#0f0")); showToast("KLOSKA VERJAGT!","#00ff00","Server gerettet! (+1500 Pkt)");
                 this._kloskaVerjagt = (this._kloskaVerjagt||0) + 1;
                 if(this._kloskaVerjagt >= 3) unlockTrophy('nervensaege'); }
+            // GEHEIME WAND — Secret Boss Trigger (Distanz zur nächsten Kante, nicht Mitte)
+            if(secretWall && !secretWall.found && !secretBossActive) {
+                let sw = secretWall;
+                // Nächster Punkt auf der Wand zum Spieler
+                let cx = Math.max(sw.x, Math.min(sw.x + sw.w, this.x));
+                let cy = Math.max(sw.y, Math.min(sw.y + sw.h, this.y));
+                let dist = Math.hypot(this.x - cx, this.y - cy);
+                if(dist < 200) {
+                    secretWall.found = true;
+                    obstacles = obstacles.filter(o => o.type !== 'secretwall');
+                    secretBossActive = true;
+                    let mh = new Enemy({ name:"MEISTER HAND", subtitle:"???", hp:35000, color:'#9b59b6', radius:80, speed:5.0 });
+                    mh.x = sw.x + sw.w/2; mh.y = sw.y + sw.h/2;
+                    mh._isMeisterHand = true;
+                    enemies.push(mh); activeBoss = mh;
+                    screenShake = 60; flashScreen = 80;
+                    playSound('boss'); playSound('alarm');
+                    showToast('✋ GEHEIMER BOSS ENTDECKT!', '#9b59b6', 'MEISTER HAND — Stärker als Bayer!');
+                    { let _bhc=document.getElementById('bossHpContainer'); if(_bhc) _bhc.style.display='block'; }
+                    input.keys['KeyE'] = false;
+                }
+            }
         }
         
         if(input.keys['KeyG']&&this.vacationTimer<=0) this.activateVacation();
+        // PHANTOM GRIP — Trophäe Meister Hand: V drücken → alle Gegner auf der Map töten
+        if(input.keys['KeyV'] && this._phantomGriff && phantomCooldown <= 0) {
+            phantomCooldown = 3600; // 60s CD bei 60fps
+            screenShake = 60; flashScreen = 80;
+            playSound('hammer'); playSound('alarm');
+            let killCount = 0;
+            for(let i=enemies.length-1; i>=0; i--) {
+                if(enemies[i].type !== 99) { // Bosse überleben
+                    score += enemies[i].score * comboMult;
+                    splatters.push(new Splatter(enemies[i].x, enemies[i].y, enemies[i].color));
+                    spawnParticles(enemies[i].x, enemies[i].y, '#9b59b6', 10);
+                    enemies.splice(i, 1);
+                    killCount++;
+                    updateCombo(true);
+                } else {
+                    enemies[i].hp -= 3000; // Bosse nehmen massiven Schaden
+                }
+            }
+            showToast('✋ PHANTOM GRIP!', '#9b59b6', killCount + ' Gegner vernichtet! (60s CD)');
+            input.keys['KeyV'] = false;
+        }
         if(input.keys['KeyQ']){
             for(let s of stations){
                 if(s.type==='coffee_machine'&&Math.hypot(this.x-s.x-s.w/2,this.y-s.y-s.h/2)<100){
@@ -4061,6 +4213,7 @@ class Player{
         if(this.bossSpawnTimer>0)   this.bossSpawnTimer--;
         if(this.crateFlashTimer>0)  this.crateFlashTimer--;
         if(this.mouseTimer>0 && this.mouseTimer !== Infinity) this.mouseTimer--;
+        if(phantomCooldown > 0) phantomCooldown--;
 
         for(let w in this.activeWeapons){
             if(this.activeWeapons[w] === Infinity) continue; // Favorit läuft nie ab
@@ -4128,7 +4281,6 @@ class Player{
             if(this.mouseTimer !== Infinity) { this.mouseTimer = 1800; showToast("ORBIT-MAUS!", "#0ff", "AKTIVIERT (30 SEK)"); }
             return; 
         }
-        // Favorit-Waffe nicht überschreiben (Infinity → bleibt Infinity)
         if(this.activeWeapons[type] === Infinity) {
             showToast("FAVORIT AKTIV!", "#f1c40f", type.toUpperCase() + " — bereits permanent");
             return;
@@ -4153,8 +4305,14 @@ class Player{
         else if(w==='railgun'){bullets.push(new Bullet(this.x,this.y+offset,angle,'railgun',dmg*5)); playSound('boss'); recoil = 8; screenShake = 8;}
         else if(w==='flamer'){for(let i=0; i<3; i++) bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.3,'flame',dmg*0.3)); if(frame%5===0) playSound('shoot');}
         else {bullets.push(new Bullet(this.x,this.y+offset,angle,'standard',dmg)); playSound('shoot');}
+        let oldX = this.x, oldY = this.y;
         this.x -= Math.cos(angle) * recoil;
         this.y -= Math.sin(angle) * recoil;
+        if(recoil > 0) {
+            this.x = Math.max(this.radius, Math.min(WORLD_WIDTH - this.radius, this.x));
+            this.y = Math.max(this.radius, Math.min(WORLD_HEIGHT - this.radius, this.y));
+            if(checkWallCollision(this.x, this.y, this.radius)) { this.x = oldX; this.y = oldY; }
+        }
     }
 
     draw(){
@@ -4537,23 +4695,29 @@ class Particle{
 // ============================================================
 function generateWorld(){
     obstacles=[];stations=[];servers=[];serverFarms=[];
-    function getSafePos(w,h){let safe=false,sx,sy;while(!safe){sx=Math.random()*(WORLD_WIDTH-w-100)+50;sy=Math.random()*(WORLD_HEIGHT-h-100)+50;if(Math.hypot(sx-WORLD_WIDTH/2,sy-300)>400)safe=true;}return{x:sx,y:sy};}
-    let p1=getSafePos(200,120);stations.push({type:'chicken_truck', x:p1.x,y:p1.y,w:200,h:120,label:"WITWE BOLTE",color:'#d35400',img:chickenImg});
-    let p2=getSafePos(100,100);stations.push({type:'coffee_machine',x:p2.x,y:p2.y,w:100,h:100,label:"KAFFEE",     color:'#6f4e37',img:coffeeImg});
-    let p3=getSafePos(180,180);stations.push({type:'hardware_store',x:p3.x,y:p3.y,w:180,h:180,label:"HARDWARELAGER",color:'#9b59b6',img:hardwareImg});
-    for(let i=0;i<12;i++){let sp=getSafePos(40,80);servers.push({x:sp.x,y:sp.y,w:40,h:80,color:'#c0392b',isFarm:false});}
-    for(let i=0;i<60;i++){
-        let dx,dy,safe=false;
-        while(!safe){dx=Math.random()*WORLD_WIDTH;dy=Math.random()*1200;
-            if(Math.hypot(dx-WORLD_WIDTH/2,dy-300)>250){safe=true;
-                for(let s of stations)if(dx<s.x+s.w+50&&dx+90>s.x-50&&dy<s.y+s.h+50&&dy+50>s.y-50)safe=false;
-                for(let sv of servers)if(dx<sv.x+sv.w+20&&dx+90>sv.x-20&&dy<sv.y+sv.h+20&&dy+50>sv.y-20)safe=false;
-            }
-        }
-        obstacles.push({x:dx,y:dy,w:90,h:50,color:'#546e7a',type:'desk'});
-    }
-    for(let i=0;i<40;i++) obstacles.push({x:Math.random()*(WORLD_WIDTH-200),y:1300+Math.random()*1200,w:200,h:40,color:'#3e2723',type:'shelf'});
-    for(let i=0;i<24;i++){let tx=Math.random()*(WORLD_WIDTH-200),ty=2700+Math.random()*1200;obstacles.push({x:tx,y:ty,w:160,h:70,color:'#bdc3c7',type:'truck'});obstacles.push({x:tx+160,y:ty+5,w:50,h:60,color:'#c0392b',type:'cab'});}
+    function getZonePos(w,h,yMin,yMax){let s=false,sx,sy,a=0;while(!s&&a<200){sx=100+Math.random()*(WORLD_WIDTH-w-200);sy=yMin+80+Math.random()*(yMax-yMin-h-160);if(Math.hypot(sx-WORLD_WIDTH/2,sy-300)>400)s=true;if(Math.abs(sy-1185)<100||Math.abs(sy+h-1185)<100)s=false;if(Math.abs(sy-2585)<100||Math.abs(sy+h-2585)<100)s=false;a++;}return{x:sx,y:sy};}
+    // Stationen — zone-spezifisch
+    let p3=getZonePos(180,180,0,1100); stations.push({type:'hardware_store',x:p3.x,y:p3.y,w:180,h:180,label:"HARDWARELAGER",color:'#9b59b6',img:hardwareImg});
+    let p2=getZonePos(100,100,1300,2500); stations.push({type:'coffee_machine',x:p2.x,y:p2.y,w:100,h:100,label:"KAFFEE",color:'#6f4e37',img:coffeeImg});
+    let p1=getZonePos(200,120,2700,3800); stations.push({type:'chicken_truck',x:p1.x,y:p1.y,w:200,h:120,label:"WITWE BOLTE",color:'#d35400',img:chickenImg});
+    // Server — 4 pro Zone
+    [[100,1050],[1350,2450],[2750,3800]].forEach(([a,b])=>{ for(let i=0;i<4;i++){let sp=getZonePos(40,80,a,b);servers.push({x:sp.x,y:sp.y,w:40,h:80,color:'#c0392b',isFarm:false});} });
+    // ZONENWÄNDE mit 3 Durchgängen
+    let dW=220, wallH=30;
+    [[1185,'#f1c40f',[0.2,0.55,0.85]], [2585,'#f39c12',[0.15,0.5,0.8]]].forEach(([wy,wc,doors])=>{
+        let lx=0;
+        doors.forEach(d=>{ let dx=WORLD_WIDTH*d; if(dx-dW/2-lx>10) obstacles.push({x:lx,y:wy,w:dx-dW/2-lx,h:wallH,color:wc,type:'zonewall'}); lx=dx+dW/2; });
+        if(WORLD_WIDTH-lx>10) obstacles.push({x:lx,y:wy,w:WORLD_WIDTH-lx,h:wallH,color:wc,type:'zonewall'});
+    });
+    // OFFICE — Schreibtische
+    for(let i=0;i<50;i++){let dx,dy,s=false,a=0;while(!s&&a<50){dx=Math.random()*WORLD_WIDTH;dy=50+Math.random()*1050;if(Math.hypot(dx-WORLD_WIDTH/2,dy-300)>250){s=true;for(let st of stations)if(dx<st.x+st.w+50&&dx+90>st.x-50&&dy<st.y+st.h+50&&dy+50>st.y-50)s=false;for(let sv of servers)if(dx<sv.x+sv.w+20&&dx+90>sv.x-20&&dy<sv.y+sv.h+20&&dy+50>sv.y-20)s=false;}a++;}if(s)obstacles.push({x:dx,y:dy,w:90,h:50,color:'#546e7a',type:'desk'});}
+    // WAREHOUSE — Regale
+    for(let i=0;i<35;i++) obstacles.push({x:Math.random()*(WORLD_WIDTH-200),y:1250+Math.random()*1250,w:200,h:40,color:'#3e2723',type:'shelf'});
+    // LOGISTICS — LKWs
+    for(let i=0;i<20;i++){let tx=Math.random()*(WORLD_WIDTH-200),ty=2650+Math.random()*1150;obstacles.push({x:tx,y:ty,w:160,h:70,color:'#bdc3c7',type:'truck'});obstacles.push({x:tx+160,y:ty+5,w:50,h:60,color:'#c0392b',type:'cab'});}
+    // GEHEIME WAND — Fake-Wand in Logistics (Easter Egg für Secret Boss)
+    secretWall = { x: WORLD_WIDTH - 250, y: 3600, w: 30, h: 120, found: false };
+    obstacles.push({x:secretWall.x, y:secretWall.y, w:secretWall.w, h:secretWall.h, color:'#050505', type:'secretwall'});
 }
 
 // ============================================================
@@ -4693,6 +4857,16 @@ function drawWorld(){
         } else if(o.type==='shelf'){
             ctx.fillStyle='#4e342e';ctx.fillRect(o.x,o.y,o.w,o.h);
             for(let k=0;k<o.w;k+=35){ctx.fillStyle='#5d4037';ctx.fillRect(o.x+k+2,o.y+2,30,o.h-4);}
+        } else if(o.type==='zonewall'){
+            ctx.fillStyle=o.color; ctx.fillRect(o.x,o.y,o.w,o.h);
+            for(let s=0;s<o.w;s+=40){ctx.fillStyle=s%80===0?'#000':o.color;ctx.fillRect(o.x+s,o.y,20,o.h);}
+            ctx.shadowColor=o.color;ctx.shadowBlur=8;ctx.strokeStyle=o.color;ctx.lineWidth=2;ctx.strokeRect(o.x,o.y,o.w,o.h);ctx.shadowBlur=0;
+        } else if(o.type==='secretwall'){
+            // Geheime Wand — fast unsichtbar, leichtes Flimmern
+            ctx.fillStyle=`rgba(10,10,10,${0.95+Math.sin(frame*0.02)*0.05})`;ctx.fillRect(o.x,o.y,o.w,o.h);
+            if(player && Math.hypot(player.x-o.x-o.w/2,player.y-o.y-o.h/2)<120){
+                ctx.strokeStyle=`rgba(255,0,0,${0.15+Math.sin(frame*0.1)*0.1})`;ctx.lineWidth=1;ctx.strokeRect(o.x,o.y,o.w,o.h);
+            }
         } else {
             ctx.fillStyle=o.color;ctx.fillRect(o.x,o.y,o.w,o.h);
             ctx.fillStyle='#fff';ctx.fillRect(o.x+o.w-5,o.y+5,5,10);ctx.fillRect(o.x+o.w-5,o.y+o.h-15,5,10);
@@ -4842,6 +5016,7 @@ if ((activeBoss && activeBoss.hp > 0) || (gamePhase === 'bossroom' && bossRoomSt
         addStatus("🖱️ ORBIT-MAUS", player.mouseTimer, "#FFFFFF");
         addStatus("💿 SAP-SLOW", player.sapDebuffTimer, "#1f618d");
         addStatus("💾 BUG (INVERT)", player.bugTimer, "#FFFFFF");
+        if(phantomCooldown > 0 && player._phantomGriff) addStatus("✋ PHANTOM CD", phantomCooldown, "#9b59b6");
         if(isWegflexenMode) addStatus("⚠️ FLEX-TIMER", wegflexenTimer, "#f00");
         let wk = Object.keys(player.activeWeapons);
         if(wk.length > 0) { let maxT = Math.max(...Object.values(player.activeWeapons)); addStatus("🔫 WAFFEN-ARSENAL", maxT, "#ffeb3b"); }
@@ -5126,6 +5301,15 @@ function loop(){
                         flashScreen = 100; playSound('alarm');
                         showToast("SYSTEM-KOLLAPS!", "#f00", "ÜBERLEBE DAS CHAOS!");
                         break;
+                    } else if(e.label === "MEISTER HAND") {
+                        unlockTrophy('meister_hand');
+                        secretBossActive = false;
+                        screenShake = 80; flashScreen = 120;
+                        score += 25000;
+                        kaffeebons += 2000;
+                        playSound('evolve');
+                        showToast("✋ MEISTER HAND BESIEGT!", "#9b59b6", "+25.000 Score · +2.000 KB · Phantom Grip freigeschaltet!");
+                        for(let i=0;i<3;i++) items.push(new Item('briefcase', e.x + (Math.random()-0.5)*100, e.y + (Math.random()-0.5)*100));
                     } else {
                         floatingTexts.push(new FloatingText(e.x,e.y,"PROJEKT ABGESCHLOSSEN!","#ffd700"));
                         screenShake = 50;
@@ -5350,6 +5534,7 @@ function startGame(diff=1){
     systemCollapse = false; collapseTimer = 0;
     enemies=[];bullets=[];particles=[];items=[];splatters=[];floatingTexts=[];turrets=[];shells=[];serverFarms=[];vehicles=[];
     gamePhase='normal'; bueroDoor=null; bossRoomState=null; fadeAlpha=0; fadeDir=0;
+    secretWall=null; secretBossActive=false; phantomTimer=0; phantomCooldown=0;
     
     // Reset Combo
     combo = 0; comboTimer = 0; comboMult = 1; bestComboThisRun = 1; comboHitCount = 0;
