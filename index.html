@@ -4140,25 +4140,38 @@ class Player{
             if(kloskaEvent&&Math.hypot(this.x-kloskaEvent.x,this.y-kloskaEvent.y)<120){ kloskaEvent=null; score+=1500; removePersistentToast(); floatingTexts.push(new FloatingText(this.x,this.y,"KLOSKA VERJAGT!","#0f0")); showToast("KLOSKA VERJAGT!","#00ff00","Server gerettet! (+1500 Pkt)");
                 this._kloskaVerjagt = (this._kloskaVerjagt||0) + 1;
                 if(this._kloskaVerjagt >= 3) unlockTrophy('nervensaege'); }
-            // GEHEIME WAND — Secret Boss Trigger (Distanz zur nächsten Kante, nicht Mitte)
+            // GEHEIME WAND — Secret Boss Trigger
             if(secretWall && !secretWall.found && !secretBossActive) {
                 let sw = secretWall;
-                // Nächster Punkt auf der Wand zum Spieler
                 let cx = Math.max(sw.x, Math.min(sw.x + sw.w, this.x));
                 let cy = Math.max(sw.y, Math.min(sw.y + sw.h, this.y));
                 let dist = Math.hypot(this.x - cx, this.y - cy);
+                
                 if(dist < 200) {
                     secretWall.found = true;
                     obstacles = obstacles.filter(o => o.type !== 'secretwall');
                     secretBossActive = true;
-                    let mh = new Enemy({ name:"MEISTER HAND", subtitle:"???", hp:35000, color:'#9b59b6', radius:80, speed:5.0 });
+
+                    // --- ABSURDES SCALING BERECHNEN ---
+                    // Wir addieren alle Progressionen des Spielers zusammen
+                    let pwr = unlockedSkills.length + Object.values(upgradeProgress||{}).reduce((s,v)=>s+(v||0),0) + (unlockedTrophies.length * 3) + (prestigeLevel * 10);
+                    let diffMult = lastChosenDifficulty >= 3 ? lastChosenDifficulty : 3; // Hand skaliert immer MINDESTENS auf Vollzeit-Niveau
+                    
+                    // Base 50.000 HP * Schwierigkeit * Spieler-Power-Faktor
+                    let mhHp = Math.floor(50000 * diffMult * Math.max(1, pwr * 0.15));
+                    let mhSpeed = 6.0 + (diffMult * 0.3) + (pwr * 0.03); // Grundspeed eskaliert mit
+
+                    let mh = new Enemy({ name:"MEISTER HAND", subtitle:"???", hp:mhHp, color:'#9b59b6', radius:80, speed:mhSpeed });
                     mh.x = sw.x + sw.w/2; mh.y = sw.y + sw.h/2;
                     mh._isMeisterHand = true;
                     mh.symbol = "🫳";
+                    
                     enemies.push(mh); activeBoss = mh;
-                    screenShake = 60; flashScreen = 80;
+                    screenShake = 80; flashScreen = 100;
                     playSound('boss'); playSound('alarm');
-                    showToast('🫳 GEHEIMER BOSS ENTDECKT!', '#9b59b6', 'MEISTER HAND — Stärker als Bayer!');
+                    
+                    // Zeigt die absurden HP im Toast an, um direkt Panik zu erzeugen
+                    showToast('🫳 GEHEIMER BOSS ENTDECKT!', '#9b59b6', 'MEISTER HAND — ' + mhHp.toLocaleString() + ' HP!');
                     { let _bhc=document.getElementById('bossHpContainer'); if(_bhc) _bhc.style.display='block'; }
                     input.keys['KeyE'] = false;
                 }
