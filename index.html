@@ -4865,8 +4865,8 @@ function drawWorld(){
         } else if(o.type==='secretwall'){
             // Geheime Wand — fast unsichtbar, leichtes Flimmern
             ctx.fillStyle=`rgba(10,10,10,${0.95+Math.sin(frame*0.02)*0.05})`;ctx.fillRect(o.x,o.y,o.w,o.h);
-            if(player && Math.hypot(player.x-o.x-o.w/2,player.y-o.y-o.h/2)<120){
-                ctx.strokeStyle=`rgba(255,0,0,${0.15+Math.sin(frame*0.1)*0.1})`;ctx.lineWidth=1;ctx.strokeRect(o.x,o.y,o.w,o.h);
+            if(player && Math.hypot(player.x-o.x-o.w/2,player.y-o.y-o.h/2)<400){
+                ctx.strokeStyle=`rgba(255,0,0,${0.3+Math.sin(frame*0.1)*0.2})`;ctx.lineWidth=2;ctx.strokeRect(o.x,o.y,o.w,o.h);
             }
         } else {
             ctx.fillStyle=o.color;ctx.fillRect(o.x,o.y,o.w,o.h);
