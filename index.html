@@ -2705,14 +2705,14 @@ function enterBossRoom() {
         startTime: Date.now()
     };
     // WAFFEN EINFRIEREN: Alle aktiven Waffen/Buffs bleiben für den gesamten Boss-Kampf
-    if(player) {
-        for(let w in player.activeWeapons) {
-            if(player.activeWeapons[w] !== Infinity && player.activeWeapons[w] > 0) player.activeWeapons[w] = Infinity;
-        }
-        if(player.mouseTimer > 0) player.mouseTimer = Infinity;
-        if(player.shieldTimer > 0) player.shieldTimer = Infinity;
-        if(player.vodkaTimer > 0) player.vodkaTimer = Infinity;
-    }
+    // if(player) {
+    //    for(let w in player.activeWeapons) {
+    //        if(player.activeWeapons[w] !== Infinity && player.activeWeapons[w] > 0) player.activeWeapons[w] = Infinity;
+    //    }
+    //    if(player.mouseTimer > 0) player.mouseTimer = Infinity;
+    //    if(player.shieldTimer > 0) player.shieldTimer = Infinity;
+    //    if(player.vodkaTimer > 0) player.vodkaTimer = Infinity;
+    // }
     let _wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫'};
     let _carried = [];
     if(player) {
@@ -3067,6 +3067,17 @@ function exitBossRoom(won) {
             if(isWegflexenMode) unlockTrophy('god_of_leitstand');
             showToast('PETER BAYER BESIEGT!', '#f1c40f', 'SYSTEM-KOLLAPS BEGINNT! ÜBERLEBE!');
             if(player) { score += 5000; } // Bonus-Score
+            // if(player) { 
+             //   score += 5000; 
+            //    // FIX: Götter-Modus beenden! Alle eingefrorenen Timer auf 5 Sekunden (300 Frames) Puffer setzen.
+            //    if(player.shieldTimer === Infinity) player.shieldTimer = 300;
+            //    if(player.vodkaTimer === Infinity) player.vodkaTimer = 300;
+            //    for(let w in player.activeWeapons) {
+            //        if(player.activeWeapons[w] === Infinity && w !== favoriteWeapon) {
+            //            player.activeWeapons[w] = 300;
+            //        }
+            //    }
+            // } // Bonus-Score
             // Skill-Buff nach Boss-Kill
             if(player && hasSkill('bo3b')) { player._bossKillBuff = 1800; }
         } else {
@@ -3650,6 +3661,7 @@ let fadeAlpha = 0;        // für Fade-Transition
 let fadeDir = 0;          // 1=fade in, -1=fade out
 let idocEvent=null, meetingZone=null, kloskaEvent=null;
 let blockadeEvent = null; // NEU: Tracker für die Map-Sperre
+let blockadeCooldown = 1200; // NEU: Erster Unfall nach 20 Sekunden   
 let player=null;
 let bullets=[], enemies=[], particles=[], obstacles=[], stations=[];
 let vehicles=[];
@@ -4968,32 +4980,46 @@ if(!bueroDoor && currentBossStage >= 4 && !activeBoss && gamePhase === 'normal' 
         meetingZone={x:Math.random()*(WORLD_WIDTH-400)+200,y:Math.random()*(WORLD_HEIGHT-400)+200,r:150,active:true};
     }
    // --- OVERCOOKED MECHANIK: MAP-SPERRE (GABELSTAPLER-UNFALL) ---
-    if(frame > 0 && frame % 2400 === 0 && !blockadeEvent && !systemCollapse && !activeBoss) {
-        // Die exakten Koordinaten der 6 Durchgänge
-        const doors = [
-            {x: WORLD_WIDTH * 0.2,  y: 1185, name: "Büro -> Warehouse (Links)"},
-            {x: WORLD_WIDTH * 0.55, y: 1185, name: "Büro -> Warehouse (Mitte)"},
-            {x: WORLD_WIDTH * 0.85, y: 1185, name: "Büro -> Warehouse (Rechts)"},
-            {x: WORLD_WIDTH * 0.15, y: 2585, name: "Warehouse -> Logistics (Links)"},
-            {x: WORLD_WIDTH * 0.5,  y: 2585, name: "Warehouse -> Logistics (Mitte)"},
-            {x: WORLD_WIDTH * 0.8,  y: 2585, name: "Warehouse -> Logistics (Rechts)"}
-        ];
+    // Der Cooldown tickt nur runter, wenn wir im normalen Spiel sind
+    if(!systemCollapse && !activeBoss && gamePhase === 'normal') {
+        if(!blockadeEvent) blockadeCooldown--;
         
-        let d = doors[Math.floor(Math.random() * doors.length)];
-        
-        // Blockade als normales Hindernis ins Array pushen (Hitbox: 220x50)
-        let blockObj = { x: d.x - 110, y: d.y - 10, w: 220, h: 50, type: 'blockade' };
-        obstacles.push(blockObj);
-        
-        // Spieler rausschubsen, falls er genau in der Tür steht
-        if(player.x > blockObj.x && player.x < blockObj.x + blockObj.w && player.y > blockObj.y - 20 && player.y < blockObj.y + blockObj.h + 20) {
-            player.y -= 100; 
-        }
+        if(blockadeCooldown <= 0 && !blockadeEvent) {
+            const doors = [
+                {x: WORLD_WIDTH * 0.2,  y: 1185, name: "Büro -> Warehouse (Links)"},
+                {x: WORLD_WIDTH * 0.55, y: 1185, name: "Büro -> Warehouse (Mitte)"},
+                {x: WORLD_WIDTH * 0.85, y: 1185, name: "Büro -> Warehouse (Rechts)"},
+                {x: WORLD_WIDTH * 0.15, y: 2585, name: "Warehouse -> Logistics (Links)"},
+                {x: WORLD_WIDTH * 0.5,  y: 2585, name: "Warehouse -> Logistics (Mitte)"},
+                {x: WORLD_WIDTH * 0.8,  y: 2585, name: "Warehouse -> Logistics (Rechts)"}
+            ];
+            
+            let d = doors[Math.floor(Math.random() * doors.length)];
+            let blockObj = { x: d.x - 110, y: d.y - 10, w: 220, h: 50, type: 'blockade' };
+            obstacles.push(blockObj);
+            
+            // Spieler rausschubsen
+            if(player.x > blockObj.x && player.x < blockObj.x + blockObj.w && player.y > blockObj.y - 20 && player.y < blockObj.y + blockObj.h + 20) {
+                player.y -= 100; 
+            }
 
-        blockadeEvent = { timer: 1800, objRef: blockObj }; // Hält 30 Sekunden (1800 Frames)
-        
-        playSound('hammer'); screenShake = 40;
-        showToast("⚠️ STAPLER-UNFALL!", "#e67e22", d.name + " blockiert! (30s)", true);
+            blockadeEvent = { timer: 1800, objRef: blockObj }; // 30 Sekunden aktiv
+            blockadeCooldown = 2400 + Math.random() * 1200;    // Nächster Unfall in 40 bis 60 Sekunden
+            
+            playSound('hammer'); screenShake = 40;
+            showToast("⚠️ STAPLER-UNFALL!", "#e67e22", d.name + " blockiert! (30s)", true);
+        }
+    }
+
+    // Timer runterzählen und Blockade wieder entfernen
+    if(blockadeEvent) {
+        blockadeEvent.timer--;
+        if(blockadeEvent.timer <= 0) {
+            obstacles = obstacles.filter(o => o !== blockadeEvent.objRef);
+            blockadeEvent = null;
+            showToast("✅ GANG FREI!", "#2ecc71", "Hindernis wurde geräumt.");
+            playSound('powerup');
+        }
     }
 
     // Timer runterzählen und Blockade wieder entfernen
@@ -5748,6 +5774,7 @@ function startGame(diff=1){
     gamePhase='normal'; bueroDoor=null; bossRoomState=null; fadeAlpha=0; fadeDir=0;
     secretWall=null; secretBossActive=false; phantomTimer=0; phantomCooldown=0;
     blockadeEvent=null; // NEU: Reset beim Start
+    blockadeCooldown=1200; // NEU: Reset beim Start
    
     // Reset Combo
     combo = 0; comboTimer = 0; comboMult = 1; bestComboThisRun = 1; comboHitCount = 0;
