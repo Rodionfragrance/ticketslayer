@@ -180,11 +180,11 @@ canvas { display:block; cursor:crosshair; }
 /* ============================================================
    MISC HUD
    ============================================================ */
-#highscore-overlay {
-    position:absolute; top:10px; left:10px;
-    font-size:13px; color:rgba(255,255,255,0.7);
-    pointer-events:none; z-index:50; text-shadow:1px 1px 0 #000;
-}
+// #highscore-overlay {
+//    position:absolute; top:10px; left:10px;
+//    font-size:13px; color:rgba(255,255,255,0.7);
+//    pointer-events:none; z-index:50; text-shadow:1px 1px 0 #000;
+// }
 #stationInfo {
     position:absolute; bottom:125px; left:20px;
     font-size:12px; color:#888; z-index:5;
@@ -873,7 +873,7 @@ input[type="text"] {
 <div id="farmIndicator"></div>
 
 <!-- MISC HUD -->
-<div id="highscore-overlay">Lade Online Scores...</div>
+// <div id="highscore-overlay">Lade Online Scores...</div>
 <div id="status-overlay"></div>
 <div id="stationInfo">[E] Interagieren | [B] Azubi 5000P | [F] Server-Farm | [Q] Kaffee | [G] Urlaub | [ESC] Pause</div>
 
@@ -1009,44 +1009,49 @@ try {
     if (firebaseConfig.apiKey) { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); loadHighscores(); }
 } catch(e) { console.error("Firebase:", e); }
 
-function loadHighscores() {
-    if (!db) return;
-    document.getElementById('highscore-overlay').innerHTML = "Lade Ligen...";
-    db.collection("highscores").orderBy("score","desc").limit(300).get().then(snap=>{
-        let scores = { "WEGFLEXEN": [], "SURVIVAL": [], "BURNOUT": [], "VOLLZEIT": [], "PRAKTIKANT": [] };
-        snap.forEach(doc => {
-            let d = doc.data();
-            let diff = d.difficulty || "PRAKTIKANT"; 
-            if(scores[diff]) scores[diff].push(d); 
-        });
-        let html = "<span style='color:#fff;text-decoration:underline;font-size:14px;font-weight:bold;'>🏆 LIGEN TOP 5:</span><br>"; 
-        ["WEGFLEXEN", "SURVIVAL", "BURNOUT", "VOLLZEIT", "PRAKTIKANT"].forEach(mode => {
-            if(scores[mode].length > 0) {
-                let color = mode === 'WEGFLEXEN' ? '#f00' : (mode === 'SURVIVAL' ? '#8e44ad' : (mode === 'BURNOUT' ? '#c0392b' : (mode === 'VOLLZEIT' ? '#f1c40f' : '#2ecc71')));
-                html += `<div style="color:${color}; font-weight:bold; margin-top:6px; font-size:12px;">[${mode}]</div>`;
-                // BALANCING: 1 Sekunde Kollaps = TIME_BONUS Punkte wert.
-                // Erhöhen = Zeit wichtiger. Verringern = Score wichtiger.
-                const TIME_BONUS = 3000;
-                scores[mode].sort((a, b) => {
-                    let rA = (a.score||0) + (parseFloat(a.collapseTime)||0) * TIME_BONUS;
-                    let rB = (b.score||0) + (parseFloat(b.collapseTime)||0) * TIME_BONUS;
-                    return rB - rA;
-                });
-                let top5 = scores[mode].slice(0, 5);
-                top5.forEach((d, i) => {
-                    let rank = i + 1;
-                    let c = rank===1?'gold':(rank===2?'silver':(rank===3?'#cd7f32':'#aaa'));
-                    let coll = parseFloat(d.collapseTime) > 0 ? ` [🔥${d.collapseTime}s]` : "";
-                    let gradeColors = {S:'#f1c40f',A:'#2ecc71',B:'#3498db',C:'#9b59b6',D:'#e67e22',E:'#e74c3c',F:'#555'};
-                    let gradeBadge = d.grade ? `<span style="color:${gradeColors[d.grade]||'#aaa'};font-weight:bold;">[${d.grade}]</span> ` : '';
-                    let boss = d.bossKilled ? ' 💀' : '';
-                    html += `<div style="color:${c}; font-size:11px; margin-left:5px;">${rank}. ${gradeBadge}${d.name.substring(0,8)}: ${d.score}${coll}${boss}</div>`;
-                });
-            }
-        });
-        document.getElementById('highscore-overlay').innerHTML = html;
-    }).catch(e => console.error(e));
-}
+
+ function loadHighscores() {
+    // Totgelegt. Rangliste wird jetzt exklusiv über das Menü (renderHsMenu) geladen.
+    return;
+}  
+// function loadHighscores() {
+//    if (!db) return;
+//    document.getElementById('highscore-overlay').innerHTML = "Lade Ligen...";
+//    db.collection("highscores").orderBy("score","desc").limit(300).get().then(snap=>{
+//        let scores = { "WEGFLEXEN": [], "SURVIVAL": [], "BURNOUT": [], "VOLLZEIT": [], "PRAKTIKANT": [] };
+//        snap.forEach(doc => {
+//            let d = doc.data();
+//            let diff = d.difficulty || "PRAKTIKANT"; 
+//            if(scores[diff]) scores[diff].push(d); 
+//           });
+//           let html = "<span style='color:#fff;text-decoration:underline;font-size:14px;font-weight:bold;'>🏆 LIGEN TOP 5:</span><br>"; 
+//        ["WEGFLEXEN", "SURVIVAL", "BURNOUT", "VOLLZEIT", "PRAKTIKANT"].forEach(mode => {
+//            if(scores[mode].length > 0) {
+//                let color = mode === 'WEGFLEXEN' ? '#f00' : (mode === 'SURVIVAL' ? '#8e44ad' : (mode === 'BURNOUT' ? '#c0392b' : (mode === 'VOLLZEIT' ? '#f1c40f' : '#2ecc71')));
+//                html += `<div style="color:${color}; font-weight:bold; margin-top:6px; font-size:12px;">[${mode}]</div>`;
+//                // BALANCING: 1 Sekunde Kollaps = TIME_BONUS Punkte wert.
+//                // Erhöhen = Zeit wichtiger. Verringern = Score wichtiger.
+//                const TIME_BONUS = 3000;
+//                scores[mode].sort((a, b) => {
+//                    let rA = (a.score||0) + (parseFloat(a.collapseTime)||0) * TIME_BONUS;
+//                    let rB = (b.score||0) + (parseFloat(b.collapseTime)||0) * TIME_BONUS;
+//                    return rB - rA;
+//                });
+//                let top5 = scores[mode].slice(0, 5);
+//                top5.forEach((d, i) => {
+//                    let rank = i + 1;
+//                    let c = rank===1?'gold':(rank===2?'silver':(rank===3?'#cd7f32':'#aaa'));
+//                    let coll = parseFloat(d.collapseTime) > 0 ? ` [🔥${d.collapseTime}s]` : "";
+//                    let gradeColors = {S:'#f1c40f',A:'#2ecc71',B:'#3498db',C:'#9b59b6',D:'#e67e22',E:'#e74c3c',F:'#555'};
+//                    let gradeBadge = d.grade ? `<span style="color:${gradeColors[d.grade]||'#aaa'};font-weight:bold;">[${d.grade}]</span> ` : '';
+//                    let boss = d.bossKilled ? ' 💀' : '';
+//                    html += `<div style="color:${c}; font-size:11px; margin-left:5px;">${rank}. ${gradeBadge}${d.name.substring(0,8)}: ${d.score}${coll}${boss}</div>`;
+//                });
+//            }
+//        });
+//        document.getElementById('highscore-overlay').innerHTML = html;
+//    }).catch(e => console.error(e));
+// }
 
 // ============================================================
 // HIGHSCORE MENU — Alltime & Wöchentlich
