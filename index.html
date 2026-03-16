@@ -4979,56 +4979,50 @@ if(!bueroDoor && currentBossStage >= 4 && !activeBoss && gamePhase === 'normal' 
     if(!player.inMeeting&&frame%4500===2000){
         meetingZone={x:Math.random()*(WORLD_WIDTH-400)+200,y:Math.random()*(WORLD_HEIGHT-400)+200,r:150,active:true};
     }
-   // --- OVERCOOKED MECHANIK: MAP-SPERRE (GABELSTAPLER-UNFALL) ---
-    // Der Cooldown tickt nur runter, wenn wir im normalen Spiel sind
+   // --- OVERCOOKED MECHANIK: TOTALER BEREICHS-LOCKDOWN ---
     if(!systemCollapse && !activeBoss && gamePhase === 'normal') {
         if(!blockadeEvent) blockadeCooldown--;
         
         if(blockadeCooldown <= 0 && !blockadeEvent) {
-            const doors = [
-                {x: WORLD_WIDTH * 0.2,  y: 1185, name: "Büro -> Warehouse (Links)"},
-                {x: WORLD_WIDTH * 0.55, y: 1185, name: "Büro -> Warehouse (Mitte)"},
-                {x: WORLD_WIDTH * 0.85, y: 1185, name: "Büro -> Warehouse (Rechts)"},
-                {x: WORLD_WIDTH * 0.15, y: 2585, name: "Warehouse -> Logistics (Links)"},
-                {x: WORLD_WIDTH * 0.5,  y: 2585, name: "Warehouse -> Logistics (Mitte)"},
-                {x: WORLD_WIDTH * 0.8,  y: 2585, name: "Warehouse -> Logistics (Rechts)"}
+            // Wir definieren die zwei Grenzlinien
+            const lines = [
+                { y: 1185, name: "BÜRO / WAREHOUSE", doorsX: [0.2, 0.55, 0.85] },
+                { y: 2585, name: "WAREHOUSE / LOGISTICS", doorsX: [0.15, 0.5, 0.8] }
             ];
             
-            let d = doors[Math.floor(Math.random() * doors.length)];
-            let blockObj = { x: d.x - 110, y: d.y - 10, w: 220, h: 50, type: 'blockade' };
-            obstacles.push(blockObj);
+            // Wähle eine zufällige Grenzlinie
+            let line = lines[Math.floor(Math.random() * lines.length)];
             
-            // Spieler rausschubsen
-            if(player.x > blockObj.x && player.x < blockObj.x + blockObj.w && player.y > blockObj.y - 20 && player.y < blockObj.y + blockObj.h + 20) {
-                player.y -= 100; 
-            }
+            blockadeEvent = { timer: 1200, objs: [], name: line.name }; // 20 Sekunden Lockdown (härter!)
 
-            blockadeEvent = { timer: 1800, objRef: blockObj }; // 30 Sekunden aktiv
-            blockadeCooldown = 2400 + Math.random() * 1200;    // Nächster Unfall in 40 bis 60 Sekunden
+            // Erzeuge 3 Blöcke an den X-Positionen der Türen dieser Linie
+            line.doorsX.forEach(distPct => {
+                let blockObj = { 
+                    x: (WORLD_WIDTH * distPct) - 110, 
+                    y: line.y - 10, 
+                    w: 220, 
+                    h: 55, 
+                    type: 'blockade' 
+                };
+                obstacles.push(blockObj);
+                blockadeEvent.objs.push(blockObj);
+            });
             
-            playSound('hammer'); screenShake = 40;
-            showToast("⚠️ STAPLER-UNFALL!", "#e67e22", d.name + " blockiert! (30s)", true);
+            blockadeCooldown = 3000 + Math.random() * 2000; // Nächster Alarm in ca. 50-80 Sek.
+            
+            playSound('alarm'); screenShake = 50;
+            showToast("🚨 TOTAL-LOCKDOWN!", "#f00", "Grenze " + line.name + " gesperrt!", true);
         }
     }
 
-    // Timer runterzählen und Blockade wieder entfernen
+    // Timer und Abbruch
     if(blockadeEvent) {
         blockadeEvent.timer--;
         if(blockadeEvent.timer <= 0) {
-            obstacles = obstacles.filter(o => o !== blockadeEvent.objRef);
+            // Alle Blöcke dieses Events aus den Hindernissen entfernen
+            obstacles = obstacles.filter(o => !blockadeEvent.objs.includes(o));
             blockadeEvent = null;
-            showToast("✅ GANG FREI!", "#2ecc71", "Hindernis wurde geräumt.");
-            playSound('powerup');
-        }
-    }
-
-    // Timer runterzählen und Blockade wieder entfernen
-    if(blockadeEvent) {
-        blockadeEvent.timer--;
-        if(blockadeEvent.timer <= 0) {
-            obstacles = obstacles.filter(o => o !== blockadeEvent.objRef);
-            blockadeEvent = null;
-            showToast("✅ GANG FREI!", "#2ecc71", "Hindernis wurde geräumt.");
+            showToast("✅ LOCKDOWN BEENDET", "#2ecc71", "Grenzübergänge wieder offen.");
             playSound('powerup');
         }
     }
