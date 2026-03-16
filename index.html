@@ -4154,10 +4154,11 @@ class Player{
                     let mh = new Enemy({ name:"MEISTER HAND", subtitle:"???", hp:35000, color:'#9b59b6', radius:80, speed:5.0 });
                     mh.x = sw.x + sw.w/2; mh.y = sw.y + sw.h/2;
                     mh._isMeisterHand = true;
+                    mh.symbol = "🫳";
                     enemies.push(mh); activeBoss = mh;
                     screenShake = 60; flashScreen = 80;
                     playSound('boss'); playSound('alarm');
-                    showToast('✋ GEHEIMER BOSS ENTDECKT!', '#9b59b6', 'MEISTER HAND — Stärker als Bayer!');
+                    showToast('🫳 GEHEIMER BOSS ENTDECKT!', '#9b59b6', 'MEISTER HAND — Stärker als Bayer!');
                     { let _bhc=document.getElementById('bossHpContainer'); if(_bhc) _bhc.style.display='block'; }
                     input.keys['KeyE'] = false;
                 }
