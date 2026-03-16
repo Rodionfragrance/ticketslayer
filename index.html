@@ -1700,7 +1700,13 @@ function applyJobEffects(p) {
         if(jid === 'supporter' || jid === 'burnout_spezialist') p._suppeHealBonus = (p._suppeHealBonus||0) + 15;
         if(jid === 'techniker' || jid === 'entwickler') p._farmIntervalMult = (p._farmIntervalMult||1) * 0.7;
         if(jid === 'gabelstapler') p._vehicleImmune = true;
-        if(jid === 'maddin') { p.azubiCost = 0; p._maddingMode = true; }
+        // Maddin bleibt permanent aktiv, wenn er einmal abgeschlossen wurde
+        if(jid === 'maddin') { 
+            p.azubiCost = 0; 
+            p._maddingMode = true; 
+            p.isMartin = true; // <--- Das hier sorgt für die Maddin-Optik
+            p.radius = 28;     // <--- Das hier für die Boss-Hitbox
+        }
         if(jid === 'hacker') p._hackerPassiv = true;
     }
     function _applySkills(sk) {
@@ -2588,6 +2594,8 @@ function saveProgress() {
     // --- FIX: EXP IMMER SPEICHERN ---
     localStorage.setItem('ts_baseexp', baseExp);
     localStorage.setItem('ts_jobexp', jobExp);
+    localStorage.setItem('ts_baselv', baseLevel);
+    localStorage.setItem('ts_joblv', jobLevel);
     // --------------------------------
     if(db && _name !== 'ANONYM') {
         let _daily = {}; try { _daily = JSON.parse(localStorage.getItem('ts_daily')||'{}'); } catch(e){}
@@ -4005,20 +4013,36 @@ class FloatingText{
     draw(){ctx.fillStyle=this.color;ctx.font="bold 24px Courier New";ctx.textAlign="center";ctx.globalAlpha=this.life/90;ctx.fillText(this.text,this.x,this.y);ctx.globalAlpha=1;}
 }
 
-class Turret{
-    constructor(x,y){this.x=x;this.y=y;this.cooldown=0;}
+class Turret {
+    constructor(x,y){
+        this.x=x; this.y=y; this.cooldown=0;
+        this.kills=0; this.level=0; this.type='turret';
+    }
     update(){
         this.cooldown--;
+        // Evolutionen
+        if(this.kills >= 100 && this.level < 2) { this.level = 2; playSound('evolve'); showToast('TURRET EVOLUTION!', '#f1c40f', 'SENIOR: Raketen aktiv!'); }
+        else if(this.kills >= 30 && this.level < 1) { this.level = 1; playSound('powerup'); showToast('TURRET EVOLUTION!', '#00e5ff', 'JUNIOR: Speed x2!'); }
+
         if(this.cooldown<=0){
-            let nearest=null,minDist=800;
-            for(let e of enemies){let d=Math.hypot(e.x-this.x,e.y-this.y);if(d<minDist){minDist=d;nearest=e;}}
-            if(nearest){let a=Math.atan2(nearest.y-this.y,nearest.x-this.x);bullets.push(new Bullet(this.x,this.y,a,'standard'));shells.push(new Shell(this.x,this.y,a)); playSound('shoot');this.cooldown=20;}
+            let nearest=null, minDist=800;
+            for(let e of enemies){ let d=Math.hypot(e.x-this.x, e.y-this.y); if(d<minDist){minDist=d; nearest=e;} }
+            if(nearest){
+                let a = Math.atan2(nearest.y-this.y, nearest.x-this.x);
+                if(this.level === 2) { bullets.push(new Bullet(this.x, this.y, a, 'rocket', 40, this)); this.cooldown = 45; }
+                else { bullets.push(new Bullet(this.x, this.y, a, 'standard', 12, this)); this.cooldown = (this.level === 1 ? 10 : 20); }
+                shells.push(new Shell(this.x, this.y, a)); playSound('shoot');
+            }
         }
     }
     draw(){
-        ctx.fillStyle='#aaa';ctx.beginPath();ctx.arc(this.x,this.y,20,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle='#00f';ctx.fillRect(this.x-10,this.y-30,20,10);
-        ctx.fillStyle='#fff';ctx.font='12px Arial';ctx.textAlign='center';ctx.fillText("AZUBI",this.x,this.y+5);
+        let color = this.level === 2 ? '#f1c40f' : (this.level === 1 ? '#00e5ff' : '#aaa');
+        ctx.fillStyle=color; ctx.beginPath(); ctx.arc(this.x, this.y, 20, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle='#fff'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
+        ctx.fillText(this.level === 2 ? "SENIOR" : (this.level === 1 ? "JUNIOR" : "AZUBI"), this.x, this.y+4);
+        // XP-Balken
+        let req = this.level === 0 ? 30 : 100;
+        if(this.level < 2) { ctx.fillStyle='#222'; ctx.fillRect(this.x-15, this.y+15, 30, 4); ctx.fillStyle=color; ctx.fillRect(this.x-15, this.y+15, 30 * (this.kills/req), 4); }
     }
 }
 
