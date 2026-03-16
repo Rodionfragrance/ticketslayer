@@ -648,7 +648,7 @@ input[type="text"] {
             <br><br>
             <strong>Schritt 1 — Trophäen-Grundlage:</strong> Zuerst <em>Suppenkasper</em> und <em>Netzwerk-Admin</em> holen. Diese beiden Perks (Gratis-Suppe + Farm-Bonus) beschleunigen alles andere massiv.<br><br>
             <strong>Schritt 2 — Skilltree-Kern:</strong> Kaffeekasse-Zone bis zum Keystone <em>Betriebsrat</em> ausbauen. Ja, Gegner spawnen 20% schneller — aber Meetings geben 2× Punkte und deine KB-Rate ist so hoch, dass du jeden anderen Knoten danach viel schneller kaufen kannst. Parallel: Technik-Zone bis <em>Netzwerk-Admin</em> Notable für +2 Farm-Slots.<br><br>
-            <strong>Schritt 3 — Job-Wahl:</strong> Sachbearbeiter nehmen, auf Job Level 25 hochleveln, zu <em>Maddin</em> wechseln. Azubis kosten ab dann nichts. Skills: Volle Pulle (Lv 3) + Maddin-Stampfer (Lv 3) + Teampower (Lv 3). Ergebnis: du hast permanent 5 kostenlose Azubis, Vodka macht dich unverwundbar, und der Stampfer tötet ganze Bildschirme auf einmal.<br><br>
+            <strong>Schritt 3 — Job-Wahl:</strong> Sachbearbeiter nehmen, auf Max Level (40) bringen, Rebirth durchführen, dann zu <em>Maddin</em> wechseln. Azubis kosten ab dann nichts. Skills: Volle Pulle (Lv 3) + Maddin-Stampfer (Lv 3) + Teampower (Lv 3). Ergebnis: du hast permanent 5 kostenlose Azubis, Vodka macht dich unverwundbar, und der Stampfer tötet ganze Bildschirme auf einmal.<br><br>
             <strong>Schritt 4 — Waffenkammer-Favorit:</strong> Orbit-Maus als Favorit setzen. Sie startet dauerhaft ausgerüstet, braucht keinen Timer und kombiniert mit Maddin-Azubis zur absoluten Crowd-Control. Du musst buchstäblich nichts mehr aktiv tun.<br><br>
             <strong>Schritt 5 — Skilltree-Finale:</strong> Rage-Zone bis <em>Überstunden-Rage</em> Keystone (18.000 KB) ausbauen. Bewegung-Zone bis <em>Geisterläufer</em> Notable. Cross-Zone-Brücke <em>Synergie</em> kaufen (pro aktiver Farm: +Speed und +Schaden). Mit 3 Farmen aktiv, Maddin-Job und Rage-Keystone: dein Schaden unter 30% HP ist absurd hoch.<br><br>
             <strong>Schritt 6 — Prestige Loop:</strong> Alle 17 Trophäen holen, Prestige starten. Beim zweiten Durchgang mit +5% Schaden und +10 HP von Anfang an. Schritt 1–5 wiederholen, diesmal schneller weil du die Trophäen-Perks behältst. Ab Prestige 3 beginnt der echte Endgame-Loop: Ultra-Rare Knoten kaufen, Transcendenz-Keystone (Score ×3), Kaffee-Imperium (KB ×2). <br><br>
@@ -2580,6 +2580,10 @@ function saveProgress() {
     localStorage.setItem('ts_name', _name);
     localStorage.setItem('ts_trophies', JSON.stringify(unlockedTrophies));
     localStorage.setItem('ts_weapons', JSON.stringify(unlockedWeapons));
+    // --- FIX: EXP IMMER SPEICHERN ---
+    localStorage.setItem('ts_baseexp', baseExp);
+    localStorage.setItem('ts_jobexp', jobExp);
+    // --------------------------------
     if(db && _name !== 'ANONYM') {
         let _daily = {}; try { _daily = JSON.parse(localStorage.getItem('ts_daily')||'{}'); } catch(e){}
         let _best  = parseInt(localStorage.getItem('ts_best_score')||'0');
@@ -4155,11 +4159,11 @@ class Player{
                     // --- ABSURDES SCALING BERECHNEN ---
                     // Wir addieren alle Progressionen des Spielers zusammen
                     let pwr = unlockedSkills.length + Object.values(upgradeProgress||{}).reduce((s,v)=>s+(v||0),0) + (unlockedTrophies.length * 3) + (prestigeLevel * 10);
-                    let diffMult = lastChosenDifficulty >= 3 ? lastChosenDifficulty : 3; // Hand skaliert immer MINDESTENS auf Vollzeit-Niveau
+                    let diffMult = lastChosenDifficulty >= 3 ? lastChosenDifficulty : 3; 
                     
-                    // Base 50.000 HP * Schwierigkeit * Spieler-Power-Faktor
-                    let mhHp = Math.floor(50000 * diffMult * Math.max(1, pwr * 0.15));
-                    let mhSpeed = 6.0 + (diffMult * 0.3) + (pwr * 0.03); // Grundspeed eskaliert mit
+                    // FIX: Base HP von 50000 auf 5000 gesenkt -> ~5,5 Mio HP statt 55 Mio
+                    let mhHp = Math.floor(5000 * diffMult * Math.max(1, pwr * 0.15));
+                    let mhSpeed = 6.0 + (diffMult * 0.3) + (pwr * 0.03);
 
                     let mh = new Enemy({ name:"MEISTER HAND", subtitle:"???", hp:mhHp, color:'#9b59b6', radius:80, speed:mhSpeed });
                     mh.x = sw.x + sw.w/2; mh.y = sw.y + sw.h/2;
@@ -4579,7 +4583,7 @@ class Enemy{
             this.mhState = this.mhState || 0; // 0: Chase, 1: Slam Warn, 2: Dash Warn, 3: Dashing
 
             // Entscheiden, welcher Angriff
-            if(this.mhState === 0 && this.mhTimer >= 180) {
+            if(this.mhState === 0 && this.mhTimer >= 90) {
                 this.mhTimer = 0;
                 this.mhState = Math.random() < 0.5 ? 1 : 2;
                 if(this.mhState === 1) floatingTexts.push(new FloatingText(this.x, this.y, "SMASH!", "#9b59b6"));
@@ -5546,6 +5550,10 @@ function loop(){
         shells.forEach(s=>s.update()); if(shells.length>200)shells.splice(0,50);
         for(let i=floatingTexts.length-1;i>=0;i--){if(!floatingTexts[i])continue;floatingTexts[i].update();if(floatingTexts[i].life<=0)floatingTexts.splice(i,1);}
         if(particles.length>500) particles.splice(0,100);
+        
+        // --- FIX: SPLATTER MEMORY LEAK BEHEBEN ---
+        if(splatters.length > 200) splatters.splice(0, 50);
+        // -----------------------------------------
 
         checkGameOver();
         updateHUD();
