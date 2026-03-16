@@ -4589,7 +4589,7 @@ class Enemy{
                     spawnParticles(this.x, this.y, '#9b59b6', 40);
                     
                     // Radius 160: Der Spieler hat 35 Frames Zeit, um den Kreis zu verlassen.
-                    if(Math.hypot(player.x - this.x, player.y - this.y) < 160) {
+                    if(Math.hypot(player.x - this.x, player.y - this.y) < 320) {
                         if(player.rollTimer <= 0) {
                             if(isWegflexenMode) player.hp = 0;
                             else { player.hp -= 60; player.orangeHp += 60; player.orangeTimer = 120; }
@@ -4606,26 +4606,31 @@ class Enemy{
             // 2. Raketenschlag Warnung (Dash Aim)
             else if(this.mhState === 2) {
                 this.speed = 0;
-                // Laser trackt den Spieler für 30 Frames, danach bleibt der Laser stehen
+                // Laser trackt 30 Frames, danach friert er ein.
                 if(this.mhTimer <= 30) {
                     this.targetAngle = Math.atan2(player.y - this.y, player.x - this.x);
                 }
                 
-                // Nach 50 Frames feuert die Hand ab
-                if(this.mhTimer === 50) {
+                // FEUERT BEREITS BEI FRAME 40! Nur 10 Frames Reaktionszeit.
+                if(this.mhTimer === 40) {
                     this.mhState = 3; 
-                    this.mhTimer = 0; // Timer reset für den Dash selbst
-                    this.dashDx = Math.cos(this.targetAngle) * 35;
-                    this.dashDy = Math.sin(this.targetAngle) * 35;
+                    this.mhTimer = 0; 
+                    // SPEED VERDOPPELT VON 35 AUF 70
+                    this.dashDx = Math.cos(this.targetAngle) * 70;
+                    this.dashDy = Math.sin(this.targetAngle) * 70;
                     this.dashHit = false;
                     playSound('boss');
                 }
-            } 
+            }
             // 3. Raketenschlag Ausführung (Dashing)
             else if(this.mhState === 3) {
                 this.x += this.dashDx; 
                 this.y += this.dashDy;
                 
+                // NEU: Feuer-Trail hinter der Hand
+                spawnParticles(this.x, this.y, '#ff4444', 3);
+                spawnParticles(this.x, this.y, '#ffeb3b', 2);
+                                              
                 if(Math.hypot(player.x - this.x, player.y - this.y) < this.radius + player.radius) {
                     if(player.rollTimer <= 0 && !this.dashHit) {
                         this.dashHit = true;
@@ -4752,7 +4757,7 @@ class Enemy{
                 // Roter Rahmen zeigt an: Ziel gelockt, Spieler kann jetzt ausweichen
                 let isLocked = this.mhTimer > 25;
                 let progress = this.mhTimer / 60;
-                ctx.beginPath(); ctx.arc(this.targetX, this.targetY, 160, 0, Math.PI * 2);
+                ctx.beginPath(); ctx.arc(this.targetX, this.targetY, 320, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(155, 89, 182, ${0.1 + progress * 0.3})`; ctx.fill();
                 ctx.strokeStyle = isLocked ? '#ff0000' : '#9b59b6'; // Wechsel auf rot
                 ctx.lineWidth = isLocked ? 5 : 3; 
@@ -4766,6 +4771,19 @@ class Enemy{
                 ctx.beginPath(); ctx.moveTo(this.x, this.y);
                 ctx.lineTo(this.x + Math.cos(this.targetAngle)*2000, this.y + Math.sin(this.targetAngle)*2000);
                 ctx.stroke();
+            }
+           // ---> HIER KOMMT DER MOTION BLUR HIN <---
+            if(this.mhState === 3) {
+                // Roter Motion-Blur-Schweif beim Fliegen (Dash)
+                ctx.shadowColor = '#ff0000';
+                ctx.shadowBlur = 30;
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+                ctx.lineWidth = this.radius * 1.5;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x - this.dashDx * 1.5, this.y - this.dashDy * 1.5); 
+                ctx.stroke();
+                ctx.shadowBlur = 0;
             }
         }
         ctx.globalAlpha=1;
