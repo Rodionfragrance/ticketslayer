@@ -4560,6 +4560,92 @@ class Enemy{
                 this.flutCooldown = 400; 
             }
         }
+        // --- MEISTER HAND ANGRIFFE ---
+        if(this.type===99 && this.label==="MEISTER HAND") {
+            this.mhTimer = (this.mhTimer || 0) + 1;
+            this.mhState = this.mhState || 0; // 0: Chase, 1: Slam Warn, 2: Dash Warn, 3: Dashing
+
+            // Entscheiden, welcher Angriff
+            if(this.mhState === 0 && this.mhTimer >= 180) {
+                this.mhTimer = 0;
+                this.mhState = Math.random() < 0.5 ? 1 : 2;
+                if(this.mhState === 1) floatingTexts.push(new FloatingText(this.x, this.y, "SMASH!", "#9b59b6"));
+                else floatingTexts.push(new FloatingText(this.x, this.y, "RAKETEN-SCHLAG!", "#9b59b6"));
+            }
+
+            // 1. Klatscher (Slam)
+            if(this.mhState === 1) {
+                this.speed = 0; 
+                // Verfolgt den Spieler für die ersten 25 Frames, danach rastet das Fadenkreuz ein!
+                if(this.mhTimer <= 25) {
+                    this.targetX = player.x; 
+                    this.targetY = player.y;
+                }
+                
+                // Nach 60 Frames schlägt die Hand am eingeloggten Ort ein
+                if(this.mhTimer === 60) { 
+                    screenShake = 50; playSound('hammer');
+                    this.x = this.targetX; this.y = this.targetY; // Teleport zum Zielpunkt
+                    spawnParticles(this.x, this.y, '#9b59b6', 40);
+                    
+                    // Radius 160: Der Spieler hat 35 Frames Zeit, um den Kreis zu verlassen.
+                    if(Math.hypot(player.x - this.x, player.y - this.y) < 160) {
+                        if(player.rollTimer <= 0) {
+                            if(isWegflexenMode) player.hp = 0;
+                            else { player.hp -= 60; player.orangeHp += 60; player.orangeTimer = 120; }
+                            player.stunned = 30;
+                            showToast("ZERSCHMETTERT!", "#9b59b6", "Zu langsam!");
+                        } else {
+                            score += 1500;
+                            floatingTexts.push(new FloatingText(player.x, player.y - 40, "PERFEKT AUSGEWICHEN!", "#0f0"));
+                        }
+                    }
+                    this.mhState = 0; this.mhTimer = 0; this.speed = 5.0; // Reset
+                }
+            } 
+            // 2. Raketenschlag Warnung (Dash Aim)
+            else if(this.mhState === 2) {
+                this.speed = 0;
+                // Laser trackt den Spieler für 30 Frames, danach bleibt der Laser stehen
+                if(this.mhTimer <= 30) {
+                    this.targetAngle = Math.atan2(player.y - this.y, player.x - this.x);
+                }
+                
+                // Nach 50 Frames feuert die Hand ab
+                if(this.mhTimer === 50) {
+                    this.mhState = 3; 
+                    this.mhTimer = 0; // Timer reset für den Dash selbst
+                    this.dashDx = Math.cos(this.targetAngle) * 35;
+                    this.dashDy = Math.sin(this.targetAngle) * 35;
+                    this.dashHit = false;
+                    playSound('boss');
+                }
+            } 
+            // 3. Raketenschlag Ausführung (Dashing)
+            else if(this.mhState === 3) {
+                this.x += this.dashDx; 
+                this.y += this.dashDy;
+                
+                if(Math.hypot(player.x - this.x, player.y - this.y) < this.radius + player.radius) {
+                    if(player.rollTimer <= 0 && !this.dashHit) {
+                        this.dashHit = true;
+                        if(isWegflexenMode) player.hp = 0;
+                        else { player.hp -= 40; player.orangeHp += 40; player.orangeTimer = 120; }
+                        showToast("WEGGEKLATSCHT!", "#9b59b6", "Raketen-Schlag!");
+                    }
+                }
+                
+                // Beenden, wenn Timer über 40 oder Hand komplett aus der Map fliegt
+                if(this.mhTimer > 40 || this.x < -200 || this.x > WORLD_WIDTH+200 || this.y < -200 || this.y > WORLD_HEIGHT+200) {
+                    this.mhState = 0; this.mhTimer = 0; this.speed = 5.0;
+                    // Respawnt auf der Mapähe zum Spieler, um Laufwege zu sparen
+                    let a = Math.random() * Math.PI * 2;
+                    this.x = Math.max(100, Math.min(WORLD_WIDTH-100, player.x + Math.cos(a)*400));
+                    this.y = Math.max(100, Math.min(WORLD_HEIGHT-100, player.y + Math.sin(a)*400));
+                }
+                return; // WICHTIG: Überspringt normale Bewegungslogik
+            }
+        }
 
         if(this.type===99){
             if(this.laserCooldown>0) this.laserCooldown--;
@@ -4660,6 +4746,28 @@ class Enemy{
         ctx.filter = 'none';
         ctx.fillStyle='#fff';ctx.font='bold 13px Courier New';ctx.textAlign='center';ctx.textBaseline='top';
         ctx.fillText(this.label,this.x,drawY+this.radius);
+        // --- MEISTER HAND VISUALS ---
+        if(this.type===99 && this.label==="MEISTER HAND") {
+            if(this.mhState === 1) {
+                // Roter Rahmen zeigt an: Ziel gelockt, Spieler kann jetzt ausweichen
+                let isLocked = this.mhTimer > 25;
+                let progress = this.mhTimer / 60;
+                ctx.beginPath(); ctx.arc(this.targetX, this.targetY, 160, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(155, 89, 182, ${0.1 + progress * 0.3})`; ctx.fill();
+                ctx.strokeStyle = isLocked ? '#ff0000' : '#9b59b6'; // Wechsel auf rot
+                ctx.lineWidth = isLocked ? 5 : 3; 
+                ctx.stroke();
+            }
+            if(this.mhState === 2) {
+                // Laser friert ein und wird rot
+                let isLocked = this.mhTimer > 30;
+                ctx.strokeStyle = isLocked ? '#ff0000' : 'rgba(155, 89, 182, 0.6)'; 
+                ctx.lineWidth = isLocked ? 12 : 8;
+                ctx.beginPath(); ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x + Math.cos(this.targetAngle)*2000, this.y + Math.sin(this.targetAngle)*2000);
+                ctx.stroke();
+            }
+        }
         ctx.globalAlpha=1;
     }
 }
