@@ -3649,7 +3649,7 @@ let bossRoomState = null; // Boss-Room State
 let fadeAlpha = 0;        // für Fade-Transition
 let fadeDir = 0;          // 1=fade in, -1=fade out
 let idocEvent=null, meetingZone=null, kloskaEvent=null;
-
+let blockadeEvent = null; // NEU: Tracker für die Map-Sperre
 let player=null;
 let bullets=[], enemies=[], particles=[], obstacles=[], stations=[];
 let vehicles=[];
@@ -4967,6 +4967,45 @@ if(!bueroDoor && currentBossStage >= 4 && !activeBoss && gamePhase === 'normal' 
     if(!player.inMeeting&&frame%4500===2000){
         meetingZone={x:Math.random()*(WORLD_WIDTH-400)+200,y:Math.random()*(WORLD_HEIGHT-400)+200,r:150,active:true};
     }
+   // --- OVERCOOKED MECHANIK: MAP-SPERRE (GABELSTAPLER-UNFALL) ---
+    if(frame > 0 && frame % 2400 === 0 && !blockadeEvent && !systemCollapse && !activeBoss) {
+        // Die exakten Koordinaten der 6 Durchgänge
+        const doors = [
+            {x: WORLD_WIDTH * 0.2,  y: 1185, name: "Büro -> Warehouse (Links)"},
+            {x: WORLD_WIDTH * 0.55, y: 1185, name: "Büro -> Warehouse (Mitte)"},
+            {x: WORLD_WIDTH * 0.85, y: 1185, name: "Büro -> Warehouse (Rechts)"},
+            {x: WORLD_WIDTH * 0.15, y: 2585, name: "Warehouse -> Logistics (Links)"},
+            {x: WORLD_WIDTH * 0.5,  y: 2585, name: "Warehouse -> Logistics (Mitte)"},
+            {x: WORLD_WIDTH * 0.8,  y: 2585, name: "Warehouse -> Logistics (Rechts)"}
+        ];
+        
+        let d = doors[Math.floor(Math.random() * doors.length)];
+        
+        // Blockade als normales Hindernis ins Array pushen (Hitbox: 220x50)
+        let blockObj = { x: d.x - 110, y: d.y - 10, w: 220, h: 50, type: 'blockade' };
+        obstacles.push(blockObj);
+        
+        // Spieler rausschubsen, falls er genau in der Tür steht
+        if(player.x > blockObj.x && player.x < blockObj.x + blockObj.w && player.y > blockObj.y - 20 && player.y < blockObj.y + blockObj.h + 20) {
+            player.y -= 100; 
+        }
+
+        blockadeEvent = { timer: 1800, objRef: blockObj }; // Hält 30 Sekunden (1800 Frames)
+        
+        playSound('hammer'); screenShake = 40;
+        showToast("⚠️ STAPLER-UNFALL!", "#e67e22", d.name + " blockiert! (30s)", true);
+    }
+
+    // Timer runterzählen und Blockade wieder entfernen
+    if(blockadeEvent) {
+        blockadeEvent.timer--;
+        if(blockadeEvent.timer <= 0) {
+            obstacles = obstacles.filter(o => o !== blockadeEvent.objRef);
+            blockadeEvent = null;
+            showToast("✅ GANG FREI!", "#2ecc71", "Hindernis wurde geräumt.");
+            playSound('powerup');
+        }
+    }
 }
 
 // ============================================================
@@ -5016,6 +5055,26 @@ function drawWorld(){
             if(player && Math.hypot(player.x-o.x-o.w/2,player.y-o.y-o.h/2)<400){
                 ctx.strokeStyle=`rgba(255,0,0,${0.3+Math.sin(frame*0.1)*0.2})`;ctx.lineWidth=2;ctx.strokeRect(o.x,o.y,o.w,o.h);
             }
+           // ---> NEU: MAP-SPERRE RENDERN <---
+        } else if(o.type==='blockade'){
+            ctx.fillStyle = '#222';
+            ctx.fillRect(o.x, o.y, o.w, o.h);
+            ctx.fillStyle = '#f1c40f'; // Gelbe Warnstreifen
+            for(let s = 0; s < o.w; s += 30) {
+                ctx.beginPath(); ctx.moveTo(o.x + s, o.y); ctx.lineTo(o.x + s + 15, o.y);
+                ctx.lineTo(o.x + s - 10, o.y + o.h); ctx.lineTo(o.x + s - 25, o.y + o.h); ctx.fill();
+            }
+            ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 3; ctx.strokeRect(o.x, o.y, o.w, o.h);
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Courier New'; ctx.textAlign = 'center';
+            ctx.shadowColor = '#000'; ctx.shadowBlur = 5;
+            ctx.fillText('🚧 UNFALL 🚧', o.x + o.w/2, o.y + 32);
+            ctx.shadowBlur = 0;
+            // Timer über dem Hindernis
+            if(blockadeEvent && blockadeEvent.objRef === o) {
+                ctx.fillStyle = '#f00'; ctx.font = 'bold 18px Courier New';
+                ctx.fillText(Math.ceil(blockadeEvent.timer/60) + 's', o.x + o.w/2, o.y - 10);
+            }
+        // ---------------------------------
         } else {
             ctx.fillStyle=o.color;ctx.fillRect(o.x,o.y,o.w,o.h);
             ctx.fillStyle='#fff';ctx.fillRect(o.x+o.w-5,o.y+5,5,10);ctx.fillRect(o.x+o.w-5,o.y+o.h-15,5,10);
@@ -5688,7 +5747,8 @@ function startGame(diff=1){
     enemies=[];bullets=[];particles=[];items=[];splatters=[];floatingTexts=[];turrets=[];shells=[];serverFarms=[];vehicles=[];
     gamePhase='normal'; bueroDoor=null; bossRoomState=null; fadeAlpha=0; fadeDir=0;
     secretWall=null; secretBossActive=false; phantomTimer=0; phantomCooldown=0;
-    
+    blockadeEvent=null; // NEU: Reset beim Start
+   
     // Reset Combo
     combo = 0; comboTimer = 0; comboMult = 1; bestComboThisRun = 1; comboHitCount = 0;
     // Reset Run-Tracking
