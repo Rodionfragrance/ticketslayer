@@ -1509,164 +1509,105 @@ function jobExpNeeded(lv)  { return Math.floor(100 * Math.pow(lv, 1.55)); } // ~
 const EXP_TABLE = { 5:3, 4:5, 3:8, 2:12, 1:20, 7:10, 8:15, 99:0 };
 const JOB_EXP_TABLE = { 5:2, 4:3, 3:5, 2:8, 1:13, 7:7, 8:10, 99:0 };
 
-// Job-Definitionen
+// Job-Definitionen nach RO-System
 const JOBS = {
-    // ── EBENE 1 (ab Base Level 10) ──────────────────────
-    lagermitarbeiter: {
-        name: '📦 Lagermitarbeiter', tier: 1, baseLvReq: 10,
-        color: '#e67e22',
-        desc: 'Stärke-Build. Hechtrolle macht Schaden. Mehr Items.',
-        passiv: 'Schwere Items spawnen 20% häufiger.',
-        skills: {
-            palettenramme:  { name:'Palettenramme',   desc:'Hechtrolle macht 30/50/80 Schaden an Gegnern.',    maxLv:3, cost:[1,2,3] },
-            ueberstundenk:  { name:'Überstunden-Kraft',desc:'Unter 40% HP: +15/25/40% Schaden.',               maxLv:3, cost:[1,2,3] },
-            lagerhaltung:   { name:'Lagerhaltung',     desc:'Trage 1/1/2 Waffen extra gleichzeitig.',           maxLv:3, cost:[2,3,4], minJobLv:10 },
-        }
-    },
-    sachbearbeiter: {
-        name: '💻 Sachbearbeiter', tier: 1, baseLvReq: 10,
-        color: '#3498db',
-        desc: 'Support/Farm-Build. IDOC-Boni, Ticket-Einkommen.',
-        passiv: 'IDOC-Alarme geben +300 Bonus-Score.',
-        skills: {
-            ticketsystem:   { name:'Ticketsystem',     desc:'Kill-Streak: +2/3/5 Pkt/Sek Bonus-Farm-Income.',  maxLv:3, cost:[1,2,3] },
-            formular27b:    { name:'Formular 27b',     desc:'Getroffen: Gegner 1/2/3s verlangsamt.',            maxLv:3, cost:[1,2,3] },
-            eskalation:     { name:'Eskalation',       desc:'Boss verliert 0.2/0.4/0.8% HP/Sek extra.',        maxLv:3, cost:[2,3,4], minJobLv:10 },
-        }
-    },
-    techniker: {
-        name: '🔧 Techniker', tier: 1, baseLvReq: 10,
-        color: '#1abc9c',
-        desc: 'Technik-Build. Farmen, Azubis, Turrets.',
-        passiv: 'Server-Farmen produzieren 30% schneller.',
-        skills: {
-            codereview:     { name:'Code-Review',      desc:'10/15/20% Chance pro Kill: Turret spawnt.',       maxLv:3, cost:[1,2,3] },
-            hotfix:         { name:'Hotfix',           desc:'Kaputte Farm repariert in 15/10/5s.',             maxLv:3, cost:[1,2,3] },
-            deployment:     { name:'Deployment',       desc:'Azubis kosten 30/50/70% weniger.',                maxLv:3, cost:[2,3,4], minJobLv:10 },
-        }
-    },
-    supporter: {
-        name: '📞 Supporter', tier: 1, baseLvReq: 10,
-        color: '#9b59b6',
-        desc: 'Heal-Build. Suppe stärker, Regen, Defensiv.',
-        passiv: 'Suppe heilt 30% mehr HP.',
-        skills: {
-            ticketschliessen:{ name:'Ticket schließen', desc:'Alle 10 Kills: +3/5/8 HP Regen-Burst.',          maxLv:3, cost:[1,2,3] },
-            eskalation3:    { name:'Eskalationsstufe 3',desc:'Gegner-Angriff 0.3/0.5/0.8s vorher sichtbar.',  maxLv:3, cost:[1,2,3] },
-            pausenregel:    { name:'Pausenregelung',    desc:'Alle 90/70/50s: 3s Unverwundbarkeit.',           maxLv:3, cost:[2,3,4], minJobLv:10 },
-        }
-    },
+    // ── 1st Class (Benötigt Base Lv 10) ──
+    lagermitarbeiter:      { name: '📦 Lagermitarbeiter', classLevel: 1, isTrans: false, color: '#e67e22', desc: 'Tank/Melee (Swordsman)', passiv: 'Max HP +20%' },
+    sachbearbeiter:        { name: '💻 Sachbearbeiter', classLevel: 1, isTrans: false, color: '#3498db', desc: 'Support/Heal (Acolyte)', passiv: 'Suppe heilt 20% mehr' },
+    techniker:             { name: '🔧 Techniker', classLevel: 1, isTrans: false, color: '#1abc9c', desc: 'Utility (Merchant)', passiv: 'Farm-Speed +15%' },
 
-    // ── EBENE 2 (ab Job Level 25) ────────────────────────
-    maddin: {
-        name: '👔 MADDIN (Teamleiter)', tier: 2, baseLvReq: 10, jobLvReq: 25, prevJob: 'sachbearbeiter',
-        color: '#f1c40f',
-        desc: 'Maddin führt das Team. Vodka, Azubis, Stampfer.',
-        passiv: 'Azubis kosten nichts. Vodka gibt Unverwundbarkeit.',
-        skills: {
-            vollpulle:      { name:'Volle Pulle!',     desc:'Vodka-Buff dauert 2/3/5s länger.',                maxLv:3, cost:[2,3,4] },
-            maddinstampfer: { name:'Maddin-Stampfer',  desc:'[SHIFT] macht 50/80/120 AoE Schaden (5s CD).',   maxLv:3, cost:[2,3,5] },
-            teampower:      { name:'Teampower',        desc:'Pro Azubi aktiv: +5/8/12% Schaden.',             maxLv:3, cost:[2,3,4] },
-            beinweg:        { name:'Beine weg!',       desc:'Nach Vodka: Speed +40/60/80% für 5s.',           maxLv:3, cost:[3,4,5], minJobLv:10 },
-        }
-    },
-    gabelstapler: {
-        name: '🚜 Gabelstaplerfahrer', tier: 2, baseLvReq: 10, jobLvReq: 25, prevJob: 'lagermitarbeiter',
-        color: '#e67e22',
-        desc: 'Fahrzeuge mähen Gegner nieder. Ultimative Bewegung.',
-        passiv: 'Gabelstapler & LKW schaden dir nicht.',
-        skills: {
-            staplerSense:   { name:'Stapler-Sense',    desc:'Fahrzeuge killen Gegner (80/150/250 Schaden).',   maxLv:3, cost:[2,3,4] },
-            schmalgang:     { name:'Schmalgang',        desc:'Hechtrolle-CD auf 1.5/1.0/0.5s.',               maxLv:3, cost:[2,3,5] },
-            eigenerStapler: { name:'Eigener Stapler',  desc:'Alle 90/60/45s: Eigener Stapler spawnt für dich.',maxLv:3, cost:[3,4,5], minJobLv:10 },
-        }
-    },
-    entwickler: {
-        name: '🖥️ Entwickler', tier: 2, baseLvReq: 10, jobLvReq: 25, prevJob: 'techniker',
-        color: '#2ecc71',
-        desc: 'Farmen ×2, Turrets überall, Automation.',
-        passiv: 'Server-Farmen produzieren Suppen 50% schneller.',
-        skills: {
-            farmDouble:     { name:'Farm Overdrive',   desc:'Farm-Output ×1.5/×2.0/×2.5.',                   maxLv:3, cost:[2,3,4] },
-            autoTurret:     { name:'Auto-Deploy',      desc:'Alle 45/30/20s: Turret spawnt automatisch.',     maxLv:3, cost:[2,3,4] },
-            infiniteAzubi:  { name:'Unbegrenzt Azubis',desc:'Max. 3/5/∞ Azubis gleichzeitig.',               maxLv:3, cost:[3,4,5], minJobLv:10 },
-        }
-    },
-    hacker: {
-        name: '⚡ Hacker', tier: 2, baseLvReq: 10, jobLvReq: 25, prevJob: 'techniker',
-        color: '#e74c3c',
-        desc: 'Chaos-Build. Gegner hacken, SQL-Injection.',
-        passiv: 'Gegner 5% Chance sich gegenseitig anzugreifen.',
-        skills: {
-            sqlInjection:   { name:'SQL-Injection',    desc:'Jeder Schuss trifft +1/2/3 Zufallsgegner.',      maxLv:3, cost:[2,3,4] },
-            rootAccess:     { name:'Root-Access',      desc:'Kloska 10/20/30s für dich arbeiten.',            maxLv:3, cost:[2,3,4] },
-            zeroDay:        { name:'Zero-Day',         desc:'1/2/3× pro Run: alle Gegner 5s einfrieren.',     maxLv:3, cost:[3,4,5], minJobLv:10 },
-        }
-    },
-    burnout_spezialist: {
-        name: '😤 Burnout-Spezialist', tier: 2, baseLvReq: 10, jobLvReq: 25, prevJob: 'supporter',
-        color: '#e74c3c',
-        desc: 'Schmerz ist Stärke. HP als Ressource nutzen.',
-        passiv: 'Alle 60s: Adrenalinschub +50% Schaden für 8s.',
-        skills: {
-            schmerztoleran: { name:'Schmerztoleranz',  desc:'Schaden -15/25/35% wenn unter 50% HP.',          maxLv:3, cost:[2,3,4] },
-            adrenalinjunkie:{ name:'Adrenalin-Junkie', desc:'Nach Treffer: +10/15/20% Speed für 3s.',         maxLv:3, cost:[2,3,4] },
-            aufbrennen:     { name:'Aufbrennen',       desc:'Verbrenne 5 HP: nächster Angriff ×2/×3/×4.',    maxLv:3, cost:[3,4,5], minJobLv:10 },
-        }
-    },
+    // ── 2nd Class (Benötigt Job Lv 50) ──
+    staplerfahrer:         { name: '🚜 Staplerfahrer', classLevel: 2, prev: 'lagermitarbeiter', isTrans: false, color: '#d35400', desc: 'Fahrzeuge (Knight)', passiv: 'Fahrzeug-Immunität' },
+    maddin:                { name: '👔 MADDIN (Teamleiter)', classLevel: 2, prev: 'sachbearbeiter', isTrans: false, color: '#f1c40f', desc: 'Boss (Priest)', passiv: 'Gratis Azubis, Vodka-Schutz' },
+    entwickler:            { name: '🖥️ Entwickler', classLevel: 2, prev: 'techniker', isTrans: false, color: '#2ecc71', desc: 'Automatisierung (Blacksmith)', passiv: 'Turrets spawnen schneller' },
+
+    // ── Transcendent 1st Class (Nach Rebirth, Base 1 / Job 10) ──
+    high_lagermitarbeiter: { name: '📦 High Lagermitarbeiter', classLevel: 1, isTrans: true, color: '#e67e22', desc: 'Rebirth Swordsman', passiv: 'Max HP +40%' },
+    high_sachbearbeiter:   { name: '💻 High Sachbearbeiter', classLevel: 1, isTrans: true, color: '#3498db', desc: 'Rebirth Acolyte', passiv: 'Suppe heilt 40% mehr' },
+    high_techniker:        { name: '🔧 High Techniker', classLevel: 1, isTrans: true, color: '#1abc9c', desc: 'Rebirth Merchant', passiv: 'Farm-Speed +30%' },
+
+    // ── Transcendent 2nd Class (Benötigt Trans 1st, Job 50) ──
+    schichtleiter:         { name: '🏭 Schichtleiter', classLevel: 2, prev: 'high_lagermitarbeiter', isTrans: true, color: '#d35400', desc: 'Lord Knight', passiv: 'Schaden +20%' },
+    abteilungsleiter:      { name: '👑 Abteilungsleiter', classLevel: 2, prev: 'high_sachbearbeiter', isTrans: true, color: '#f1c40f', desc: 'High Priest (Maddin V2)', passiv: 'Gratis Azubis, Max HP +50' },
+    senior_entwickler:     { name: '🧠 Senior Entwickler', classLevel: 2, prev: 'high_techniker', isTrans: true, color: '#2ecc71', desc: 'Mastersmith', passiv: 'Turrets haben +50% DMG' },
+
+    // ── 3rd Class (Benötigt Trans 2nd, Base 99, Job 70) ──
+    supply_chain_manager:  { name: '🚄 Supply Chain Mgr', classLevel: 3, prev: 'schichtleiter', reqBase: 99, reqJob: 70, color: '#c0392b', desc: 'Rune Knight', passiv: 'Schaden +50%, Hechtrolle x2' },
+    it_director:           { name: '👁️ IT-Director', classLevel: 3, prev: 'abteilungsleiter', reqBase: 99, reqJob: 70, color: '#8e44ad', desc: 'Arch Bishop', passiv: 'Alle Cooldowns halbiert' },
+    lead_architect:        { name: '🏗️ Lead Architect', classLevel: 3, prev: 'senior_entwickler', reqBase: 99, reqJob: 70, color: '#27ae60', desc: 'Mechanic', passiv: 'Farmen droppen Waffen-Kisten' },
+
+    // ── 4th Class (Benötigt 3rd Class, Base 200, Job 70) ──
+    coo:                   { name: '🐉 Chief Operating Officer', classLevel: 4, prev: 'supply_chain_manager', reqBase: 200, reqJob: 70, color: '#ff0000', desc: 'Dragon Knight', passiv: 'Unaufhaltbare Zerstörung' },
+    cio:                   { name: '🔮 Chief Info. Officer', classLevel: 4, prev: 'it_director', reqBase: 200, reqJob: 70, color: '#9b59b6', desc: 'Cardinal', passiv: 'Absolute Systemkontrolle' },
+    cto:                   { name: '🦾 Chief Tech. Officer', classLevel: 4, prev: 'lead_architect', reqBase: 200, reqJob: 70, color: '#00ff00', desc: 'Meister', passiv: 'Perfekte Automatisierung' },
+
+    // ── Extended Classes (Kein Rebirth, Level bis 200) ──
+    werkstudent:           { name: '🎓 Werkstudent', classLevel: 1, isExtended: true, color: '#bdc3c7', desc: 'Super Novice (Hard Mode)', passiv: 'Base Speed +1.0' },
+    dauerstudent:          { name: '🧟 Dauerstudent', classLevel: 2, prev: 'werkstudent', reqBase: 99, reqJob: 99, isExtended: true, color: '#7f8c8d', desc: 'Extended Super Novice', passiv: 'Base Speed +2.0' },
+    bachelor:              { name: '📜 Bachelor', classLevel: 3, prev: 'dauerstudent', reqBase: 200, reqJob: 70, isExtended: true, color: '#ecf0f1', desc: 'Hyper Novice', passiv: 'Base Speed +3.0, Max HP +200' }
 };
-
-function getAvailableJobs() {
+function getAvailablePromotions() {
+    if (!currentJob) {
+        // Novice -> 1st Class (Base Lv 10 req)
+        if (baseLevel < 10) return [];
+        return Object.entries(JOBS).filter(([id, j]) => j.classLevel === 1 && (j.isTrans === isTrans || j.isExtended));
+    }
+    // Höhere Klassen prüfen
     return Object.entries(JOBS).filter(([id, j]) => {
-        if(id === currentJob) return false;
-        if(completedJobs.includes(id)) return false;
-        if(j.tier === 1) return baseLevel >= j.baseLvReq && !currentJob;
-        if(j.tier === 2) return baseLevel >= j.baseLvReq && !currentJob && completedJobs.includes(j.prevJob);
-        return false;
+        if (j.prev !== currentJob) return false; // Muss auf aktuellem Job aufbauen
+        let reqJ = j.reqJob || (j.classLevel === 2 ? 50 : 70);
+        let reqB = j.reqBase || 1;
+        return jobLevel >= reqJ && baseLevel >= reqB;
     });
 }
 
-function chooseJob(jobId) {
+function advanceJob(jobId) {
     currentJob = jobId;
-    jobLevel = 0; jobExp = 0; jobSkillPts = 0; jobSkills = {};
+    jobLevel = 1; // Job Level resettet bei Klassenwechsel
+    jobExp = 0;
+    // Base Level bleibt beim normalen Job Change erhalten!
     localStorage.setItem('ts_job', currentJob);
     localStorage.setItem('ts_joblv', jobLevel);
     localStorage.setItem('ts_jobexp', jobExp);
-    localStorage.setItem('ts_jobspts', jobSkillPts);
-    localStorage.setItem('ts_jobskills', JSON.stringify(jobSkills));
     saveProgress();
     let j = JOBS[jobId];
-    showToast('⚔️ JOB GEWÄHLT!', j.color, j.name + ' — ' + j.passiv);
-    let jbtn = document.getElementById('job-menu-btn');
-    if(jbtn) jbtn.innerText = '⚔️ ' + (j.name||'JOB');
+    showToast('⚔️ KLASSENWECHSEL!', j.color, j.name + ' erreicht!');
+    playSound('evolve');
     renderJobOverlay();
 }
 
-function rebirthJob() {
-    if(!currentJob || jobLevel < 40) return;
-    let jobName = JOBS[currentJob]?.name || currentJob;
-    if(!confirm('⚔️ REBIRTH: ' + jobName + '\n\nAlle Skills werden PERMANENT behalten!\nDu kannst danach einen neuen Job wählen.\n\nFortfahren?')) return;
-    let job = JOBS[currentJob];
-    if(job) {
-        Object.entries(jobSkills).forEach(([skillId, lv]) => {
-            rebirthSkills[currentJob + ':' + skillId] = Math.max(lv, rebirthSkills[currentJob + ':' + skillId] || 0);
-        });
-    }
-    if(!completedJobs.includes(currentJob)) completedJobs.push(currentJob);
-    let rebirthKB = 500 + completedJobs.length * 250;
-    kaffeebons += rebirthKB;
-    currentJob = null; jobLevel = 0; jobExp = 0; jobSkillPts = 0; jobSkills = {};
-    localStorage.setItem('ts_completed_jobs', JSON.stringify(completedJobs));
-    localStorage.setItem('ts_rebirth_skills', JSON.stringify(rebirthSkills));
+function performRebirth() {
+    if (!currentJob || isTrans) return;
+    let j = JOBS[currentJob];
+    if (j.classLevel !== 2 || baseLevel < 99 || jobLevel < 50) return; // Nur 2nd Class kann Rebirth machen
+
+    if(!confirm('🔄 REBIRTH DURCHFÜHREN?\n\nDein Base- und Job-Level wird auf 1 zurückgesetzt.\nAlle Statuspunkte werden erstattet.\nDu erhältst +100 Bonus-Statuspunkte!\n\nBist du bereit für den Weg der Transzendenten?')) return;
+    
+    isTrans = true;
+    currentJob = null;
+    baseLevel = 1;
+    baseExp = 0;
+    jobLevel = 1;
+    jobExp = 0;
+    
+    // Statuspunkte resetten + 100 Bonus
+    statPoints = 100; 
+    stats = {"str":1,"agi":1,"vit":1,"int":1,"dex":1,"luk":1};
+    
+    localStorage.setItem('ts_isTrans', 'true');
     localStorage.setItem('ts_job', '');
-    localStorage.setItem('ts_joblv', 0); localStorage.setItem('ts_jobexp', 0);
-    localStorage.setItem('ts_jobspts', 0); localStorage.setItem('ts_jobskills', '{}');
+    localStorage.setItem('ts_baselv', 1);
+    localStorage.setItem('ts_baseexp', 0);
+    localStorage.setItem('ts_joblv', 1);
+    localStorage.setItem('ts_jobexp', 0);
+    localStorage.setItem('ts_statpts', statPoints);
+    localStorage.setItem('ts_stats', JSON.stringify(stats));
+    
+    kaffeebons += 5000; // Bonus Belohnung
     saveProgress();
-    if(Object.keys(JOBS).every(id => completedJobs.includes(id))) unlockTrophy('ueberqualifiziert');
-    showToast('🔄 REBIRTH!', '#f1c40f', jobName + ' gemeistert! +' + rebirthKB + ' KB · Skills permanent');
+    
+    showToast('🔄 TRANSZENDENZ ERREICHT!', '#f1c40f', 'Du wurdest wiedergeboren! +100 Stat-Punkte!');
     playSound('evolve');
-    let jbtn = document.getElementById('job-menu-btn');
-    if(jbtn) jbtn.innerText = '⚔️ JOB WÄHLEN';
     renderJobOverlay();
 }
 
@@ -1690,34 +1631,35 @@ function earnTimeExp() {
 
 function checkLevelUp() {
     let leveled = false;
-    // Base Level
-    while(baseLevel < 50 && baseExp >= baseExpNeeded(baseLevel)) {
+    let maxBase = (currentJob && JOBS[currentJob] && JOBS[currentJob].classLevel >= 3) ? 250 : 99;
+
+    // Base Level (RO-Cap bei 99 oder 250)
+    while(baseLevel < maxBase && baseExp >= baseExpNeeded(baseLevel)) {
         baseExp -= baseExpNeeded(baseLevel);
         baseLevel++;
+        // RO-ähnliche Stat-Punkte Kurve (wird mehr je höher das Level)
+        statPoints += Math.floor(baseLevel / 5) + 2; 
         leveled = true;
         floatingTexts.push(new FloatingText(player.x, player.y - 40, `⬆ BASE LV ${baseLevel}!`, '#f1c40f'));
         playSound('delivery');
-        // Job-Auswahl bei Level 10
-        if(baseLevel === 10 && !currentJob) {
-            setTimeout(() => openJobOverlay(), 500);
-            showToast('⚔️ LEVEL 10!', '#f1c40f', 'Job-Auswahl verfügbar! Menü → JOB');
-        }
     }
+
     // Job Level
     if(currentJob) {
-        while(jobLevel < 40 && jobExp >= jobExpNeeded(jobLevel + 1)) {
+        let maxJob = 50;
+        if (isTrans && JOBS[currentJob].classLevel === 2) maxJob = 70;
+        if (JOBS[currentJob].classLevel >= 3) maxJob = 70;
+        if (JOBS[currentJob].isExtended && JOBS[currentJob].classLevel === 1) maxJob = 99; // Super Novice Ausnahme
+
+        while(jobLevel < maxJob && jobExp >= jobExpNeeded(jobLevel + 1)) {
             jobExp -= jobExpNeeded(jobLevel + 1);
             jobLevel++;
-            jobSkillPts++;
             leveled = true;
-            floatingTexts.push(new FloatingText(player.x, player.y - 60, `⚔️ JOB LV ${jobLevel}!`, JOBS[currentJob]?.color || '#fff'));
-            // Job 2 Auswahl bei Job Level 25
-            if(jobLevel === 25) {
-                showToast('⚔️ JOB LEVEL 25!', '#f1c40f', 'Tier-2 Jobs bald möglich!');
-            }
-            if(jobLevel === 40) {
-                showToast('🔄 MAX LEVEL!', '#f1c40f', 'REBIRTH verfügbar! Menü → JOB');
-                playSound('evolve');
+            floatingTexts.push(new FloatingText(player.x, player.y - 60, `⚔️ JOB LV ${jobLevel}!`, JOBS[currentJob].color || '#fff'));
+            
+            // Rebirth-Check
+            if(baseLevel >= 99 && jobLevel >= 50 && JOBS[currentJob].classLevel === 2 && !isTrans) {
+                showToast('🔄 REBIRTH MÖGLICH!', '#f1c40f', 'Geh ins Menü für den Aufstieg!');
             }
         }
     }
@@ -1726,9 +1668,25 @@ function checkLevelUp() {
         localStorage.setItem('ts_jobexp',  jobExp);
         localStorage.setItem('ts_baselv',  baseLevel);
         localStorage.setItem('ts_joblv',   jobLevel);
-        localStorage.setItem('ts_jobspts', jobSkillPts);
+        localStorage.setItem('ts_statpts', statPoints);
         saveProgress();
     }
+}
+
+// --- NEU: STAT-PUNKTE VERTEILEN ---
+function increaseStat(statName) {
+    let currentVal = stats[statName];
+    if (currentVal >= 99) { showToast('MAXIMALWERT!', '#e74c3c'); return; }
+    
+    let cost = Math.floor((currentVal - 1) / 10) + 2; // Kosten steigen wie bei RO
+    if (statPoints < cost) { showToast('ZU WENIG PUNKTE', '#e74c3c'); return; }
+    
+    statPoints -= cost;
+    stats[statName]++;
+    localStorage.setItem('ts_statpts', statPoints);
+    localStorage.setItem('ts_stats', JSON.stringify(stats));
+    saveProgress();
+    renderJobOverlay(); // UI direkt aktualisieren
 }
 
 function upgradeJobSkill(skillId) {
@@ -1751,49 +1709,32 @@ function upgradeJobSkill(skillId) {
 }
 
 function applyJobEffects(p) {
-    function _applyPassiv(jid) {
-        if(jid === 'supporter' || jid === 'burnout_spezialist') p._suppeHealBonus = (p._suppeHealBonus||0) + 15;
-        if(jid === 'techniker' || jid === 'entwickler') p._farmIntervalMult = (p._farmIntervalMult||1) * 0.7;
-        if(jid === 'gabelstapler') p._vehicleImmune = true;
-        // Maddin bleibt permanent aktiv, wenn er einmal abgeschlossen wurde
-        if(jid === 'maddin') { 
-            p.azubiCost = 0; 
-            p._maddingMode = true; 
-            p.isMartin = true; // <--- Das hier sorgt für die Maddin-Optik
-            p.radius = 28;     // <--- Das hier für die Boss-Hitbox
-        }
-        if(jid === 'hacker') p._hackerPassiv = true;
+    if (!currentJob) return;
+    
+    // Maddin Optik und Features (betrifft auch Abteilungsleiter)
+    if(currentJob === 'maddin' || currentJob === 'abteilungsleiter') { 
+        p.isMartin = true; p.radius = 28; p.azubiCost = 0; p._maddingMode = true; 
     }
-    function _applySkills(sk) {
-        let lv = (id) => sk[id] || 0;
-        if(lv('palettenramme') > 0) p._rollDmg = Math.max(p._rollDmg||0, [0,30,50,80][lv('palettenramme')]);
-        if(lv('ueberstundenk') > 0) p._lowHpDmg = Math.max(p._lowHpDmg||0, [0,0.15,0.25,0.40][lv('ueberstundenk')]);
-        if(lv('lagerhaltung') > 0)  p._extraWeaponSlots = (p._extraWeaponSlots||0) + [0,1,1,2][lv('lagerhaltung')];
-        if(lv('formular27b') > 0)   p._hitSlowEnemy = Math.max(p._hitSlowEnemy||0, [0,60,120,180][lv('formular27b')]);
-        if(lv('ticketschliessen')>0)p._killRegenBurst = Math.max(p._killRegenBurst||0, [0,3,5,8][lv('ticketschliessen')]);
-        if(lv('deployment') > 0)    p.azubiCost = Math.floor((p.azubiCost||5000) * [1,0.7,0.5,0.3][lv('deployment')]);
-        if(lv('vollpulle') > 0)     p._vodkaTimeBonus = Math.max(p._vodkaTimeBonus||0, [0,120,180,300][lv('vollpulle')]);
-        if(lv('maddinstampfer') > 0)p._maddingStampfer = Math.max(p._maddingStampfer||0, [0,50,80,120][lv('maddinstampfer')]);
-        if(lv('teampower') > 0)     p._azubiDmgBonus = Math.max(p._azubiDmgBonus||0, [0,0.05,0.08,0.12][lv('teampower')]);
-        if(lv('staplerSense') > 0)  p._vehicleKillDmg = Math.max(p._vehicleKillDmg||0, [0,80,150,250][lv('staplerSense')]);
-        if(lv('schmerztoleran') > 0)p._lowHpDefense = Math.max(p._lowHpDefense||0, [0,0.15,0.25,0.35][lv('schmerztoleran')]);
-        if(lv('farmDouble') > 0)    p._farmIntervalMult = (p._farmIntervalMult||1) * [1,0.67,0.5,0.4][lv('farmDouble')];
-        if(lv('sqlInjection') > 0)  p._sqlInjection = Math.max(p._sqlInjection||0, lv('sqlInjection'));
-        if(lv('pausenregel') > 0)   p._autoInvuln = Math.min(p._autoInvuln||99999, [0,5400,4200,3000][lv('pausenregel')]);
+    
+    // Fahrzeug-Immunität für den Stapler-Zweig (Swordsman-Linie)
+    if(currentJob === 'staplerfahrer' || currentJob === 'schichtleiter' || currentJob === 'supply_chain_manager' || currentJob === 'coo') {
+        p._vehicleImmune = true;
     }
-    // Rebirth-Skills (permanent)
-    for(let cj of completedJobs) {
-        _applyPassiv(cj);
-        let rsk = {};
-        for(let key in rebirthSkills) { if(key.startsWith(cj+':')) rsk[key.split(':')[1]] = rebirthSkills[key]; }
-        _applySkills(rsk);
+    
+    // Farm-Bonus für den Techniker-Zweig (Merchant-Linie)
+    if(currentJob === 'techniker' || currentJob === 'high_techniker' || currentJob === 'entwickler' || currentJob === 'senior_entwickler' || currentJob === 'lead_architect' || currentJob === 'cto') {
+        p._farmIntervalMult = 0.7;
     }
-    // Aktueller Job
-    if(currentJob) { _applyPassiv(currentJob); _applySkills(jobSkills); }
-    // Trophäe Überqualifiziert: alle Passivs
-    if(hasTrophy('ueberqualifiziert')) Object.keys(JOBS).forEach(jid => _applyPassiv(jid));
-    // Trophäe Meister Hand: Unsichtbarkeit
-    if(hasTrophy('meister_hand')) p._phantomGriff = true;
+
+    // Heilungs-Bonus für den Support-Zweig (Acolyte-Linie)
+    if(currentJob === 'sachbearbeiter' || currentJob === 'high_sachbearbeiter' || currentJob === 'it_director' || currentJob === 'cio') {
+        p._suppeHealBonus = (p._suppeHealBonus || 0) + 15;
+    }
+    
+    // Speed-Bonus für die Novice-Linie
+    if(currentJob === 'werkstudent' || currentJob === 'dauerstudent' || currentJob === 'bachelor') {
+        p.speed += 1.0;
+    }
 }
 
 // ── JOB OVERLAY UI ───────────────────────────────────────────
@@ -1810,6 +1751,7 @@ function renderJobOverlay() {
     let cont = document.getElementById('jobContent');
     if(!cont) return;
     let j = currentJob ? JOBS[currentJob] : null;
+    let maxBase = (j && j.tier >= 3) ? 250 : 99;
     let bexpNext = baseExpNeeded(baseLevel);
     let jexpNext = currentJob ? jobExpNeeded(jobLevel+1) : 0;
     let bPct = Math.min(100, Math.round(baseExp / bexpNext * 100));
@@ -1818,8 +1760,8 @@ function renderJobOverlay() {
     let html = `
     <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;">
         <div style="flex:1;min-width:200px;background:#111;border:2px solid #f1c40f;padding:14px;border-radius:4px;">
-            <div style="color:#f1c40f;font-size:13px;letter-spacing:2px;margin-bottom:6px;">⚔️ BASE LEVEL</div>
-            <div style="color:#fff;font-size:28px;font-weight:bold;">${baseLevel} <span style="font-size:14px;color:#888;">/ 50</span></div>
+            <div style="color:#f1c40f;font-size:13px;letter-spacing:2px;margin-bottom:6px;">⚔️ BASE LEVEL ${isTrans ? '<span style="color:#e74c3c">(TRANS)</span>' : ''}</div>
+            <div style="color:#fff;font-size:28px;font-weight:bold;">${baseLevel} <span style="font-size:14px;color:#888;">/ ${maxBase}</span></div>
             <div style="background:#222;height:8px;border-radius:4px;margin:8px 0;">
                 <div style="background:#f1c40f;height:8px;border-radius:4px;width:${bPct}%;transition:0.3s;"></div>
             </div>
@@ -1827,59 +1769,65 @@ function renderJobOverlay() {
         </div>
         <div style="flex:1;min-width:200px;background:#111;border:2px solid ${j?j.color:'#333'};padding:14px;border-radius:4px;">
             <div style="color:${j?j.color:'#555'};font-size:13px;letter-spacing:2px;margin-bottom:6px;">💼 JOB LEVEL</div>
-            <div style="color:#fff;font-size:28px;font-weight:bold;">${jobLevel} <span style="font-size:14px;color:#888;">/ 40</span></div>
+            <div style="color:#fff;font-size:28px;font-weight:bold;">${jobLevel}</div>
             <div style="background:#222;height:8px;border-radius:4px;margin:8px 0;">
                 <div style="background:${j?j.color:'#333'};height:8px;border-radius:4px;width:${jPct}%;transition:0.3s;"></div>
             </div>
-            <div style="color:#888;font-size:11px;">${currentJob?`${jobExp} / ${jexpNext} Job-EXP`:'Kein Job'} ${jobSkillPts>0?`<span style="color:#2ecc71;font-weight:bold;">● ${jobSkillPts} Skillpkt</span>`:''}</div>
+            <div style="color:#888;font-size:11px;">${currentJob?`${jobExp} / ${jexpNext} Job-EXP`:'Novice'}</div>
         </div>
     </div>`;
 
-    if(!currentJob) {
-        if(baseLevel < 10) {
-            html += `<div style="text-align:center;color:#666;padding:30px;border:2px dashed #333;border-radius:4px;">
-                🔒 Job-Auswahl bei <strong style="color:#f1c40f;">Base Level 10</strong><br>
-                <span style="font-size:12px;">Noch ${10-baseLevel} Level bis zur Auswahl</span></div>`;
-        } else {
-            let avT1 = Object.entries(JOBS).filter(([id,j])=>j.tier===1 && !completedJobs.includes(id));
-            let avT2 = Object.entries(JOBS).filter(([id,j])=>j.tier===2 && !completedJobs.includes(id) && completedJobs.includes(j.prevJob));
-            if(avT1.length > 0) {
-                html += `<div style="color:#f1c40f;font-size:14px;margin-bottom:12px;letter-spacing:2px;">⚔️ WÄHLE DEINEN JOB:</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">`;
-                avT1.forEach(([id,j])=>{ html += `<div onclick="chooseJob('${id}')" style="background:#0a0a0a;border:2px solid ${j.color};padding:14px;border-radius:4px;cursor:pointer;" onmouseover="this.style.background='${j.color}22'" onmouseout="this.style.background='#0a0a0a'"><div style="color:${j.color};font-size:15px;font-weight:bold;">${j.name}</div><div style="color:#aaa;font-size:11px;margin:6px 0;">${j.desc}</div><div style="color:#2ecc71;font-size:11px;">✦ ${j.passiv}</div></div>`; });
-                html += '</div>';
-            }
-            if(avT2.length > 0) {
-                html += `<div style="color:#e67e22;font-size:14px;margin:16px 0 12px;letter-spacing:2px;">🌟 TIER-2 (via Rebirth):</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">`;
-                avT2.forEach(([id,j])=>{ html += `<div onclick="chooseJob('${id}')" style="background:#0a0a0a;border:2px solid ${j.color};padding:14px;border-radius:4px;cursor:pointer;" onmouseover="this.style.background='${j.color}22'" onmouseout="this.style.background='#0a0a0a'"><div style="color:${j.color};font-size:15px;font-weight:bold;">${j.name} <span style="font-size:10px;color:#e67e22;">T2</span></div><div style="color:#aaa;font-size:11px;margin:6px 0;">${j.desc}</div><div style="color:#2ecc71;font-size:11px;">✦ ${j.passiv}</div></div>`; });
-                html += '</div>';
-            }
-            if(avT1.length===0 && avT2.length===0) html += `<div style="text-align:center;color:#2ecc71;padding:20px;border:2px solid #2ecc71;border-radius:4px;">🎓 ALLE JOBS ABGESCHLOSSEN!</div>`;
-        }
-    } else {
-        let job = JOBS[currentJob];
-        html += `<div style="background:#0a0a0a;border:2px solid ${job.color};padding:14px;border-radius:4px;margin-bottom:16px;"><div style="color:${job.color};font-size:16px;font-weight:bold;">${job.name}</div><div style="color:#aaa;font-size:12px;margin:4px 0;">${job.desc}</div><div style="color:#2ecc71;font-size:12px;">✦ Passiv: ${job.passiv}</div></div>`;
-        html += `<div style="color:#fff;font-size:13px;letter-spacing:2px;margin-bottom:10px;">⚡ JOB-SKILLS <span style="color:#f1c40f;">(${jobSkillPts} Pkt verfügbar)</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">`;
-        Object.entries(job.skills).forEach(([id, sk]) => {
-            let curLv = jobSkills[id] || 0;
-            let maxed = curLv >= sk.maxLv;
-            let cost = !maxed ? sk.cost[curLv] : 0;
-            let canUp = !maxed && jobSkillPts >= cost && (!sk.minJobLv || jobLevel >= sk.minJobLv);
-            let locked = sk.minJobLv && jobLevel < sk.minJobLv;
-            let borderCol = maxed ? '#2ecc71' : (canUp ? job.color : '#333');
-            let dots = ''; for(let i=0;i<sk.maxLv;i++) dots += `<span style="color:${i<curLv?job.color:'#333'};margin-right:3px;">●</span>`;
-            html += `<div onclick="${canUp?`upgradeJobSkill('${id}')`:''}" style="background:#111;border:2px solid ${borderCol};padding:12px;border-radius:4px;cursor:${canUp?'pointer':'default'};opacity:${locked?0.4:1};"><div style="color:${maxed?'#2ecc71':job.color};font-size:13px;font-weight:bold;">${sk.name} ${maxed?'✅':''}</div><div style="color:#888;font-size:11px;margin:4px 0;">${sk.desc.split('/')[0]}${sk.maxLv>1?'/…':''}</div><div style="margin-top:6px;">${dots}</div><div style="color:${canUp?'#f1c40f':'#555'};font-size:11px;margin-top:4px;">${locked?'🔒 Job Lv '+sk.minJobLv:(maxed?'MAX':'⚡ '+cost+' Pkt')}</div></div>`;
-        });
-        html += '</div>';
-        // REBIRTH
-        if(jobLevel >= 40) {
-            html += `<div style="margin-top:20px;background:linear-gradient(135deg,rgba(241,196,15,0.1),rgba(231,76,60,0.1));border:3px solid #f1c40f;padding:20px;border-radius:6px;text-align:center;"><div style="font-size:36px;">🔄</div><div style="color:#f1c40f;font-size:18px;font-weight:bold;letter-spacing:3px;">REBIRTH VERFÜGBAR</div><div style="color:#aaa;font-size:12px;margin:8px 0;">Alle Skills werden <strong style="color:#2ecc71;">PERMANENT</strong> behalten!</div><div style="color:#ffd700;font-size:12px;margin-bottom:12px;">Bonus: +${500 + (completedJobs.length+1)*250} KB</div><button onclick="rebirthJob()" style="background:#f1c40f;color:#000;border:none;padding:14px 40px;font-size:16px;font-weight:bold;font-family:'Courier New',monospace;text-transform:uppercase;cursor:pointer;letter-spacing:3px;border-radius:3px;">🔄 REBIRTH STARTEN</button></div>`;
-        }
+    // --- STAT-MENÜ ---
+    html += `<div style="margin-bottom:20px;background:#111;border:2px solid #3498db;padding:14px;border-radius:4px;">
+        <div style="color:#3498db;font-size:14px;letter-spacing:2px;margin-bottom:10px;">📊 STATUSWERTE (Punkte: <span style="color:#f1c40f">${statPoints}</span>)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">`;
+    
+    for(let s in stats) {
+        let cost = Math.floor((stats[s] - 1) / 10) + 2;
+        let canBuy = statPoints >= cost && stats[s] < 99;
+        html += `<div style="background:#0a0a0a;padding:8px;border:1px solid #333;display:flex;justify-content:space-between;align-items:center;">
+            <div><span style="color:#fff;font-weight:bold;">${s.toUpperCase()}</span> <span style="color:#888;font-size:12px;">${stats[s]}</span></div>
+            <button onclick="increaseStat('${s}')" style="background:${canBuy?'#3498db':'#222'};color:${canBuy?'#fff':'#555'};border:none;padding:4px 10px;cursor:${canBuy?'pointer':'default'};font-weight:bold;border-radius:2px;">+</button>
+        </div>`;
     }
-    // Abgeschlossene Jobs
-    if(completedJobs.length > 0) {
-        html += `<div style="margin-top:20px;border-top:2px solid #222;padding-top:16px;"><div style="color:#2ecc71;font-size:13px;letter-spacing:2px;margin-bottom:10px;">🎓 ABGESCHLOSSENE JOBS (${completedJobs.length}/${Object.keys(JOBS).length})</div><div style="display:flex;flex-wrap:wrap;gap:6px;">`;
-        completedJobs.forEach(jid => { let j=JOBS[jid]; if(j) html += `<span style="background:${j.color}22;border:1px solid ${j.color};color:${j.color};padding:4px 10px;border-radius:12px;font-size:11px;font-weight:bold;">${j.name} ✅</span>`; });
-        html += '</div></div>';
+    html += `</div><div style="color:#888;font-size:10px;margin-top:8px;">STR: Dmg | AGI: Speed/Feuerrate | VIT: HP/Def | INT: Farm-Speed | DEX: Crit | LUK: Glück</div></div>`;
+
+    // --- AKTUELLER JOB INFO ---
+    if(currentJob) {
+        html += `<div style="background:#0a0a0a;border:2px solid ${j.color};padding:14px;border-radius:4px;margin-bottom:16px;">
+            <div style="color:${j.color};font-size:16px;font-weight:bold;">${j.name} (Class ${j.classLevel})</div>
+            <div style="color:#aaa;font-size:12px;margin:4px 0;">${j.desc}</div>
+            <div style="color:#2ecc71;font-size:12px;">✦ Passiv: ${j.passiv}</div>
+        </div>`;
+    }
+
+    // --- KLASSENWECHSEL / PROMOTION ---
+    let promos = getAvailablePromotions();
+    if(promos.length > 0) {
+        html += `<div style="color:#f1c40f;font-size:14px;margin-bottom:12px;letter-spacing:2px;">🚀 KLASSENWECHSEL VERFÜGBAR:</div>
+                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">`;
+        promos.forEach(([id, promo]) => { 
+            html += `<div onclick="advanceJob('${id}')" style="background:#0a0a0a;border:2px solid ${promo.color};padding:14px;border-radius:4px;cursor:pointer;" onmouseover="this.style.background='${promo.color}22'" onmouseout="this.style.background='#0a0a0a'">
+                <div style="color:${promo.color};font-size:15px;font-weight:bold;">${promo.name}</div>
+                <div style="color:#aaa;font-size:11px;margin:6px 0;">${promo.desc}</div>
+            </div>`; 
+        });
+        html += `</div>`;
+    } else if (!currentJob && baseLevel < 10) {
+        html += `<div style="text-align:center;color:#666;padding:20px;border:2px dashed #333;border-radius:4px;">🔒 1. Klasse bei Base Level 10</div>`;
+    } else if (currentJob) {
+        let reqLevel = j.classLevel === 1 ? "Job 50" : "Base 99 / Job 70";
+        if(j.classLevel < 4) html += `<div style="text-align:center;color:#666;padding:15px;border:2px dashed #333;">🔒 Nächste Klasse bei ${reqLevel}</div>`;
+    }
+
+    // --- REBIRTH BUTTON ---
+    if(j && j.classLevel === 2 && baseLevel >= 99 && jobLevel >= 50 && !isTrans && !j.isExtended) {
+        html += `<div style="margin-top:20px;background:linear-gradient(135deg,rgba(241,196,15,0.1),rgba(231,76,60,0.1));border:3px solid #f1c40f;padding:20px;border-radius:6px;text-align:center;">
+            <div style="font-size:36px;">🔄</div>
+            <div style="color:#f1c40f;font-size:18px;font-weight:bold;letter-spacing:3px;">REBIRTH VERFÜGBAR</div>
+            <div style="color:#aaa;font-size:12px;margin:8px 0;">Werde Level 1 und erhalte <strong style="color:#2ecc71;">+100 Statuspunkte!</strong></div>
+            <button onclick="performRebirth()" style="background:#f1c40f;color:#000;border:none;padding:14px 40px;font-size:16px;font-weight:bold;font-family:'Courier New',monospace;cursor:pointer;">🔄 TRANSZENDIEREN</button>
+        </div>`;
     }
 
     cont.innerHTML = html;
@@ -3488,6 +3436,17 @@ function applyUpgradesToPlayer(p) {
     }
     applySkillTree(p); // Skilltree-Effekte anwenden
     applyJobEffects(p); // Job-Effekte anwenden
+
+    // --- NEU: RO STATS ANWENDEN ---
+    p.dmgBonus += (stats.str - 1) * 1.5;                                        // STR: +1.5 Dmg pro Punkt
+    p.speed += (stats.agi - 1) * 0.05;                                          // AGI: +Movement Speed
+    p.fireRate = Math.max(2, p.fireRate - (stats.agi - 1) * 0.2);               // AGI: +Feuerrate
+    p.maxHp += (stats.vit - 1) * 5;                                             // VIT: +5 Max HP pro Punkt
+    p._dmgReduction = (p._dmgReduction || 0) + (stats.vit - 1) * 0.002;         // VIT: Schadensreduktion
+    p._stFarmBonus = (p._stFarmBonus || 0) + (stats.int - 1);                   // INT: +Farm-Speed (Frames)
+    p._critChance = (p._critChance || 0) + (stats.dex - 1) * 0.005;             // DEX: +0.5% Crit Chance pro Punkt
+    p._luckMult = (p._luckMult || 1) + (stats.luk - 1) * 0.05;                  // LUK: Drop-Raten Multiplikator
+    // ------------------------------
 }
 function getMaxFarms() { return 3 + getUpgradeLevel('farm_slots') + (player && player._stFarmSlots ? player._stFarmSlots : 0); }
 function openShop(fromGameOver=false) { renderShop(); document.getElementById('shopOverlay').style.display = 'block'; }
@@ -5948,10 +5907,8 @@ function startGame(diff=1){
         showToast("MODUS: WEGFLEXEN", "#f00", "1 HP | 5S KILL-TIMER | 10X PUNKTE");
     }
     generateWorld();
-    // Maddin-Job: isMartin aktivieren
-    if(currentJob === 'maddin') { 
-        player.radius = 28; // Größere Hitbox für den Teamleiter
-        player.isMartin = true; 
+    // Maddin/Abteilungsleiter Optik Trigger
+    if(currentJob === 'maddin' || currentJob === 'abteilungsleiter') { 
         player.promoTriggered = true; 
     }
     // Favorit-Waffe permanent equippen (kein Timer)
