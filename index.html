@@ -1463,17 +1463,43 @@ let unlockedTrophies = JSON.parse(localStorage.getItem('ts_trophies') || '[]');
 let unlockedWeapons  = JSON.parse(localStorage.getItem('ts_weapons') || '[]');
 
 // ============================================================
-// JOB-SYSTEM — RAGNARÖK-STYLE
+// JOB-SYSTEM — RAGNARÖK-STYLE (V2.0)
 // ============================================================
-let baseExp      = parseInt(localStorage.getItem('ts_baseexp') || '0');
-let jobExp       = parseInt(localStorage.getItem('ts_jobexp')  || '0');
-let baseLevel    = parseInt(localStorage.getItem('ts_baselv')  || '1');
-let jobLevel     = parseInt(localStorage.getItem('ts_joblv')   || '0');
-let currentJob   = localStorage.getItem('ts_job') || null;     // z.B. 'sachbearbeiter'
-let jobSkillPts  = parseInt(localStorage.getItem('ts_jobspts') || '0');
-let jobSkills    = JSON.parse(localStorage.getItem('ts_jobskills') || '{}');
+
+// --- SCHRITT 1: DER HARD RESET (WIPE DER ALTEN DATEN) ---
+if (!localStorage.getItem('ts_ro_wipe_v1')) {
+    // Lösche alle alten Job- und Level-Daten
+    localStorage.removeItem('ts_baseexp');
+    localStorage.removeItem('ts_jobexp');
+    localStorage.removeItem('ts_baselv');
+    localStorage.removeItem('ts_joblv');
+    localStorage.removeItem('ts_job');
+    localStorage.removeItem('ts_jobspts');
+    localStorage.removeItem('ts_jobskills');
+    localStorage.removeItem('ts_completed_jobs');
+    localStorage.removeItem('ts_rebirth_skills');
+    
+    // Setze den Marker, damit nicht bei jedem Start gelöscht wird
+    localStorage.setItem('ts_ro_wipe_v1', 'done');
+    console.log("Alte Job-Daten gelöscht. RO-System initialisiert.");
+}
+// --------------------------------------------------------
+
+let baseExp       = parseInt(localStorage.getItem('ts_baseexp') || '0');
+let jobExp        = parseInt(localStorage.getItem('ts_jobexp')  || '0');
+let baseLevel     = parseInt(localStorage.getItem('ts_baselv')  || '1');
+let jobLevel      = parseInt(localStorage.getItem('ts_joblv')   || '1'); // Job startet jetzt bei 1
+let currentJob    = localStorage.getItem('ts_job') || null;     
+let jobSkillPts   = parseInt(localStorage.getItem('ts_jobspts') || '0');
+let jobSkills     = JSON.parse(localStorage.getItem('ts_jobskills') || '{}');
 let completedJobs = JSON.parse(localStorage.getItem('ts_completed_jobs') || '[]');
 let rebirthSkills = JSON.parse(localStorage.getItem('ts_rebirth_skills') || '{}');
+
+// --- NEUE STATS-VARIABLEN FÜR DAS RO-SYSTEM ---
+let isTrans       = localStorage.getItem('ts_isTrans') === 'true'; 
+let statPoints    = parseInt(localStorage.getItem('ts_statpts') || '0');
+let stats         = JSON.parse(localStorage.getItem('ts_stats') || '{"str":1,"agi":1,"vit":1,"int":1,"dex":1,"luk":1}');
+// ----------------------------------------------
 
 // EXP-Kurven
 function baseExpNeeded(lv) { return Math.floor(100 * Math.pow(lv, 1.6)); }
