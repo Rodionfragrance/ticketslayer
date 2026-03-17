@@ -5547,7 +5547,8 @@ function loop(){
                                 e.x += Math.cos(b.angle) * 10; 
                                 e.y += Math.sin(b.angle) * 10;
                             }
-                        } else if (b.type === 'flame') {
+                        }
+                    } else if (b.type === 'flame') {
                         e.burnTimer = 90; e.hp -= b.dmg; bullets.splice(j,1);
                     } else { 
                         if (!b.hitEnemies.includes(e)) {
