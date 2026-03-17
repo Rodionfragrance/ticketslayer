@@ -248,6 +248,15 @@ button:hover { transform:scale(1.05); border-color:#fff; }
 .btn-easy   { border-color:#2ecc71; color:#2ecc71; }
 .btn-normal { border-color:#f1c40f; color:#f1c40f; }
 .btn-hard   { border-color:#c0392b; color:#c0392b; }
+.btn-felix {
+    background: linear-gradient(45deg, #f1c40f, #f39c12); color: #000;
+    border: 2px solid #fff; padding: 12px 18px; font-size: 16px;
+    box-shadow: 0 0 15px #f1c40f, inset 0 0 10px #fff;
+    animation: goldPulse 1.5s infinite alternate;
+    font-weight: bold; font-family:'Courier New',monospace; cursor: pointer; text-transform: uppercase;
+}
+.btn-felix:hover { transform: scale(1.08); box-shadow: 0 0 30px #f1c40f, inset 0 0 20px #fff; color: #000; }
+@keyframes goldPulse { 0% { box-shadow: 0 0 15px #f1c40f; } 100% { box-shadow: 0 0 35px #f39c12, 0 0 15px #fff; } }   
 .btn-info   { border-color:#3498db; color:#3498db; margin-top:15px; width:100%; }
 .btn-shop   { border-color:#00e5ff; color:#00e5ff; margin-top:8px;  width:100%; }
 input[type="text"] {
@@ -686,6 +695,7 @@ input[type="text"] {
             <button class="btn-hard"   onclick="startGame(6)">Burnout</button>
             <button id="btn-survival"  onclick="startGame(9)" style="background:#111;color:#9b59b6;border:2px solid #9b59b6;padding:12px 18px;font-size:16px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;min-width:130px;transition:0.2s;">Survival</button>
             <button class="btn-flex"   onclick="isWegflexenMode=true; startGame(9)">WEGFLEXEN</button>
+            <button class="btn-felix"  onclick="isWegflexenMode=true; startGame(15)">WEIL WEGEN FELIX</button>
         </div>
 
         <!-- MENÜ-GRID 3x2 -->
@@ -1126,12 +1136,20 @@ function saveHighscoreAndRestart() {
     let timeSec = (Date.now() - runStartTime) / 1000;
     let rat = calculateRunRating(score, runKillCount, timeSec, runBossKilled, bestComboThisRun, lastChosenDifficulty);
     // --- NEU: S-Rang Trophäen Tracking ---
+    // --- S-RANG & FELIX TROPHÄEN ---
     if(rat.grade === 'S') {
         let sRanks = JSON.parse(localStorage.getItem('ts_s_ranks') || '[]');
         if(!sRanks.includes(currentDiffLabel)) {
             sRanks.push(currentDiffLabel);
             localStorage.setItem('ts_s_ranks', JSON.stringify(sRanks));
             if(sRanks.length >= 5) unlockTrophy('ceo_perk');
+        }
+        
+        // FELIX MODUS PRÜFUNG (Millionen-Werte)
+        if(currentDiffLabel === "WEIL WEGEN FELIX") {
+            if(score >= 1000000) unlockTrophy('felix_tier1');
+            if(score >= 2500000) unlockTrophy('felix_tier2');
+            if(score >= 5000000) unlockTrophy('felix_tier3');
         }
     }
     if(db && score > 0) {
@@ -1164,13 +1182,20 @@ function saveHighscoreAndMainMenu() {
     let name = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim().substring(0,10);
     let timeSec2 = (Date.now() - runStartTime) / 1000;
     let rat2 = calculateRunRating(score, runKillCount, timeSec2, runBossKilled, bestComboThisRun, lastChosenDifficulty);
-    // --- NEU: S-Rang Trophäen Tracking ---
-    if(rat2.grade === 'S') {
+    // --- S-RANG & FELIX TROPHÄEN ---
+    if(rat.grade === 'S') {
         let sRanks = JSON.parse(localStorage.getItem('ts_s_ranks') || '[]');
         if(!sRanks.includes(currentDiffLabel)) {
             sRanks.push(currentDiffLabel);
             localStorage.setItem('ts_s_ranks', JSON.stringify(sRanks));
             if(sRanks.length >= 5) unlockTrophy('ceo_perk');
+        }
+        
+        // FELIX MODUS PRÜFUNG (Millionen-Werte)
+        if(currentDiffLabel === "WEIL WEGEN FELIX") {
+            if(score >= 1000000) unlockTrophy('felix_tier1');
+            if(score >= 2500000) unlockTrophy('felix_tier2');
+            if(score >= 5000000) unlockTrophy('felix_tier3');
         }
     }
     if(db && score > 0) {
@@ -1427,7 +1452,11 @@ const TROPHIES_DEF = [
     { id:'speedster',       icon:'⚡', name:'Speedster',           desc:'Besiege Peter Bayer in unter 5 Sekunden im Boss-Room.', perk:'Präzision: +5% Schaden auf alle Waffen' },
     { id:'ceo_perk',        icon:'👑', name:'Vorstandsvorsitzender',desc:'Schließe alle 5 Ligen mit dem S-Rang ab.', perk:'Unkündbar: Überlebe 1 tödlichen Treffer mit 1 HP (3s Schild)' },
     { id:'ueberqualifiziert', icon:'🎓', name:'Überqualifiziert',   desc:'Schließe alle 9 Jobs durch Rebirth ab.', perk:'Universalgenie: Alle Job-Passivs gleichzeitig aktiv' },
-    { id:'meister_hand',    icon:'✋', name:'Meister Hand',         desc:'Besiege die geheime Hand im Logistics-Bereich.', perk:'Phantomgriff: [V] Vernichtet alle Gegner auf der Map (60s CD)' }
+    { id:'meister_hand',    icon:'✋', name:'Meister Hand',         desc:'Besiege die geheime Hand im Logistics-Bereich.', perk:'Phantomgriff: [V] Vernichtet alle Gegner auf der Map (60s CD)' },
+    // --- WEIL WEGEN FELIX - ENDGAME TROPHÄEN ---
+    { id:'felix_tier1', icon:'🚀', name:'Das Ticket-Kartell', desc:'Felix-Modus: S-Rang + 1.000.000 Pkt.', perk:'Combo startet bei ×3.' },
+    { id:'felix_tier2', icon:'💸', name:'Mehrheitsaktionär', desc:'Felix-Modus: S-Rang + 2.500.000 Pkt.', perk:'Kloska -50% & Start mit +5 Suppen.' },
+    { id:'felix_tier3', icon:'👑', name:'Der wahre CEO', desc:'Felix-Modus: S-Rang + 5.000.000 Pkt.', perk:'Azubis spawnen als Junior. +25% Schaden.' }
 ];
 
 let unlockedTrophies = JSON.parse(localStorage.getItem('ts_trophies') || '[]');
@@ -2411,6 +2440,10 @@ function applySkillTree(p) {
         if(ef === 'ks_unantastbar')        p._rollInvFrames = 180; // 3s bei 60fps
         if(ef === 'ks_ki')                 p._aiTurrets = true;
     }
+    // --- FELIX PERKS AKTIVIEREN ---
+    if(hasTrophy('felix_tier1')) { p._comboStart = 3; }
+    if(hasTrophy('felix_tier2')) { p._shopDiscount = (p._shopDiscount||0) + 0.50; p.suppe += 5; }
+    if(hasTrophy('felix_tier3')) { p.dmgBonus += Math.floor(p.dmgBonus * 0.25 + 5); p._azubiStartLevel = 1; }
     // HP nach allen Upgrades setzen
     p.hp = p.maxHp;
 }
@@ -3710,8 +3743,8 @@ function updateCombo(kill=true) {
     // Multiplikator-Stufen
     if      (combo >= 20) comboMult = 5;
     else if (combo >= 10) comboMult = 3;
-    else if (combo >= 5)  comboMult = 2;
-    else                  comboMult = 1;
+    else if (combo >= 5)  comboMult = Math.max(player ? player._comboStart || 1 : 1, 2);
+    else                  comboMult = player ? player._comboStart || 1 : 1;
 
     if(comboMult > bestComboThisRun) bestComboThisRun = comboMult;
     if(combo >= 100)  unlockTrophy('picobello');
@@ -4016,7 +4049,7 @@ class FloatingText{
 class Turret {
     constructor(x,y){
         this.x=x; this.y=y; this.cooldown=0;
-        this.kills=0; this.level=0; this.type='turret';
+        this.kills=0; this.level = (player && player._azubiStartLevel) ? player._azubiStartLevel : 0; this.type='turret';
     }
     update(){
         this.cooldown--;
@@ -4460,9 +4493,10 @@ class Item{
 }
 
 class Bullet {
-    constructor(x, y, angle, type, dmg=10) {
+    constructor(x, y, angle, type, dmg=10, owner=null) {
         this.x = x; this.y = y; this.type = type; this.dmg = dmg;
         this.angle = angle;
+        this.owner = owner; // NEU: Wer hat geschossen?
         if (type === 'rocket') this.speed = 12;
         else if (type === 'railgun') this.speed = 35;
         else if (type === 'flame') this.speed = 10 + Math.random() * 4;
@@ -4767,6 +4801,24 @@ class Enemy{
                     let dmg=0.5;
                     if(this.type===4)dmg=1.0; if(this.type===3)dmg=1.5; if(this.type===2)dmg=2.0;
                     if(this.type===1)dmg=2.5;  if(this.type===99)dmg=3.5; if(this.type===7)dmg=1.2;
+                    
+                    // --- NEU: SCHATTEN-SCHADEN & RAUB ---
+                    if(this.label === "DEIN SCHATTEN") {
+                        dmg = 15.0; // Der Schatten haut richtig rein
+                        if(player.suppe > 0 && Math.random() < 0.3) {
+                            player.suppe--; 
+                            showToast("BESTOHLEN!", "#555", "Der Schatten nahm deine Suppe!");
+                            
+                            // --- NEU: Visueller Hinweis am Spieler ---
+                            floatingTexts.push(new FloatingText(player.x, player.y - 60, "-1 SUPPE", "#ff9f43"));
+                            // -----------------------------------------
+                            
+                            // Heilt sich selbst ein bisschen durch die Suppe
+                            this.hp = Math.min(this.maxHp, this.hp + 5000); 
+                        }
+                    }
+                    // ------------------------------------
+
                     if(isWegflexenMode) { player.hp = 0; }
                     else { player.hp -= dmg; player.orangeHp += dmg; player.orangeTimer = 120; }
                     spawnParticles(player.x,player.y,'#f00',1);
@@ -5003,6 +5055,24 @@ if(!bueroDoor && currentBossStage >= 4 && !activeBoss && gamePhase === 'normal' 
     if(!player.inMeeting&&frame%4500===2000){
         meetingZone={x:Math.random()*(WORLD_WIDTH-400)+200,y:Math.random()*(WORLD_HEIGHT-400)+200,r:150,active:true};
     }
+
+   // --- WEIL WEGEN FELIX: DER SCHATTEN ---
+    if(currentDiffLabel === "WEIL WEGEN FELIX" && frame > 0 && frame % 7200 === 0 && !systemCollapse) {
+        let shadow = new Enemy();
+        shadow.type = 1; // Prio-1 Verfolgungs-Logik
+        shadow.color = "#111"; // Pechschwarz
+        shadow.label = "DEIN SCHATTEN";
+        shadow.symbol = "👤";
+        shadow.radius = 35;
+        shadow.hp = 150000; 
+        shadow.maxHp = 150000;
+        shadow.speed = player.speed * 0.8; 
+        shadow.score = 50000;
+        enemies.push(shadow);
+        showToast("SPIEGELKAMPF", "#555", "Dein Schatten jagt dich!", true);
+        playSound('alarm');
+    }
+   
    // --- OVERCOOKED MECHANIK: TOTALER BEREICHS-LOCKDOWN ---
     if(!systemCollapse && !activeBoss && gamePhase === 'normal') {
         if(!blockadeEvent) blockadeCooldown--;
@@ -5469,17 +5539,29 @@ function loop(){
                         bullets.splice(j,1);
                     } else if (b.type === 'railgun') {
                         if (!b.hitEnemies.includes(e)) {
-                            e.hp -= b.dmg; b.hitEnemies.push(e);
+                            e.hp -= b.dmg; e.lastHitBy = b.owner; b.hitEnemies.push(e);
                             spawnParticles(e.x, e.y, '#00ffff', 5); playSound('hit');
-                            e.x += Math.cos(b.angle) * 10; e.y += Math.sin(b.angle) * 10;
-                        }
-                    } else if (b.type === 'flame') {
+                            
+                            // --- SCHATTEN IST IMMUN GEGEN RAILGUN-RÜCKSTOSS ---
+                            if(e.label !== "DEIN SCHATTEN") {
+                                e.x += Math.cos(b.angle) * 10; 
+                                e.y += Math.sin(b.angle) * 10;
+                            }
+                        } else if (b.type === 'flame') {
                         e.burnTimer = 90; e.hp -= b.dmg; bullets.splice(j,1);
                     } else { 
                         if (!b.hitEnemies.includes(e)) {
-                            e.hp -= b.dmg; b.hitEnemies.push(e);
+                            e.hp -= b.dmg; e.lastHitBy = b.owner; b.hitEnemies.push(e);
                             spawnParticles(e.x, e.y, e.color, 3); playSound('hit');
                             if(player.hasFireMod) e.burnTimer = 180; 
+                            
+                            // --- NEU: SCHATTEN KNOCKBACK RESISTENZ ---
+                            if(e.label !== "DEIN SCHATTEN") {
+                                e.x += Math.cos(b.angle) * 3; 
+                                e.y += Math.sin(b.angle) * 3;
+                            }
+                            // -----------------------------------------
+
                             if(!player.hasPierceMod || b.hitEnemies.length >= 2) bullets.splice(j, 1);
                         }
                     }
@@ -5506,6 +5588,12 @@ function loop(){
         for(let i=enemies.length-1;i>=0;i--){
             if(enemies[i].hp<=0){
                 let e=enemies[i];
+
+               // --- XP FÜR AZUBIS ---
+                if(e.lastHitBy && e.lastHitBy.type === 'turret') {
+                    e.lastHitBy.kills++;
+                }
+                // ---------------------
                 
                 // Rache-Heilung
                 if(player.orangeHp > 0) {
@@ -5530,7 +5618,12 @@ function loop(){
                 let earnedScore = e.score * comboMult;
                 score += earnedScore;
                 if(currentShift===2) score += Math.floor(e.score * 0.5 * comboMult);
-                
+
+                // --- WEIL WEGEN FELIX: SAP-OVERLOAD ---
+                if(currentDiffLabel === "WEIL WEGEN FELIX" && e.type === 1) {
+                    player.bugTimer = 120; // 2 Sekunden invertierte Steuerung
+                    showToast("SAP-OVERLOAD", "#ff00ff", "Steuerung invertiert!");
+                }
                 // Multiplikator-Floating-Text
                 if(comboMult > 1) {
                     floatingTexts.push(new FloatingText(e.x, e.y - 20, `×${comboMult} ${earnedScore}`, comboMult >= 5 ? '#e74c3c' : (comboMult >= 3 ? '#e67e22' : '#f1c40f')));
@@ -5757,6 +5850,24 @@ function loop(){
             ctx.fillStyle = "#f00"; ctx.font = "bold 40px Courier New"; ctx.textAlign = "center";
             ctx.fillText(`KOLLAPS-STATUS: ${(collapseTimer/60).toFixed(1)}s`, player.x, player.y - 150);
         } 
+        // --- WEIL WEGEN FELIX: BLACKOUT & AUDIT ---
+        if(currentDiffLabel === "WEIL WEGEN FELIX") {
+            // 1. Blackout
+            let g = ctx.createRadialGradient(player.x, player.y, 80, player.x, player.y, 400);
+            g.addColorStop(0, "rgba(0,0,0,0)");
+            g.addColorStop(1, "rgba(0,0,0,0.98)");
+            ctx.fillStyle = g;
+            ctx.fillRect(player.x - 2000, player.y - 2000, 4000, 4000);
+            
+            // 2. The Audit (Alle 60s Stats drosseln)
+            if(frame > 0 && frame % 3600 === 0) {
+                player.dmgBonus -= player.dmgBonus * 0.10; // -10% Schaden
+                player.speed -= player.speed * 0.05;       // -5% Speed
+                showToast("REVISION!", "#f00", "Schaden und Speed reduziert!");
+                playSound('hammer'); screenShake = 20;
+            }
+        }
+        // ------------------------------------------
         ctx.restore();
 
         requestAnimationFrame(loop);
@@ -5782,8 +5893,7 @@ function startGame(diff=1){
 
     input.keys={};input.mouseDown=false;
     score=0;frame=0;difficulty=diff;
-    currentDiffLabel = isWegflexenMode ? "WEGFLEXEN" : (diff===1 ? "PRAKTIKANT" : (diff===3 ? "VOLLZEIT" : (diff===6 ? "BURNOUT" : "SURVIVAL")));
-    lastChosenDifficulty=diff;
+    currentDiffLabel = isWegflexenMode ? (diff===15 ? "WEIL WEGEN FELIX" : "WEGFLEXEN") : (diff===1 ? "PRAKTIKANT" : (diff===3 ? "VOLLZEIT" : (diff===6 ? "BURNOUT" : "SURVIVAL")));    lastChosenDifficulty=diff;
     currentBossStage=0;activeBoss=null;
     currentShift=0;shiftTimer=0;
     gamePaused=false;idocEvent=null;meetingZone=null;kloskaEvent=null;
@@ -5803,7 +5913,7 @@ function startGame(diff=1){
 
     player = new Player();
     
-    if(diff !== 9 && diff !== 10) isWegflexenMode = false; 
+    if(diff !== 9 && diff !== 10 && diff !== 15) isWegflexenMode = false;
     lastWasWegflexen = isWegflexenMode;
     if(isWegflexenMode) {
         player.maxHp = 100; player.hp = 1;
@@ -5848,8 +5958,9 @@ function closeKloskaShop() {
     input.keys = {};
 }
 function buyKloskaItem(item, cost) {
-    if(player.suppe >= cost) {
-        player.suppe -= cost;
+    let finalCost = Math.floor(cost * (1 - (player._shopDiscount || 0)));
+    if(player.suppe >= finalCost) {
+        player.suppe -= finalCost;
         document.getElementById('shopSuppenCount').innerText = player.suppe;
         playSound('powerup');
         if(item === 'perm_mouse') { player.mouseTimer = Infinity; showToast("GEKAUFT!", "#0ff", "PERMANENTE ORBIT MAUS"); }
