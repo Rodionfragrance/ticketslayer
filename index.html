@@ -1087,7 +1087,7 @@ input[type="text"] {
 </div>
 
 <!-- PASSWORT LOGIK -->
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 var GAME_PASSWORD = 'Vollzeit2025';
 var SESSION_HOURS = 8;
 
@@ -2202,9 +2202,10 @@ function renderJobOverlay() {
     if(!cont) return;
     let j = currentJob ? JOBS[currentJob] : null;
     let maxBase = (j && (j.classLevel >= 3 || ((j.isAlt || j.isDoram || j.isExtended) && j.classLevel >= 2))) ? 250 : 99;
-    let jexpNext = jobExpNeeded(jobLevel + 1);
-    let bPct = Math.min(100, Math.round(baseExp / bexpNext * 100));
-    let jPct = Math.min(100, Math.round(jobExp / jexpNext * 100));
+    let bexpNext = (typeof baseExpNeeded === 'function') ? baseExpNeeded(baseLevel || 1) : 100;
+    let jexpNext = (typeof jobExpNeeded  === 'function') ? jobExpNeeded((jobLevel || 1) + 1) : 100;
+    let bPct = bexpNext > 0 ? Math.min(100, Math.round((baseExp||0) / bexpNext * 100)) : 0;
+    let jPct = jexpNext > 0 ? Math.min(100, Math.round((jobExp||0)  / jexpNext * 100)) : 0;
     let jobCap = !currentJob ? 10 : (j.isExtended && j.classLevel===1 ? 99 : (j.isAlt||j.isDoram||(isTrans&&j.classLevel===2)||j.classLevel>=3 ? 70 : 50));
 
     // ── Level-Bars ──
