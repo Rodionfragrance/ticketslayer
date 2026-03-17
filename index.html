@@ -1597,7 +1597,13 @@ let baseExp       = parseInt(localStorage.getItem('ts_baseexp') || '0');
 let jobExp        = parseInt(localStorage.getItem('ts_jobexp')  || '0');
 let baseLevel     = parseInt(localStorage.getItem('ts_baselv')  || '1');
 let jobLevel      = parseInt(localStorage.getItem('ts_joblv')   || '1'); // Job startet jetzt bei 1
-let currentJob    = localStorage.getItem('ts_job') || null;     
+let currentJob    = localStorage.getItem('ts_job') || null;
+// Lokale Job-ID migrieren falls veraltet
+if(currentJob && typeof JOB_ID_MIGRATION !== 'undefined' && JOB_ID_MIGRATION[currentJob]) {
+    currentJob = JOB_ID_MIGRATION[currentJob];
+    localStorage.setItem('ts_job', currentJob);
+}
+
 let jobSkillPts   = parseInt(localStorage.getItem('ts_jobspts') || '0');
 let jobSkills     = JSON.parse(localStorage.getItem('ts_jobskills') || '{}');
 let completedJobs = JSON.parse(localStorage.getItem('ts_completed_jobs') || '[]');
@@ -1864,6 +1870,7 @@ function earnTimeExp() {
 
 function checkLevelUp() {
     let leveled = false;
+    if(currentJob && !JOBS[currentJob]) { currentJob = null; jobLevel = 1; jobExp = 0; }
     let j = currentJob ? JOBS[currentJob] : null;
     let maxBase = (j && (j.classLevel >= 3 || ((j.isAlt || j.isDoram || j.isExtended) && j.classLevel >= 2))) ? 250 : 99;
 
@@ -2068,6 +2075,12 @@ function closeJobOverlay() {
 function renderJobOverlay() {
     let cont = document.getElementById('jobContent');
     if(!cont) return;
+    // Sicherheitscheck: Job existiert noch?
+    if(currentJob && !JOBS[currentJob]) {
+        console.warn('renderJobOverlay: unbekannter Job', currentJob, '→ reset');
+        currentJob = null; jobLevel = 1; jobExp = 0;
+        localStorage.setItem('ts_job',''); localStorage.setItem('ts_joblv','1'); localStorage.setItem('ts_jobexp','0');
+    }
     let j = currentJob ? JOBS[currentJob] : null;
     let maxBase = (j && (j.classLevel >= 3 || ((j.isAlt || j.isDoram || j.isExtended) && j.classLevel >= 2))) ? 250 : 99;
     let jexpNext = jobExpNeeded(jobLevel + 1);
@@ -3009,12 +3022,57 @@ function saveProgress() {
             prestige: prestigeLevel, trophies: unlockedTrophies,
             weapons: unlockedWeapons, favorite: favoriteWeapon||null, skills: unlockedSkills,
             baseLevel, jobLevel, baseExp, jobExp, currentJob: currentJob||null,
+            isTrans: isTrans||false, statPoints: statPoints||0, stats: stats||{},
             jobSkillPts, jobSkills, completedJobs, rebirthSkills,
+            runeInv: runeInventory, runeGrid: runeGrid,
             daily: _daily, bestScore: _best,
             lastSeen: new Date().toISOString()
         }, {merge:true}).catch(function(){});
     }
 }
+
+// ============================================================
+// JOB ID MIGRATION — mappt alte Cloud-Daten auf neue IDs
+// ============================================================
+const JOB_ID_MIGRATION = {
+    'gabelstapler':          'staplerfahrer',
+    'supporter':             'sachbearbeiter',
+    'burnout_spezialist':    'sachbearbeiter',
+    'hacker':                'techniker',
+    // Falls jemand alte extended hatte
+    'super_novice':          'werkstudent',
+};
+
+function migrateJobData(data) {
+    // currentJob migrieren
+    if(data.currentJob && JOB_ID_MIGRATION[data.currentJob]) {
+        console.log('Job Migration:', data.currentJob, '->', JOB_ID_MIGRATION[data.currentJob]);
+        data.currentJob = JOB_ID_MIGRATION[data.currentJob];
+    }
+    // currentJob validieren — existiert er noch in JOBS?
+    if(data.currentJob && !JOBS[data.currentJob]) {
+        console.log('Unbekannter Job, reset:', data.currentJob);
+        data.currentJob = null;
+        data.jobLevel = 1;
+        data.jobExp = 0;
+    }
+    // completedJobs migrieren
+    if(data.completedJobs) {
+        data.completedJobs = data.completedJobs.map(id => JOB_ID_MIGRATION[id] || id).filter(id => id && (JOBS[id] || true));
+    }
+    // rebirthSkills: Keys umschreiben (format: "jobId:skillId")
+    if(data.rebirthSkills) {
+        let newSkills = {};
+        for(let key in data.rebirthSkills) {
+            let [jobId, skillId] = key.split(':');
+            let newJobId = JOB_ID_MIGRATION[jobId] || jobId;
+            newSkills[newJobId + ':' + skillId] = data.rebirthSkills[key];
+        }
+        data.rebirthSkills = newSkills;
+    }
+    return data;
+}
+
 async function loadCloudProfile() {
     var el = document.getElementById('playerName');
     var name = el ? el.value.toUpperCase().trim() : '';
@@ -3024,6 +3082,8 @@ async function loadCloudProfile() {
         var doc = await db.collection('playerProfiles').doc(name).get();
         if(doc.exists){
             var d = doc.data();
+            // Migrationsfunktion anwenden (alte Job-IDs → neue IDs)
+            d = migrateJobData(Object.assign({}, d));
             kaffeebons = d.kb||0; upgradeProgress = d.upgrades||{}; prestigeLevel = d.prestige||0;
             unlockedTrophies = d.trophies || [];
             unlockedWeapons  = d.weapons   || [];
@@ -3038,10 +3098,35 @@ async function loadCloudProfile() {
             if(favoriteWeapon) localStorage.setItem('ts_favorite', favoriteWeapon);
             completedJobs = d.completedJobs || [];
             rebirthSkills = d.rebirthSkills || {};
+            // ── Job-Daten vollständig aus Cloud laden ──
+            if(d.currentJob !== undefined) {
+                currentJob = d.currentJob || null;
+                baseLevel  = d.baseLevel  || 1;
+                jobLevel   = d.jobLevel   || 1;
+                baseExp    = d.baseExp    || 0;
+                jobExp     = d.jobExp     || 0;
+            }
+            if(d.isTrans  !== undefined) isTrans    = !!d.isTrans;
+            if(d.statPoints !== undefined) statPoints = d.statPoints || 0;
+            if(d.stats)   stats = d.stats;
+            // Alles in localStorage sichern
+            localStorage.setItem('ts_job',     currentJob || '');
+            localStorage.setItem('ts_baselv',  baseLevel);
+            localStorage.setItem('ts_joblv',   jobLevel);
+            localStorage.setItem('ts_baseexp', baseExp);
+            localStorage.setItem('ts_jobexp',  jobExp);
+            localStorage.setItem('ts_isTrans', isTrans ? 'true' : 'false');
+            localStorage.setItem('ts_statpts', statPoints);
+            if(d.stats) localStorage.setItem('ts_stats', JSON.stringify(d.stats));
+            if(d.runeInv)  { runeInventory = d.runeInv;  localStorage.setItem('ts_runes', JSON.stringify(runeInventory)); }
+            if(d.runeGrid) { runeGrid = d.runeGrid;       localStorage.setItem('ts_rune_grid', JSON.stringify(runeGrid)); }
             localStorage.setItem('ts_completed_jobs', JSON.stringify(completedJobs));
             localStorage.setItem('ts_rebirth_skills', JSON.stringify(rebirthSkills));
             var el2 = document.getElementById('startKBAmount');
             if(el2) el2.innerText = kaffeebons;
+            // Job-Button aktualisieren
+            let jbtn2 = document.getElementById('job-menu-btn');
+            if(jbtn2) jbtn2.innerText = currentJob ? ('⚔️ ' + (JOBS[currentJob]?.name||'JOB')) : '⚔️ JOB';
             showToast('PROFIL GELADEN','#00e5ff','Willkommen zurück, '+name+'!');
         } else { showToast('NEUES PROFIL','#2ecc71',name+' — Viel Erfolg!'); }
     } catch(e){ showToast('LADEFEHLER','#f00','Firebase nicht erreichbar'); }
