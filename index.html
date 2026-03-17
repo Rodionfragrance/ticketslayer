@@ -708,6 +708,8 @@ input[type="text"] {
             <button onclick="openDailyOverlay()" id="daily-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;">☕ TAGES-BONUS</button>
             <button onclick="openQuestBoard()" style="background:#111;color:#2ecc71;border:2px solid #2ecc71;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#2ecc71';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#2ecc71'">📋 AUFTRÄGE</button>
             <button onclick="openJobOverlay()" id="job-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">⚔️ JOB</button>
+            <button onclick="openPetOverlay()" id="pet-menu-btn" style="background:#111;color:#9b59b6;border:2px solid #9b59b6;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#9b59b6';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#9b59b6'">🐾 PET</button>
+            <button onclick="openRuneOverlay()" style="background:#111;color:#00e5ff;border:2px solid #00e5ff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#00e5ff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#00e5ff'">🔮 RUNEN</button>
             <button onclick="showEmail()" style="background:#111;color:#3498db;border:2px solid #3498db;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#3498db';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#3498db'">[I] ANLEITUNG</button>
             <button onclick="openSkillTree()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🌳 SKILLTREE</button>
             <button onclick="openHighscoreMenu()" style="background:#111;color:#fff;border:2px solid #fff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#fff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#fff'">🏆 RANGLISTE</button>
@@ -754,6 +756,7 @@ input[type="text"] {
             </div>
         </div>
         <button class="btn-easy" onclick="closeKloskaShop()" style="margin-top:20px; width:100%; background:#222; border-color:#9b59b6; color:#9b59b6;">LAGER VERLASSEN</button>
+        <button onclick="closeKloskaShop(); openSchmiede();" style="display:block;width:100%;margin-top:8px;background:#1a0a00;color:#e67e22;border:2px solid #e67e22;padding:12px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;transition:0.2s;" onmouseover="this.style.background='#e67e22';this.style.color='#000'" onmouseout="this.style.background='#1a0a00';this.style.color='#e67e22'">🔨 WAFFEN-SCHMIEDE (REFINEMENT)</button>
     </div>
 </div>
 
@@ -879,6 +882,38 @@ input[type="text"] {
         <div style="color:#ffd700; font-size:16px; margin-bottom:22px;">☕ Kaffeebons: <span id="waffenKBAmount">0</span></div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;" id="waffenGrid"></div>
         <button onclick="closeWaffenkammer()" style="display:block;width:100%;margin-top:22px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
+        <button onclick="closeWaffenkammer(); openSchmiede();" style="display:block;width:100%;margin-top:8px;background:#1a0a00;color:#e67e22;border:2px solid #e67e22;padding:12px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;" onmouseover="this.style.background='#e67e22';this.style.color='#000'" onmouseout="this.style.background='#1a0a00';this.style.color='#e67e22'">🔨 WAFFE AUFWERTEN (SCHMIEDE)</button>
+    </div>
+</div>
+
+<!-- RUNE TABLET SYSTEM -->
+<div id="runeOverlay">
+    <div id="runeInner">
+        <h2>🔮 RUNEN-TAFEL</h2>
+        <div style="color:#666;font-size:11px;margin-bottom:16px;">Platziere Runen im 5×5 Grid — nur eingelegte Runen aktivieren ihre Boni</div>
+        <div id="runeContent"></div>
+        <button onclick="closeRuneOverlay()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
+    </div>
+</div>
+
+<!-- PET SYSTEM OVERLAY -->
+<div id="petOverlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.93);z-index:610;overflow-y:auto;font-family:'Courier New',monospace;">
+    <div style="max-width:640px;margin:40px auto;padding:28px;border:3px solid #9b59b6;background:#0a0a0a;border-radius:4px;">
+        <h2 style="color:#9b59b6;font-size:22px;letter-spacing:4px;margin:0 0 4px;text-transform:uppercase;">🐾 AZUBI-HAMSTER</h2>
+        <div style="color:#666;font-size:11px;margin-bottom:18px;">Dein permanenter Begleiter — für jeden Run</div>
+        <div id="petOverlayContent"></div>
+        <button onclick="closePetOverlay()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
+    </div>
+</div>
+
+<!-- SCHMIEDE / REFINEMENT -->
+<div id="schmiedeOverlay">
+    <div id="schmiedeInner">
+        <h2>🔨 WAFFEN-SCHMIEDE</h2>
+        <div style="color:#888;font-size:12px;margin-bottom:6px;">NPC Kloska · Aufwertung der Favoriten-Waffe</div>
+        <div style="color:#ffd700;font-size:14px;margin-bottom:18px;">☕ KB: <span id="schmiedeKB">0</span> &nbsp;|&nbsp; 🥣 Suppen: <span id="schmiedeSuppen">0</span></div>
+        <div id="schmiedeContent"></div>
+        <button onclick="closeSchmiede()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
     </div>
 </div>
 
@@ -894,6 +929,14 @@ input[type="text"] {
 
 <!-- FARM INDICATOR -->
 <div id="farmIndicator"></div>
+<!-- PET HUD -->
+<div id="petHud">
+    <div class="pet-name" id="petHudName">🐾 AZUBI-HAMSTER</div>
+    <div class="pet-mood" id="petHudMood">Neutral</div>
+    <div class="pet-hunger-outer"><div class="pet-hunger-inner" id="petHudHunger" style="width:100%;background:#2ecc71;"></div></div>
+    <div style="color:#555;font-size:9px;margin-top:2px;">[C] Füttern (1🥣)</div>
+</div>
+
 
 <!-- MISC HUD -->
 // <div id="highscore-overlay">Lade Online Scores...</div>
@@ -1562,7 +1605,10 @@ const TROPHIES_DEF = [
     // --- WEIL WEGEN FELIX - ENDGAME TROPHÄEN ---
     { id:'felix_tier1', icon:'🚀', name:'Das Ticket-Kartell', desc:'Felix-Modus: S-Rang + 1.000.000 Pkt.', perk:'Combo startet bei ×3.' },
     { id:'felix_tier2', icon:'💸', name:'Mehrheitsaktionär', desc:'Felix-Modus: S-Rang + 2.500.000 Pkt.', perk:'Kloska -50% & Start mit +5 Suppen.' },
-    { id:'felix_tier3', icon:'👑', name:'Der wahre CEO', desc:'Felix-Modus: S-Rang + 5.000.000 Pkt.', perk:'Azubis spawnen als Junior. +25% Schaden.' }
+    { id:'felix_tier3', icon:'👑', name:'Der wahre CEO', desc:'Felix-Modus: S-Rang + 5.000.000 Pkt.', perk:'Azubis spawnen als Junior. +25% Schaden.' },
+    { id:'pet_loyal',   icon:'🐾', name:'Bester Freund',   desc:'Bringe deinen Hamster auf Loyal-Stufe.', perk:'Hamster-Aura: Gegner in 80px Radius verlangsamt' },
+    { id:'refine_max',  icon:'🔨', name:'Schmiedemeister', desc:'Werte eine Waffe auf +10 auf.', perk:'Schmiede-Rabatt: Alle Kosten -20%' },
+    { id:'rune_master', icon:'🔮', name:'Runen-Meister',   desc:'Lege 10 Runen gleichzeitig ins Grid.', perk:'Runen-Resonanz: Alle Runen-Boni +20%' }
 ];
 
 let unlockedTrophies = JSON.parse(localStorage.getItem('ts_trophies') || '[]');
@@ -2083,9 +2129,10 @@ function renderJobOverlay() {
     }
     let j = currentJob ? JOBS[currentJob] : null;
     let maxBase = (j && (j.classLevel >= 3 || ((j.isAlt || j.isDoram || j.isExtended) && j.classLevel >= 2))) ? 250 : 99;
-    let jexpNext = jobExpNeeded(jobLevel + 1);
-    let bPct = Math.min(100, Math.round(baseExp / bexpNext * 100));
-    let jPct = Math.min(100, Math.round(jobExp / jexpNext * 100));
+    let bexpNext = (typeof baseExpNeeded === 'function') ? baseExpNeeded(baseLevel || 1) : 100;
+    let jexpNext = (typeof jobExpNeeded  === 'function') ? jobExpNeeded((jobLevel || 1) + 1) : 100;
+    let bPct = bexpNext > 0 ? Math.min(100, Math.round((baseExp||0) / bexpNext * 100)) : 0;
+    let jPct = jexpNext > 0 ? Math.min(100, Math.round((jobExp||0)  / jexpNext * 100)) : 0;
     let jobCap = !currentJob ? 10 : (j.isExtended && j.classLevel===1 ? 99 : (j.isAlt||j.isDoram||(isTrans&&j.classLevel===2)||j.classLevel>=3 ? 70 : 50));
 
     // ── Level-Bars ──
@@ -2917,6 +2964,276 @@ function setFavorite(id) {
               '#f1c40f', id ? (w.name + ' — permanent im nächsten Run') : 'Kein permanenter Start mehr');
     renderWaffenkammer();
 }
+
+
+// ============================================================
+// REFINEMENT SYSTEM — WAFFEN-SCHMIEDE (RO-STYLE)
+// ============================================================
+const REFINE_CHANCES = { 1:100, 2:100, 3:100, 4:100, 5:60, 6:50, 7:40, 8:30, 9:20, 10:15, 11:10, 12:8 };
+const REFINE_MAX = 12;
+const REFINE_COSTS = { 1:[100,0], 2:[100,0], 3:[100,0], 4:[100,0], 5:[200,1], 6:[300,1], 7:[400,2], 8:[500,2], 9:[800,3], 10:[1000,4], 11:[1500,5], 12:[2000,6] };
+
+let refineData = JSON.parse(localStorage.getItem('ts_refine') || '{}');
+let refinePity = JSON.parse(localStorage.getItem('ts_refine_pity') || '{}');
+
+function getRefineLevel(weaponId) { return refineData[weaponId] || 0; }
+function saveRefineData() { localStorage.setItem('ts_refine', JSON.stringify(refineData)); localStorage.setItem('ts_refine_pity', JSON.stringify(refinePity)); }
+
+function getRefineChance(weaponId, targetLevel) {
+    let base = REFINE_CHANCES[targetLevel] || 0;
+    if(base >= 100) return 100;
+    let pityKey = weaponId + '_' + targetLevel;
+    let pityCount = refinePity[pityKey] || 0;
+    let pityBonus = pityCount * (base * 0.10);
+    return Math.min(99, base + pityBonus);
+}
+
+function openSchmiede() { renderSchmiede(); document.getElementById('schmiedeOverlay').style.display = 'block'; }
+function closeSchmiede() {
+    document.getElementById('schmiedeOverlay').style.display = 'none';
+    document.getElementById('startKBAmount').innerText = kaffeebons;
+    renderWaffenkammer();
+}
+
+function renderSchmiede() {
+    let el = document.getElementById('schmiedeKB'); let es = document.getElementById('schmiedeSuppen');
+    if(el) el.innerText = kaffeebons;
+    let storedSuppen = parseInt(localStorage.getItem('ts_suppen_persistent') || '0');
+    if(es) es.innerText = gameRunning ? (player ? player.suppe : storedSuppen) : storedSuppen;
+    let cont = document.getElementById('schmiedeContent');
+    if(!cont) return;
+    if(unlockedWeapons.length === 0) { cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;border:2px dashed #222;border-radius:4px;">🔒 Keine Waffen — kaufe zuerst eine Waffe!</div>'; return; }
+    let html2 = '<div style="background:#111;border:1px solid #333;padding:12px;border-radius:4px;margin-bottom:16px;font-size:12px;color:#888;line-height:1.7;"><strong style="color:#e67e22;">SCHMIEDE</strong><br>• <span style="color:#2ecc71;">+1 bis +4</span>: 100% sicher<br>• <span style="color:#f39c12;">+5+</span>: Risiko — Fehlschlag → <strong style="color:#c0392b;">+0</strong>!<br>• Pity: Jeder Fehlschlag erhöht nächste Chance<br>• Jede Stufe: <span style="color:#f1c40f;">+10% Schaden</span></div>';
+    unlockedWeapons.forEach(wid => {
+        let w = WEAPON_SHOP.find(x => x.id === wid); if(!w) return;
+        let curRef = getRefineLevel(wid); let isFav = favoriteWeapon === wid;
+        let targetRef = curRef + 1; let atMax = curRef >= REFINE_MAX;
+        let chance = atMax ? 0 : getRefineChance(wid, targetRef);
+        let [kbCost, suppCost] = atMax ? [0,0] : (REFINE_COSTS[targetRef] || [999,9]);
+        if(!atMax && hasTrophy('refine_max')) kbCost = Math.floor(kbCost * 0.8);
+        let canAffordKB = kaffeebons >= kbCost;
+        let currentSuppeVal = gameRunning && player ? player.suppe : parseInt(localStorage.getItem('ts_suppen_persistent')||'0');
+        let canAffordSupp = suppCost === 0 || currentSuppeVal >= suppCost;
+        let canRefine = !atMax && canAffordKB && canAffordSupp;
+        let badgeClass = curRef === 0 ? '' : (curRef <= 4 ? 'safe' : (curRef <= 7 ? 'risky' : 'danger'));
+        let probColor = chance >= 70 ? '#2ecc71' : (chance >= 40 ? '#f39c12' : '#c0392b');
+        html2 += '<div class="refine-weapon-card ' + (isFav?'selected':'') + '"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><div><span style="font-size:22px;">' + w.icon + '</span><span style="color:' + (isFav?'#f1c40f':'#fff') + ';font-size:14px;font-weight:bold;margin-left:8px;">' + (isFav?'⭐ ':'') + w.name + '</span></div><div>' + (curRef>0?'<span class="refine-level-badge '+badgeClass+'">+'+curRef+'</span>':'<span style="color:#555;font-size:12px;">–</span>') + (curRef>0?' <span style="color:#f1c40f;font-size:11px;">+'+curRef*10+'% DMG</span>':'') + '</div></div>';
+        if(atMax) html2 += '<div style="color:#f1c40f;text-align:center;padding:10px;border:1px solid #f1c40f;border-radius:3px;">🏆 MAX (+'+REFINE_MAX+')</div>';
+        else html2 += '<div style="color:#888;font-size:11px;margin-bottom:6px;">→ <strong style="color:#fff;">+'+targetRef+'</strong> | Chance: <strong style="color:'+probColor+';">'+Math.floor(chance)+'%</strong> | Kosten: <span style="color:#ffd700;">'+kbCost+' KB</span>'+(suppCost>0?' + <span style="color:#ff9f43;">'+suppCost+' 🥣</span>':'')+'</div><div class="refine-prob-bar-outer"><div class="refine-prob-bar-inner" style="width:'+Math.floor(chance)+'%;background:'+probColor+';"></div></div>'+(targetRef>4?'<div style="color:#c0392b;font-size:10px;margin-bottom:4px;">⚠ Fehlschlag → +0!</div>':'<div style="color:#2ecc71;font-size:10px;margin-bottom:4px;">✅ Sicher</div>')+'<button class="refine-anvil-btn" onclick="doRefine(''+wid+'')" '+(canRefine?'':'disabled')+'>🔨 AUFWERTEN auf +'+targetRef+((!canAffordKB)?' — ZU WENIG KB':'')+((!canAffordSupp)?' — ZU WENIG SUPPEN':'')+'</button>';
+        html2 += '</div>';
+    });
+    cont.innerHTML = html2;
+}
+
+function doRefine(weaponId) {
+    let curRef = getRefineLevel(weaponId); if(curRef >= REFINE_MAX) return;
+    let targetRef = curRef + 1;
+    let [kbCost, suppCost] = REFINE_COSTS[targetRef] || [999,9];
+    if(hasTrophy('refine_max')) kbCost = Math.floor(kbCost * 0.8);
+    let chance = getRefineChance(weaponId, targetRef);
+    if(kaffeebons < kbCost) { showToast('ZU WENIG KB!', '#e74c3c', 'Brauchst ' + kbCost + ' KB'); return; }
+    let currentSuppeVal = gameRunning && player ? player.suppe : parseInt(localStorage.getItem('ts_suppen_persistent')||'0');
+    if(suppCost > 0 && currentSuppeVal < suppCost) { showToast('ZU WENIG SUPPE!', '#e74c3c', 'Brauchst ' + suppCost + ' 🥣'); return; }
+    kaffeebons -= kbCost;
+    if(suppCost > 0) { if(gameRunning && player) player.suppe -= suppCost; else { let s = parseInt(localStorage.getItem('ts_suppen_persistent')||'0'); localStorage.setItem('ts_suppen_persistent', Math.max(0, s-suppCost)); } }
+    localStorage.setItem('ts_kb', kaffeebons);
+    saveProgress();
+    let roll = Math.random() * 100;
+    let pityKey = weaponId + '_' + targetRef;
+    let cont = document.getElementById('schmiedeContent');
+    if(roll < chance) {
+        refineData[weaponId] = targetRef; delete refinePity[pityKey]; saveRefineData();
+        if(gameRunning && player && favoriteWeapon === weaponId) player._refineBonus = targetRef * 0.10;
+        if(targetRef >= 10) unlockTrophy('refine_max');
+        showToast('+'+targetRef+' AUFWERTUNG!', '#2ecc71', '✅ +'+targetRef*10+'% Schaden permanent!');
+        playSound('evolve');
+        let flash = document.createElement('div'); flash.className = 'refine-result-success';
+        flash.innerHTML = '🔨 +'+targetRef+' ERFOLG! +'+targetRef*10+'% SCHADEN!';
+        if(cont) { cont.insertBefore(flash, cont.firstChild); setTimeout(()=>flash.remove(), 2500); }
+    } else {
+        refineData[weaponId] = 0; refinePity[pityKey] = (refinePity[pityKey]||0) + 1; saveRefineData();
+        if(gameRunning && player && favoriteWeapon === weaponId) player._refineBonus = 0;
+        showToast('💥 FEHLSCHLAG!', '#c0392b', (WEAPON_SHOP.find(x=>x.id===weaponId)?.name||weaponId) + ' auf +0! (Pity gespeichert)');
+        playSound('hit');
+        let flash = document.createElement('div'); flash.className = 'refine-result-fail';
+        flash.innerHTML = '💥 FEHLSCHLAG! +0 | Nächste Chance: ' + Math.floor(getRefineChance(weaponId, targetRef)) + '%';
+        if(cont) { cont.insertBefore(flash, cont.firstChild); setTimeout(()=>flash.remove(), 3000); }
+    }
+    let kbEl = document.getElementById('schmiedeKB'); if(kbEl) kbEl.innerText = kaffeebons;
+    let sEl = document.getElementById('schmiedeSuppen'); if(sEl && gameRunning && player) sEl.innerText = player.suppe;
+    setTimeout(() => renderSchmiede(), 400);
+}
+
+
+// ============================================================
+// PET SYSTEM — AZUBI-HAMSTER (RO-Style)
+// ============================================================
+const PET_STAGES = [
+    { name:'Fremd',      minIntimacy:0,   color:'#e74c3c', emoji:'😶', buff:null },
+    { name:'Schüchtern', minIntimacy:100, color:'#e67e22', emoji:'😳', buff:null },
+    { name:'Neutral',    minIntimacy:250, color:'#f1c40f', emoji:'😐', buff:null },
+    { name:'Vertraut',   minIntimacy:500, color:'#2ecc71', emoji:'😊', buff:'speed+5%' },
+    { name:'Loyal',      minIntimacy:750, color:'#9b59b6', emoji:'🥰', buff:'speed+5%+attack' }
+];
+const PET_MAX_INTIMACY = 1000;
+
+let petData = JSON.parse(localStorage.getItem('ts_pet') || JSON.stringify({ active:false, name:'Hamster', intimacy:250, hunger:0, lastFed:Date.now() }));
+function savePetData() { localStorage.setItem('ts_pet', JSON.stringify(petData)); }
+function getPetStage() { let stage = PET_STAGES[0]; for(let s of PET_STAGES) { if(petData.intimacy >= s.minIntimacy) stage = s; } return stage; }
+let activePet = null;
+
+class Pet {
+    constructor() {
+        this.x=0; this.y=0; this.vx=0; this.vy=0; this.frame=0;
+        this.attackTimer=0; this.attackCooldown=90; this.size=14;
+        this.hungerTimer=0; this.hungerTickRate=600; this.feedFlash=0;
+    }
+    update() {
+        this.frame++;
+        if(player) {
+            let offsetAngle = Math.sin(this.frame*0.02)*0.8;
+            let followDist = 55;
+            let tx = player.x + Math.cos(offsetAngle)*followDist;
+            let ty = player.y + Math.sin(offsetAngle+1.2)*followDist;
+            let dx = tx-this.x, dy = ty-this.y, dist = Math.hypot(dx,dy);
+            let stg = getPetStage();
+            let sm = (stg.name==='Loyal'||stg.name==='Vertraut') ? 1.3 : 1.0;
+            if(dist>8) { this.vx += (dx/dist)*0.5*sm; this.vy += (dy/dist)*0.5*sm; }
+            this.vx*=0.82; this.vy*=0.82; this.x+=this.vx; this.y+=this.vy;
+        }
+        this.hungerTimer++;
+        if(this.hungerTimer >= this.hungerTickRate) {
+            this.hungerTimer=0; petData.hunger=Math.min(100,petData.hunger+1);
+            if(petData.hunger>=80) { petData.intimacy=Math.max(0,petData.intimacy-8); if(petData.hunger>=90&&frame%600===0){floatingTexts.push(new FloatingText(this.x,this.y-30,'😢 HUNGER!','#e74c3c'));showToast('🐾 HAMSTER HUNGRIG!','#e74c3c','Füttere ihn mit [C]!');} }
+            savePetData(); updatePetHUD();
+        }
+        if(getPetStage().name==='Loyal') {
+            this.attackTimer++;
+            if(this.attackTimer>=this.attackCooldown) {
+                let nearest=null, nearDist=200;
+                enemies.forEach(e=>{let d=Math.hypot(e.x-this.x,e.y-this.y); if(d<nearDist){nearDist=d;nearest=e;}});
+                if(nearest){this.attackTimer=0;let dmg=8+Math.floor(petData.intimacy/100);nearest.hp-=dmg;spawnParticles(nearest.x,nearest.y,'#9b59b6',4);floatingTexts.push(new FloatingText(nearest.x,nearest.y-20,'🐾'+dmg,'#9b59b6'));}
+            }
+        }
+        let stg=getPetStage();
+        if(player&&(stg.name==='Vertraut'||stg.name==='Loyal')) player._petSpeedBuff=0.3;
+        else if(player) player._petSpeedBuff=0;
+        if(this.feedFlash>0) this.feedFlash--;
+    }
+    draw() {
+        if(!player) return;
+        ctx.save();
+        let stg=getPetStage(); let bob=Math.sin(this.frame*0.12)*3; let s=this.size;
+        ctx.fillStyle=this.feedFlash>0?'#fff':stg.color;
+        ctx.beginPath(); ctx.ellipse(this.x,this.y+bob,s,s*0.75,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle=stg.color;
+        ctx.beginPath(); ctx.ellipse(this.x-s*0.6,this.y+bob-s*0.5,s*0.35,s*0.55,-0.4,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(this.x+s*0.6,this.y+bob-s*0.5,s*0.35,s*0.55,0.4,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#ff9f9f';
+        ctx.beginPath(); ctx.ellipse(this.x-s*0.6,this.y+bob-s*0.5,s*0.18,s*0.3,-0.4,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(this.x+s*0.6,this.y+bob-s*0.5,s*0.18,s*0.3,0.4,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#000';
+        ctx.beginPath(); ctx.arc(this.x-s*0.3,this.y+bob-s*0.1,2.5,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(this.x+s*0.3,this.y+bob-s*0.1,2.5,0,Math.PI*2); ctx.fill();
+        if(stg.name==='Loyal'){ctx.strokeStyle='rgba(155,89,182,'+(.3+Math.sin(this.frame*.1)*.2)+')';ctx.lineWidth=2;ctx.beginPath();ctx.arc(this.x,this.y+bob,s+6,0,Math.PI*2);ctx.stroke();}
+        ctx.font='12px serif'; ctx.textAlign='center'; ctx.fillText(stg.emoji,this.x,this.y+bob-s-4);
+        ctx.restore();
+    }
+}
+
+function feedPet() {
+    if(!activePet||!gameRunning) return;
+    if(!player||player.suppe<1) { showToast('KEINE SUPPE!','#e74c3c','Brauchst 1 🥣 zum Füttern'); return; }
+    player.suppe-=1;
+    let hunger=petData.hunger;
+    if(hunger>=20&&hunger<=40) { petData.intimacy=Math.min(PET_MAX_INTIMACY,petData.intimacy+25); floatingTexts.push(new FloatingText(activePet.x,activePet.y-40,'💕 +25 ZUNEIGUNG','#2ecc71')); }
+    else if(hunger<20) { petData.intimacy=Math.max(0,petData.intimacy-10); floatingTexts.push(new FloatingText(activePet.x,activePet.y-40,'😵 ÜBERFÜTTERT -10','#e67e22')); }
+    else { petData.intimacy=Math.min(PET_MAX_INTIMACY,petData.intimacy+10); floatingTexts.push(new FloatingText(activePet.x,activePet.y-40,'😋 +10 ZUNEIGUNG','#f1c40f')); }
+    petData.hunger=Math.max(0,hunger-30); petData.lastFed=Date.now();
+    activePet.feedFlash=15; savePetData(); updatePetHUD(); playSound('powerup');
+    let newStage=getPetStage();
+    if(newStage.name==='Vertraut'&&petData.intimacy>=500&&petData.intimacy<525) showToast('🐾 PET: VERTRAUT!','#2ecc71','+5% Speed!');
+    if(newStage.name==='Loyal'&&petData.intimacy>=750&&petData.intimacy<775) { showToast('🐾 PET: LOYAL!','#9b59b6','Hamster greift Feinde an!'); unlockTrophy('pet_loyal'); }
+}
+
+function updatePetHUD() {
+    let hud=document.getElementById('petHud'); if(!hud) return;
+    if(!petData.active||!gameRunning) { hud.style.display='none'; return; }
+    hud.style.display='block';
+    let stg=getPetStage(); let hungerPct=100-petData.hunger;
+    let hungerColor=hungerPct>60?'#2ecc71':(hungerPct>30?'#f39c12':'#e74c3c');
+    let nameEl=document.getElementById('petHudName'); if(nameEl) nameEl.innerHTML='🐾 HAMSTER <span style="color:'+stg.color+';font-size:10px;">['+stg.name.toUpperCase()+']</span>';
+    let moodEl=document.getElementById('petHudMood'); if(moodEl) moodEl.innerHTML=stg.emoji+' Zuneigung: <span style="color:'+stg.color+';">'+petData.intimacy+'</span>/1000';
+    let hungerEl=document.getElementById('petHudHunger'); if(hungerEl){hungerEl.style.width=hungerPct+'%';hungerEl.style.background=hungerColor;}
+}
+
+function openPetOverlay() { renderPetOverlay(); document.getElementById('petOverlay').style.display='block'; }
+function closePetOverlay() { document.getElementById('petOverlay').style.display='none'; }
+
+function renderPetOverlay() {
+    let cont=document.getElementById('petOverlayContent'); if(!cont) return;
+    let stg=getPetStage(); let hungerPct=Math.max(0,100-petData.hunger);
+    let hungerColor=hungerPct>60?'#2ecc71':(hungerPct>30?'#f39c12':'#e74c3c');
+    let intimacyPct=Math.round(petData.intimacy/PET_MAX_INTIMACY*100);
+    let stagesHtml=PET_STAGES.map(s=>{let active=stg.name===s.name;let reached=petData.intimacy>=s.minIntimacy;return '<div style="padding:8px 12px;border:1px solid '+(active?s.color:'#222')+';border-radius:3px;background:'+(active?s.color+'22':'#0a0a0a')+';display:flex;justify-content:space-between;align-items:center;"><span style="color:'+(reached?s.color:'#333')+';font-weight:bold;">'+s.emoji+' '+s.name+(active?' ← AKTIV':'')+'</span><span style="color:#555;font-size:11px;">'+s.minIntimacy+' Zuneigung'+(s.buff?' · '+s.buff:' · kein Buff')+'</span></div>';}).join('');
+    cont.innerHTML=(!petData.active?'<div style="text-align:center;padding:20px;border:2px dashed #9b59b6;border-radius:4px;margin-bottom:16px;"><div style="font-size:48px;margin-bottom:10px;">🐾</div><div style="color:#9b59b6;font-size:16px;font-weight:bold;margin-bottom:8px;">AZUBI-HAMSTER ADOPTIEREN</div><div style="color:#888;font-size:12px;margin-bottom:16px;">Permanenter Begleiter für alle Runs.</div><button onclick="adoptPet()" style="background:#9b59b6;color:#fff;border:none;padding:12px 30px;font-size:14px;font-weight:bold;font-family:'Courier New',monospace;cursor:pointer;text-transform:uppercase;border-radius:3px;">🐾 ADOPTIEREN (500 KB)</button></div>':'<div style="background:#111;border:2px solid '+stg.color+';padding:16px;border-radius:4px;margin-bottom:14px;display:flex;gap:16px;align-items:center;"><div style="font-size:52px;line-height:1;">'+stg.emoji+'</div><div style="flex:1;"><div style="color:'+stg.color+';font-size:16px;font-weight:bold;">Hamster · '+stg.name.toUpperCase()+'</div><div style="color:#888;font-size:11px;margin:4px 0;">Zuneigung: '+petData.intimacy+' / '+PET_MAX_INTIMACY+'</div><div style="background:#1a1a1a;height:8px;border-radius:4px;margin:6px 0;"><div style="background:'+stg.color+';height:8px;border-radius:4px;width:'+intimacyPct+'%;"></div></div><div style="color:#aaa;font-size:11px;">Sättigung: <span style="color:'+hungerColor+';">'+hungerPct+'%</span> <span style="color:#555;">(Ideal: 60–80%)</span></div></div></div>')+'<div style="background:#0a0a0a;border:1px solid #333;padding:12px;border-radius:4px;margin-bottom:14px;font-size:11px;color:#888;line-height:1.8;"><strong style="color:#9b59b6;">FÜTTER-GUIDE [C] im Run:</strong><br>🟢 60–80% Sättigung → <span style="color:#2ecc71;">+25 Zuneigung</span><br>🟡 40–60% → <span style="color:#f1c40f;">+10</span><br>🔴 >80% (überfüttert) → <span style="color:#e74c3c;">-10</span><br>💀 <20% Hunger → <span style="color:#e74c3c;">-8 automatisch</span></div><div><div style="color:#888;font-size:11px;letter-spacing:2px;margin-bottom:8px;">STUFEN</div><div style="display:flex;flex-direction:column;gap:6px;">'+stagesHtml+'</div></div>';
+}
+
+function adoptPet() {
+    if(kaffeebons<500) { showToast('ZU WENIG KB!','#e74c3c','500 KB nötig'); return; }
+    kaffeebons-=500; localStorage.setItem('ts_kb',kaffeebons);
+    petData.active=true; petData.intimacy=250; petData.hunger=0;
+    savePetData(); saveProgress(); showToast('🐾 HAMSTER ADOPTIERT!','#9b59b6','Dein Begleiter wartet!'); renderPetOverlay();
+}
+
+// ============================================================
+// RUNE TABLET SYSTEM — PHASE 3 ENDGAME
+// ============================================================
+const RUNE_SHAPES = { I1x1:[[1]], I2x1:[[1,1]], I1x2:[[1],[1]], L:[[1,0],[1,0],[1,1]], J:[[0,1],[0,1],[1,1]], T:[[1,1,1],[0,1,0]], S:[[0,1,1],[1,1,0]], Z:[[1,1,0],[0,1,1]], O2x2:[[1,1],[1,1]], I3x1:[[1,1,1]], I1x3:[[1],[1],[1]] };
+const SHAPE_KEYS = Object.keys(RUNE_SHAPES);
+const RUNE_STAT_POOL = [
+    {key:'dmgPct',label:'Schaden',unit:'%',min:3,max:15},{key:'hpFlat',label:'Max HP',unit:'',min:10,max:50},
+    {key:'speedPct',label:'Speed',unit:'%',min:2,max:8},{key:'critPct',label:'Crit-Chance',unit:'%',min:1,max:5},
+    {key:'fireDmg',label:'Feuer-DMG',unit:'%',min:5,max:20},{key:'waterDmg',label:'Wasser-DMG',unit:'%',min:5,max:20},
+    {key:'windDmg',label:'Wind-DMG',unit:'%',min:5,max:20},{key:'earthDmg',label:'Erde-DMG',unit:'%',min:5,max:20},
+    {key:'kbBonus',label:'KB-Drop',unit:'%',min:5,max:15},{key:'farmSpd',label:'Farm-Speed',unit:'%',min:10,max:30}
+];
+const RUNE_RARITIES = [{name:'Gewöhnlich',color:'#aaa',weight:50,statCount:1,mult:1.0},{name:'Selten',color:'#3498db',weight:30,statCount:2,mult:1.3},{name:'Episch',color:'#9b59b6',weight:15,statCount:2,mult:1.7},{name:'Legendär',color:'#f1c40f',weight:5,statCount:3,mult:2.5}];
+
+let runeInventory = JSON.parse(localStorage.getItem('ts_runes') || '[]');
+let runeGrid = JSON.parse(localStorage.getItem('ts_rune_grid') || JSON.stringify(Array(25).fill(null)));
+function saveRuneData() { localStorage.setItem('ts_runes',JSON.stringify(runeInventory)); localStorage.setItem('ts_rune_grid',JSON.stringify(runeGrid)); }
+function rollRarity() { let total=RUNE_RARITIES.reduce((s,r)=>s+r.weight,0),r=Math.random()*total; for(let rr of RUNE_RARITIES){r-=rr.weight;if(r<=0)return rr;} return RUNE_RARITIES[0]; }
+function generateRune(sourceLabel) {
+    let rarity=rollRarity(); let shapeKey=SHAPE_KEYS[Math.floor(Math.random()*SHAPE_KEYS.length)];
+    let stats=[],usedKeys=[];
+    for(let i=0;i<rarity.statCount;i++){let pool=RUNE_STAT_POOL.filter(s=>!usedKeys.includes(s.key));if(!pool.length)break;let s=pool[Math.floor(Math.random()*pool.length)];usedKeys.push(s.key);let val=Math.floor((s.min+Math.random()*(s.max-s.min))*rarity.mult);stats.push({key:s.key,label:s.label,unit:s.unit,value:val});}
+    return {id:'rune_'+Date.now()+'_'+Math.floor(Math.random()*9999),name:rarity.name+' Rune',rarity:rarity.name,rarityColor:rarity.color,shape:shapeKey,stats,source:sourceLabel||'Unbekannt',gridPos:null};
+}
+function shapeToGridCells(shapeKey,startRow,startCol){let shape=RUNE_SHAPES[shapeKey];if(!shape)return null;let cells=[];for(let r=0;r<shape.length;r++)for(let c=0;c<shape[r].length;c++)if(shape[r][c]){let gr=startRow+r,gc=startCol+c;if(gr>=5||gc>=5)return null;cells.push(gr*5+gc);}return cells;}
+function canPlace(shapeKey,startRow,startCol,skipRuneId){let cells=shapeToGridCells(shapeKey,startRow,startCol);if(!cells)return false;for(let ci of cells)if(runeGrid[ci]&&runeGrid[ci]!==skipRuneId)return false;return true;}
+function placeRune(runeId,startRow,startCol){let rune=runeInventory.find(r=>r.id===runeId);if(!rune)return false;removeFromGrid(runeId);if(!canPlace(rune.shape,startRow,startCol,runeId))return false;let cells=shapeToGridCells(rune.shape,startRow,startCol);cells.forEach(ci=>{runeGrid[ci]=runeId;});rune.gridPos={row:startRow,col:startCol};saveRuneData();if(runeGrid.filter(Boolean).length>=10&&typeof unlockTrophy==='function')unlockTrophy('rune_master');return true;}
+function removeFromGrid(runeId){runeGrid=runeGrid.map(cell=>cell===runeId?null:cell);let rune=runeInventory.find(r=>r.id===runeId);if(rune)rune.gridPos=null;saveRuneData();}
+function getActiveRuneStats(){let totals={},placed=new Set(runeGrid.filter(Boolean));placed.forEach(rid=>{let rune=runeInventory.find(r=>r.id===rid);if(!rune)return;rune.stats.forEach(s=>{totals[s.key]=(totals[s.key]||0)+s.value;});});return totals;}
+function applyRuneStats(p){let s=getActiveRuneStats();if(s.dmgPct)p.dmgBonus=(p.dmgBonus||0)+(p.dmgBonus+10)*s.dmgPct/100;if(s.hpFlat){p.maxHp+=s.hpFlat;p.hp+=s.hpFlat;}if(s.speedPct)p.speed+=p.speed*s.speedPct/100;if(s.critPct)p._critChance=(p._critChance||0)+s.critPct/100;if(s.fireDmg)p._fireDmgBonus=(p._fireDmgBonus||0)+s.fireDmg/100;if(s.waterDmg)p._waterDmgBonus=(p._waterDmgBonus||0)+s.waterDmg/100;if(s.windDmg)p._windDmgBonus=(p._windDmgBonus||0)+s.windDmg/100;if(s.earthDmg)p._earthDmgBonus=(p._earthDmgBonus||0)+s.earthDmg/100;if(s.farmSpd)p._stFarmBonus=(p._stFarmBonus||0)+s.farmSpd;if(s.kbBonus)p._kbDropBonus=(p._kbDropBonus||0)+s.kbBonus/100;let bonusLines=Object.entries(s).map(([k,v])=>{let stat=RUNE_STAT_POOL.find(x=>x.key===k);return stat?stat.label+'+'+v+stat.unit:'';}).filter(Boolean);if(bonusLines.length>0)showToast('🔮 RUNEN AKTIV','#00e5ff',bonusLines.slice(0,3).join(' · '));}
+let dragRuneId=null;
+function openRuneOverlay(){renderRuneOverlay();document.getElementById('runeOverlay').style.display='block';}
+function closeRuneOverlay(){document.getElementById('runeOverlay').style.display='none';document.getElementById('startKBAmount').innerText=kaffeebons;}
+function renderRuneOverlay(){
+    let cont=document.getElementById('runeContent');if(!cont)return;
+    let placed=new Set(runeGrid.filter(Boolean));let activeStats=getActiveRuneStats();
+    let statsHtml=Object.entries(activeStats).map(([k,v])=>{let s=RUNE_STAT_POOL.find(x=>x.key===k);return s?'<span style="color:#00e5ff;margin-right:10px;">+'+v+s.unit+' '+s.label+'</span>':'';}).join('');
+    let gridHtml='<div class="rune-grid-wrapper" id="runeGridEl">';
+    for(let r=0;r<5;r++)for(let c=0;c<5;c++){let ci=r*5+c;let rid=runeGrid[ci];let rune=rid?runeInventory.find(x=>x.id===rid):null;let cellContent=rune?'<div style="width:100%;height:100%;background:'+rune.rarityColor+'22;display:flex;align-items:center;justify-content:center;font-size:16px;" title="'+rune.name+'">🔮</div>':'';gridHtml+='<div class="rune-cell '+(rune?'filled':'')+'" data-row="'+r+'" data-col="'+c+'" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="onDropCell(event,'+r+','+c+')" onclick="onCellClick('+r+','+c+')">'+cellContent+'</div>';}
+    gridHtml+='</div>';
+    let invHtml=runeInventory.length===0?'<div style="color:#555;font-size:12px;text-align:center;padding:20px;border:2px dashed #1a3040;border-radius:4px;">Keine Runen.<br><span style="font-size:10px;">Besiege Bosse!</span></div>':'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+runeInventory.map(rune=>{let shape=RUNE_SHAPES[rune.shape];let isPlaced=placed.has(rune.id);let sgHtml='<div class="rune-shape-preview" style="grid-template-columns:repeat('+shape[0].length+',12px);">';shape.forEach(row=>row.forEach(cell=>{sgHtml+='<div class="rune-shape-cell '+(cell?'':'empty')+'"></div>';}));sgHtml+='</div>';return '<div class="rune-card '+(isPlaced?'equipped':'')+'" draggable="true" ondragstart="dragRuneId=''+rune.id+'';this.classList.add('dragging')" ondragend="this.classList.remove('dragging')" onclick="onRuneCardClick(''+rune.id+'')">'+'<div style="display:flex;justify-content:space-between;align-items:flex-start;"><div>'+sgHtml+'<div style="color:'+rune.rarityColor+';font-size:11px;font-weight:bold;">'+rune.name+'</div><div style="color:#555;font-size:9px;">'+rune.source+'</div></div>'+(isPlaced?'<span style="color:#f1c40f;font-size:10px;">IM GRID</span>':'')+'</div><div style="margin-top:6px;">'+rune.stats.map(s=>'<div style="color:#aaa;font-size:11px;">+'+s.value+s.unit+' '+s.label+'</div>').join('')+'</div>'+(isPlaced?'<button onclick="event.stopPropagation();removeFromGrid(''+rune.id+'');renderRuneOverlay()" style="width:100%;margin-top:6px;background:#1a0000;color:#e74c3c;border:1px solid #e74c3c;padding:3px;font-size:10px;cursor:pointer;font-family:'Courier New',monospace;">✖ ENTFERNEN</button>':'<button onclick="event.stopPropagation();deleteRune(''+rune.id+'')" style="width:100%;margin-top:6px;background:#0a0a0a;color:#555;border:1px solid #222;padding:3px;font-size:10px;cursor:pointer;font-family:'Courier New',monospace;">🗑 LÖSCHEN</button>')+'</div>';}).join('')+'</div>';
+    cont.innerHTML='<div style="background:#0a1a20;border:1px solid #1a3040;padding:10px 14px;border-radius:4px;margin-bottom:14px;font-size:11px;"><strong style="color:#00e5ff;">AKTIVE RUNEN-BONI:</strong> '+(statsHtml||'<span style="color:#333;">— Keine Runen im Grid</span>')+'</div><div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start;"><div><div style="color:#555;font-size:10px;letter-spacing:2px;margin-bottom:8px;">5×5 GRID</div>'+gridHtml+'<div style="color:#555;font-size:9px;margin-top:6px;">'+placed.size+' Zellen belegt</div></div><div><div style="color:#555;font-size:10px;letter-spacing:2px;margin-bottom:8px;">INVENTAR ('+runeInventory.length+')</div>'+invHtml+'</div></div>';
+}
+function onDropCell(event,row,col){event.preventDefault();document.querySelectorAll('.rune-cell').forEach(c=>c.classList.remove('drag-over'));if(!dragRuneId)return;let ok=placeRune(dragRuneId,row,col);dragRuneId=null;if(!ok)showToast('KEIN PLATZ!','#e74c3c','Rune passt nicht');renderRuneOverlay();}
+function onRuneCardClick(runeId){let rune=runeInventory.find(r=>r.id===runeId);if(!rune||rune.gridPos)return;let shape=RUNE_SHAPES[rune.shape];let h=shape.length,w=shape[0].length;for(let r=0;r<=5-h;r++)for(let c=0;c<=5-w;c++){if(canPlace(rune.shape,r,c,runeId)){placeRune(runeId,r,c);renderRuneOverlay();return;}}showToast('GRID VOLL!','#e74c3c','Kein Platz');}
+function onCellClick(row,col){let ci=row*5+col;let rid=runeGrid[ci];if(rid){removeFromGrid(rid);renderRuneOverlay();}}
+function deleteRune(runeId){if(!confirm('Rune löschen?'))return;runeInventory=runeInventory.filter(r=>r.id!==runeId);runeGrid=runeGrid.map(c=>c===runeId?null:c);saveRuneData();renderRuneOverlay();}
+function dropRuneFragment(sourceLabel){let rune=generateRune(sourceLabel);runeInventory.push(rune);saveRuneData();showToast('🔮 RUNEN-FRAGMENT!',rune.rarityColor,'['+rune.rarity+'] '+rune.stats.map(s=>'+'+s.value+s.unit+' '+s.label).join(', '));}
 
 function buyWeapon(id) {
     let w = WEAPON_SHOP.find(x => x.id === id);
