@@ -3868,6 +3868,8 @@ function dropRuneFragment(sourceLabel) {
     showToast('🔮 RUNEN-FRAGMENT!', rune.rarityColor,
         `[${rune.rarity}] ${rune.stats.map(s=>`+${s.value}${s.unit} ${s.label}`).join(', ')}`);
 }
+
+function buyWeapon(id) {
     let w = WEAPON_SHOP.find(x => x.id === id);
     if(!w || hasWeaponUnlocked(id) || kaffeebons < w.cost) return;
     kaffeebons -= w.cost;
