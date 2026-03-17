@@ -2787,6 +2787,7 @@ function enterBossRoom() {
     spdMult *= Math.min(1.5, 1.0 + powerScore * 0.003);
     bossRoomState = {
         bayer: {
+            element: 'schatten', // <--- DAS HIER EINFÜGEN
             x: BR_W/2, y: 120,
             hp: Math.round(BAYER_STATS.hp * hpMult),
             maxHp: Math.round(BAYER_STATS.hp * hpMult),
@@ -2809,6 +2810,10 @@ function enterBossRoom() {
             enrageTimer: 0,
         },
         player: { x: BR_W/2, y: BR_H - 80 },
+        _rollCD: 0,         // <--- HIER EINFÜGEN
+        _rollTimer: 0,      // <--- HIER EINFÜGEN
+        _rollDx: 0,         // <--- HIER EINFÜGEN
+        _rollDy: 0,         // <--- HIER EINFÜGEN
         bullets: [],
         particles: [],
         phase: 1,
@@ -2911,43 +2916,42 @@ function updateBossRoom() {
 
     if(input.mouseDown && player) {
         let wepKeys = Object.keys(player.activeWeapons||{});
-        for(let w of (unlockedWeapons||[])) { if(!wepKeys.includes(w)) wepKeys.push(w); }
         let baseDmg = 10 + (player.dmgBonus||0);
         let baseFireRate = player.fireRate || 20;
         let stdFR = Math.max(2, baseFireRate - Math.ceil(baseFireRate * 0.15 * getUpgradeLevel('fire_rate')));
         
         if(br.frame % stdFR === 0) {
             playSound('shoot'); 
-            br.bullets.push({ x: p.x, y: p.y, dx: Math.cos(aimAngle)*16, dy: Math.sin(aimAngle)*16, dmg: baseDmg, life: 90, type:'standard', color:'#ffeb3b', size:4 });
+            br.bullets.push({ x: p.x, y: p.y, dx: Math.cos(aimAngle)*16, dy: Math.sin(aimAngle)*16, dmg: baseDmg, life: 90, type:'standard', color:'#ffeb3b', size:4, element: 'neutral' });
             player.shotsFired = (player.shotsFired||0) + 1;
         }
         if(wepKeys.includes('minigun') && br.frame % Math.max(2,4) === 0) {
             playSound('shoot');
             let a = aimAngle + (Math.random()-0.5)*0.35;
-            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(a)*18, dy:Math.sin(a)*18, dmg:baseDmg*0.8, life:75, type:'standard', color:'#ff00ff', size:3 });
+            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(a)*18, dy:Math.sin(a)*18, dmg:baseDmg*0.8, life:75, type:'standard', color:'#ff00ff', size:3, element: 'neutral' });
         }
         if(wepKeys.includes('shotgun') && br.frame % 40 === 0) {
             playSound('shoot');
-            for(let si=-2;si<=2;si++) br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(aimAngle+si*0.18)*14, dy:Math.sin(aimAngle+si*0.18)*14, dmg:baseDmg*1.2, life:60, type:'standard', color:'#ff8800', size:5 });
+            for(let si=-2;si<=2;si++) br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(aimAngle+si*0.18)*14, dy:Math.sin(aimAngle+si*0.18)*14, dmg:baseDmg*1.2, life:60, type:'standard', color:'#ff8800', size:5, element: 'neutral' });
         }
         if(wepKeys.includes('rocket') && br.frame % 60 === 0) {
-            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(aimAngle)*13, dy:Math.sin(aimAngle)*13, dmg:baseDmg*4, life:80, type:'rocket', color:'#ff4444', size:9 });
+            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(aimAngle)*13, dy:Math.sin(aimAngle)*13, dmg:baseDmg*4, life:80, type:'rocket', color:'#ff4444', size:9, element: 'feuer' });
         }
         if(wepKeys.includes('railgun') && br.frame % 50 === 0) {
             playSound('boss');
-            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(aimAngle)*35, dy:Math.sin(aimAngle)*35, dmg:baseDmg*5, life:60, type:'railgun', color:'#00ffff', size:4 });
+            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(aimAngle)*35, dy:Math.sin(aimAngle)*35, dmg:baseDmg*5, life:60, type:'railgun', color:'#00ffff', size:4, element: 'wind' });
         }
         if(wepKeys.includes('flamer') && br.frame % 3 === 0) {
             let fa = aimAngle + (Math.random()-0.5)*0.3;
-            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(fa)*11, dy:Math.sin(fa)*11, dmg:baseDmg*0.4, life:45, type:'flame', color:'#ff6600', size:6 });
+            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(fa)*11, dy:Math.sin(fa)*11, dmg:baseDmg*0.4, life:45, type:'flame', color:'#ff6600', size:6, element: 'feuer' });
         }
         if(wepKeys.includes('uzi') && br.frame % 7 === 0) {
             let a = aimAngle + (Math.random()-0.5)*0.1;
-            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(a)*17, dy:Math.sin(a)*17, dmg:baseDmg*0.7, life:70, type:'standard', color:'#aaffaa', size:3 });
+            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(a)*17, dy:Math.sin(a)*17, dmg:baseDmg*0.7, life:70, type:'standard', color:'#aaffaa', size:3, element: 'neutral' });
         }
         if(wepKeys.includes('ak47') && br.frame % 6 === 0) {
             let a = aimAngle + (Math.random()-0.5)*0.05;
-            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(a)*18, dy:Math.sin(a)*18, dmg:baseDmg*0.9, life:75, type:'standard', color:'#ffdd44', size:4 });
+            br.bullets.push({ x:p.x, y:p.y, dx:Math.cos(a)*18, dy:Math.sin(a)*18, dmg:baseDmg*0.9, life:75, type:'standard', color:'#ffdd44', size:4, element: 'neutral' });
         }
     }
 
@@ -2956,13 +2960,13 @@ function updateBossRoom() {
         let mx = p.x + Math.cos(br.frame*0.12)*orbitR_br;
         let my = p.y + Math.sin(br.frame*0.12)*orbitR_br;
         if(Math.hypot(mx - b.x, my - b.y) < b.radius + 40) {
-            b.hp -= (0.8 + (player.dmgBonus||0)*0.05);
+            applyElementalDamage(b, 0.8 + (player.dmgBonus||0)*0.05, 'neutral', b.x, b.y);
             spawnBRParticles(b.x, b.y, '#00ffff', 2);
         }
         for(let mi=b.miniEnemies.length-1; mi>=0; mi--) {
             let m = b.miniEnemies[mi];
             if(Math.hypot(mx-m.x, my-m.y) < m.radius + 35) {
-                m.hp -= (50 + (player.dmgBonus||0));
+                applyElementalDamage(m, 50 + (player.dmgBonus||0), 'neutral', m.x, m.y);
                 spawnBRParticles(m.x, m.y, '#00ffff', 3);
                 if(m.hp <= 0) { spawnBRParticles(m.x,m.y,'#e67e22',8); b.miniEnemies.splice(mi,1); score += 300 * comboMult; updateCombo(true); }
             }
@@ -2979,7 +2983,7 @@ function updateBossRoom() {
         let hitRadius = bl.type === 'rocket' ? b.radius + 20 : b.radius;
         if(Math.hypot(bl.x-b.x, bl.y-b.y) < hitRadius) {
             let dmg = bl.dmg;
-            b.hp -= dmg;
+            applyElementalDamage(b, dmg, bl.element, bl.x, bl.y);
             if(bl.type === 'rocket') { spawnBRParticles(bl.x, bl.y, '#ff4400', 12); screenShake = 8; }
             else if(bl.type === 'railgun') { spawnBRParticles(bl.x, bl.y, '#00ffff', 6); }
             else { spawnBRParticles(bl.x, bl.y, '#e74c3c', 3); }
@@ -2990,7 +2994,7 @@ function updateBossRoom() {
         for(let mi=b.miniEnemies.length-1; mi>=0; mi--) {
             let m = b.miniEnemies[mi];
             if(Math.hypot(bl.x-m.x, bl.y-m.y) < m.radius + (bl.size||4)) {
-                m.hp -= bl.dmg;
+                applyElementalDamage(m, bl.dmg, bl.element, bl.x, bl.y);
                 spawnBRParticles(bl.x, bl.y, m.color, 3);
                 if(bl.type !== 'railgun') { br.bullets.splice(i,1); }
                 if(m.hp <= 0) { 
@@ -3098,6 +3102,7 @@ function updateBossRoom() {
             let p1hp = Math.round(400 * sc.hp * pwrHpBonus);
             
             b.miniEnemies.push({ 
+                element: 'schatten',
                 x: b.x+Math.cos(angle)*100, y: b.y+Math.sin(angle)*100, 
                 hp: p1hp, maxHp: p1hp, 
                 speed: sc.spd * 1.2, // Prio 1 ist im Büro etwas aggressiver
@@ -4209,6 +4214,7 @@ class Player{
         
         // --- NEU: CEO PERK START-CHECK ---
         if(hasTrophy('ceo_perk')) { this._hasUnkuendbar = true; this._unkuendbarUsed = false; }
+        if(hasTrophy('meister_hand')) this._phantomGriff = true;
         
         this.hp = this.maxHp;
         this.runSuppen = 0;
@@ -4508,7 +4514,10 @@ class Player{
             let wImg = facingRight ? wormImgRight : wormImgLeft;
             let wW=60, wH=60;
             if(wImg && wImg.complete && wImg.naturalHeight !== 0) {
+                ctx.save();
+                if(rolling) { ctx.globalAlpha = 0.5; ctx.rotate(this.rollTimer * 0.4); }
                 ctx.drawImage(wImg, -wW/2, -wH/2, wW, wH);
+                ctx.restore();
             } else {
                 ctx.restore(); ctx.save();
                 drawWormChar(ctx, this.x, this.y, facingRight, rolling, frame);
@@ -4519,9 +4528,15 @@ class Player{
             let mImg = facingRight ? martinImgRight : martinImgLeft;
             let mW=60, mH=90;
             if(mImg && mImg.complete && mImg.naturalHeight !== 0) {
+                ctx.save();
+                if(rolling) { ctx.globalAlpha = 0.5; ctx.rotate(this.rollTimer * 0.4); }
                 ctx.drawImage(mImg, -mW/2, -mH/2, mW, mH);
+                ctx.restore();
             } else {
+                ctx.save();
+                if(rolling) { ctx.globalAlpha = 0.5; ctx.rotate(this.rollTimer * 0.4); }
                 ctx.fillStyle='gold'; ctx.fillRect(-mW/2,-mH/2,mW,mH);
+                ctx.restore();
             }
         }
         let w=60,h=this.isMartin?90:60;
@@ -4581,11 +4596,41 @@ class Item{
     }
 }
 
+// ============================================================
+// ELEMENT-SYSTEM MATRIX
+// ============================================================
+const ELEMENT_CHART = {
+    // [Angreifer-Element][Verteidiger-Element] = Multiplikator
+    'neutral': { 'erde': 1.0, 'feuer': 1.0, 'wasser': 1.0, 'wind': 1.0, 'schatten': 0.75 },
+    'feuer':   { 'erde': 2.0, 'feuer': 1.0, 'wasser': 0.5, 'wind': 1.0, 'schatten': 0.75 },
+    'wind':    { 'erde': 0.5, 'feuer': 1.0, 'wasser': 2.0, 'wind': 1.0, 'schatten': 0.75 }
+};
+
+// Zentrale Funktion für Schaden & Popups
+function applyElementalDamage(enemy, baseDmg, attackElement, x, y) {
+    let mult = (ELEMENT_CHART[attackElement] && ELEMENT_CHART[attackElement][enemy.element]) ? ELEMENT_CHART[attackElement][enemy.element] : 1.0;
+    let finalDmg = baseDmg * mult;
+    enemy.hp -= finalDmg;
+    
+    // Visuelles Feedback
+    if (mult >= 2.0 && frame % 15 === 0) floatingTexts.push(new FloatingText(x, y - 25, "EFFEKTIV!", "#ff4444"));
+    if (mult <= 0.5 && frame % 15 === 0 && enemy.element !== 'schatten') floatingTexts.push(new FloatingText(x, y - 25, "SCHWACH...", "#aaa"));
+    
+    return finalDmg;
+}   
+   
 class Bullet {
     constructor(x, y, angle, type, dmg=10, owner=null) {
         this.x = x; this.y = y; this.type = type; this.dmg = dmg;
         this.angle = angle;
         this.owner = owner; // NEU: Wer hat geschossen?
+        // Element zuweisen
+        if (type === 'flame' || type === 'rocket') this.element = 'feuer';
+        else if (type === 'railgun') this.element = 'wind';
+        else this.element = 'neutral';
+        
+        // Azubi-Turrets schießen immer Wind/Elektro!
+        if (owner && owner.type === 'turret') this.element = 'wind';
         if (type === 'rocket') this.speed = 12;
         else if (type === 'railgun') this.speed = 35;
         else if (type === 'flame') this.speed = 10 + Math.random() * 4;
@@ -4665,6 +4710,16 @@ class Enemy{
             case 1: this.hp=400;  this.maxHp=400;  this.speed=1.0; this.radius=50; this.color='#c0392b'; this.score=300;  this.label="PRIO1";      this.symbol="☠";  break;
             case 7: this.hp=35;   this.maxHp=35;   this.speed=2.2; this.radius=18; this.color='#9b59b6'; this.score=75;   this.label="DER ANWENDER";this.symbol="🧑"; this.teleportTimer=180+Math.floor(Math.random()*60); break;
             case 8: this.hp=220;  this.maxHp=220;  this.speed=0.6; this.radius=30; this.color='#1f618d'; this.score=200;  this.label="SAP-UPDATE"; this.symbol="💿"; break;
+        }
+        // Element-Zuweisung
+        if ([2, 3, 4, 5].includes(this.type)) {
+            this.element = 'erde'; // Standard-Tickets
+        } else if (this.type === 8) {
+            this.element = 'wasser'; // SAP-Update
+        } else if ([1, 6, 7, 99].includes(this.type)) {
+            this.element = 'schatten'; // Bosse, Teichmann, Prio 1, Anwender
+        } else {
+            this.element = 'erde'; // Fallback
         }
 
         // Schwierigkeitsgrad-Skalierung für alle normalen Gegner
@@ -5624,11 +5679,11 @@ function loop(){
                     if(e.type===6){if(!player.isMartin||b.type!=='rocket'){bullets.splice(j,1);spawnParticles(e.x,e.y,'#f1c40f',2);playSound('hit');continue;}}
                     if(b.type === 'rocket') {
                         screenShake=15;playSound('hammer');spawnParticles(b.x,b.y,'#f00',20);
-                        enemies.forEach(oe=>{if(Math.hypot(oe.x-b.x,oe.y-b.y)<150){oe.hp-=100;floatingTexts.push(new FloatingText(oe.x,oe.y,"BOOM","#f00"));}});
+                        enemies.forEach(oe=>{if(Math.hypot(oe.x-b.x,oe.y-b.y)<150){applyElementalDamage(oe, 100, b.element, oe.x, oe.y);floatingTexts.push(new FloatingText(oe.x,oe.y,"BOOM","#f00"));}});
                         bullets.splice(j,1);
                     } else if (b.type === 'railgun') {
                         if (!b.hitEnemies.includes(e)) {
-                            e.hp -= b.dmg; e.lastHitBy = b.owner; b.hitEnemies.push(e);
+                            applyElementalDamage(e, b.dmg, b.element, e.x, e.y); e.lastHitBy = b.owner; b.hitEnemies.push(e);
                             spawnParticles(e.x, e.y, '#00ffff', 5); playSound('hit');
                             
                             // --- SCHATTEN IST IMMUN GEGEN RAILGUN-RÜCKSTOSS ---
@@ -5638,10 +5693,10 @@ function loop(){
                             }
                         }
                     } else if (b.type === 'flame') {
-                        e.burnTimer = 90; e.hp -= b.dmg; bullets.splice(j,1);
+                        e.burnTimer = 90; applyElementalDamage(e, b.dmg, b.element, e.x, e.y); bullets.splice(j,1);
                     } else { 
                         if (!b.hitEnemies.includes(e)) {
-                            e.hp -= b.dmg; e.lastHitBy = b.owner; b.hitEnemies.push(e);
+                            applyElementalDamage(e, b.dmg, b.element, e.x, e.y); e.lastHitBy = b.owner; b.hitEnemies.push(e);
                             spawnParticles(e.x, e.y, e.color, 3); playSound('hit');
                             if(player.hasFireMod) e.burnTimer = 180; 
                             
@@ -5666,7 +5721,7 @@ function loop(){
             for (let e of enemies) {
                 if (Math.hypot(e.x - mx, e.y - my) < e.radius + 35) {
                     if (e.mouseCooldown <= 0) {
-                        e.hp -= (50 + player.dmgBonus); e.mouseCooldown = 15; 
+                        applyElementalDamage(e, 50 + player.dmgBonus, 'neutral', e.x, e.y); e.mouseCooldown = 15;
                         spawnParticles(e.x, e.y, '#f00', 8); playSound('hit');
                         let a = Math.atan2(e.y - my, e.x - mx);
                         e.x += Math.cos(a) * 40; e.y += Math.sin(a) * 40;
