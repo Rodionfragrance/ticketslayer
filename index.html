@@ -407,6 +407,114 @@ input[type="text"] {
 #pw-btn:hover { background:#f00; color:#000; }
 #pw-error { color:#c0392b; font-size:12px; height:16px; margin:0; }
 #pw-logo  { font-size:60px; }
+
+/* ============================================================
+   SCHMIEDE / REFINEMENT OVERLAY
+   ============================================================ */
+#schmiedeOverlay {
+    display:none; position:absolute; inset:0;
+    background:rgba(0,0,0,0.93); z-index:600;
+    overflow-y:auto; font-family:'Courier New',monospace;
+}
+#schmiedeInner {
+    max-width:680px; margin:40px auto; padding:30px;
+    border:3px solid #e67e22; background:#0a0a0a;
+    border-radius:4px; box-shadow:0 0 60px rgba(230,126,34,0.2);
+}
+#schmiedeInner h2 { color:#e67e22; font-size:24px; letter-spacing:4px; margin:0 0 4px; text-transform:uppercase; }
+.refine-weapon-card {
+    background:#111; border:2px solid #333; border-radius:4px;
+    padding:16px; margin-bottom:16px; position:relative;
+}
+.refine-weapon-card.selected { border-color:#e67e22; background:#1a0f00; }
+.refine-level-badge {
+    display:inline-block; background:#e67e22; color:#000;
+    font-weight:bold; font-size:13px; padding:2px 8px; border-radius:2px;
+    letter-spacing:1px;
+}
+.refine-level-badge.safe { background:#2ecc71; }
+.refine-level-badge.risky { background:#f39c12; }
+.refine-level-badge.danger { background:#c0392b; color:#fff; }
+.refine-prob-bar-outer {
+    width:100%; height:10px; background:#1a1a1a;
+    border:1px solid #333; border-radius:3px; margin:8px 0 4px;
+}
+.refine-prob-bar-inner { height:100%; border-radius:3px; transition:width 0.3s; }
+.refine-anvil-btn {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    color:#fff; border:none; padding:14px 30px; font-size:15px;
+    font-family:'Courier New',monospace; font-weight:bold;
+    cursor:pointer; text-transform:uppercase; letter-spacing:2px;
+    border-radius:3px; transition:0.2s; width:100%; margin-top:12px;
+}
+.refine-anvil-btn:hover:not(:disabled) { background:linear-gradient(135deg,#f39c12,#e67e22); transform:scale(1.02); }
+.refine-anvil-btn:disabled { opacity:0.4; cursor:default; transform:none; }
+.refine-result-success { color:#2ecc71; font-size:20px; font-weight:bold; text-align:center; padding:10px; animation:refineFlash 0.5s ease; }
+.refine-result-fail    { color:#c0392b; font-size:20px; font-weight:bold; text-align:center; padding:10px; animation:refineFlash 0.5s ease; }
+@keyframes refineFlash { 0%{opacity:0;transform:scale(0.8)} 100%{opacity:1;transform:scale(1)} }
+
+/* ============================================================
+   PET SYSTEM HUD
+   ============================================================ */
+#petHud {
+    position:absolute; bottom:125px; left:50%; transform:translateX(-50%);
+    background:rgba(0,0,0,0.75); border:2px solid #9b59b6;
+    border-radius:6px; padding:6px 14px; display:none;
+    z-index:120; font-family:'Courier New',monospace; text-align:center;
+    pointer-events:none; white-space:nowrap;
+}
+#petHud .pet-name  { color:#9b59b6; font-size:11px; font-weight:bold; letter-spacing:2px; }
+#petHud .pet-mood  { color:#fff; font-size:13px; margin:2px 0; }
+#petHud .pet-hunger-outer { width:140px; height:7px; background:#1a1a1a; border:1px solid #333; border-radius:3px; margin:3px auto 0; }
+#petHud .pet-hunger-inner { height:100%; border-radius:3px; transition:width 0.5s; }
+
+/* ============================================================
+   RUNE TABLET SYSTEM
+   ============================================================ */
+#runeOverlay {
+    display:none; position:absolute; inset:0;
+    background:rgba(0,0,0,0.95); z-index:620;
+    overflow-y:auto; font-family:'Courier New',monospace;
+}
+#runeInner {
+    max-width:820px; margin:30px auto; padding:28px;
+    border:3px solid #00e5ff; background:#030a0f;
+    border-radius:4px; box-shadow:0 0 80px rgba(0,229,255,0.15);
+}
+#runeInner h2 { color:#00e5ff; font-size:22px; letter-spacing:4px; margin:0 0 4px; text-transform:uppercase; }
+.rune-grid-wrapper {
+    display:grid; grid-template-columns:repeat(5,52px);
+    grid-template-rows:repeat(5,52px); gap:3px;
+    background:#0a1a20; border:2px solid #00e5ff33;
+    padding:6px; border-radius:4px; width:fit-content;
+}
+.rune-cell {
+    width:52px; height:52px; background:#0d1f28;
+    border:1px solid #1a3040; border-radius:2px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; color:#1a4060; cursor:pointer;
+    transition:background 0.15s, border-color 0.15s;
+    position:relative; overflow:hidden;
+}
+.rune-cell.filled { border-color:#00e5ff44; }
+.rune-cell.drag-over { background:#0a2535 !important; border-color:#00e5ff !important; box-shadow:inset 0 0 8px rgba(0,229,255,0.3); }
+.rune-card {
+    background:#0d1a24; border:2px solid #1a4060;
+    border-radius:4px; padding:12px; cursor:grab;
+    transition:0.15s; position:relative; user-select:none;
+}
+.rune-card:hover { border-color:#00e5ff; background:#0a1e2c; }
+.rune-card.equipped { border-color:#f1c40f; background:#1a1400; }
+.rune-card.dragging { opacity:0.5; }
+.rune-shape-preview {
+    display:grid; gap:2px; margin-bottom:8px;
+    width:fit-content;
+}
+.rune-shape-cell {
+    width:12px; height:12px; border-radius:1px;
+    background:#00e5ff; display:inline-block;
+}
+.rune-shape-cell.empty { background:transparent; }
 </style>
 </head>
 <body>
@@ -469,6 +577,7 @@ input[type="text"] {
         <div><span>SHIFT / RMB</span> — Hechtrolle (i-Frames)</div>
         <div><span>E</span> — Interagieren (Heilen/IDOC/Shop)</div>
         <div><span>B</span> — Azubi einsetzen (5000 Pkt)</div>
+        <div><span>V</span> — Pet füttern (1🥣) / Phantom Grip (Trophäe)</div>
         <div><span>F</span> — Server-Farm aktivieren</div>
         <div><span>G</span> — Urlaub einlösen (Heilung)</div>
         <div><span>ESC</span> — Pause</div>
@@ -481,7 +590,7 @@ input[type="text"] {
 <!-- EMAIL OVERLAY -->
 <div id="emailOverlay">
     <div class="email-header">
-        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;leitstand@zls-hamm.de&gt;</div>
+        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3e525b574a4d4a5f505a7e44524d13565f5353105a5b">[email&#160;protected]</a>&gt;</div>
         <div class="email-row"><span class="email-label">AN:</span> Alle Mitarbeiter</div>
         <div class="email-row email-subject">PFLICHTLEKTÜRE: Neue Prozessanweisung V20 — Vollständige Revision</div>
     </div>
@@ -563,12 +672,29 @@ input[type="text"] {
         <p>Steh nah an einem Server und drücke <span class="key-hint">F</span>. Hacking-Puzzle: korrekte IP wählen (nicht 192.x). Erfolg → Farm aktiv. Alle <strong>~20 Sekunden</strong> erscheint eine Suppe neben dem Server (Intervall mit Skilltree verkürzbar). Kloska sabotiert aktive Farmen — verjage ihn mit <span class="key-hint">E</span>. <em>Trophäe Nervensäge: Kloska 3× in einem Run verjagen.</em></p>
 
         <h3>10. KLOSKA-SHOP (HARDWARELAGER)</h3>
-        <p>Betritt das Lager mit <span class="key-hint">E</span>. Zahlungsmittel: Suppe (🥣).</p>
+        <p>Betritt das Lager mit <span class="key-hint">E</span>. Zahlungsmittel: Suppe (🥣). Unten: Zugang zur <strong>🔨 Waffen-Schmiede</strong>.</p>
         <ul>
             <li>🖱️ <strong>Orbit-Maus (Permanent)</strong> — Kein Timer bis Rundenende. [10 🥣]</li>
             <li>🖥️ <strong>Defekter ThinClient</strong> — Blockiert alle IDOC-Alarme für den Rest des Runs. [12 🥣]</li>
             <li>👷 <strong>Azubi-Armee</strong> — Spawnt sofort 3 Turrets. [8 🥣]</li>
-            <li>☢️ <strong>System-Reboot</strong> — Löscht ALLE normalen Gegner. Boss verliert nur 1500 HP. [20 🥣]</li>
+            <li>☢️ <strong>System-Reboot</strong> — Löscht ALLE normalen Gegner. [20 🥣]</li>
+            <li>🔨 <strong>Waffen-Schmiede</strong> — Favoriten-Waffe aufwerten (+1 bis +12). +10% Schaden pro Stufe. Bis +4 sicher (100%). Danach Risiko — Fehlschlag → +0. Pity-System: jeder Fehlschlag erhöht nächste Chance!</li>
+        </ul>
+
+        <h3>10b. 🐾 PET-SYSTEM — AZUBI-HAMSTER</h3>
+        <p>Adoptiere deinen permanenten Begleiter im <strong>Menü → PET</strong> (500 KB). Er folgt dir durch jeden Run.</p>
+        <ul>
+            <li><strong>Hunger-Balken</strong> — Sinkt während des Runs. Mit <span class="key-hint">V</span> füttern (1🥣 pro Fütterung).</li>
+            <li><strong>Ideal-Zone 60–80% Sättigung</strong> → +25 Zuneigung. Überfüttern oder hungern → sinkt.</li>
+            <li><strong>Stufen</strong>: Fremd → Schüchtern → Neutral → <span style="color:#2ecc71;">Vertraut (+Speed)</span> → <span style="color:#9b59b6;">Loyal (greift Feinde an!)</span></li>
+        </ul>
+
+        <h3>10c. 🔮 RUNEN-TAFEL — ENDGAME</h3>
+        <p>Runen-Fragmente droppen von Bossen. Im <strong>Menü → RUNEN</strong> in ein 5×5 Grid einlegen (Drag & Drop). Nur eingelegte Runen aktivieren ihre Boni.</p>
+        <ul>
+            <li>Runen haben Tetris-Formen und zufällige RNG-Stats (+% Schaden, +% Elementarschaden, +HP, etc.)</li>
+            <li>4 Seltenheitsstufen: <span style="color:#aaa;">Gewöhnlich</span> · <span style="color:#3498db;">Selten</span> · <span style="color:#9b59b6;">Episch</span> · <span style="color:#f1c40f;">Legendär</span></li>
+            <li>Trophäe: <strong>Runen-Meister</strong> (10 Zellen belegt) → Alle Runen-Boni +20%!</li>
         </ul>
 
         <h3>11. META-PROGRESSION — ÜBERSICHT</h3>
@@ -583,19 +709,19 @@ input[type="text"] {
             <li><strong>📋 Tages-Challenge</strong> — Täglich wechselnde Aufgabe (14 Varianten). Belohnung: 100–250 KB.</li>
         </ul>
 
-        <h3>12. JOB-SYSTEM — DETAILS</h3>
-        <p>EXP gibt es für: Kills nach Gegner-Typ (PRIO5 = wenig, PRIO1 = viel, Boss = sehr viel), überlebte Spielzeit und gelöste IDOCs. Base EXP und Job EXP werden separat geführt.</p>
+        <h3>12. JOB-SYSTEM — RAGNARÖK-STYLE (V3)</h3>
+        <p>EXP für Base-Level: Kills, Zeit, IDOCs. Job-EXP bereits als <strong>Azubi (Novice)</strong> — bei Job Lv 10 Klassenwechsel möglich. Drei Haupt-Zweige + vier Alt-Pfade.</p>
         <ul>
-            <li>📦 <strong>Lagermitarbeiter</strong> — Hechtrolle macht Schaden, Überstunden-Kraft, Lagerhaltung.</li>
-            <li>💻 <strong>Sachbearbeiter</strong> — Ticketsystem-Farm, Formular 27b (Slow), Eskalation gegen Bosse.</li>
-            <li>🔧 <strong>Techniker</strong> — Turrets aus Kills, Farm-Reparatur, Azubi-Rabatt.</li>
-            <li>📞 <strong>Supporter</strong> — Suppe heilt mehr, Kill-Regen, automatische Unverwundbarkeit.</li>
-            <li>👔 <strong>MADDIN (Teamleiter)</strong> — Sachbearbeiter Job Lv 25. Azubis kostenlos, Vodka-Buff, Stampfer-Angriff, Beine-weg-Speed.</li>
-            <li>🚜 <strong>Gabelstaplerfahrer</strong> — Lagermitarbeiter Job Lv 25. Fahrzeugimmunität, Stapler mähen Gegner.</li>
-            <li>🖥️ <strong>Entwickler</strong> — Techniker Job Lv 25. Farm-Overdrive, Auto-Turret-Deploy.</li>
-            <li>⚡ <strong>Hacker</strong> — Techniker Job Lv 25. SQL-Injection, Gegner hacken, Zero-Day-Freeze.</li>
-            <li>😤 <strong>Burnout-Spezialist</strong> — Supporter Job Lv 25. Schmerz als Stärke, HP als Ressource.</li>
+            <li>🎓 <strong>AZUBI → Job Lv 10 → 1. Klasse wählen</strong> (Menü öffnen!)</li>
+            <li>📦 <strong>Lagerist → Staplerfahrer → [Rebirth] → High Lagerist → Schichtleiter → Supply Chain Mgr → COO</strong> — Logistik-Linie. Fahrzeug-Immunität, HP-Boni, Schaden-Multiplikator.</li>
+            <li>🎧 <strong>Sachbearbeiter → Maddin → [Rebirth] → High Sachbearbeiter → Abteilungsleiter → IT-Director → CIO</strong> — Support-Linie. Azubis gratis, Heilungs-Boni, Cooldown-Reduktion.</li>
+            <li>🔧 <strong>IT-Techniker → Entwickler → [Rebirth] → High Techniker → Senior Entwickler → Lead Architect → CTO</strong> — Technik-Linie. Farm-Speed, Turrets, Automatisierung.</li>
+            <li>🎓 <strong>Werkstudent → Dauerstudent (Base99/Job99) → Bachelor (Base200)</strong> — Extended, kein Rebirth. Stat-Boni + Speed.</li>
+            <li>🥷 <strong>Freelancer → Consultant (Base99/Job70) → Senior Consultant (Base200)</strong> — Alt. Crit + Dash.</li>
+            <li>🔫 <strong>Netzwerktechniker → NOC-Spezialist (Base99/Job70) → Network Architect (Base200)</strong> — Alt. Projektil-Boni.</li>
+            <li>🎓 <strong>Dualer Student → Absolvent (Base200/Job70)</strong> — Doram. EXP-Bonus + Azubis.</li>
         </ul>
+        <p style="color:#888;font-size:11px;">Rebirth: Base 99 + Job 50 als 2nd Class (Hauptpfade). Level → 1, +100 Statuspunkte, Trans-Klassen freischalten.</p>
 
         <h3>13. TROPHÄEN (17 Stück)</h3>
         <p>Jede Trophäe gibt einen dauerhaften Perk für alle zukünftigen Runs. Alle 17 sammeln → <strong>Prestige</strong> freigeschaltet.</p>
@@ -706,6 +832,8 @@ input[type="text"] {
             <button onclick="openDailyOverlay()" id="daily-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;">☕ TAGES-BONUS</button>
             <button onclick="openQuestBoard()" style="background:#111;color:#2ecc71;border:2px solid #2ecc71;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#2ecc71';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#2ecc71'">📋 AUFTRÄGE</button>
             <button onclick="openJobOverlay()" id="job-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">⚔️ JOB</button>
+            <button onclick="openPetOverlay()" id="pet-menu-btn" style="background:#111;color:#9b59b6;border:2px solid #9b59b6;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#9b59b6';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#9b59b6'">🐾 PET</button>
+            <button onclick="openRuneOverlay()" style="background:#111;color:#00e5ff;border:2px solid #00e5ff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#00e5ff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#00e5ff'">🔮 RUNEN</button>
             <button onclick="showEmail()" style="background:#111;color:#3498db;border:2px solid #3498db;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#3498db';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#3498db'">[I] ANLEITUNG</button>
             <button onclick="openSkillTree()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🌳 SKILLTREE</button>
             <button onclick="openHighscoreMenu()" style="background:#111;color:#fff;border:2px solid #fff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#fff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#fff'">🏆 RANGLISTE</button>
@@ -752,6 +880,7 @@ input[type="text"] {
             </div>
         </div>
         <button class="btn-easy" onclick="closeKloskaShop()" style="margin-top:20px; width:100%; background:#222; border-color:#9b59b6; color:#9b59b6;">LAGER VERLASSEN</button>
+        <button onclick="closeKloskaShop(); openSchmiede();" style="display:block;width:100%;margin-top:8px;background:#1a0a00;color:#e67e22;border:2px solid #e67e22;padding:12px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;transition:0.2s;" onmouseover="this.style.background='#e67e22';this.style.color='#000'" onmouseout="this.style.background='#1a0a00';this.style.color='#e67e22'">🔨 WAFFEN-SCHMIEDE (REFINEMENT)</button>
     </div>
 </div>
 
@@ -877,6 +1006,38 @@ input[type="text"] {
         <div style="color:#ffd700; font-size:16px; margin-bottom:22px;">☕ Kaffeebons: <span id="waffenKBAmount">0</span></div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;" id="waffenGrid"></div>
         <button onclick="closeWaffenkammer()" style="display:block;width:100%;margin-top:22px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
+        <button onclick="closeWaffenkammer(); openSchmiede();" style="display:block;width:100%;margin-top:8px;background:#1a0a00;color:#e67e22;border:2px solid #e67e22;padding:12px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;" onmouseover="this.style.background='#e67e22';this.style.color='#000'" onmouseout="this.style.background='#1a0a00';this.style.color='#e67e22'">🔨 WAFFE AUFWERTEN (SCHMIEDE)</button>
+    </div>
+</div>
+
+<!-- RUNE TABLET SYSTEM -->
+<div id="runeOverlay">
+    <div id="runeInner">
+        <h2>🔮 RUNEN-TAFEL</h2>
+        <div style="color:#666;font-size:11px;margin-bottom:16px;">Platziere Runen im 5×5 Grid — nur eingelegte Runen aktivieren ihre Boni</div>
+        <div id="runeContent"></div>
+        <button onclick="closeRuneOverlay()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
+    </div>
+</div>
+
+<!-- PET SYSTEM OVERLAY -->
+<div id="petOverlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.93);z-index:610;overflow-y:auto;font-family:'Courier New',monospace;">
+    <div style="max-width:640px;margin:40px auto;padding:28px;border:3px solid #9b59b6;background:#0a0a0a;border-radius:4px;box-shadow:0 0 60px rgba(155,89,182,0.2);">
+        <h2 style="color:#9b59b6;font-size:22px;letter-spacing:4px;margin:0 0 4px;text-transform:uppercase;">🐾 AZUBI-HAMSTER</h2>
+        <div style="color:#666;font-size:11px;margin-bottom:18px;">Dein permanenter Begleiter — für jeden Run</div>
+        <div id="petOverlayContent"></div>
+        <button onclick="closePetOverlay()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
+    </div>
+</div>
+
+<!-- SCHMIEDE / REFINEMENT -->
+<div id="schmiedeOverlay">
+    <div id="schmiedeInner">
+        <h2>🔨 WAFFEN-SCHMIEDE</h2>
+        <div style="color:#888;font-size:12px;margin-bottom:6px;">NPC Kloska · Aufwertung der Favoriten-Waffe</div>
+        <div style="color:#ffd700;font-size:14px;margin-bottom:18px;">☕ KB: <span id="schmiedeKB">0</span> &nbsp;|&nbsp; 🥣 Suppen: <span id="schmiedeSuppen">0</span></div>
+        <div id="schmiedeContent"></div>
+        <button onclick="closeSchmiede()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
     </div>
 </div>
 
@@ -892,6 +1053,14 @@ input[type="text"] {
 
 <!-- FARM INDICATOR -->
 <div id="farmIndicator"></div>
+
+<!-- PET HUD -->
+<div id="petHud">
+    <div class="pet-name" id="petHudName">🐾 AZUBI-HAMSTER</div>
+    <div class="pet-mood" id="petHudMood">Neutral</div>
+    <div class="pet-hunger-outer"><div class="pet-hunger-inner" id="petHudHunger" style="width:100%;background:#2ecc71;"></div></div>
+    <div style="color:#555;font-size:9px;margin-top:2px;">[V] Füttern (1🥣)</div>
+</div>
 
 <!-- MISC HUD -->
 // <div id="highscore-overlay">Lade Online Scores...</div>
@@ -918,7 +1087,7 @@ input[type="text"] {
 </div>
 
 <!-- PASSWORT LOGIK -->
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 var GAME_PASSWORD = 'Vollzeit2025';
 var SESSION_HOURS = 8;
 
@@ -1555,12 +1724,15 @@ const TROPHIES_DEF = [
     { id:'nervensaege',     icon:'😤', name:'Nervensäge',          desc:'Verscheuche Kloska 3× in einem Run.', perk:'Respekt: Kloska erscheint 25% seltener' },
     { id:'speedster',       icon:'⚡', name:'Speedster',           desc:'Besiege Peter Bayer in unter 5 Sekunden im Boss-Room.', perk:'Präzision: +5% Schaden auf alle Waffen' },
     { id:'ceo_perk',        icon:'👑', name:'Vorstandsvorsitzender',desc:'Schließe alle 5 Ligen mit dem S-Rang ab.', perk:'Unkündbar: Überlebe 1 tödlichen Treffer mit 1 HP (3s Schild)' },
-    { id:'ueberqualifiziert', icon:'🎓', name:'Überqualifiziert',   desc:'Schließe alle 9 Jobs durch Rebirth ab.', perk:'Universalgenie: Alle Job-Passivs gleichzeitig aktiv' },
+    { id:'ueberqualifiziert', icon:'🎓', name:'Überqualifiziert',   desc:'Schließe alle 3 Hauptpfade durch Rebirth ab und wechsle in die 3. Klasse.', perk:'Universalgenie: Alle Job-Passivs gleichzeitig aktiv' },
     { id:'meister_hand',    icon:'✋', name:'Meister Hand',         desc:'Besiege die geheime Hand im Logistics-Bereich.', perk:'Phantomgriff: [V] Vernichtet alle Gegner auf der Map (60s CD)' },
     // --- WEIL WEGEN FELIX - ENDGAME TROPHÄEN ---
     { id:'felix_tier1', icon:'🚀', name:'Das Ticket-Kartell', desc:'Felix-Modus: S-Rang + 1.000.000 Pkt.', perk:'Combo startet bei ×3.' },
     { id:'felix_tier2', icon:'💸', name:'Mehrheitsaktionär', desc:'Felix-Modus: S-Rang + 2.500.000 Pkt.', perk:'Kloska -50% & Start mit +5 Suppen.' },
-    { id:'felix_tier3', icon:'👑', name:'Der wahre CEO', desc:'Felix-Modus: S-Rang + 5.000.000 Pkt.', perk:'Azubis spawnen als Junior. +25% Schaden.' }
+    { id:'felix_tier3', icon:'👑', name:'Der wahre CEO', desc:'Felix-Modus: S-Rang + 5.000.000 Pkt.', perk:'Azubis spawnen als Junior. +25% Schaden.' },
+    { id:'pet_loyal',   icon:'🐾', name:'Bester Freund', desc:'Bringe deinen Hamster auf Loyal-Stufe.', perk:'Hamster-Aura: Gegner in 80px Radius verlangsamt' },
+    { id:'refine_max',  icon:'🔨', name:'Schmiedemeister', desc:'Werte eine Waffe auf +10 auf.', perk:'Schmiede-Rabatt: Alle Kosten -20%' },
+    { id:'rune_master', icon:'🔮', name:'Runen-Meister', desc:'Lege 10 Runen gleichzeitig ins Grid.', perk:'Runen-Resonanz: Alle Runen-Boni +20%' }
 ];
 
 let unlockedTrophies = JSON.parse(localStorage.getItem('ts_trophies') || '[]');
@@ -1571,21 +1743,23 @@ let unlockedWeapons  = JSON.parse(localStorage.getItem('ts_weapons') || '[]');
 // ============================================================
 
 // --- SCHRITT 1: DER HARD RESET (WIPE DER ALTEN DATEN) ---
-if (!localStorage.getItem('ts_ro_wipe_v1')) {
-    // Lösche alle alten Job- und Level-Daten
+if (!localStorage.getItem('ts_ro_wipe_v2')) {
+    // Lösche alle alten Job- und Level-Daten (V3 Job-System — Novice Job-EXP Fix)
     localStorage.removeItem('ts_baseexp');
     localStorage.removeItem('ts_jobexp');
     localStorage.removeItem('ts_baselv');
     localStorage.removeItem('ts_joblv');
     localStorage.removeItem('ts_job');
+    localStorage.removeItem('ts_isTrans');
     localStorage.removeItem('ts_jobspts');
     localStorage.removeItem('ts_jobskills');
     localStorage.removeItem('ts_completed_jobs');
     localStorage.removeItem('ts_rebirth_skills');
+    localStorage.removeItem('ts_ro_wipe_v1');
     
     // Setze den Marker, damit nicht bei jedem Start gelöscht wird
-    localStorage.setItem('ts_ro_wipe_v1', 'done');
-    console.log("Alte Job-Daten gelöscht. RO-System initialisiert.");
+    localStorage.setItem('ts_ro_wipe_v2', 'done');
+    console.log("Job-System V3 initialisiert — Novice Job-EXP & Alt-Pfade aktiv.");
 }
 // --------------------------------------------------------
 
@@ -1613,69 +1787,185 @@ function jobExpNeeded(lv)  { return Math.floor(100 * Math.pow(lv, 1.55)); } // ~
 const EXP_TABLE = { 5:3, 4:5, 3:8, 2:12, 1:20, 7:10, 8:15, 99:0 };
 const JOB_EXP_TABLE = { 5:2, 4:3, 3:5, 2:8, 1:13, 7:7, 8:10, 99:0 };
 
-// Job-Definitionen nach RO-System
+// Job-Definitionen nach RO-System (V3.0 — vollständiger Klassen-Baum)
+// ─────────────────────────────────────────────────────────────────────
+// PFAD-STRUKTUR:
+//   Novice (Job Lv 10) → 1st → (Job 50) → 2nd → REBIRTH (Base99/Job50)
+//   → High Novice (Job 10) → Trans 1st → (Job 50) → Trans 2nd
+//   → (Base99/Job70) → 3rd → (Base200/Job70) → 4th
+//
+//   ALTERNATIV-PFADE (kein Rebirth):
+//   Werkstudent (Super Novice): Job99 → Dauerstudent → Hyper Novice
+//   Freelancer   (Ninja):        Base99/Job70 → Consultant → Senior
+//   Netzwerktechniker (Gunslinger): Base99/Job70 → NOC → Architect
+//   Dualer Student   (Doram):    Base200/Job70 → Absolvent
+// ─────────────────────────────────────────────────────────────────────
 const JOBS = {
-    // ── 1st Class (Benötigt Base Lv 10) ──
-    lagermitarbeiter:      { name: '📦 Lagermitarbeiter', classLevel: 1, isTrans: false, color: '#e67e22', desc: 'Tank/Melee (Swordsman)', passiv: 'Max HP +20%' },
-    sachbearbeiter:        { name: '💻 Sachbearbeiter', classLevel: 1, isTrans: false, color: '#3498db', desc: 'Support/Heal (Acolyte)', passiv: 'Suppe heilt 20% mehr' },
-    techniker:             { name: '🔧 Techniker', classLevel: 1, isTrans: false, color: '#1abc9c', desc: 'Utility (Merchant)', passiv: 'Farm-Speed +15%' },
+    // ══════════════════════════════════════════════
+    // ZWEIG 1 — LOGISTIK  (≈ Swordsman-Linie)
+    // ══════════════════════════════════════════════
+    lagermitarbeiter: { name:'📦 Lagerist', classLevel:1, isTrans:false, color:'#e67e22',
+        desc:'Swordsman. Robust, ausdauernd, das Rückgrat der Logistik.',
+        passiv:'Max HP +25%, Nahkampf-Schaden +15%' },
+    staplerfahrer:    { name:'🚜 Staplerfahrer', classLevel:2, prev:'lagermitarbeiter', isTrans:false, color:'#d35400',
+        desc:'Knight. Meister der Fahrzeuglogistik. Kein Truck trifft ihn.',
+        passiv:'Fahrzeug-Immunität, Schaden +20%' },
+    high_lagermitarbeiter: { name:'📦 High Lagerist', classLevel:1, isTrans:true, color:'#f39c12',
+        desc:'Lord Knight Vorstufe. Wiedergeboren, stärker als je zuvor.',
+        passiv:'Max HP +50%, Fahrzeug-Immunität, Speed +0.3' },
+    schichtleiter:    { name:'🏭 Schichtleiter', classLevel:2, prev:'high_lagermitarbeiter', isTrans:true, color:'#c0392b',
+        desc:'Lord Knight. Führt die Schicht mit eiserner Hand.',
+        passiv:'Schaden +30%, Hechtrolle cooldownfrei, HP +50' },
+    supply_chain_manager: { name:'🚄 Supply Chain Mgr', classLevel:3, prev:'schichtleiter', reqBase:99, reqJob:70, color:'#ff6b35',
+        desc:'Rune Knight. Dominiert die gesamte Lieferkette.',
+        passiv:'Schaden +60%, Max HP +150, Fahrzeug-Immunität' },
+    coo: { name:'🐉 Chief Operating Officer', classLevel:4, prev:'supply_chain_manager', reqBase:200, reqJob:70, color:'#ff0000',
+        desc:'Dragon Knight. Absolute Kontrolle aller Operationen.',
+        passiv:'Schaden ×2, Max HP ×2, Alle Cooldowns -50%' },
 
-    // ── 2nd Class (Benötigt Job Lv 50) ──
-    staplerfahrer:         { name: '🚜 Staplerfahrer', classLevel: 2, prev: 'lagermitarbeiter', isTrans: false, color: '#d35400', desc: 'Fahrzeuge (Knight)', passiv: 'Fahrzeug-Immunität' },
-    maddin:                { name: '👔 MADDIN (Teamleiter)', classLevel: 2, prev: 'sachbearbeiter', isTrans: false, color: '#f1c40f', desc: 'Boss (Priest)', passiv: 'Gratis Azubis, Vodka-Schutz' },
-    entwickler:            { name: '🖥️ Entwickler', classLevel: 2, prev: 'techniker', isTrans: false, color: '#2ecc71', desc: 'Automatisierung (Blacksmith)', passiv: 'Turrets spawnen schneller' },
+    // ══════════════════════════════════════════════
+    // ZWEIG 2 — IT-SUPPORT  (≈ Acolyte-Linie)
+    // ══════════════════════════════════════════════
+    sachbearbeiter:   { name:'🎧 Sachbearbeiter', classLevel:1, isTrans:false, color:'#3498db',
+        desc:'Acolyte. Support & Heilung. Hält das Team am Laufen.',
+        passiv:'Suppe heilt 25% mehr, KB-Drop-Rate +10%' },
+    maddin:           { name:'👔 MADDIN (Teamleiter)', classLevel:2, prev:'sachbearbeiter', isTrans:false, color:'#f1c40f',
+        desc:'Priest. Der legendäre Teamleiter. Azubis kosten nichts.',
+        passiv:'Gratis Azubis, Vodka-Schutz, Stampfer-Angriff' },
+    high_sachbearbeiter: { name:'🎧 High Sachbearbeiter', classLevel:1, isTrans:true, color:'#5dade2',
+        desc:'High Acolyte. Wiedergeborener Support-Profi mit Klasse.',
+        passiv:'Suppe heilt 50% mehr, Speed +0.5' },
+    abteilungsleiter: { name:'👑 Abteilungsleiter', classLevel:2, prev:'high_sachbearbeiter', isTrans:true, color:'#f1c40f',
+        desc:'High Priest. Maddin auf Steroiden. Maximale Autorität.',
+        passiv:'Gratis Azubis, Max HP +50, Cooldowns -30%' },
+    it_director:      { name:'👁️ IT-Director', classLevel:3, prev:'abteilungsleiter', reqBase:99, reqJob:70, color:'#8e44ad',
+        desc:'Arch Bishop. Absolute Systemkontrolle über alles.',
+        passiv:'Cooldowns -75%, Suppe heilt +75%, Azubis permanent' },
+    cio:              { name:'🔮 Chief Info. Officer', classLevel:4, prev:'it_director', reqBase:200, reqJob:70, color:'#9b59b6',
+        desc:'Cardinal. IT-Gott. Alle Buffs wirken permanent.',
+        passiv:'Absolute Systemkontrolle: alle Buffs permanent' },
 
-    // ── Transcendent 1st Class (Nach Rebirth, Base 1 / Job 10) ──
-    high_lagermitarbeiter: { name: '📦 High Lagermitarbeiter', classLevel: 1, isTrans: true, color: '#e67e22', desc: 'Rebirth Swordsman', passiv: 'Max HP +40%' },
-    high_sachbearbeiter:   { name: '💻 High Sachbearbeiter', classLevel: 1, isTrans: true, color: '#3498db', desc: 'Rebirth Acolyte', passiv: 'Suppe heilt 40% mehr' },
-    high_techniker:        { name: '🔧 High Techniker', classLevel: 1, isTrans: true, color: '#1abc9c', desc: 'Rebirth Merchant', passiv: 'Farm-Speed +30%' },
+    // ══════════════════════════════════════════════
+    // ZWEIG 3 — ENTWICKLUNG  (≈ Merchant-Linie)
+    // ══════════════════════════════════════════════
+    techniker:        { name:'🔧 IT-Techniker', classLevel:1, isTrans:false, color:'#1abc9c',
+        desc:'Merchant. Automatisierungs-Experte & Farm-Spezialist.',
+        passiv:'Farm-Speed +20%, Turret-Cooldown -15%' },
+    entwickler:       { name:'🖥️ Entwickler', classLevel:2, prev:'techniker', isTrans:false, color:'#2ecc71',
+        desc:'Blacksmith. Meister der Automatisierung & Systeme.',
+        passiv:'Turrets spawnen doppelt, Farm-Speed +30%' },
+    high_techniker:   { name:'🔧 High Techniker', classLevel:1, isTrans:true, color:'#1abc9c',
+        desc:'High Merchant. Wiedergeborener Tech-Profi.',
+        passiv:'Farm-Speed +40%, alle Farmen +1 Suppe' },
+    senior_entwickler: { name:'🧠 Senior Entwickler', classLevel:2, prev:'high_techniker', isTrans:true, color:'#27ae60',
+        desc:'Mastersmith. Turret-Meister & Automatisierungs-Gott.',
+        passiv:'Turrets +50% DMG, Farm-Intervall halbiert' },
+    lead_architect:   { name:'🏗️ Lead Architect', classLevel:3, prev:'senior_entwickler', reqBase:99, reqJob:70, color:'#16a085',
+        desc:'Mechanic. Farmen droppen Waffen-Kisten — alles automatisch.',
+        passiv:'Farmen droppen Waffen-Kisten, Turrets ×3 DMG' },
+    cto:              { name:'🦾 Chief Tech. Officer', classLevel:4, prev:'lead_architect', reqBase:200, reqJob:70, color:'#00ff00',
+        desc:'Meister. Vollständige Automatisierung des Betriebs.',
+        passiv:'Alle Systeme Autopilot: Farmen & Turrets ×3' },
 
-    // ── Transcendent 2nd Class (Benötigt Trans 1st, Job 50) ──
-    schichtleiter:         { name: '🏭 Schichtleiter', classLevel: 2, prev: 'high_lagermitarbeiter', isTrans: true, color: '#d35400', desc: 'Lord Knight', passiv: 'Schaden +20%' },
-    abteilungsleiter:      { name: '👑 Abteilungsleiter', classLevel: 2, prev: 'high_sachbearbeiter', isTrans: true, color: '#f1c40f', desc: 'High Priest (Maddin V2)', passiv: 'Gratis Azubis, Max HP +50' },
-    senior_entwickler:     { name: '🧠 Senior Entwickler', classLevel: 2, prev: 'high_techniker', isTrans: true, color: '#2ecc71', desc: 'Mastersmith', passiv: 'Turrets haben +50% DMG' },
+    // ══════════════════════════════════════════════
+    // ALTERNATIV — WERKSTUDENT  (≈ Super Novice, kein Rebirth)
+    // Novice Job 10 → Werkstudent → Base99/Job99 → Dauerstudent
+    //              → Base200/Job70 → Bachelor
+    // ══════════════════════════════════════════════
+    werkstudent:      { name:'🎓 Werkstudent', classLevel:1, isExtended:true, color:'#bdc3c7',
+        desc:'Super Novice. Kein Rebirth, dafür höchste Stufen möglich.',
+        passiv:'Alle Stats +5%, Base Speed +0.8' },
+    dauerstudent:     { name:'🧟 Dauerstudent', classLevel:2, prev:'werkstudent', reqBase:99, reqJob:99, isExtended:true, color:'#7f8c8d',
+        desc:'Extended Super Novice. Immer noch hier. Immer noch lernend.',
+        passiv:'Alle Stats +10%, Crit-Chance +10%' },
+    bachelor:         { name:'📜 Bachelor (Hyper Novice)', classLevel:3, prev:'dauerstudent', reqBase:200, reqJob:70, isExtended:true, color:'#ecf0f1',
+        desc:'Hyper Novice. Der ultimative Quereinsteiger.',
+        passiv:'Alle Stats +20%, Max HP +200, Speed +1.5' },
 
-    // ── 3rd Class (Benötigt Trans 2nd, Base 99, Job 70) ──
-    supply_chain_manager:  { name: '🚄 Supply Chain Mgr', classLevel: 3, prev: 'schichtleiter', reqBase: 99, reqJob: 70, color: '#c0392b', desc: 'Rune Knight', passiv: 'Schaden +50%, Hechtrolle x2' },
-    it_director:           { name: '👁️ IT-Director', classLevel: 3, prev: 'abteilungsleiter', reqBase: 99, reqJob: 70, color: '#8e44ad', desc: 'Arch Bishop', passiv: 'Alle Cooldowns halbiert' },
-    lead_architect:        { name: '🏗️ Lead Architect', classLevel: 3, prev: 'senior_entwickler', reqBase: 99, reqJob: 70, color: '#27ae60', desc: 'Mechanic', passiv: 'Farmen droppen Waffen-Kisten' },
+    // ══════════════════════════════════════════════
+    // ALTERNATIV — FREELANCER  (≈ Ninja/Kagerou, kein Rebirth)
+    // Novice Job 10 → Freelancer → Base99/Job70 → Consultant
+    //              → Base200/Job70 → Senior Consultant
+    // ══════════════════════════════════════════════
+    freelancer:       { name:'🥷 Freelancer', classLevel:1, isAlt:true, color:'#2c3e50',
+        desc:'Ninja. Geht eigene Wege. Schnell, präzise, unkontrollierbar.',
+        passiv:'Hechtrolle-Cooldown -50%, Crit-Chance +10%' },
+    consultant:       { name:'🎯 Consultant', classLevel:2, prev:'freelancer', reqBase:99, reqJob:70, isAlt:true, color:'#1a252f',
+        desc:'Kagerou. Schatten-Spezialist. Niemand sieht ihn kommen.',
+        passiv:'Unsichtbar 2s nach Hechtrolle, Krit-Schaden +50%' },
+    senior_consultant: { name:'🌑 Senior Consultant', classLevel:3, prev:'consultant', reqBase:200, reqJob:70, isAlt:true, color:'#8395a7',
+        desc:'Shinkiro. Macht alles alleine. Braucht niemanden.',
+        passiv:'Solo-Schaden ×2, +30% Ausweichen permanent' },
 
-    // ── 4th Class (Benötigt 3rd Class, Base 200, Job 70) ──
-    coo:                   { name: '🐉 Chief Operating Officer', classLevel: 4, prev: 'supply_chain_manager', reqBase: 200, reqJob: 70, color: '#ff0000', desc: 'Dragon Knight', passiv: 'Unaufhaltbare Zerstörung' },
-    cio:                   { name: '🔮 Chief Info. Officer', classLevel: 4, prev: 'it_director', reqBase: 200, reqJob: 70, color: '#9b59b6', desc: 'Cardinal', passiv: 'Absolute Systemkontrolle' },
-    cto:                   { name: '🦾 Chief Tech. Officer', classLevel: 4, prev: 'lead_architect', reqBase: 200, reqJob: 70, color: '#00ff00', desc: 'Meister', passiv: 'Perfekte Automatisierung' },
+    // ══════════════════════════════════════════════
+    // ALTERNATIV — NETZWERKTECHNIKER  (≈ Gunslinger/Rebellion, kein Rebirth)
+    // Novice Job 10 → Netzwerktechniker → Base99/Job70 → NOC-Spezialist
+    //              → Base200/Job70 → Network Architect
+    // ══════════════════════════════════════════════
+    netzwerktechniker: { name:'🔫 Netzwerktechniker', classLevel:1, isAlt:true, color:'#e74c3c',
+        desc:'Gunslinger. Fernkampf-Spezialist. Hält Distanz und schießt.',
+        passiv:'Projektil-Geschw. +50%, Reichweite +200px' },
+    noc_spezialist:   { name:'📡 NOC-Spezialist', classLevel:2, prev:'netzwerktechniker', reqBase:99, reqJob:70, isAlt:true, color:'#c0392b',
+        desc:'Rebellion. Explosiv, unkontrollierbar, vernichtend.',
+        passiv:'Projektile 15% Splash-Chance, Speed +0.5' },
+    network_architect: { name:'🌐 Network Architect', classLevel:3, prev:'noc_spezialist', reqBase:200, reqJob:70, isAlt:true, color:'#96281b',
+        desc:'Nightwatch. Netzwerk-Domination. Alles ist sein Revier.',
+        passiv:'Kugeln durchdringen alle Gegner, Schaden +40%' },
 
-    // ── Extended Classes (Kein Rebirth, Level bis 200) ──
-    werkstudent:           { name: '🎓 Werkstudent', classLevel: 1, isExtended: true, color: '#bdc3c7', desc: 'Super Novice (Hard Mode)', passiv: 'Base Speed +1.0' },
-    dauerstudent:          { name: '🧟 Dauerstudent', classLevel: 2, prev: 'werkstudent', reqBase: 99, reqJob: 99, isExtended: true, color: '#7f8c8d', desc: 'Extended Super Novice', passiv: 'Base Speed +2.0' },
-    bachelor:              { name: '📜 Bachelor', classLevel: 3, prev: 'dauerstudent', reqBase: 200, reqJob: 70, isExtended: true, color: '#ecf0f1', desc: 'Hyper Novice', passiv: 'Base Speed +3.0, Max HP +200' }
+    // ══════════════════════════════════════════════
+    // ALTERNATIV — DUALER STUDENT  (≈ Doram, kein Rebirth)
+    // Novice Job 10 → Dualer Student → Base200/Job70 → Absolvent
+    // ══════════════════════════════════════════════
+    dualer_student:   { name:'🎓 Dualer Student', classLevel:1, isDoram:true, color:'#f39c12',
+        desc:'Doram. Lernt und arbeitet gleichzeitig. Kein Rebirth nötig.',
+        passiv:'+20% EXP, startet mit 2 gratis Azubis' },
+    absolvent:        { name:'📜 Absolvent (Spirit Handler)', classLevel:2, prev:'dualer_student', reqBase:200, reqJob:70, isDoram:true, color:'#e67e22',
+        desc:'Spirit Handler. Hat seinen Platz in der Welt gefunden.',
+        passiv:'EXP-Bonus +40%, alle Drop-Chancen ×2' }
 };
 function getAvailablePromotions() {
     if (!currentJob) {
-        // Novice -> 1st Class (Base Lv 10 req)
-        if (baseLevel < 10) return [];
-        return Object.entries(JOBS).filter(([id, j]) => j.classLevel === 1 && (j.isTrans === isTrans || j.isExtended));
+        // Novice → 1st Class: JOBLEVEL 10 benötigt (RO-Standard — nicht Base Level!)
+        if (jobLevel < 10) return [];
+        if (isTrans) {
+            // Nach Rebirth: nur Trans 1st-Klassen anzeigen
+            return Object.entries(JOBS).filter(([id, j]) =>
+                j.classLevel === 1 && !j.prev && j.isTrans === true
+            );
+        } else {
+            // Normaler Novice: Hauptpfade + alle Alternativ-Pfade
+            return Object.entries(JOBS).filter(([id, j]) =>
+                j.classLevel === 1 && !j.prev &&
+                (j.isTrans === false || j.isExtended || j.isAlt || j.isDoram)
+            );
+        }
     }
     // Höhere Klassen prüfen
     return Object.entries(JOBS).filter(([id, j]) => {
-        if (j.prev !== currentJob) return false; // Muss auf aktuellem Job aufbauen
-        let reqJ = j.reqJob || (j.classLevel === 2 ? 50 : 70);
+        if (j.prev !== currentJob) return false;
+        // Anforderungen aus JOBS-Definition lesen (mit Fallback)
+        let reqJ = j.reqJob !== undefined ? j.reqJob : (j.classLevel === 2 ? 50 : 70);
         let reqB = j.reqBase || 1;
         return jobLevel >= reqJ && baseLevel >= reqB;
     });
 }
 
 function advanceJob(jobId) {
+    let prevJob = currentJob;
+    if(prevJob && !completedJobs.includes(prevJob)) {
+        completedJobs.push(prevJob);
+        localStorage.setItem('ts_completed_jobs', JSON.stringify(completedJobs));
+    }
     currentJob = jobId;
-    jobLevel = 1; // Job Level resettet bei Klassenwechsel
+    jobLevel = 1;
     jobExp = 0;
-    // Base Level bleibt beim normalen Job Change erhalten!
     localStorage.setItem('ts_job', currentJob);
     localStorage.setItem('ts_joblv', jobLevel);
     localStorage.setItem('ts_jobexp', jobExp);
     saveProgress();
     let j = JOBS[jobId];
-    showToast('⚔️ KLASSENWECHSEL!', j.color, j.name + ' erreicht!');
+    let classLabel = j.classLevel===1?'1. KLASSE':j.classLevel===2?'2. KLASSE':j.classLevel===3?'3. KLASSE':'🏆 4. KLASSE — ENDGAME!';
+    showToast(`⚔️ ${classLabel}`, j.color, j.name + ' erreicht!');
     playSound('evolve');
     renderJobOverlay();
 }
@@ -1683,21 +1973,28 @@ function advanceJob(jobId) {
 function performRebirth() {
     if (!currentJob || isTrans) return;
     let j = JOBS[currentJob];
-    if (j.classLevel !== 2 || baseLevel < 99 || jobLevel < 50) return; // Nur 2nd Class kann Rebirth machen
+    // Rebirth nur für normale 2nd Class (Hauptpfade — nicht Alt, Extended oder Doram)
+    if (j.classLevel !== 2 || j.isExtended || j.isAlt || j.isDoram) return;
+    if (baseLevel < 99 || jobLevel < 50) return;
 
-    if(!confirm('🔄 REBIRTH DURCHFÜHREN?\n\nDein Base- und Job-Level wird auf 1 zurückgesetzt.\nAlle Statuspunkte werden erstattet.\nDu erhältst +100 Bonus-Statuspunkte!\n\nBist du bereit für den Weg der Transzendenten?')) return;
-    
+    if(!confirm(
+        '🔄 REBIRTH — TRANSZENDIERUNG\n\n' +
+        '⚠ Base- und Job-Level → 1 zurückgesetzt\n' +
+        '✅ Erhältst +100 Bonus-Statuspunkte\n' +
+        '✅ Trans-Klassen freigeschalten\n' +
+        '✅ 5.000 Kaffeebons als Bonus\n' +
+        '📌 Als Novice wieder Job Lv 10 erreichen\n\n' +
+        'Bereit für den Weg der Transzendenten?'
+    )) return;
+
     isTrans = true;
     currentJob = null;
-    baseLevel = 1;
-    baseExp = 0;
-    jobLevel = 1;
-    jobExp = 0;
-    
-    // Statuspunkte resetten + 100 Bonus
-    statPoints = 100; 
+    baseLevel = 1; baseExp = 0;
+    jobLevel = 1; jobExp = 0;  // jobLevel 1 = Novice muss wieder auf Job Lv 10
+
+    statPoints = 100;
     stats = {"str":1,"agi":1,"vit":1,"int":1,"dex":1,"luk":1};
-    
+
     localStorage.setItem('ts_isTrans', 'true');
     localStorage.setItem('ts_job', '');
     localStorage.setItem('ts_baselv', 1);
@@ -1706,11 +2003,11 @@ function performRebirth() {
     localStorage.setItem('ts_jobexp', 0);
     localStorage.setItem('ts_statpts', statPoints);
     localStorage.setItem('ts_stats', JSON.stringify(stats));
-    
-    kaffeebons += 5000; // Bonus Belohnung
+
+    kaffeebons += 5000;
     saveProgress();
-    
-    showToast('🔄 TRANSZENDENZ ERREICHT!', '#f1c40f', 'Du wurdest wiedergeboren! +100 Stat-Punkte!');
+
+    showToast('🔄 TRANSZENDENZ!', '#f1c40f', 'Wiedergeboren! +100 Stat-Pkt · Trans-Klassen frei!');
     playSound('evolve');
     renderJobOverlay();
 }
@@ -1718,7 +2015,9 @@ function performRebirth() {
 function earnExp(enemyType, isBoss) {
     if(!gameRunning) return;
     let bexp = (EXP_TABLE[enemyType] || 5);
-    let jexp = currentJob ? (JOB_EXP_TABLE[enemyType] || 3) : 0;
+    let jexp = JOB_EXP_TABLE[enemyType] || 3;
+    // EXP-Multiplikator (Doram/Absolvent-Bonus aus applyJobEffects)
+    if(player && player._expMult) { bexp = Math.floor(bexp * player._expMult); jexp = Math.floor(jexp * player._expMult); }
     baseExp += bexp;
     jobExp  += jexp;
     runExpGained += bexp;
@@ -1729,41 +2028,64 @@ function earnExp(enemyType, isBoss) {
 function earnTimeExp() {
     // Wird im Game Loop jede Minute aufgerufen
     baseExp += 20;
-    if(currentJob) jobExp += 10;
+    jobExp += 10; // Auch Novice erhält Job-EXP (Zeitbonus)
     checkLevelUp();
 }
 
 function checkLevelUp() {
     let leveled = false;
-    let maxBase = (currentJob && JOBS[currentJob] && JOBS[currentJob].classLevel >= 3) ? 250 : 99;
+    let j = currentJob ? JOBS[currentJob] : null;
+    let maxBase = (j && (j.classLevel >= 3 || ((j.isAlt || j.isDoram || j.isExtended) && j.classLevel >= 2))) ? 250 : 99;
 
     // Base Level (RO-Cap bei 99 oder 250)
     while(baseLevel < maxBase && baseExp >= baseExpNeeded(baseLevel)) {
         baseExp -= baseExpNeeded(baseLevel);
         baseLevel++;
-        // RO-ähnliche Stat-Punkte Kurve (wird mehr je höher das Level)
-        statPoints += Math.floor(baseLevel / 5) + 2; 
+        statPoints += Math.floor(baseLevel / 5) + 2;
         leveled = true;
         floatingTexts.push(new FloatingText(player.x, player.y - 40, `⬆ BASE LV ${baseLevel}!`, '#f1c40f'));
         playSound('delivery');
     }
 
-    // Job Level
-    if(currentJob) {
-        let maxJob = 50;
-        if (isTrans && JOBS[currentJob].classLevel === 2) maxJob = 70;
-        if (JOBS[currentJob].classLevel >= 3) maxJob = 70;
-        if (JOBS[currentJob].isExtended && JOBS[currentJob].classLevel === 1) maxJob = 99; // Super Novice Ausnahme
+    // Job Level — Novice (kein currentJob)
+    if (!currentJob) {
+        // Novice: Job Level cap bei 10 (Anforderung für 1st Class)
+        while(jobLevel < 10 && jobExp >= jobExpNeeded(jobLevel + 1)) {
+            jobExp -= jobExpNeeded(jobLevel + 1);
+            jobLevel++;
+            leveled = true;
+            floatingTexts.push(new FloatingText(player.x, player.y - 60, `🎓 AZUBI JOB LV ${jobLevel}!`, '#bdc3c7'));
+            if (jobLevel >= 10) {
+                showToast('🎓 KLASSENWECHSEL MÖGLICH!', '#f1c40f', 'Wähle deine Klasse im Menü!');
+                playSound('evolve');
+            }
+        }
+    } else {
+        // Job Level — mit aktiver Klasse
+        let maxJob = 50; // Standard: 1st und normale 2nd Class
+        if (j.isAlt || j.isDoram)               maxJob = 70; // Alternativ-Pfade: cap 70
+        else if (isTrans && j.classLevel === 2)  maxJob = 70; // Trans 2nd: cap 70
+        else if (j.classLevel >= 3)              maxJob = 70; // 3rd/4th: cap 70
+        else if (j.isExtended && j.classLevel === 1) maxJob = 99; // Super Novice: cap 99
+        else if (j.isExtended && j.classLevel >= 2)  maxJob = 70; // Extended 2nd+: cap 70
 
         while(jobLevel < maxJob && jobExp >= jobExpNeeded(jobLevel + 1)) {
             jobExp -= jobExpNeeded(jobLevel + 1);
             jobLevel++;
             leveled = true;
-            floatingTexts.push(new FloatingText(player.x, player.y - 60, `⚔️ JOB LV ${jobLevel}!`, JOBS[currentJob].color || '#fff'));
-            
-            // Rebirth-Check
-            if(baseLevel >= 99 && jobLevel >= 50 && JOBS[currentJob].classLevel === 2 && !isTrans) {
-                showToast('🔄 REBIRTH MÖGLICH!', '#f1c40f', 'Geh ins Menü für den Aufstieg!');
+            floatingTexts.push(new FloatingText(player.x, player.y - 60, `⚔️ JOB LV ${jobLevel}!`, j.color || '#fff'));
+
+            // Rebirth-Check (nur normale 2nd Class, kein Alt/Extended/Doram)
+            if(baseLevel >= 99 && jobLevel >= 50 && j.classLevel === 2 && !isTrans && !j.isExtended && !j.isAlt && !j.isDoram) {
+                showToast('🔄 REBIRTH MÖGLICH!', '#f1c40f', 'Geh ins Menü — Wiedergeburt verfügbar!');
+            }
+            // 3rd Class unlock (Trans 2nd bei Base 99 + Job 70)
+            if(isTrans && j.classLevel === 2 && baseLevel >= 99 && jobLevel >= 70) {
+                showToast('🌟 3. KLASSE VERFÜGBAR!', '#8e44ad', 'Wähle deine 3. Klasse im Menü!');
+            }
+            // 4th Class unlock (3rd bei Base 200 + Job 70)
+            if(j.classLevel === 3 && baseLevel >= 200 && jobLevel >= 70) {
+                showToast('👑 4. KLASSE VERFÜGBAR!', '#ff0000', 'Die finale Transformation wartet!');
             }
         }
     }
@@ -1814,30 +2136,54 @@ function upgradeJobSkill(skillId) {
 
 function applyJobEffects(p) {
     if (!currentJob) return;
-    
-    // Maddin Optik und Features (betrifft auch Abteilungsleiter)
-    if(currentJob === 'maddin' || currentJob === 'abteilungsleiter') { 
-        p.isMartin = true; p.radius = 28; p.azubiCost = 0; p._maddingMode = true; 
+    let j = JOBS[currentJob];
+
+    // ── Maddin-Linie: Azubis gratis, Optik etc. ──
+    if(currentJob === 'maddin' || currentJob === 'abteilungsleiter') {
+        p.isMartin = true; p.radius = 28; p.azubiCost = 0; p._maddingMode = true;
     }
-    
-    // Fahrzeug-Immunität für den Stapler-Zweig (Swordsman-Linie)
-    if(currentJob === 'staplerfahrer' || currentJob === 'schichtleiter' || currentJob === 'supply_chain_manager' || currentJob === 'coo') {
-        p._vehicleImmune = true;
+
+    // ── Logistik-Linie: Fahrzeug-Immunität ──
+    if(['staplerfahrer','schichtleiter','supply_chain_manager','coo',
+        'lagermitarbeiter','high_lagermitarbeiter'].includes(currentJob)) {
+        if(currentJob !== 'lagermitarbeiter' && currentJob !== 'high_lagermitarbeiter') {
+            p._vehicleImmune = true;
+        }
+        // Logistik-Linie generell: +25% Max HP
+        p.maxHp = Math.floor(p.maxHp * 1.25);
     }
-    
-    // Farm-Bonus für den Techniker-Zweig (Merchant-Linie)
-    if(currentJob === 'techniker' || currentJob === 'high_techniker' || currentJob === 'entwickler' || currentJob === 'senior_entwickler' || currentJob === 'lead_architect' || currentJob === 'cto') {
+
+    // ── Techniker-Linie: Farm-Speed ──
+    if(['techniker','high_techniker','entwickler','senior_entwickler','lead_architect','cto'].includes(currentJob)) {
         p._farmIntervalMult = 0.7;
     }
 
-    // Heilungs-Bonus für den Support-Zweig (Acolyte-Linie)
-    if(currentJob === 'sachbearbeiter' || currentJob === 'high_sachbearbeiter' || currentJob === 'it_director' || currentJob === 'cio') {
+    // ── Support-Linie: Suppe heilt mehr ──
+    if(['sachbearbeiter','high_sachbearbeiter','maddin','abteilungsleiter','it_director','cio'].includes(currentJob)) {
         p._suppeHealBonus = (p._suppeHealBonus || 0) + 15;
     }
-    
-    // Speed-Bonus für die Novice-Linie
-    if(currentJob === 'werkstudent' || currentJob === 'dauerstudent' || currentJob === 'bachelor') {
+
+    // ── Extended (Werkstudent): Speed-Bonus ──
+    if(['werkstudent','dauerstudent','bachelor'].includes(currentJob)) {
         p.speed += 1.0;
+    }
+
+    // ── Freelancer/Ninja-Linie: Hechtrolle Cooldown ──
+    if(['freelancer','consultant','senior_consultant'].includes(currentJob)) {
+        p._dashCooldownMult = (p._dashCooldownMult || 1) * 0.5;
+        p._critChance = (p._critChance || 0) + 0.10;
+    }
+
+    // ── Netzwerktechniker/Gunslinger-Linie: Projektil-Boost ──
+    if(['netzwerktechniker','noc_spezialist','network_architect'].includes(currentJob)) {
+        p.dmgBonus = (p.dmgBonus || 0) + 15;
+        p._bulletSpeedMult = (p._bulletSpeedMult || 1) + 0.5;
+    }
+
+    // ── Dualer Student/Doram: EXP-Bonus + Azubis ──
+    if(['dualer_student','absolvent'].includes(currentJob)) {
+        p._expMult = (p._expMult || 1) * 1.2;
+        if(currentJob === 'dualer_student') p.azubiCost = Math.max(1000, p.azubiCost - 2000);
     }
 }
 
@@ -1855,82 +2201,161 @@ function renderJobOverlay() {
     let cont = document.getElementById('jobContent');
     if(!cont) return;
     let j = currentJob ? JOBS[currentJob] : null;
-    let maxBase = (j && j.tier >= 3) ? 250 : 99;
-    let bexpNext = baseExpNeeded(baseLevel);
-    let jexpNext = currentJob ? jobExpNeeded(jobLevel+1) : 0;
+    let maxBase = (j && (j.classLevel >= 3 || ((j.isAlt || j.isDoram || j.isExtended) && j.classLevel >= 2))) ? 250 : 99;
+    let jexpNext = jobExpNeeded(jobLevel + 1);
     let bPct = Math.min(100, Math.round(baseExp / bexpNext * 100));
-    let jPct = currentJob ? Math.min(100, Math.round(jobExp / jexpNext * 100)) : 0;
+    let jPct = Math.min(100, Math.round(jobExp / jexpNext * 100));
+    let jobCap = !currentJob ? 10 : (j.isExtended && j.classLevel===1 ? 99 : (j.isAlt||j.isDoram||(isTrans&&j.classLevel===2)||j.classLevel>=3 ? 70 : 50));
 
+    // ── Level-Bars ──
     let html = `
-    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;">
-        <div style="flex:1;min-width:200px;background:#111;border:2px solid #f1c40f;padding:14px;border-radius:4px;">
-            <div style="color:#f1c40f;font-size:13px;letter-spacing:2px;margin-bottom:6px;">⚔️ BASE LEVEL ${isTrans ? '<span style="color:#e74c3c">(TRANS)</span>' : ''}</div>
-            <div style="color:#fff;font-size:28px;font-weight:bold;">${baseLevel} <span style="font-size:14px;color:#888;">/ ${maxBase}</span></div>
-            <div style="background:#222;height:8px;border-radius:4px;margin:8px 0;">
-                <div style="background:#f1c40f;height:8px;border-radius:4px;width:${bPct}%;transition:0.3s;"></div>
-            </div>
-            <div style="color:#888;font-size:11px;">${baseExp} / ${bexpNext} EXP</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <div style="flex:1;min-width:180px;background:#111;border:2px solid #f1c40f;padding:12px;border-radius:4px;">
+            <div style="color:#f1c40f;font-size:11px;letter-spacing:2px;margin-bottom:4px;">⬆ BASE LEVEL ${isTrans?'<span style="color:#e74c3c;font-size:10px;">[TRANS]</span>':''}</div>
+            <div style="color:#fff;font-size:26px;font-weight:bold;">${baseLevel}<span style="font-size:13px;color:#555;"> / ${maxBase}</span></div>
+            <div style="background:#222;height:6px;border-radius:3px;margin:6px 0;"><div style="background:#f1c40f;height:6px;border-radius:3px;width:${bPct}%;"></div></div>
+            <div style="color:#555;font-size:10px;">${baseExp} / ${bexpNext} EXP</div>
         </div>
-        <div style="flex:1;min-width:200px;background:#111;border:2px solid ${j?j.color:'#333'};padding:14px;border-radius:4px;">
-            <div style="color:${j?j.color:'#555'};font-size:13px;letter-spacing:2px;margin-bottom:6px;">💼 JOB LEVEL</div>
-            <div style="color:#fff;font-size:28px;font-weight:bold;">${jobLevel}</div>
-            <div style="background:#222;height:8px;border-radius:4px;margin:8px 0;">
-                <div style="background:${j?j.color:'#333'};height:8px;border-radius:4px;width:${jPct}%;transition:0.3s;"></div>
-            </div>
-            <div style="color:#888;font-size:11px;">${currentJob?`${jobExp} / ${jexpNext} Job-EXP`:'Novice'}</div>
+        <div style="flex:1;min-width:180px;background:#111;border:2px solid ${j?j.color:'#bdc3c7'};padding:12px;border-radius:4px;">
+            <div style="color:${j?j.color:'#bdc3c7'};font-size:11px;letter-spacing:2px;margin-bottom:4px;">💼 JOB LEVEL ${!currentJob?'(AZUBI)':''}</div>
+            <div style="color:#fff;font-size:26px;font-weight:bold;">${jobLevel}<span style="font-size:13px;color:#555;"> / ${jobCap}</span></div>
+            <div style="background:#222;height:6px;border-radius:3px;margin:6px 0;"><div style="background:${j?j.color:'#bdc3c7'};height:6px;border-radius:3px;width:${jPct}%;"></div></div>
+            <div style="color:#555;font-size:10px;">${jobExp} / ${jexpNext} Job-EXP</div>
         </div>
     </div>`;
 
-    // --- STAT-MENÜ ---
-    html += `<div style="margin-bottom:20px;background:#111;border:2px solid #3498db;padding:14px;border-radius:4px;">
-        <div style="color:#3498db;font-size:14px;letter-spacing:2px;margin-bottom:10px;">📊 STATUSWERTE (Punkte: <span style="color:#f1c40f">${statPoints}</span>)</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">`;
-    
+    // ── Stat-Menü ──
+    html += `<div style="margin-bottom:14px;background:#111;border:2px solid #3498db;padding:12px;border-radius:4px;">
+        <div style="color:#3498db;font-size:12px;letter-spacing:2px;margin-bottom:8px;">📊 STATUSWERTE — Punkte: <span style="color:#f1c40f;font-weight:bold;">${statPoints}</span></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">`;
+    const STAT_LABELS = {str:'STR ⚔️',agi:'AGI 💨',vit:'VIT 🛡️',int:'INT 🔬',dex:'DEX 🎯',luk:'LUK 🍀'};
+    const STAT_DESC   = {str:'Schaden',agi:'Speed/Rate',vit:'HP/Def',int:'Farm-Speed',dex:'Crit',luk:'Drops'};
     for(let s in stats) {
-        let cost = Math.floor((stats[s] - 1) / 10) + 2;
+        let cost = Math.floor((stats[s]-1)/10)+2;
         let canBuy = statPoints >= cost && stats[s] < 99;
-        html += `<div style="background:#0a0a0a;padding:8px;border:1px solid #333;display:flex;justify-content:space-between;align-items:center;">
-            <div><span style="color:#fff;font-weight:bold;">${s.toUpperCase()}</span> <span style="color:#888;font-size:12px;">${stats[s]}</span></div>
-            <button onclick="increaseStat('${s}')" style="background:${canBuy?'#3498db':'#222'};color:${canBuy?'#fff':'#555'};border:none;padding:4px 10px;cursor:${canBuy?'pointer':'default'};font-weight:bold;border-radius:2px;">+</button>
+        html += `<div style="background:#0a0a0a;padding:7px;border:1px solid #2c2c2c;display:flex;justify-content:space-between;align-items:center;">
+            <div><div style="color:#fff;font-weight:bold;font-size:12px;">${STAT_LABELS[s]}</div><div style="color:#555;font-size:9px;">${STAT_DESC[s]}</div></div>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <span style="color:#f1c40f;font-size:15px;font-weight:bold;">${stats[s]}</span>
+                <button onclick="increaseStat('${s}')" title="Kostet ${cost} Pkt" style="background:${canBuy?'#3498db':'#1a1a1a'};color:${canBuy?'#fff':'#333'};border:none;padding:3px 9px;cursor:${canBuy?'pointer':'default'};font-weight:bold;border-radius:2px;font-size:13px;">+</button>
+            </div>
         </div>`;
     }
-    html += `</div><div style="color:#888;font-size:10px;margin-top:8px;">STR: Dmg | AGI: Speed/Feuerrate | VIT: HP/Def | INT: Farm-Speed | DEX: Crit | LUK: Glück</div></div>`;
+    html += `</div></div>`;
 
-    // --- AKTUELLER JOB INFO ---
+    // ── Aktueller Job Info ──
     if(currentJob) {
-        html += `<div style="background:#0a0a0a;border:2px solid ${j.color};padding:14px;border-radius:4px;margin-bottom:16px;">
-            <div style="color:${j.color};font-size:16px;font-weight:bold;">${j.name} (Class ${j.classLevel})</div>
-            <div style="color:#aaa;font-size:12px;margin:4px 0;">${j.desc}</div>
-            <div style="color:#2ecc71;font-size:12px;">✦ Passiv: ${j.passiv}</div>
+        html += `<div style="background:#0a0a0a;border:2px solid ${j.color};padding:12px;border-radius:4px;margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="color:${j.color};font-size:15px;font-weight:bold;">${j.name}</div>
+                <div style="background:${j.color}33;color:${j.color};font-size:10px;padding:3px 8px;border-radius:3px;">CLASS ${j.classLevel}${j.isTrans?' · TRANS':''}${j.isExtended?' · EXTENDED':''}${j.isAlt?' · ALT':''}${j.isDoram?' · DORAM':''}</div>
+            </div>
+            <div style="color:#888;font-size:11px;margin:4px 0;">${j.desc}</div>
+            <div style="color:#2ecc71;font-size:11px;">✦ Passiv: ${j.passiv}</div>
+        </div>`;
+    } else {
+        // Novice Info
+        let noviceReq = jobLevel < 10 ? `${10 - jobLevel} Job-Level bis zur 1. Klasse` : '✅ Bereit für Klassenwechsel!';
+        html += `<div style="background:#0a0a14;border:2px solid #bdc3c7;padding:12px;border-radius:4px;margin-bottom:12px;">
+            <div style="color:#bdc3c7;font-size:15px;font-weight:bold;">🎓 AZUBI (Novice)</div>
+            <div style="color:#888;font-size:11px;margin:4px 0;">Noch kein Job gewählt. Erreiche Job Level 10 für den Klassenwechsel.</div>
+            <div style="color:${jobLevel>=10?'#2ecc71':'#f1c40f'};font-size:12px;margin-top:4px;">📌 ${noviceReq}</div>
         </div>`;
     }
 
-    // --- KLASSENWECHSEL / PROMOTION ---
+    // ── KLASSEN-PFAD ANZEIGE ──
+    // Zeige den Progressions-Pfad für die aktuelle Klassen-Linie
+    if(currentJob || jobLevel >= 5) {
+        // Bestimme aktuellen Branch
+        let branch = null;
+        if(currentJob) {
+            let jd = JOBS[currentJob];
+            if(['lagermitarbeiter','staplerfahrer','high_lagermitarbeiter','schichtleiter','supply_chain_manager','coo'].includes(currentJob)) branch='logistik';
+            else if(['sachbearbeiter','maddin','high_sachbearbeiter','abteilungsleiter','it_director','cio'].includes(currentJob)) branch='support';
+            else if(['techniker','entwickler','high_techniker','senior_entwickler','lead_architect','cto'].includes(currentJob)) branch='technik';
+            else if(jd.isExtended) branch='extended';
+            else if(jd.isAlt && ['freelancer','consultant','senior_consultant'].includes(currentJob)) branch='freelancer';
+            else if(jd.isAlt && ['netzwerktechniker','noc_spezialist','network_architect'].includes(currentJob)) branch='noc';
+            else if(jd.isDoram) branch='doram';
+        }
+
+        const PATHS = {
+            logistik:   ['lagermitarbeiter','staplerfahrer','→REBIRTH→','high_lagermitarbeiter','schichtleiter','supply_chain_manager','coo'],
+            support:    ['sachbearbeiter','maddin','→REBIRTH→','high_sachbearbeiter','abteilungsleiter','it_director','cio'],
+            technik:    ['techniker','entwickler','→REBIRTH→','high_techniker','senior_entwickler','lead_architect','cto'],
+            extended:   ['werkstudent','dauerstudent','bachelor'],
+            freelancer: ['freelancer','consultant','senior_consultant'],
+            noc:        ['netzwerktechniker','noc_spezialist','network_architect'],
+            doram:      ['dualer_student','absolvent']
+        };
+
+        if(branch && PATHS[branch]) {
+            html += `<div style="background:#0a0a0a;border:1px solid #333;padding:10px;border-radius:4px;margin-bottom:12px;">
+                <div style="color:#555;font-size:10px;letter-spacing:2px;margin-bottom:8px;">KLASSEN-PFAD</div>
+                <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">`;
+            PATHS[branch].forEach(id => {
+                if(id === '→REBIRTH→') {
+                    html += `<span style="color:#f1c40f;font-size:10px;font-weight:bold;">🔄</span>`;
+                    return;
+                }
+                let jj = JOBS[id]; if(!jj) return;
+                let isCurrent = id === currentJob;
+                let reqJ = jj.reqJob !== undefined ? jj.reqJob : (jj.classLevel===2 ? 50 : 70);
+                let reqB = jj.reqBase || 1;
+                let done = completedJobs && completedJobs.includes(id);
+                let canGet = !isCurrent && (done || (
+                    (jj.prev ? currentJob === jj.prev : (!currentJob && jobLevel>=10)) &&
+                    jobLevel >= reqJ && baseLevel >= reqB
+                ));
+                let col = isCurrent ? jj.color : (done ? '#27ae60' : (canGet ? jj.color+'88' : '#333'));
+                html += `<span style="color:${col};font-size:10px;font-weight:bold;background:${isCurrent?jj.color+'22':'transparent'};padding:2px 6px;border-radius:2px;border:1px solid ${isCurrent?jj.color:'#222'};">${jj.name.replace(/[📦🚜🏭🚄🐉🎧👔👑👁️🔮🔧🖥️🧠🏗️🦾🎓🧟📜🥷🎯🌑🔫📡🌐]/u,'').trim()}</span>`;
+                html += `<span style="color:#333;font-size:10px;">›</span>`;
+            });
+            html += `</div></div>`;
+        }
+    }
+
+    // ── Klassenwechsel verfügbar ──
     let promos = getAvailablePromotions();
     if(promos.length > 0) {
-        html += `<div style="color:#f1c40f;font-size:14px;margin-bottom:12px;letter-spacing:2px;">🚀 KLASSENWECHSEL VERFÜGBAR:</div>
-                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">`;
-        promos.forEach(([id, promo]) => { 
-            html += `<div onclick="advanceJob('${id}')" style="background:#0a0a0a;border:2px solid ${promo.color};padding:14px;border-radius:4px;cursor:pointer;" onmouseover="this.style.background='${promo.color}22'" onmouseout="this.style.background='#0a0a0a'">
-                <div style="color:${promo.color};font-size:15px;font-weight:bold;">${promo.name}</div>
-                <div style="color:#aaa;font-size:11px;margin:6px 0;">${promo.desc}</div>
-            </div>`; 
+        html += `<div style="color:#f1c40f;font-size:12px;margin-bottom:8px;letter-spacing:2px;">🚀 KLASSENWECHSEL VERFÜGBAR:</div>
+                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">`;
+        promos.forEach(([id, promo]) => {
+            html += `<div onclick="advanceJob('${id}')" style="background:#0a0a0a;border:2px solid ${promo.color};padding:12px;border-radius:4px;cursor:pointer;transition:0.15s;" onmouseover="this.style.background='${promo.color}22'" onmouseout="this.style.background='#0a0a0a'">
+                <div style="color:${promo.color};font-size:14px;font-weight:bold;">${promo.name}</div>
+                <div style="color:#888;font-size:10px;margin:4px 0;">${promo.desc}</div>
+                <div style="color:#2ecc71;font-size:10px;">✦ ${promo.passiv}</div>
+            </div>`;
         });
         html += `</div>`;
-    } else if (!currentJob && baseLevel < 10) {
-        html += `<div style="text-align:center;color:#666;padding:20px;border:2px dashed #333;border-radius:4px;">🔒 1. Klasse bei Base Level 10</div>`;
+    } else if (!currentJob && jobLevel < 10) {
+        let remaining = 10 - jobLevel;
+        html += `<div style="text-align:center;color:#555;padding:16px;border:2px dashed #2c2c2c;border-radius:4px;">
+            🔒 1. Klasse verfügbar bei <span style="color:#f1c40f;">Job Level 10</span><br>
+            <span style="color:#444;font-size:11px;">Noch ${remaining} Level — töte Tickets um Job-EXP zu verdienen!</span>
+        </div>`;
     } else if (currentJob) {
-        let reqLevel = j.classLevel === 1 ? "Job 50" : "Base 99 / Job 70";
-        if(j.classLevel < 4) html += `<div style="text-align:center;color:#666;padding:15px;border:2px dashed #333;">🔒 Nächste Klasse bei ${reqLevel}</div>`;
+        let nextReqJ = j.classLevel === 1 ? (j.isAlt||j.isDoram ? 70 : 50) : 70;
+        let nextReqB = j.classLevel >= 2 ? (j.classLevel === 2 && !isTrans ? 99 : (j.classLevel >= 3 ? 200 : 1)) : 1;
+        if(j.classLevel < 4 && !(j.isExtended && j.classLevel >= 3)) {
+            let reqs = [];
+            if(baseLevel < nextReqB) reqs.push(`<span style="color:#e74c3c;">Base ${baseLevel}/${nextReqB}</span>`);
+            else reqs.push(`<span style="color:#2ecc71;">✅ Base ${nextReqB}</span>`);
+            if(jobLevel < nextReqJ) reqs.push(`<span style="color:#e74c3c;">Job ${jobLevel}/${nextReqJ}</span>`);
+            else reqs.push(`<span style="color:#2ecc71;">✅ Job ${nextReqJ}</span>`);
+            html += `<div style="text-align:center;padding:12px;border:2px dashed #2c2c2c;border-radius:4px;font-size:12px;">
+                🔒 Nächste Klasse: ${reqs.join(' · ')}
+            </div>`;
+        }
     }
 
-    // --- REBIRTH BUTTON ---
-    if(j && j.classLevel === 2 && baseLevel >= 99 && jobLevel >= 50 && !isTrans && !j.isExtended) {
-        html += `<div style="margin-top:20px;background:linear-gradient(135deg,rgba(241,196,15,0.1),rgba(231,76,60,0.1));border:3px solid #f1c40f;padding:20px;border-radius:6px;text-align:center;">
-            <div style="font-size:36px;">🔄</div>
-            <div style="color:#f1c40f;font-size:18px;font-weight:bold;letter-spacing:3px;">REBIRTH VERFÜGBAR</div>
-            <div style="color:#aaa;font-size:12px;margin:8px 0;">Werde Level 1 und erhalte <strong style="color:#2ecc71;">+100 Statuspunkte!</strong></div>
-            <button onclick="performRebirth()" style="background:#f1c40f;color:#000;border:none;padding:14px 40px;font-size:16px;font-weight:bold;font-family:'Courier New',monospace;cursor:pointer;">🔄 TRANSZENDIEREN</button>
+    // ── Rebirth Button ──
+    if(j && j.classLevel === 2 && baseLevel >= 99 && jobLevel >= 50 && !isTrans && !j.isExtended && !j.isAlt && !j.isDoram) {
+        html += `<div style="margin-top:16px;background:linear-gradient(135deg,rgba(241,196,15,0.1),rgba(231,76,60,0.1));border:3px solid #f1c40f;padding:18px;border-radius:6px;text-align:center;">
+            <div style="font-size:28px;">🔄</div>
+            <div style="color:#f1c40f;font-size:16px;font-weight:bold;letter-spacing:3px;">REBIRTH VERFÜGBAR</div>
+            <div style="color:#aaa;font-size:11px;margin:6px 0;">Level wird auf 1 zurückgesetzt. Erhalte <strong style="color:#2ecc71;">+100 Statuspunkte</strong> und Trans-Klassen!</div>
+            <button onclick="performRebirth()" style="background:#f1c40f;color:#000;border:none;padding:12px 32px;font-size:15px;font-weight:bold;font-family:'Courier New',monospace;cursor:pointer;margin-top:8px;">🔄 TRANSZENDIEREN</button>
         </div>`;
     }
 
@@ -2612,7 +3037,837 @@ function setFavorite(id) {
     renderWaffenkammer();
 }
 
-function buyWeapon(id) {
+// ============================================================
+// REFINEMENT SYSTEM — WAFFEN-SCHMIEDE (RO-STYLE)
+// ============================================================
+// Wahrscheinlichkeits-Matrix (% pro Ziel-Level)
+// +1–+4: sicher (100%). +5–+12: fallend. Max: +12.
+const REFINE_CHANCES = {
+    1:100, 2:100, 3:100, 4:100,
+    5:60,  6:50,  7:40,  8:30,
+    9:20,  10:15, 11:10, 12:8
+};
+const REFINE_MAX = 12;
+// Kosten pro Ziel-Level: [KB, Suppen]
+const REFINE_COSTS = {
+    1:[100,0],  2:[100,0],  3:[100,0],  4:[100,0],
+    5:[200,1],  6:[300,1],  7:[400,2],  8:[500,2],
+    9:[800,3],  10:[1000,4],11:[1500,5],12:[2000,6]
+};
+
+// State (localStorage-backed)
+let refineData = JSON.parse(localStorage.getItem('ts_refine') || '{}');
+// pity: { "weaponId_level": count } — zählt Fehlversuche
+let refinePity = JSON.parse(localStorage.getItem('ts_refine_pity') || '{}');
+
+function getRefineLevel(weaponId) {
+    return refineData[weaponId] || 0;
+}
+function saveRefineData() {
+    localStorage.setItem('ts_refine', JSON.stringify(refineData));
+    localStorage.setItem('ts_refine_pity', JSON.stringify(refinePity));
+}
+// Effektive Chance inkl. Pity
+function getRefineChance(weaponId, targetLevel) {
+    let base = REFINE_CHANCES[targetLevel] || 0;
+    if(base >= 100) return 100;
+    let pityKey = `${weaponId}_${targetLevel}`;
+    let pityCount = refinePity[pityKey] || 0;
+    let pityBonus = targetLevel <= 12
+        ? pityCount * (base * 0.10)   // +10% der Basis pro Fehlschlag (bis +12)
+        : pityCount * (base * 0.05);  // +5% nach +12
+    return Math.min(99, base + pityBonus);
+}
+
+function openSchmiede() {
+    renderSchmiede();
+    document.getElementById('schmiedeOverlay').style.display = 'block';
+}
+function closeSchmiede() {
+    document.getElementById('schmiedeOverlay').style.display = 'none';
+    document.getElementById('startKBAmount').innerText = kaffeebons;
+    renderWaffenkammer(); // Waffenkammer aktualisieren (Refine-Level anzeigen)
+}
+
+function renderSchmiede() {
+    let el = document.getElementById('schmiedeKB');
+    let es = document.getElementById('schmiedeSuppen');
+    if(el) el.innerText = kaffeebons;
+    // Suppen nur anzeigen wenn kein aktiver Run (aus localStorage)
+    let storedSuppen = parseInt(localStorage.getItem('ts_suppen_persistent') || '0');
+    if(es) es.innerText = gameRunning ? (player ? player.suppe : storedSuppen) : storedSuppen;
+
+    let cont = document.getElementById('schmiedeContent');
+    if(!cont) return;
+
+    // Nur freigeschaltete Waffen zeigen
+    if(unlockedWeapons.length === 0) {
+        cont.innerHTML = `<div style="text-align:center;color:#555;padding:30px;border:2px dashed #222;border-radius:4px;">
+            🔒 Keine Waffen in der Kammer — kaufe zuerst eine Waffe!
+        </div>`;
+        return;
+    }
+
+    let html = `
+    <div style="background:#111;border:1px solid #333;padding:12px;border-radius:4px;margin-bottom:16px;font-size:12px;color:#888;line-height:1.7;">
+        <strong style="color:#e67e22;">WIE FUNKTIONIERT DIE SCHMIEDE?</strong><br>
+        • <span style="color:#2ecc71;">+1 bis +4</span>: 100% sicher — kein Risiko<br>
+        • <span style="color:#f39c12;">+5 und höher</span>: Chance sinkt. Fehlschlag → Waffe fällt auf <strong style="color:#c0392b;">+0</strong> zurück!<br>
+        • <strong>Pity-System</strong>: Jeder Fehlversuch erhöht deine Chance um 10% der Basis-Chance<br>
+        • Jede Stufe gibt <span style="color:#f1c40f;">+10% Basis-Schaden</span> auf die Favoriten-Waffe
+    </div>`;
+
+    unlockedWeapons.forEach(wid => {
+        let w = WEAPON_SHOP.find(x => x.id === wid);
+        if(!w) return;
+        let curRef = getRefineLevel(wid);
+        let isFav = favoriteWeapon === wid;
+        let targetRef = curRef + 1;
+        let atMax = curRef >= REFINE_MAX;
+        let isSafe = targetRef <= 4;
+        let chance = atMax ? 0 : getRefineChance(wid, targetRef);
+        let [kbCost, suppCost] = atMax ? [0,0] : (REFINE_COSTS[targetRef] || [999,9]);
+    // Trophäen-Rabatt: Schmiedemeister → -20%
+    if(!atMax && hasTrophy('refine_max')) { kbCost = Math.floor(kbCost * 0.8); }
+        let canAffordKB = kaffeebons >= kbCost;
+        // Suppen-Check: erst im Run verfügbar
+        let canAffordSupp = suppCost === 0 || (gameRunning && player && player.suppe >= suppCost) || (!gameRunning && parseInt(localStorage.getItem('ts_suppen_persistent')||'0') >= suppCost);
+        let canRefine = !atMax && canAffordKB && canAffordSupp;
+
+        // Badge-Farbe
+        let badgeClass = curRef === 0 ? '' : (curRef <= 4 ? 'safe' : (curRef <= 7 ? 'risky' : 'danger'));
+        let probColor = chance >= 70 ? '#2ecc71' : (chance >= 40 ? '#f39c12' : '#c0392b');
+        let dmgBonus = curRef * 10;
+
+        html += `<div class="refine-weapon-card ${isFav ? 'selected' : ''}">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div>
+                    <span style="font-size:22px;">${w.icon}</span>
+                    <span style="color:${isFav?'#f1c40f':'#fff'};font-size:14px;font-weight:bold;margin-left:8px;">${isFav?'⭐ ':''}${w.name}</span>
+                    ${isFav ? '<span style="color:#e67e22;font-size:10px;margin-left:6px;">FAVORIT</span>' : ''}
+                </div>
+                <div>
+                    ${curRef > 0
+                        ? `<span class="refine-level-badge ${badgeClass}">+${curRef}</span>`
+                        : `<span style="color:#555;font-size:12px;">Nicht aufgewertet</span>`}
+                    ${dmgBonus > 0 ? `<span style="color:#f1c40f;font-size:11px;margin-left:8px;">+${dmgBonus}% DMG</span>` : ''}
+                </div>
+            </div>
+            ${atMax
+                ? `<div style="color:#f1c40f;text-align:center;padding:10px;border:1px solid #f1c40f;border-radius:3px;">🏆 MAX LEVEL (+${REFINE_MAX}) ERREICHT!</div>`
+                : `
+            <div style="color:#888;font-size:11px;margin-bottom:6px;">
+                Nächste Stufe: <strong style="color:#fff;">+${targetRef}</strong>
+                &nbsp;|&nbsp; Chance: <strong style="color:${probColor};">${Math.floor(chance)}%</strong>
+                ${chance > (REFINE_CHANCES[targetRef]||0) ? `<span style="color:#3498db;font-size:10px;"> (inkl. Pity +${Math.floor(chance-(REFINE_CHANCES[targetRef]||0))}%)</span>` : ''}
+                &nbsp;|&nbsp; Kosten: <span style="color:#ffd700;">${kbCost} KB</span>${suppCost > 0 ? ` + <span style="color:#ff9f43;">${suppCost} 🥣</span>` : ''}
+            </div>
+            <div class="refine-prob-bar-outer">
+                <div class="refine-prob-bar-inner" style="width:${Math.floor(chance)}%;background:${probColor};"></div>
+            </div>
+            ${!isSafe ? `<div style="color:#c0392b;font-size:10px;margin-bottom:4px;">⚠ RISIKO: Fehlschlag setzt Waffe auf +0 zurück!</div>` : `<div style="color:#2ecc71;font-size:10px;margin-bottom:4px;">✅ Sicher — 100% Erfolgsgarantie</div>`}
+            <button class="refine-anvil-btn" onclick="doRefine('${wid}')" ${canRefine ? '' : 'disabled'}>
+                🔨 AUFWERTEN auf +${targetRef}
+                ${!canAffordKB ? ' — ZU WENIG KB' : ''}${!canAffordSupp ? ' — ZU WENIG SUPPEN' : ''}
+            </button>`}
+        </div>`;
+    });
+
+    cont.innerHTML = html;
+}
+
+function doRefine(weaponId) {
+    let curRef = getRefineLevel(weaponId);
+    if(curRef >= REFINE_MAX) return;
+    let targetRef = curRef + 1;
+    let [kbCost, suppCost] = REFINE_COSTS[targetRef] || [999,9];
+    let chance = getRefineChance(weaponId, targetRef);
+
+    if(kaffeebons < kbCost) { showToast('ZU WENIG KB!', '#e74c3c', `Brauchst ${kbCost} KB`); return; }
+    let currentSuppe = gameRunning && player ? player.suppe : parseInt(localStorage.getItem('ts_suppen_persistent')||'0');
+    if(suppCost > 0 && currentSuppe < suppCost) {
+        showToast('ZU WENIG SUPPE!', '#e74c3c', `Brauchst ${suppCost} 🥣`); return;
+    }
+
+    // Kosten abziehen
+    kaffeebons -= kbCost;
+    if(suppCost > 0) {
+        if(gameRunning && player) { player.suppe -= suppCost; }
+        else {
+            let stored = parseInt(localStorage.getItem('ts_suppen_persistent')||'0');
+            localStorage.setItem('ts_suppen_persistent', Math.max(0, stored - suppCost));
+        }
+    }
+    localStorage.setItem('ts_kb', kaffeebons);
+    saveProgress();
+
+    // Würfeln
+    let roll = Math.random() * 100;
+    let pityKey = `${weaponId}_${targetRef}`;
+    let cont = document.getElementById('schmiedeContent');
+
+    if(roll < chance) {
+        // ✅ ERFOLG
+        refineData[weaponId] = targetRef;
+        delete refinePity[pityKey]; // Pity zurücksetzen
+        saveRefineData();
+
+        let isSafe = targetRef <= 4;
+        let msg = `✅ +${targetRef} — ERFOLG! +${targetRef * 10}% Schaden auf ${WEAPON_SHOP.find(x=>x.id===weaponId)?.name}`;
+        showToast(`+${targetRef} AUFWERTUNG!`, '#2ecc71', msg);
+        if(gameRunning && player && favoriteWeapon === weaponId) {
+            player._refineBonus = targetRef * 0.10;
+        }
+        if(targetRef >= 10) unlockTrophy('refine_max');
+        playSound('evolve');
+        // Visueller Flash
+        let flash = document.createElement('div');
+        flash.className = 'refine-result-success';
+        flash.innerHTML = `🔨 +${targetRef} ERFOLG! &nbsp; +${targetRef*10}% SCHADEN PERMANENT!`;
+        if(cont) { cont.insertBefore(flash, cont.firstChild); setTimeout(()=>flash.remove(), 2500); }
+    } else {
+        // ❌ FEHLSCHLAG
+        refineData[weaponId] = 0; // Waffe bricht — auf +0 zurück
+        refinePity[pityKey] = (refinePity[pityKey] || 0) + 1;
+        saveRefineData();
+        if(gameRunning && player && favoriteWeapon === weaponId) {
+            player._refineBonus = 0;
+        }
+        let w = WEAPON_SHOP.find(x=>x.id===weaponId);
+        showToast('💥 AUFWERTUNG FEHLGESCHLAGEN!', '#c0392b', `${w?.name || weaponId} auf +0 zurückgefallen! (Pity gespeichert)`);
+        playSound('hit');
+        let flash = document.createElement('div');
+        flash.className = 'refine-result-fail';
+        let newChance = getRefineChance(weaponId, targetRef);
+        flash.innerHTML = `💥 FEHLSCHLAG! Waffe auf +0 | Nächste Chance: ${Math.floor(newChance)}%`;
+        if(cont) { cont.insertBefore(flash, cont.firstChild); setTimeout(()=>flash.remove(), 3000); }
+    }
+
+    // HUD aktualisieren
+    let kbEl = document.getElementById('schmiedeKB');
+    if(kbEl) kbEl.innerText = kaffeebons;
+    let sEl = document.getElementById('schmiedeSuppen');
+    if(sEl && gameRunning && player) sEl.innerText = player.suppe;
+
+    setTimeout(() => renderSchmiede(), 400);
+}
+
+// ============================================================
+// PET SYSTEM — AZUBI-HAMSTER (RO-Style)
+// ============================================================
+// Intimacy-Stufen (wie RO: Awkward → Shy → Neutral → Cordial → Loyal)
+const PET_STAGES = [
+    { name:'Fremd',    minIntimacy:0,   color:'#e74c3c', emoji:'😶', buff:null },
+    { name:'Schüchtern', minIntimacy:100, color:'#e67e22', emoji:'😳', buff:null },
+    { name:'Neutral',  minIntimacy:250, color:'#f1c40f', emoji:'😐', buff:null },
+    { name:'Vertraut', minIntimacy:500, color:'#2ecc71', emoji:'😊', buff:'speed+5%' },
+    { name:'Loyal',    minIntimacy:750, color:'#9b59b6', emoji:'🥰', buff:'speed+5%+attack' }
+];
+const PET_MAX_INTIMACY = 1000;
+// Hunger: 0=satt, 100=verhungert
+// Ideal-Fütterzone: 20–40% Hunger → Intimacy steigt
+// Überfüttern (0%) oder verhungern (80%+) → Intimacy sinkt
+
+let petData = JSON.parse(localStorage.getItem('ts_pet') || JSON.stringify({
+    active: false,       // Pet besessen?
+    name: 'Hamster',
+    intimacy: 250,       // 0–1000
+    hunger: 0,           // 0=satt, 100=verhungert
+    lastFed: Date.now()  // Timestamp (für Offline-Hunger-Berechnung)
+}));
+
+function savePetData() {
+    localStorage.setItem('ts_pet', JSON.stringify(petData));
+}
+
+function getPetStage() {
+    let stage = PET_STAGES[0];
+    for(let s of PET_STAGES) { if(petData.intimacy >= s.minIntimacy) stage = s; }
+    return stage;
+}
+
+// Aufgerufen aus startGame — initialisiert das Pet für den Run
+let activePet = null;
+
+class Pet {
+    constructor() {
+        this.x = 0; this.y = 0;
+        this.targetX = 0; this.targetY = 0;
+        this.vx = 0; this.vy = 0;
+        this.frame = 0;
+        this.attackTimer = 0;
+        this.attackCooldown = 90; // 1.5s zwischen Angriffen
+        this.size = 14;
+        // Hunger tickt jede Sekunde (60 frames)
+        this.hungerTimer = 0;
+        this.hungerTickRate = 600; // alle 10s +1 Hunger (ca. 17min bis verhungert)
+        this.overfedTimer = 0;
+        // Feedback-Flash
+        this.feedFlash = 0;
+    }
+
+    update() {
+        this.frame++;
+        // ─── Wegfindung: folge dem Spieler mit Abstand ───
+        if(player) {
+            let offsetAngle = Math.sin(this.frame * 0.02) * 0.8;
+            let followDist = 55;
+            this.targetX = player.x + Math.cos(offsetAngle) * followDist;
+            this.targetY = player.y + Math.sin(offsetAngle + 1.2) * followDist;
+            let dx = this.targetX - this.x;
+            let dy = this.targetY - this.y;
+            let dist = Math.hypot(dx, dy);
+            let stage = getPetStage();
+            let speedMult = (stage.name === 'Loyal' || stage.name === 'Vertraut') ? 1.3 : 1.0;
+            if(dist > 8) {
+                this.vx += (dx / dist) * 0.5 * speedMult;
+                this.vy += (dy / dist) * 0.5 * speedMult;
+            }
+            this.vx *= 0.82; this.vy *= 0.82;
+            this.x += this.vx; this.y += this.vy;
+        }
+
+        // ─── Hunger-System ───
+        this.hungerTimer++;
+        if(this.hungerTimer >= this.hungerTickRate) {
+            this.hungerTimer = 0;
+            petData.hunger = Math.min(100, petData.hunger + 1);
+            // Verhungern: Intimacy sinkt
+            if(petData.hunger >= 80) {
+                petData.intimacy = Math.max(0, petData.intimacy - 8);
+                if(petData.hunger >= 90 && frame % 600 === 0) {
+                    floatingTexts.push(new FloatingText(this.x, this.y - 30, '😢 HUNGER!', '#e74c3c'));
+                    showToast('🐾 HAMSTER HUNGRIG!', '#e74c3c', 'Füttere ihn mit [V]!');
+                }
+            }
+            savePetData();
+            updatePetHUD();
+        }
+
+        // ─── Loyal-Angriff: greift nahe Gegner an ───
+        if(getPetStage().name === 'Loyal') {
+            this.attackTimer++;
+            if(this.attackTimer >= this.attackCooldown) {
+                // Finde nächsten Feind in Reichweite
+                let nearest = null; let nearDist = 200;
+                enemies.forEach(e => {
+                    let d = Math.hypot(e.x - this.x, e.y - this.y);
+                    if(d < nearDist) { nearDist = d; nearest = e; }
+                });
+                if(nearest) {
+                    this.attackTimer = 0;
+                    let dmg = 8 + Math.floor(petData.intimacy / 100);
+                    nearest.hp -= dmg;
+                    spawnParticles(nearest.x, nearest.y, '#9b59b6', 4);
+                    floatingTexts.push(new FloatingText(nearest.x, nearest.y - 20, `🐾${dmg}`, '#9b59b6'));
+                }
+            }
+        }
+
+        // ─── Cordial/Loyal Buff: Speed-Boost auf Player ───
+        let stg = getPetStage();
+        if(player && (stg.name === 'Vertraut' || stg.name === 'Loyal')) {
+            player._petSpeedBuff = 0.3; // +0.3 Speed (wird in Player.update angewendet)
+        } else if(player) {
+            player._petSpeedBuff = 0;
+        }
+
+        if(this.feedFlash > 0) this.feedFlash--;
+    }
+
+    draw() {
+        if(!player) return;
+        ctx.save();
+        let stg = getPetStage();
+        let bob = Math.sin(this.frame * 0.12) * 3;
+        let s = this.size;
+
+        // Körper
+        ctx.fillStyle = this.feedFlash > 0 ? '#fff' : stg.color;
+        ctx.beginPath();
+        ctx.ellipse(this.x, this.y + bob, s, s * 0.75, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        // Ohren
+        ctx.fillStyle = stg.color;
+        ctx.beginPath(); ctx.ellipse(this.x - s*0.6, this.y + bob - s*0.5, s*0.35, s*0.55, -0.4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(this.x + s*0.6, this.y + bob - s*0.5, s*0.35, s*0.55, 0.4, 0, Math.PI*2); ctx.fill();
+
+        // Innenohr
+        ctx.fillStyle = '#ff9f9f';
+        ctx.beginPath(); ctx.ellipse(this.x - s*0.6, this.y + bob - s*0.5, s*0.18, s*0.3, -0.4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(this.x + s*0.6, this.y + bob - s*0.5, s*0.18, s*0.3, 0.4, 0, Math.PI*2); ctx.fill();
+
+        // Augen
+        ctx.fillStyle = '#000';
+        ctx.beginPath(); ctx.arc(this.x - s*0.3, this.y + bob - s*0.1, 2.5, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(this.x + s*0.3, this.y + bob - s*0.1, 2.5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(this.x - s*0.3 + 1, this.y + bob - s*0.1 - 1, 1, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(this.x + s*0.3 + 1, this.y + bob - s*0.1 - 1, 1, 0, Math.PI*2); ctx.fill();
+
+        // Loyal-Aura
+        if(stg.name === 'Loyal') {
+            ctx.strokeStyle = `rgba(155,89,182,${0.3 + Math.sin(this.frame*0.1)*0.2})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(this.x, this.y + bob, s + 6, 0, Math.PI*2); ctx.stroke();
+        }
+
+        // Stufen-Emoji über dem Pet
+        ctx.font = '12px serif'; ctx.textAlign = 'center';
+        ctx.fillText(stg.emoji, this.x, this.y + bob - s - 4);
+        ctx.restore();
+    }
+}
+
+function feedPet() {
+    if(!activePet || !gameRunning) return;
+    if(!player || player.suppe < 1) { showToast('KEINE SUPPE!', '#e74c3c', 'Brauchst 1 🥣 zum Füttern'); return; }
+
+    player.suppe -= 1;
+    let hunger = petData.hunger;
+
+    if(hunger >= 20 && hunger <= 40) {
+        // Ideal-Zone → Intimacy steigt stark
+        petData.intimacy = Math.min(PET_MAX_INTIMACY, petData.intimacy + 25);
+        floatingTexts.push(new FloatingText(activePet.x, activePet.y - 40, '💕 +25 ZUNEIGUNG', '#2ecc71'));
+    } else if(hunger < 20) {
+        // Überfüttern → Intimacy sinkt leicht
+        petData.intimacy = Math.max(0, petData.intimacy - 10);
+        floatingTexts.push(new FloatingText(activePet.x, activePet.y - 40, '😵 ÜBERFÜTTERT -10', '#e67e22'));
+    } else {
+        // Normal hungrig → kleiner Bonus
+        petData.intimacy = Math.min(PET_MAX_INTIMACY, petData.intimacy + 10);
+        floatingTexts.push(new FloatingText(activePet.x, activePet.y - 40, '😋 +10 ZUNEIGUNG', '#f1c40f'));
+    }
+
+    petData.hunger = Math.max(0, hunger - 30);
+    petData.lastFed = Date.now();
+    activePet.feedFlash = 15;
+    savePetData();
+    updatePetHUD();
+    playSound('powerup');
+
+    // Stage-Up melden
+    let newStage = getPetStage();
+    if(newStage.name === 'Vertraut' && petData.intimacy >= 500 && petData.intimacy < 525) {
+        showToast('🐾 PET: VERTRAUT!', '#2ecc71', '+5% Speed für diesen Run!');
+    }
+    if(newStage.name === 'Loyal' && petData.intimacy >= 750 && petData.intimacy < 775) {
+        showToast('🐾 PET: LOYAL!', '#9b59b6', 'Hamster greift Feinde an!');
+        unlockTrophy('pet_loyal');
+    }
+}
+
+function updatePetHUD() {
+    let hud = document.getElementById('petHud');
+    if(!hud) return;
+    if(!petData.active || !gameRunning) { hud.style.display = 'none'; return; }
+    hud.style.display = 'block';
+    let stg = getPetStage();
+    let hungerPct = 100 - petData.hunger;
+    let hungerColor = hungerPct > 60 ? '#2ecc71' : (hungerPct > 30 ? '#f39c12' : '#e74c3c');
+    let moodEl = document.getElementById('petHudMood');
+    let hungerEl = document.getElementById('petHudHunger');
+    let nameEl = document.getElementById('petHudName');
+    if(nameEl) nameEl.innerHTML = `🐾 HAMSTER <span style="color:${stg.color};font-size:10px;">[${stg.name.toUpperCase()}]</span>`;
+    if(moodEl) moodEl.innerHTML = `${stg.emoji} Zuneigung: <span style="color:${stg.color};">${petData.intimacy}</span>/1000`;
+    if(hungerEl) { hungerEl.style.width = hungerPct + '%'; hungerEl.style.background = hungerColor; }
+}
+
+// ── Pet Overlay ──────────────────────────────────────────────
+function openPetOverlay() {
+    renderPetOverlay();
+    document.getElementById('petOverlay').style.display = 'block';
+}
+function closePetOverlay() {
+    document.getElementById('petOverlay').style.display = 'none';
+}
+
+function renderPetOverlay() {
+    let cont = document.getElementById('petOverlayContent');
+    if(!cont) return;
+    let stg = getPetStage();
+    let hungerPct = Math.max(0, 100 - petData.hunger);
+    let hungerColor = hungerPct > 60 ? '#2ecc71' : (hungerPct > 30 ? '#f39c12' : '#e74c3c');
+
+    let intimacyPct = Math.round(petData.intimacy / PET_MAX_INTIMACY * 100);
+
+    let stagesHtml = PET_STAGES.map(s => {
+        let active = stg.name === s.name;
+        let reached = petData.intimacy >= s.minIntimacy;
+        return `<div style="padding:8px 12px;border:1px solid ${active?s.color:'#222'};border-radius:3px;background:${active?s.color+'22':'#0a0a0a'};display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:${reached?s.color:'#333'};font-weight:bold;">${s.emoji} ${s.name} ${active?'← AKTIV':''}</span>
+            <span style="color:#555;font-size:11px;">${s.minIntimacy} Zuneigung${s.buff?' · '+s.buff:' · kein Buff'}</span>
+        </div>`;
+    }).join('');
+
+    cont.innerHTML = `
+    ${!petData.active ? `
+    <div style="text-align:center;padding:20px;border:2px dashed #9b59b6;border-radius:4px;margin-bottom:16px;">
+        <div style="font-size:48px;margin-bottom:10px;">🐾</div>
+        <div style="color:#9b59b6;font-size:16px;font-weight:bold;margin-bottom:8px;">AZUBI-HAMSTER ADOPTIEREN</div>
+        <div style="color:#888;font-size:12px;margin-bottom:16px;">Dein permanenter Begleiter für alle Runs.<br>Füttere ihn regelmäßig für Boni.</div>
+        <button onclick="adoptPet()" style="background:#9b59b6;color:#fff;border:none;padding:12px 30px;font-size:14px;font-weight:bold;font-family:'Courier New',monospace;cursor:pointer;text-transform:uppercase;border-radius:3px;">🐾 ADOPTIEREN (500 KB)</button>
+    </div>` : `
+    <div style="background:#111;border:2px solid ${stg.color};padding:16px;border-radius:4px;margin-bottom:14px;display:flex;gap:16px;align-items:center;">
+        <div style="font-size:52px;line-height:1;">${stg.emoji}</div>
+        <div style="flex:1;">
+            <div style="color:${stg.color};font-size:16px;font-weight:bold;">Hamster · ${stg.name.toUpperCase()}</div>
+            <div style="color:#888;font-size:11px;margin:4px 0;">Zuneigung: ${petData.intimacy} / ${PET_MAX_INTIMACY}</div>
+            <div style="background:#1a1a1a;height:8px;border-radius:4px;margin:6px 0;">
+                <div style="background:${stg.color};height:8px;border-radius:4px;width:${intimacyPct}%;transition:0.3s;"></div>
+            </div>
+            <div style="color:#aaa;font-size:11px;">Sättigung: <span style="color:${hungerColor};">${hungerPct}%</span>
+            <span style="color:#555;"> (Ideal zum Füttern: 60–80%)</span></div>
+            <div style="background:#1a1a1a;height:6px;border-radius:4px;margin:4px 0;">
+                <div style="background:${hungerColor};height:6px;border-radius:4px;width:${hungerPct}%;transition:0.3s;"></div>
+            </div>
+        </div>
+    </div>`}
+
+    <div style="background:#0a0a0a;border:1px solid #333;padding:12px;border-radius:4px;margin-bottom:14px;font-size:11px;color:#888;line-height:1.8;">
+        <strong style="color:#9b59b6;">FÜTTER-GUIDE (Taste [V] im Run):</strong><br>
+        🟢 Sättigung 60–80% → Füttern gibt <span style="color:#2ecc71;">+25 Zuneigung</span><br>
+        🟡 Sättigung 40–60% → Füttern gibt <span style="color:#f1c40f;">+10 Zuneigung</span><br>
+        🔴 Sättigung &gt;80% (überfüttert) → <span style="color:#e74c3c;">-10 Zuneigung</span><br>
+        💀 Sättigung &lt;20% (Hunger) → automatisch <span style="color:#e74c3c;">-8 Zuneigung</span>
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <div style="color:#888;font-size:11px;letter-spacing:2px;margin-bottom:8px;">STUFEN</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">${stagesHtml}</div>
+    </div>`;
+}
+
+function adoptPet() {
+    if(kaffeebons < 500) { showToast('ZU WENIG KB!', '#e74c3c', '500 KB nötig für Adoption'); return; }
+    kaffeebons -= 500;
+    localStorage.setItem('ts_kb', kaffeebons);
+    petData.active = true;
+    petData.intimacy = 250;
+    petData.hunger = 0;
+    savePetData();
+    saveProgress();
+    showToast('🐾 HAMSTER ADOPTIERT!', '#9b59b6', 'Dein Begleiter wartet auf dich!');
+    renderPetOverlay();
+}
+
+// ============================================================
+// RUNE TABLET SYSTEM — PHASE 3 ENDGAME
+// ============================================================
+// Runen-Formen (Tetris-artig): 0=leer, 1=belegt
+const RUNE_SHAPES = {
+    I1x1: [[1]],
+    I2x1: [[1,1]],
+    I1x2: [[1],[1]],
+    L:    [[1,0],[1,0],[1,1]],
+    J:    [[0,1],[0,1],[1,1]],
+    T:    [[1,1,1],[0,1,0]],
+    S:    [[0,1,1],[1,1,0]],
+    Z:    [[1,1,0],[0,1,1]],
+    O2x2: [[1,1],[1,1]],
+    I3x1: [[1,1,1]],
+    I1x3: [[1],[1],[1]]
+};
+const SHAPE_KEYS = Object.keys(RUNE_SHAPES);
+
+// Runen-Stat-Pool: was kann eine Rune geben?
+const RUNE_STAT_POOL = [
+    { key:'dmgPct',   label:'Schaden',    unit:'%',  min:3,  max:15 },
+    { key:'hpFlat',   label:'Max HP',     unit:'',   min:10, max:50 },
+    { key:'speedPct', label:'Speed',      unit:'%',  min:2,  max:8  },
+    { key:'critPct',  label:'Crit-Chance',unit:'%',  min:1,  max:5  },
+    { key:'fireDmg',  label:'Feuer-DMG',  unit:'%',  min:5,  max:20 },
+    { key:'waterDmg', label:'Wasser-DMG', unit:'%',  min:5,  max:20 },
+    { key:'windDmg',  label:'Wind-DMG',   unit:'%',  min:5,  max:20 },
+    { key:'earthDmg', label:'Erde-DMG',   unit:'%',  min:5,  max:20 },
+    { key:'kbBonus',  label:'KB-Drop',    unit:'%',  min:5,  max:15 },
+    { key:'farmSpd',  label:'Farm-Speed', unit:'%',  min:10, max:30 }
+];
+const RUNE_RARITIES = [
+    { name:'Gewöhnlich', color:'#aaa',    weight:50, statCount:1, mult:1.0 },
+    { name:'Selten',     color:'#3498db', weight:30, statCount:2, mult:1.3 },
+    { name:'Episch',     color:'#9b59b6', weight:15, statCount:2, mult:1.7 },
+    { name:'Legendär',   color:'#f1c40f', weight:5,  statCount:3, mult:2.5 }
+];
+
+// State
+let runeInventory = JSON.parse(localStorage.getItem('ts_runes') || '[]');
+// Grid: 5x5 — cell value = runeId or null
+let runeGrid = JSON.parse(localStorage.getItem('ts_rune_grid') || JSON.stringify(Array(25).fill(null)));
+
+function saveRuneData() {
+    localStorage.setItem('ts_runes', JSON.stringify(runeInventory));
+    localStorage.setItem('ts_rune_grid', JSON.stringify(runeGrid));
+}
+
+function rollRarity() {
+    let total = RUNE_RARITIES.reduce((s,r)=>s+r.weight,0);
+    let r = Math.random()*total;
+    for(let rr of RUNE_RARITIES) { r-=rr.weight; if(r<=0) return rr; }
+    return RUNE_RARITIES[0];
+}
+
+function generateRune(sourceLabel) {
+    let rarity = rollRarity();
+    let shapeKey = SHAPE_KEYS[Math.floor(Math.random()*SHAPE_KEYS.length)];
+    let stats = [];
+    let usedKeys = [];
+    for(let i=0; i<rarity.statCount; i++) {
+        let pool = RUNE_STAT_POOL.filter(s=>!usedKeys.includes(s.key));
+        if(!pool.length) break;
+        let s = pool[Math.floor(Math.random()*pool.length)];
+        usedKeys.push(s.key);
+        let val = Math.floor((s.min + Math.random()*(s.max-s.min)) * rarity.mult);
+        stats.push({ key:s.key, label:s.label, unit:s.unit, value:val });
+    }
+    return {
+        id: 'rune_' + Date.now() + '_' + Math.floor(Math.random()*9999),
+        name: `${rarity.name} Rune`,
+        rarity: rarity.name,
+        rarityColor: rarity.color,
+        shape: shapeKey,
+        stats,
+        source: sourceLabel || 'Unbekannt',
+        gridPos: null  // null = nicht im Grid
+    };
+}
+
+// Rune-Shape in Grid-Zellen-Liste umwandeln (bei Startposition r,c)
+function shapeToGridCells(shapeKey, startRow, startCol) {
+    let shape = RUNE_SHAPES[shapeKey];
+    if(!shape) return null;
+    let cells = [];
+    for(let r=0; r<shape.length; r++) {
+        for(let c=0; c<shape[r].length; c++) {
+            if(shape[r][c]) {
+                let gr = startRow+r, gc = startCol+c;
+                if(gr>=5||gc>=5) return null; // außerhalb
+                cells.push(gr*5+gc);
+            }
+        }
+    }
+    return cells;
+}
+
+// Prüfen ob Platzierung möglich
+function canPlace(shapeKey, startRow, startCol, skipRuneId) {
+    let cells = shapeToGridCells(shapeKey, startRow, startCol);
+    if(!cells) return false;
+    for(let ci of cells) {
+        if(runeGrid[ci] && runeGrid[ci] !== skipRuneId) return false;
+    }
+    return true;
+}
+
+// Rune in Grid setzen
+function placeRune(runeId, startRow, startCol) {
+    let rune = runeInventory.find(r=>r.id===runeId);
+    if(!rune) return false;
+    // Alte Position leeren
+    removeFromGrid(runeId);
+    if(!canPlace(rune.shape, startRow, startCol, runeId)) return false;
+    let cells = shapeToGridCells(rune.shape, startRow, startCol);
+    cells.forEach(ci => { runeGrid[ci] = runeId; });
+    rune.gridPos = { row:startRow, col:startCol };
+    saveRuneData();
+    // Trophäe: 10 Zellen gleichzeitig belegt
+    if(runeGrid.filter(Boolean).length >= 10 && typeof unlockTrophy === 'function') unlockTrophy('rune_master');
+    return true;
+}
+
+function removeFromGrid(runeId) {
+    runeGrid = runeGrid.map(cell => cell===runeId ? null : cell);
+    let rune = runeInventory.find(r=>r.id===runeId);
+    if(rune) rune.gridPos = null;
+    saveRuneData();
+}
+
+// Alle aktiven Runen-Stats aggregieren → wird beim Run-Start angewendet
+function getActiveRuneStats() {
+    let totals = {};
+    let placed = new Set(runeGrid.filter(Boolean));
+    placed.forEach(rid => {
+        let rune = runeInventory.find(r=>r.id===rid);
+        if(!rune) return;
+        rune.stats.forEach(s => {
+            totals[s.key] = (totals[s.key]||0) + s.value;
+        });
+    });
+    return totals;
+}
+
+// Stats auf Player anwenden
+function applyRuneStats(p) {
+    let s = getActiveRuneStats();
+    if(s.dmgPct)   p.dmgBonus = (p.dmgBonus||0) + (p.dmgBonus+10)*s.dmgPct/100;
+    if(s.hpFlat)   { p.maxHp += s.hpFlat; p.hp += s.hpFlat; }
+    if(s.speedPct) p.speed += p.speed * s.speedPct/100;
+    if(s.critPct)  p._critChance = (p._critChance||0) + s.critPct/100;
+    if(s.fireDmg)  p._fireDmgBonus = (p._fireDmgBonus||0) + s.fireDmg/100;
+    if(s.waterDmg) p._waterDmgBonus = (p._waterDmgBonus||0) + s.waterDmg/100;
+    if(s.windDmg)  p._windDmgBonus  = (p._windDmgBonus||0)  + s.windDmg/100;
+    if(s.earthDmg) p._earthDmgBonus = (p._earthDmgBonus||0) + s.earthDmg/100;
+    if(s.farmSpd)  p._stFarmBonus   = (p._stFarmBonus||0)   + s.farmSpd;
+    if(s.kbBonus)  p._kbDropBonus   = (p._kbDropBonus||0)   + s.kbBonus/100;
+    // Toast mit aktiven Boni
+    let bonusLines = Object.entries(s).map(([k,v]) => {
+        let stat = RUNE_STAT_POOL.find(x=>x.key===k);
+        return stat ? `${stat.label}+${v}${stat.unit}` : '';
+    }).filter(Boolean);
+    if(bonusLines.length > 0) showToast('🔮 RUNEN AKTIV', '#00e5ff', bonusLines.slice(0,3).join(' · '));
+}
+
+// ── UI ──────────────────────────────────────────────────────
+let dragRuneId = null;
+
+function openRuneOverlay() {
+    renderRuneOverlay();
+    document.getElementById('runeOverlay').style.display = 'block';
+}
+function closeRuneOverlay() {
+    document.getElementById('runeOverlay').style.display = 'none';
+    document.getElementById('startKBAmount').innerText = kaffeebons;
+}
+
+function renderRuneOverlay() {
+    let cont = document.getElementById('runeContent');
+    if(!cont) return;
+    let placed = new Set(runeGrid.filter(Boolean));
+    let activeStats = getActiveRuneStats();
+
+    // ── Aktive Boni Zusammenfassung ──
+    let statsHtml = Object.entries(activeStats).map(([k,v])=>{
+        let s = RUNE_STAT_POOL.find(x=>x.key===k);
+        return s ? `<span style="color:#00e5ff;margin-right:10px;">+${v}${s.unit} ${s.label}</span>` : '';
+    }).join('');
+
+    // ── 5×5 Grid ──
+    let gridHtml = '<div class="rune-grid-wrapper" id="runeGridEl">';
+    for(let r=0; r<5; r++) {
+        for(let c=0; c<5; c++) {
+            let ci = r*5+c;
+            let rid = runeGrid[ci];
+            let rune = rid ? runeInventory.find(x=>x.id===rid) : null;
+            let cellContent = '';
+            if(rune) {
+                cellContent = `<div style="width:100%;height:100%;background:${rune.rarityColor}22;display:flex;align-items:center;justify-content:center;font-size:16px;" title="${rune.name}">🔮</div>`;
+            }
+            gridHtml += `<div class="rune-cell ${rune?'filled':''}" 
+                data-row="${r}" data-col="${c}"
+                ondragover="event.preventDefault();this.classList.add('drag-over')"
+                ondragleave="this.classList.remove('drag-over')"
+                ondrop="onDropCell(event,${r},${c})"
+                onclick="onCellClick(${r},${c})">${cellContent}</div>`;
+        }
+    }
+    gridHtml += '</div>';
+
+    // ── Inventar ──
+    let invHtml = runeInventory.length === 0
+        ? `<div style="color:#555;font-size:12px;text-align:center;padding:20px;border:2px dashed #1a3040;border-radius:4px;">
+            Keine Runen vorhanden.<br><span style="font-size:10px;">Besiege Bosse um Runen-Fragmente zu erhalten!</span></div>`
+        : `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">` +
+          runeInventory.map(rune => {
+              let shape = RUNE_SHAPES[rune.shape];
+              let isPlaced = placed.has(rune.id);
+              let shapeGridHtml = `<div class="rune-shape-preview" style="grid-template-columns:repeat(${shape[0].length},12px);">`;
+              shape.forEach(row => row.forEach(cell => {
+                  shapeGridHtml += `<div class="rune-shape-cell ${cell?'':'empty'}"></div>`;
+              }));
+              shapeGridHtml += '</div>';
+              return `<div class="rune-card ${isPlaced?'equipped':''}" 
+                  draggable="true"
+                  ondragstart="dragRuneId='${rune.id}';this.classList.add('dragging')"
+                  ondragend="this.classList.remove('dragging')"
+                  onclick="onRuneCardClick('${rune.id}')">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                      <div>
+                          ${shapeGridHtml}
+                          <div style="color:${rune.rarityColor};font-size:11px;font-weight:bold;">${rune.name}</div>
+                          <div style="color:#555;font-size:9px;margin-top:2px;">Quelle: ${rune.source}</div>
+                      </div>
+                      ${isPlaced ? '<span style="color:#f1c40f;font-size:10px;">IM GRID</span>' : ''}
+                  </div>
+                  <div style="margin-top:6px;">
+                      ${rune.stats.map(s=>`<div style="color:#aaa;font-size:11px;">+${s.value}${s.unit} ${s.label}</div>`).join('')}
+                  </div>
+                  ${isPlaced
+                      ? `<button onclick="event.stopPropagation();removeFromGrid('${rune.id}');renderRuneOverlay()" style="width:100%;margin-top:6px;background:#1a0000;color:#e74c3c;border:1px solid #e74c3c;padding:3px;font-size:10px;cursor:pointer;font-family:'Courier New',monospace;">✖ ENTFERNEN</button>`
+                      : `<button onclick="event.stopPropagation();deleteRune('${rune.id}')" style="width:100%;margin-top:6px;background:#0a0a0a;color:#555;border:1px solid #222;padding:3px;font-size:10px;cursor:pointer;font-family:'Courier New',monospace;">🗑 LÖSCHEN</button>`
+                  }
+              </div>`;
+          }).join('') + '</div>';
+
+    cont.innerHTML = `
+    <div style="background:#0a1a20;border:1px solid #1a3040;padding:10px 14px;border-radius:4px;margin-bottom:14px;font-size:11px;">
+        <strong style="color:#00e5ff;">AKTIVE RUNEN-BONI:</strong> 
+        ${statsHtml || '<span style="color:#333;">— Keine Runen im Grid</span>'}
+    </div>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start;">
+        <div>
+            <div style="color:#555;font-size:10px;letter-spacing:2px;margin-bottom:8px;">5×5 GRID — Rune hineinziehen oder klicken</div>
+            ${gridHtml}
+            <div style="color:#555;font-size:9px;margin-top:6px;">${placed.size} Zellen belegt</div>
+        </div>
+        <div>
+            <div style="color:#555;font-size:10px;letter-spacing:2px;margin-bottom:8px;">INVENTAR (${runeInventory.length} Runen)</div>
+            ${invHtml}
+        </div>
+    </div>`;
+}
+
+function onDropCell(event, row, col) {
+    event.preventDefault();
+    document.querySelectorAll('.rune-cell').forEach(c=>c.classList.remove('drag-over'));
+    if(!dragRuneId) return;
+    let ok = placeRune(dragRuneId, row, col);
+    dragRuneId = null;
+    if(!ok) showToast('KEIN PLATZ!', '#e74c3c', 'Rune passt nicht an diese Position');
+    renderRuneOverlay();
+}
+
+// Click: erstes freies Feld automatisch füllen
+function onRuneCardClick(runeId) {
+    let rune = runeInventory.find(r=>r.id===runeId);
+    if(!rune || rune.gridPos) return;
+    let shape = RUNE_SHAPES[rune.shape];
+    let h = shape.length, w = shape[0].length;
+    for(let r=0; r<=5-h; r++) {
+        for(let c=0; c<=5-w; c++) {
+            if(canPlace(rune.shape,r,c,runeId)) {
+                placeRune(runeId,r,c);
+                renderRuneOverlay();
+                return;
+            }
+        }
+    }
+    showToast('GRID VOLL!', '#e74c3c', 'Kein freier Platz für diese Rune');
+}
+
+function onCellClick(row, col) {
+    let ci = row*5+col;
+    let rid = runeGrid[ci];
+    if(rid) { removeFromGrid(rid); renderRuneOverlay(); }
+}
+
+function deleteRune(runeId) {
+    if(!confirm('Rune unwiderruflich löschen?')) return;
+    runeInventory = runeInventory.filter(r=>r.id!==runeId);
+    runeGrid = runeGrid.map(c=>c===runeId?null:c);
+    saveRuneData();
+    renderRuneOverlay();
+}
+
+// Boss-Drop: wird aus exitBossRoom und Meister-Hand-Kill aufgerufen
+function dropRuneFragment(sourceLabel) {
+    let rune = generateRune(sourceLabel);
+    runeInventory.push(rune);
+    saveRuneData();
+    showToast('🔮 RUNEN-FRAGMENT!', rune.rarityColor,
+        `[${rune.rarity}] ${rune.stats.map(s=>`+${s.value}${s.unit} ${s.label}`).join(', ')}`);
+}
     let w = WEAPON_SHOP.find(x => x.id === id);
     if(!w || hasWeaponUnlocked(id) || kaffeebons < w.cost) return;
     kaffeebons -= w.cost;
@@ -2717,6 +3972,7 @@ function saveProgress() {
             weapons: unlockedWeapons, favorite: favoriteWeapon||null, skills: unlockedSkills,
             baseLevel, jobLevel, baseExp, jobExp, currentJob: currentJob||null,
             jobSkillPts, jobSkills, completedJobs, rebirthSkills,
+            runeInv: runeInventory, runeGrid: runeGrid,
             daily: _daily, bestScore: _best,
             lastSeen: new Date().toISOString()
         }, {merge:true}).catch(function(){});
@@ -2745,6 +4001,8 @@ async function loadCloudProfile() {
             if(favoriteWeapon) localStorage.setItem('ts_favorite', favoriteWeapon);
             completedJobs = d.completedJobs || [];
             rebirthSkills = d.rebirthSkills || {};
+            if(d.runeInv)  { runeInventory = d.runeInv;  localStorage.setItem('ts_runes', JSON.stringify(runeInventory)); }
+            if(d.runeGrid) { runeGrid = d.runeGrid;       localStorage.setItem('ts_rune_grid', JSON.stringify(runeGrid)); }
             localStorage.setItem('ts_completed_jobs', JSON.stringify(completedJobs));
             localStorage.setItem('ts_rebirth_skills', JSON.stringify(rebirthSkills));
             var el2 = document.getElementById('startKBAmount');
@@ -2917,6 +4175,8 @@ function updateBossRoom() {
     if(input.mouseDown && player) {
         let wepKeys = Object.keys(player.activeWeapons||{});
         let baseDmg = 10 + (player.dmgBonus||0);
+        // Refine-Bonus der Favoriten-Waffe (+10% pro +Level)
+        if(player._refineBonus && player._refineBonus > 0) baseDmg = Math.floor(baseDmg * (1 + player._refineBonus));
         let baseFireRate = player.fireRate || 20;
         
         // Standard Waffe
@@ -3164,11 +4424,14 @@ function exitBossRoom(won) {
     setTimeout(() => {
         if(won) {
             runBossKilled = true;
-            // Speedster Trophäe: Bayer in unter 5 Sekunden besiegt
+            // Speedster Trophäe
             if(bossRoomState && bossRoomState.startTime) {
                 let elapsed = (Date.now() - bossRoomState.startTime) / 1000;
                 if(elapsed < 5) unlockTrophy('speedster');
             }
+            // Runen-Fragment Drop (Boss-Room: Peter Bayer)
+            let dropChance = difficulty >= 6 ? 1.0 : (difficulty >= 3 ? 0.7 : 0.4);
+            if(Math.random() < dropChance) dropRuneFragment('Peter Bayer');
             // Sieg — Kollaps starten
             systemCollapse = true;
             collapseTimer = 0;
@@ -3515,8 +4778,10 @@ function drawBueroDoor() {
 }
 
 function earnKaffeebons(sc) {
-    let baseRate = 0.5 + getUpgradeLevel('kb_rate') * 0.1; // Basis halbiert
+    let baseRate = 0.5 + getUpgradeLevel('kb_rate') * 0.1;
     if(player && player._stKbBonus) baseRate += player._stKbBonus;
+    // Runen KB-Bonus
+    if(player && player._kbDropBonus) baseRate += player._kbDropBonus * (hasTrophy('rune_master') ? 1.2 : 1.0);
     let earned = Math.floor(sc / 100 * baseRate);
     kaffeebons += earned;
     saveProgress();
@@ -4344,24 +5609,27 @@ class Player{
         
         if(input.keys['KeyG']&&this.vacationTimer<=0) this.activateVacation();
         // PHANTOM GRIP — Trophäe Meister Hand: V drücken → alle Gegner auf der Map töten
-        if(input.keys['KeyV'] && hasTrophy('meister_hand') && phantomCooldown <= 0) {
-            phantomCooldown = 3600; // 60s CD bei 60fps
-            screenShake = 60; flashScreen = 80;
-            playSound('hammer'); playSound('alarm');
-            let killCount = 0;
-            for(let i=enemies.length-1; i>=0; i--) {
-                if(enemies[i].type !== 99) { // Bosse überleben
-                    score += enemies[i].score * comboMult;
-                    splatters.push(new Splatter(enemies[i].x, enemies[i].y, enemies[i].color));
-                    spawnParticles(enemies[i].x, enemies[i].y, '#9b59b6', 10);
-                    enemies.splice(i, 1);
-                    killCount++;
-                    updateCombo(true);
-                } else {
-                    enemies[i].hp -= 3000; // Bosse nehmen massiven Schaden
+        // PET FÜTTERN — V drücken (wenn kein Phantom Grip)
+        if(input.keys['KeyV']) {
+            if(hasTrophy('meister_hand') && phantomCooldown <= 0) {
+                phantomCooldown = 3600;
+                screenShake = 60; flashScreen = 80;
+                playSound('hammer'); playSound('alarm');
+                let killCount = 0;
+                for(let i=enemies.length-1; i>=0; i--) {
+                    if(enemies[i].type !== 99) {
+                        score += enemies[i].score * comboMult;
+                        splatters.push(new Splatter(enemies[i].x, enemies[i].y, enemies[i].color));
+                        spawnParticles(enemies[i].x, enemies[i].y, '#9b59b6', 10);
+                        enemies.splice(i, 1);
+                        killCount++;
+                        updateCombo(true);
+                    } else { enemies[i].hp -= 3000; }
                 }
+                showToast('✋ PHANTOM GRIP!', '#9b59b6', killCount + ' Gegner vernichtet! (60s CD)');
+            } else if(activePet && petData.active) {
+                feedPet();
             }
-            showToast('✋ PHANTOM GRIP!', '#9b59b6', killCount + ' Gegner vernichtet! (60s CD)');
             input.keys['KeyV'] = false;
         }
         if(input.keys['KeyQ']){
@@ -4417,7 +5685,8 @@ class Player{
         if(idocEvent && hasTrophy('idoc_savior')) spd *= 1.1;
         if(this.bikeTimer>0)       spd=10;
         if(this.speedBoostTimer>0) spd+=3;
-        if(this.sapDebuffTimer>0)  spd=Math.max(1, spd-3); 
+        if(this.sapDebuffTimer>0)  spd=Math.max(1, spd-3);
+        if(this._petSpeedBuff)     spd += this._petSpeedBuff; // Pet: Vertraut/Loyal +0.3
 
         if(dx!==0||dy!==0){
             let len=Math.sqrt(dx*dx+dy*dy); dx/=len; dy/=len;
@@ -4600,13 +5869,18 @@ const ELEMENT_CHART = {
 // Zentrale Funktion für Schaden & Popups
 function applyElementalDamage(enemy, baseDmg, attackElement, x, y) {
     let mult = (ELEMENT_CHART[attackElement] && ELEMENT_CHART[attackElement][enemy.element]) ? ELEMENT_CHART[attackElement][enemy.element] : 1.0;
+    // Runen-Elemental-Bonus anwenden
+    if(player) {
+        let resonance = hasTrophy('rune_master') ? 1.20 : 1.0;
+        if(attackElement==='feuer'   && player._fireDmgBonus)  mult += player._fireDmgBonus  * resonance;
+        if(attackElement==='wasser'  && player._waterDmgBonus) mult += player._waterDmgBonus * resonance;
+        if(attackElement==='wind'    && player._windDmgBonus)  mult += player._windDmgBonus  * resonance;
+        if(attackElement==='erde'    && player._earthDmgBonus) mult += player._earthDmgBonus * resonance;
+    }
     let finalDmg = baseDmg * mult;
     enemy.hp -= finalDmg;
-    
-    // Visuelles Feedback
     if (mult >= 2.0 && frame % 15 === 0) floatingTexts.push(new FloatingText(x, y - 25, "EFFEKTIV!", "#ff4444"));
     if (mult <= 0.5 && frame % 15 === 0 && enemy.element !== 'schatten') floatingTexts.push(new FloatingText(x, y - 25, "SCHWACH...", "#aaa"));
-    
     return finalDmg;
 }   
    
@@ -5547,6 +6821,8 @@ function loop(){
         frame++; shiftTimer++;
         spawnLogic();
         player.update();
+        // Pet update
+        if(activePet && petData.active) { activePet.update(); updatePetHUD(); }
 
         if(isWegflexenMode && gameRunning && !gamePaused) {
             wegflexenTimer--;
@@ -5786,15 +7062,18 @@ function loop(){
                         unlockTrophy('meister_hand');
                         secretBossActive = false;
                         screenShake = 80; flashScreen = 120;
-                        score += 25000;
-                        kaffeebons += 2000;
+                        score += 25000; kaffeebons += 2000;
                         playSound('evolve');
                         showToast("✋ MEISTER HAND BESIEGT!", "#9b59b6", "+25.000 Score · +2.000 KB · Phantom Grip freigeschaltet!");
                         for(let i=0;i<3;i++) items.push(new Item('briefcase', e.x + (Math.random()-0.5)*100, e.y + (Math.random()-0.5)*100));
+                        // Runen-Drop: immer 2 Fragmente bei Meister Hand
+                        dropRuneFragment('Meister Hand'); dropRuneFragment('Meister Hand');
                     } else {
                         floatingTexts.push(new FloatingText(e.x,e.y,"PROJEKT ABGESCHLOSSEN!","#ffd700"));
                         screenShake = 50;
                         items.push(new Item('briefcase',e.x,e.y));
+                        // Runen-Drop: 30% bei normalen Bossen
+                        if(Math.random() < 0.3) dropRuneFragment(e.label || 'Boss');
                         showToast("BOSS BESIEGT!","#ffd700","Projekt abgeschlossen!");
                     }
                 }
@@ -5973,6 +7252,7 @@ function loop(){
         turrets.forEach(t=>t.draw());
         floatingTexts.forEach(ft=>ft.draw());
         player.draw();
+        if(activePet && petData.active) activePet.draw();
 
         if(currentShift===2){
             let g=ctx.createRadialGradient(player.x,player.y,100,player.x,player.y,400);
@@ -6035,6 +7315,7 @@ function startGame(diff=1){
     gamePaused=false;idocEvent=null;meetingZone=null;kloskaEvent=null;
     systemCollapse = false; collapseTimer = 0;
     enemies=[];bullets=[];particles=[];items=[];splatters=[];floatingTexts=[];turrets=[];shells=[];serverFarms=[];vehicles=[];
+    activePet = null; // Pet-Reset
     gamePhase='normal'; bueroDoor=null; bossRoomState=null; fadeAlpha=0; fadeDir=0;
     secretWall=null; secretBossActive=false; phantomTimer=0; phantomCooldown=0;
     blockadeEvent=null; // NEU: Reset beim Start
@@ -6048,6 +7329,34 @@ function startGame(diff=1){
     clearAllToasts();
 
     player = new Player();
+
+    // Pet initialisieren
+    if(petData.active) {
+        // Offline-Hunger nachholen (max. 10 Ticks = +10 Hunger)
+        let offlineSecs = Math.floor((Date.now() - (petData.lastFed || Date.now())) / 1000);
+        let offlineTicks = Math.min(10, Math.floor(offlineSecs / 10));
+        if(offlineTicks > 0) {
+            petData.hunger = Math.min(100, petData.hunger + offlineTicks);
+            if(petData.hunger >= 80) petData.intimacy = Math.max(0, petData.intimacy - offlineTicks * 4);
+            petData.lastFed = Date.now();
+            savePetData();
+        }
+        activePet = new Pet();
+        // Start-Position neben Spieler
+        activePet.x = player.x + 50; activePet.y = player.y + 30;
+        // Stage-Buff sofort anwenden
+        let stg = getPetStage();
+        if(stg.name === 'Vertraut' || stg.name === 'Loyal') player._petSpeedBuff = 0.3;
+        updatePetHUD();
+        let stageMsg = stg.name !== 'Fremd' && stg.name !== 'Schüchtern'
+            ? `${stg.emoji} ${stg.name} — ${stg.buff || 'kein Buff'}`
+            : `${stg.emoji} ${stg.name}`;
+        showToast('🐾 HAMSTER DA!', '#9b59b6', stageMsg + ' · [V] Füttern');
+    } else {
+        activePet = null;
+        let hud = document.getElementById('petHud');
+        if(hud) hud.style.display = 'none';
+    }
     
     if(diff !== 9 && diff !== 10 && diff !== 15) isWegflexenMode = false;
     lastWasWegflexen = isWegflexenMode;
@@ -6065,9 +7374,16 @@ function startGame(diff=1){
     if(favoriteWeapon && hasWeaponUnlocked(favoriteWeapon)) {
         player.activeWeapons[favoriteWeapon] = Infinity; // kein Timer
         let w = WEAPON_SHOP.find(x=>x.id===favoriteWeapon);
-        showToast('⭐ FAVORIT AKTIV', '#f1c40f', (w?w.name:'Waffe') + ' — permanent für diesen Run');
+        let refLv = getRefineLevel(favoriteWeapon);
+        player._refineBonus = refLv * 0.10; // +10% Schaden pro Refine-Level
+        let refLabel = refLv > 0 ? ` [+${refLv}] (+${refLv*10}% DMG)` : '';
+        showToast('⭐ FAVORIT AKTIV', '#f1c40f', (w?w.name:'Waffe') + refLabel + ' — permanent für diesen Run');
+    } else {
+        player._refineBonus = 0;
     }
     gameRunning=true;
+    // Runen-Boni auf Spieler anwenden
+    if(getActiveRuneStats && Object.keys(getActiveRuneStats()).length > 0) applyRuneStats(player);
     loop();
 }
 
@@ -6123,12 +7439,3 @@ function buyKloskaItem(item, cost) {
 // Fallback: Wenn Preloader nach 5s noch läuft → forcierter Start
 setTimeout(function(){
     var ls = document.getElementById('loadingScreen');
-    if(ls && ls.style.display !== 'none') {
-        ls.style.display = 'none';
-        var ss = document.getElementById('startScreen');
-        if(ss) ss.style.display = 'block';
-    }
-}, 5000);
-</script>
-</body>
-</html>
