@@ -704,6 +704,7 @@ input[type="text"] {
             <button onclick="openTrophies()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🏆 TROPHÄEN</button>
             <button onclick="openWaffenkammer()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#e74c3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#e74c3c'">🔫 WAFFEN</button>
             <button onclick="openDailyOverlay()" id="daily-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;">☕ TAGES-BONUS</button>
+            <button onclick="openQuestBoard()" style="background:#111;color:#2ecc71;border:2px solid #2ecc71;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#2ecc71';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#2ecc71'">📋 AUFTRÄGE</button>
             <button onclick="openJobOverlay()" id="job-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">⚔️ JOB</button>
             <button onclick="showEmail()" style="background:#111;color:#3498db;border:2px solid #3498db;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#3498db';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#3498db'">[I] ANLEITUNG</button>
             <button onclick="openSkillTree()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🌳 SKILLTREE</button>
@@ -855,6 +856,16 @@ input[type="text"] {
         <div style="color:#666;font-size:11px;margin-bottom:20px;">EXP sammeln → Level aufsteigen → Job wählen → Skills freischalten</div>
         <div id="jobContent"></div>
         <button onclick="closeJobOverlay()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
+    </div>
+</div>
+
+<!-- Quest-Overlay -->   
+<div id="questOverlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.93);z-index:570;font-family:'Courier New',monospace;justify-content:center;align-items:flex-start;overflow-y:auto;">
+    <div style="max-width:700px;width:90%;margin:30px auto;padding:28px;border:3px solid #2ecc71;background:#0a0a0a;border-radius:4px;">
+        <h2 style="color:#2ecc71;font-size:22px;letter-spacing:4px;margin:0 0 4px;">📋 EDEN GROUP AUFTRÄGE</h2>
+        <div style="color:#666;font-size:11px;margin-bottom:20px;">Wähle EINEN aktiven Auftrag für den nächsten Run. Erfülle ihn für massive Job-EXP.</div>
+        <div id="questContent" style="display:grid;gap:10px;"></div>
+        <button onclick="closeQuestBoard()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
     </div>
 </div>
 
@@ -1128,12 +1139,43 @@ function renderHsMenu(tab) {
     }).catch(e => { cont.innerHTML = '<div style="text-align:center;color:#f00;padding:20px;">Fehler: '+e.message+'</div>'; });
 }
 
+// --- NEU: ZENTRALE QUEST-VERRECHNUNG ---
+function processActiveQuest(timeSec) {
+    if(activeQuest) {
+        let q = QUESTS.find(x => x.id === activeQuest);
+        if(!q) return;
+        
+        let success = false;
+        if(q.type === 'kills' && runKillCount >= q.target) success = true;
+        if(q.type === 'time' && timeSec >= q.target) success = true;
+        if(q.type === 'hacks' && player.runHacks >= q.target) success = true;
+        if(q.type === 'combo' && bestComboThisRun >= q.target) success = true;
+        if(q.type === 'boss' && runBossKilled) success = true;
+
+        if(success) {
+            baseExp += q.exp;
+            if(currentJob) jobExp += q.exp; 
+            kaffeebons += q.kb;
+            if(!completedQuests.includes(q.id)) completedQuests.push(q.id);
+            localStorage.setItem('ts_completed_quests', JSON.stringify(completedQuests));
+            showToast("AUFTRAG ERFÜLLT!", "#2ecc71", `${q.name}: +${q.exp} EXP / +${q.kb} KB`, true);
+            playSound('evolve');
+            checkLevelUp(); // Level-Up direkt auslösen, falls genug EXP da sind
+        }
+        // Quest nach dem Run immer deaktivieren (egal ob geschafft oder nicht)
+        activeQuest = null;
+        localStorage.setItem('ts_active_quest', '');
+    }
+}
+// ---------------------------------------
+   
 function saveHighscoreAndRestart() {
     let currentBest = parseInt(localStorage.getItem('ts_best_score') || '0');
     if (score > currentBest) localStorage.setItem('ts_best_score', score);
     saveProgress(); 
     let name = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim().substring(0,10);
     let timeSec = (Date.now() - runStartTime) / 1000;
+    processActiveQuest(timeSec);
     let rat = calculateRunRating(score, runKillCount, timeSec, runBossKilled, bestComboThisRun, lastChosenDifficulty);
     // --- NEU: S-Rang Trophäen Tracking ---
     // --- S-RANG & FELIX TROPHÄEN ---
@@ -1181,6 +1223,7 @@ function saveHighscoreAndMainMenu() {
     saveProgress(); 
     let name = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim().substring(0,10);
     let timeSec2 = (Date.now() - runStartTime) / 1000;
+    processActiveQuest(timeSec2);
     let rat2 = calculateRunRating(score, runKillCount, timeSec2, runBossKilled, bestComboThisRun, lastChosenDifficulty);
     // --- S-RANG & FELIX TROPHÄEN ---
     if(rat2.grade === 'S') {
@@ -1235,6 +1278,67 @@ const UPGRADES_DEF = [
     { id:'mod_fire',    name:'Brand-Munition',   icon:'🔥',  desc:'Gegner brennen (Ab 30k)',   baseCost:1000, costMult:3.0, minScore:30000, apply:(p,lvl)=>{ p.hasFireMod=true; } },
     { id:'mod_pierce',  name:'Durchschuss',      icon:'🎯',  desc:'Kugeln durchschlagen (Ab 50k)',baseCost:1500, costMult:3.5, minScore:50000, apply:(p,lvl)=>{ p.hasPierceMod=true; } }
 ];
+
+// ============================================================
+// EDEN GROUP (QUEST BOARD)
+// ============================================================
+const QUESTS = [
+    { id: 'q1', name: 'Massenabfertigung', desc: 'Erledige 100 Gegner in einem Run.', target: 100, type: 'kills', exp: 800, kb: 150 },
+    { id: 'q2', name: 'Ausdauer', desc: 'Überlebe 3 Minuten (180s) in einem Run.', target: 180, type: 'time', exp: 1200, kb: 250 },
+    { id: 'q3', name: 'Server-Wartung', desc: 'Hacke 3 Server in einem Run.', target: 3, type: 'hacks', exp: 1500, kb: 300 },
+    { id: 'q4', name: 'Picobello-Anwärter', desc: 'Erreiche eine ×5 Combo.', target: 5, type: 'combo', exp: 2000, kb: 400 },
+    { id: 'q5', name: 'Boss-Slayer', desc: 'Besiege Peter Bayer.', target: 1, type: 'boss', exp: 5000, kb: 1000 }
+];
+
+let activeQuest = localStorage.getItem('ts_active_quest') || null;
+let completedQuests = JSON.parse(localStorage.getItem('ts_completed_quests') || '[]');
+
+function openQuestBoard() {
+    let cont = document.getElementById('questContent');
+    let html = '';
+    
+    QUESTS.forEach(q => {
+        let isDone = completedQuests.includes(q.id);
+        let isActive = activeQuest === q.id;
+        let borderCol = isActive ? '#f1c40f' : (isDone ? '#2ecc71' : '#333');
+        let bgCol = isActive ? 'rgba(241,196,15,0.1)' : '#111';
+        let btnHtml = '';
+        
+        if (isDone) {
+            btnHtml = `<span style="color:#2ecc71;font-weight:bold;">✅ ABGESCHLOSSEN</span>`;
+        } else if (isActive) {
+            btnHtml = `<button onclick="toggleQuest('${q.id}')" style="background:#c0392b;color:#fff;border:none;padding:6px 12px;font-weight:bold;cursor:pointer;">ABBRECHEN</button>`;
+        } else {
+            let disabled = activeQuest !== null ? 'opacity:0.5;pointer-events:none;' : '';
+            btnHtml = `<button onclick="toggleQuest('${q.id}')" style="background:#2ecc71;color:#000;border:none;padding:6px 12px;font-weight:bold;cursor:pointer;${disabled}">ANNEHMEN</button>`;
+        }
+
+        html += `<div style="background:${bgCol};border:2px solid ${borderCol};padding:14px;border-radius:4px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <div style="color:${isActive ? '#f1c40f' : '#fff'};font-size:15px;font-weight:bold;">${isActive ? '🎯 AKTIV: ' : ''}${q.name}</div>
+                <div style="color:#aaa;font-size:12px;margin:4px 0;">${q.desc}</div>
+                <div style="color:#2ecc71;font-size:11px;font-weight:bold;">Belohnung: +${q.exp} Job-EXP | +${q.kb} KB</div>
+            </div>
+            <div>${btnHtml}</div>
+        </div>`;
+    });
+    cont.innerHTML = html;
+    document.getElementById('questOverlay').style.display = 'flex';
+}
+
+function closeQuestBoard() { document.getElementById('questOverlay').style.display = 'none'; }
+
+function toggleQuest(id) {
+    if (activeQuest === id) {
+        activeQuest = null; // Abbrechen
+        showToast("AUFTRAG ABGEBROCHEN", "#e74c3c");
+    } else {
+        activeQuest = id; // Annehmen
+        showToast("AUFTRAG ANGENOMMEN!", "#f1c40f", QUESTS.find(q=>q.id===id).name);
+    }
+    localStorage.setItem('ts_active_quest', activeQuest || '');
+    openQuestBoard(); // Reload UI
+}   
 
 let kaffeebons       = parseInt(localStorage.getItem('ts_kb') || '0');
 
