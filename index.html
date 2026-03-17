@@ -1183,7 +1183,7 @@ function saveHighscoreAndMainMenu() {
     let timeSec2 = (Date.now() - runStartTime) / 1000;
     let rat2 = calculateRunRating(score, runKillCount, timeSec2, runBossKilled, bestComboThisRun, lastChosenDifficulty);
     // --- S-RANG & FELIX TROPHÄEN ---
-    if(rat.grade === 'S') {
+    if(rat2.grade === 'S') {
         let sRanks = JSON.parse(localStorage.getItem('ts_s_ranks') || '[]');
         if(!sRanks.includes(currentDiffLabel)) {
             sRanks.push(currentDiffLabel);
