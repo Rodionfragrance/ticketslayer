@@ -7028,41 +7028,43 @@ function initPvPBoard(matchData, opponentName) {
 
     pvpState = {
         matchId: pvpMatchId,
-        role: pvpPlayerRole,       // 'player1' oder 'player2'
+        role: pvpPlayerRole,
         opponentName: opponentName,
         myName: (document.getElementById('playerName').value || 'ANONYM').toUpperCase().trim(),
-        // Eigene Felder
         myHp: 30,
         myDeck: myDeck,
         myHand: myHand,
-        myField: [],               // max 4 Karten auf dem Feld
-        myMana: 3,
-        myMaxMana: 3,
-        // Gegner-Felder (kommen aus Firebase)
+        myField: [],
+        myMana: pvpPlayerRole === 'player1' ? 3 : 3,
+        myMaxMana: pvpPlayerRole === 'player1' ? 3 : 3,
         oppHp: 30,
         oppHandCount: 4,
-        oppField: [],
+        oppDeckCount: 16,
         oppMana: 3,
-        // Spielzustand
+        oppMaxMana: 3,
+        oppField: [],
         myTurn: pvpPlayerRole === 'player1',
         turn: 1,
-        phase: 'draw',   // 'draw' | 'main' | 'attack' | 'end'
-        attackedThisTurn: [],      // IDs von Karten die schon angegriffen haben
+        attackedThisTurn: [],
         log: [],
-        // Animation
-        flashMsg: null,
-        flashTimer: 0,
+        flashMsg: null, flashTimer: 0, flashColor: '#f1c40f',
         floats: [],
         attackAnim: null,
+        _lastActionId: null,
+        _gameOverHandled: false,
     };
 
     // Initial state in Firebase pushen (player1 legt Felder an)
     if (pvpPlayerRole === 'player1') {
         pvpPushState({
-            p1Hp: 30, p2Hp: 30,
-            p1Field: [], p2Field: [],
-            p1HandCount: pvpState.myHand.length,
-            p2HandCount: 4,
+            player1Hp: 30, player2Hp: 30,
+            player1Field: [], player2Field: [],
+            player1HandCount: pvpState.myHand.length,
+            player1DeckCount: pvpState.myDeck.length,
+            player1Mana: 3,
+            player2HandCount: 4,
+            player2DeckCount: 16,
+            player2Mana: 3,
             turn: 1,
             activePlayer: 'player1',
             phase: 'main',
@@ -7125,13 +7127,23 @@ function pvpPushState(update) {
 }
 
 function pvpPushAction(action) {
-    if (!db || !pvpMatchId) return;
-    db.collection('pvp_matches').doc(pvpMatchId).update({
+    if (!db || !pvpMatchId || !pvpState) return;
+    let role = pvpState.role;
+    let update = {
         lastAction: action,
-        [`${pvpState.role}Field`]: pvpState.myField.map(c => ({ id: c.id, hp: c.curHp !== undefined ? c.curHp : c.pvpDef, atk: c.pvpAtk })),
-        [`${pvpState.role}Hp`]: pvpState.myHp,
-        [`${pvpState.role}HandCount`]: pvpState.myHand.length,
-    }).catch(e => console.warn('PvP action push:', e));
+        [role + 'Field']: pvpState.myField.map(c => ({
+            id: c.id,
+            hp: c.curHp !== undefined ? c.curHp : c.pvpDef,
+            atk: c.pvpAtk,
+            def: c.pvpDef
+        })),
+        [role + 'Hp']: pvpState.myHp,
+        [role + 'HandCount']: pvpState.myHand.length,
+        [role + 'Mana']: pvpState.myMana,
+        [role + 'DeckCount']: pvpState.myDeck.length,
+    };
+    db.collection('pvp_matches').doc(pvpMatchId).update(update)
+        .catch(e => console.warn('PvP action push:', e));
 }
 
 let pvpStateListener = null;
@@ -7141,16 +7153,25 @@ function listenToPvPState() {
         if (!doc.exists || !pvpState) return;
         let data = doc.data();
 
-        // Gegner-HP + Feld aktualisieren
-        let oppRole = pvpState.role === 'player1' ? 'player2' : 'player1';
         let myRole = pvpState.role;
+        let oppRole = myRole === 'player1' ? 'player2' : 'player1';
 
-        pvpState.oppHp = data[oppRole + 'Hp'] || pvpState.oppHp;
-        pvpState.oppHandCount = data[oppRole + 'HandCount'] || pvpState.oppHandCount;
+        // === Gegner-Stats aus Firebase ===
+        let newOppHp = data[oppRole + 'Hp'];
+        if (newOppHp !== undefined && newOppHp !== pvpState.oppHp) {
+            let diff = newOppHp - pvpState.oppHp;
+            if (diff < 0 && pvpCanvas) pvpFloat(diff + ' HP', pvpCanvas.width * 0.3, 80, '#e74c3c');
+            pvpState.oppHp = newOppHp;
+        }
+        let newOppHand = data[oppRole + 'HandCount'];
+        if (newOppHand !== undefined) pvpState.oppHandCount = newOppHand;
+        let newOppDeck = data[oppRole + 'DeckCount'];
+        if (newOppDeck !== undefined) pvpState.oppDeckCount = newOppDeck;
+        let newOppMana = data[oppRole + 'Mana'];
+        if (newOppMana !== undefined) pvpState.oppMana = newOppMana;
 
-        // Gegner-Feld rekonstruieren
+        // === Gegner-Feld aus Firebase (source of truth) ===
         let oppFieldData = data[oppRole + 'Field'] || [];
-        // Merge mit bestehenden Karten-Daten (wir kennen die Karten-IDs vom letzten Stand)
         pvpState.oppField = oppFieldData.map(f => {
             let existing = pvpState.oppField.find(c => c.id === f.id);
             if (existing) {
@@ -7158,39 +7179,46 @@ function listenToPvPState() {
                 existing.pvpAtk = f.atk;
                 return existing;
             }
-            // Neue Karte: lookup in CARD_DATABASE
             let cardDef = CARD_DATABASE.find(c => c.id === f.id);
-            if (cardDef) {
-                return { ...cardDef, curHp: f.hp, pvpAtk: f.atk };
-            }
-            return { id: f.id, name: '???', pvpAtk: f.atk, pvpDef: f.hp, curHp: f.hp, color: '#555', rarity: 'Gewöhnlich', pvpCost: 1 };
+            if (cardDef) return { ...cardDef, curHp: f.hp, pvpAtk: f.atk };
+            return { id: f.id, name: '???', pvpAtk: f.atk || 0, pvpDef: f.def || f.hp, curHp: f.hp, color: '#555', rarity: 'Gewöhnlich', pvpCost: 1 };
         });
 
-        // Zug-Wechsel
-        let isMyTurn = data.activePlayer === pvpState.role;
-        if (isMyTurn && !pvpState.myTurn) {
-            pvpState.myTurn = true;
-            pvpState.turn = (data.turn || pvpState.turn);
-            pvpState.attackedThisTurn = [];
-            pvpState.myMana = Math.min(10, pvpState.turn + 2);
-            pvpState.myMaxMana = pvpState.myMana;
-            // Karte ziehen
-            pvpDrawCard();
-            pvpFlash('DEIN ZUG!', '#2ecc71');
-            pvpLog('Runde ' + pvpState.turn + ' — Dein Zug!');
-        } else if (!isMyTurn) {
-            pvpState.myTurn = false;
+        // === Eigene HP-Korrektur (falls opponent hat uns geschaden) ===
+        let newMyHp = data[myRole + 'Hp'];
+        if (newMyHp !== undefined && newMyHp < pvpState.myHp) {
+            // Gegner hat unsere HP aktualisiert (z.B. durch Angriff)
+            pvpState.myHp = newMyHp;
         }
 
-        // Gegner-Aktionen verarbeiten
+        // === Zug-Wechsel ===
+        let isMyTurn = data.activePlayer === myRole;
+        let newTurn = data.turn || pvpState.turn;
+        if (isMyTurn && !pvpState.myTurn) {
+            pvpState.myTurn = true;
+            pvpState.turn = newTurn;
+            pvpState.attackedThisTurn = [];
+            pvpState.myMana = Math.min(10, newTurn + 1);
+            pvpState.myMaxMana = pvpState.myMana;
+            pvpApplyStartOfTurnEffects();
+            pvpDrawCard();
+            pvpFlash('DEIN ZUG!', '#2ecc71');
+            pvpLog('Runde ' + newTurn + ' — Dein Zug!');
+        } else if (!isMyTurn) {
+            pvpState.myTurn = false;
+            pvpState.turn = newTurn;
+        }
+
+        // === Gegner-Aktionen ===
         let action = data.lastAction;
-        if (action && action.by !== pvpState.role && action.id !== pvpState._lastActionId) {
+        if (action && action.by !== myRole && action.id !== pvpState._lastActionId) {
             pvpState._lastActionId = action.id;
             pvpProcessOpponentAction(action);
         }
 
-        // Game Over
-        if (data.gameOver) {
+        // === Game Over ===
+        if (data.gameOver && !pvpState._gameOverHandled) {
+            pvpState._gameOverHandled = true;
             pvpHandleGameOver(data.gameOver);
         }
     });
@@ -7217,6 +7245,7 @@ function pvpProcessOpponentAction(action) {
         } else if (action.targetType === 'card') {
             let myTarget = pvpState.myField.find(c => c.id === action.targetId);
             if (myTarget) {
+                dmg = pvpApplyDodge(myTarget, dmg);
                 myTarget.curHp -= dmg;
                 if (myTarget.curHp <= 0) {
                     pvpState.myField = pvpState.myField.filter(c => c.id !== action.targetId);
@@ -7267,8 +7296,9 @@ function pvpPlayCard(cardIndex) {
     pvpState.myHand.splice(cardIndex, 1);
     let fieldCard = { ...card, curHp: card.pvpDef, justPlayed: true };
     pvpState.myField.push(fieldCard);
+    pvpApplyOnPlayEffect(fieldCard);
     pvpLog('Du spielst: ' + card.name);
-    pvpFloat('+' + card.name, pvpCanvas.width * 0.3, pvpCanvas.height * 0.65, card.color);
+    pvpFloat('+' + card.name, pvpCanvas.width * 0.3, pvpCanvas.height * 0.65, card.color || '#9b59b6');
 
     // Firebase update
     let actionId = Date.now() + '_' + Math.random().toString(36).substr(2,5);
@@ -7576,6 +7606,80 @@ function pvpShowHelp() {
     }
 }
 
+
+// ============================================================
+// KARTENEFFEKTE
+// ============================================================
+function pvpApplyOnPlayEffect(card) {
+    if (!card.pvpEffect || !pvpState) return;
+    let e = card.pvpEffect.toLowerCase();
+
+    // "Zieht X Karte(n)"
+    let drawMatch = e.match(/zieht (\d+) karte/);
+    if (drawMatch) {
+        let n = parseInt(drawMatch[1]);
+        for (let i = 0; i < n; i++) pvpDrawCard();
+        pvpFloat('+' + n + ' Karte!', pvpCanvas.width*0.5, pvpCanvas.height*0.6, '#2ecc71');
+    }
+
+    // "+X ATK" für eigene Karten
+    let atkBuffMatch = e.match(/alle eigenen karten \+(\d+) atk/);
+    if (atkBuffMatch) {
+        let val = parseInt(atkBuffMatch[1]);
+        pvpState.myField.forEach(c => { if (c !== card) c.pvpAtk += val; });
+        pvpFloat('Alle +' + val + ' ATK!', pvpCanvas.width*0.5, pvpCanvas.height*0.6, '#e74c3c');
+    }
+
+    // "Heilt X HP"
+    let healMatch = e.match(/heilt? (\d+) hp/i);
+    if (healMatch) {
+        let val = parseInt(healMatch[1]);
+        pvpState.myHp = Math.min(30, pvpState.myHp + val);
+        pvpFloat('+' + val + ' HP!', pvpCanvas.width*0.7, pvpCanvas.height*0.5, '#2ecc71');
+    }
+
+    // "-X ATK für alle gegnerischen Karten"
+    let debuffMatch = e.match(/alle gegnerischen karten -(\d+) atk/);
+    if (debuffMatch) {
+        let val = parseInt(debuffMatch[1]);
+        pvpState.oppField.forEach(c => { c.pvpAtk = Math.max(0, (c.pvpAtk||0) - val); });
+        pvpFloat('Gegner -' + val + ' ATK!', pvpCanvas.width*0.5, pvpCanvas.height*0.4, '#9b59b6');
+    }
+
+    // "Weicht 1. Angriff aus" — mark card
+    if (e.includes('weicht') && e.includes('angriff')) {
+        card._dodge = true;
+        pvpFloat('Ausweich-Effekt!', pvpCanvas.width*0.5, pvpCanvas.height*0.6, '#f1c40f');
+    }
+
+    // "+X ATK pro Runde"
+    if (e.includes('atk pro runde')) {
+        card._atkPerRound = parseInt(e.match(/\+(\d+) atk pro runde/)?.[1] || 1);
+    }
+
+    // Push updated HP to Firebase
+    pvpPushState({ [pvpState.role + 'Hp']: pvpState.myHp });
+}
+
+function pvpApplyStartOfTurnEffects() {
+    if (!pvpState) return;
+    pvpState.myField.forEach(card => {
+        if (card._atkPerRound) {
+            card.pvpAtk += card._atkPerRound;
+            pvpFloat(card.name + ' +' + card._atkPerRound + ' ATK!', pvpCanvas.width*0.5, pvpCanvas.height*0.6, '#e74c3c');
+        }
+    });
+}
+
+function pvpApplyDodge(card, dmg) {
+    if (card._dodge) {
+        card._dodge = false;
+        pvpFloat('AUSGEWICHEN!', pvpCanvas.width*0.5, pvpCanvas.height*0.5, '#f1c40f');
+        return 0; // kein Schaden
+    }
+    return dmg;
+}
+
 function pvpRenderLoop() {
     if (!pvpCanvas || !pvpCtx || gamePhase !== 'pvp') return;
     pvpFrame++;
@@ -7701,17 +7805,16 @@ function pvpRenderCard(ctx, card, x, y, w, h, selected, exhausted, facedown) {
 function pvpDrawTooltip(ctx, card, cx, cy, cw, ch) {
     let W = pvpCanvas ? pvpCanvas.width : 1280;
     let H = pvpCanvas ? pvpCanvas.height : 720;
-    let tw = 220, th = 155;
-    // Smart positioning: prefer right, else left, else above
-    let tx, ty;
-    if (cx + cw + 8 + tw < W - 10) {
-        tx = cx + cw + 8; // right
-    } else if (cx - tw - 8 > 10) {
-        tx = cx - tw - 8; // left
+    let tw = 230, th = 160;
+    // Always try to appear ABOVE the card first
+    let tx = Math.max(10, Math.min(W - tw - 10, cx + cw/2 - tw/2));
+    let ty;
+    if (cy - th - 8 > 10) {
+        ty = cy - th - 8; // above
     } else {
-        tx = Math.max(10, Math.min(W - tw - 10, cx)); // centered below card
+        ty = cy + ch + 8; // below if no space above
+        if (ty + th > H - 10) ty = Math.max(10, H - th - 10);
     }
-    ty = Math.max(10, Math.min(cy, H - th - 10));
 
     ctx.fillStyle = 'rgba(10,10,20,0.97)';
     ctx.strokeStyle = card.color || '#9b59b6';
@@ -7839,36 +7942,71 @@ function pvpDraw() {
         pvpRenderCard(ctx, {}, sx + i*(cw+gap), 15, cw-10, ch-20, false, false, true);
     }
 
-    // Spieler-HP-Anzeigen
-    // Gegner (oben links)
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.beginPath(); ctx.roundRect(20, 20, 180, 100, 8); ctx.fill();
-    ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.roundRect(20, 20, 180, 100, 8); ctx.stroke();
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'left';
-    ctx.fillText('👤 ' + pvpState.opponentName, 32, 45);
-    ctx.fillStyle = '#e74c3c'; ctx.font = 'bold 32px Courier New';
-    ctx.fillText('❤️ ' + pvpState.oppHp, 32, 82);
-    // Gegner-Mana
-    ctx.fillStyle = '#3498db'; ctx.font = '12px Courier New';
-    ctx.fillText('💧 ' + pvpState.oppMana, 32, 108);
+    // ===== SPIELER-PANELS =====
+    function drawPlayerPanel(isMe) {
+        let px = isMe ? W - 240 : 20;
+        let py = 14;
+        let pw = 220, ph = 120;
+        let borderCol = isMe ? '#2ecc71' : '#e74c3c';
+        let name = isMe ? pvpState.myName : pvpState.opponentName;
+        let hp = isMe ? pvpState.myHp : pvpState.oppHp;
+        let maxHp = 30;
+        let mana = isMe ? pvpState.myMana : (pvpState.oppMana || 0);
+        let maxMana = isMe ? pvpState.myMaxMana : (pvpState.turn + 1);
+        let deckCount = isMe ? pvpState.myDeck.length : (pvpState.oppDeckCount || '?');
+        let handCount = isMe ? pvpState.myHand.length : pvpState.oppHandCount;
 
-    // Ich (oben rechts)
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.beginPath(); ctx.roundRect(W-220, 20, 200, 100, 8); ctx.fill();
-    ctx.strokeStyle = '#2ecc71'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.roundRect(W-220, 20, 200, 100, 8); ctx.stroke();
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'right';
-    ctx.fillText(pvpState.myName + ' 👤', W-32, 45);
-    ctx.fillStyle = '#2ecc71'; ctx.font = 'bold 32px Courier New';
-    ctx.fillText('❤️ ' + pvpState.myHp, W-32, 82);
-    // Mana
-    for (let i = 0; i < pvpState.myMaxMana; i++) {
-        let mx2 = W - 220 + 10 + i * 18;
-        ctx.fillStyle = i < pvpState.myMana ? '#3498db' : '#1a1a1a';
-        ctx.beginPath(); ctx.arc(mx2, 108, 6, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle = '#3498db'; ctx.lineWidth = 1; ctx.stroke();
+        // Background
+        ctx.fillStyle = 'rgba(5,5,15,0.92)';
+        ctx.strokeStyle = borderCol; ctx.lineWidth = 2;
+        ctx.shadowColor = borderCol; ctx.shadowBlur = 8;
+        ctx.beginPath(); ctx.roundRect(px, py, pw, ph, 8); ctx.fill(); ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Name
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 12px Courier New';
+        ctx.textAlign = isMe ? 'right' : 'left';
+        let nameX = isMe ? px + pw - 10 : px + 10;
+        ctx.fillText((isMe ? '👤 ' : '⚔️ ') + name, nameX, py + 20);
+
+        // HP bar
+        let hpPct = Math.max(0, hp / maxHp);
+        ctx.fillStyle = '#0a0a0a'; ctx.fillRect(px + 8, py + 26, pw - 16, 12);
+        ctx.fillStyle = hpPct > 0.5 ? '#2ecc71' : (hpPct > 0.25 ? '#f39c12' : '#e74c3c');
+        ctx.fillRect(px + 8, py + 26, (pw - 16) * hpPct, 12);
+        ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
+        ctx.strokeRect(px + 8, py + 26, pw - 16, 12);
+        // HP text on bar
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Courier New'; ctx.textAlign = 'center';
+        ctx.fillText('❤️ ' + hp + ' / ' + maxHp, px + pw/2, py + 36);
+
+        // Mana gems
+        let manaY = py + 50;
+        let gemSize = 9; let gemGap = 11;
+        let totalManaW = Math.min(maxMana, 10) * (gemSize + gemGap);
+        let manaStartX = px + (pw - totalManaW) / 2;
+        ctx.font = '9px Courier New'; ctx.textAlign = 'left';
+        ctx.fillStyle = '#3498db';
+        ctx.fillText('💧 MANA', px + 10, manaY + 8);
+        for (let i = 0; i < Math.min(maxMana, 10); i++) {
+            let gx = px + pw - 14 - i * (gemSize + 3);
+            ctx.fillStyle = i < mana ? '#3498db' : '#1a2030';
+            ctx.strokeStyle = '#2980b9'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(gx, manaY + 4, gemSize/2, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        }
+
+        // Deck + Hand counts
+        ctx.fillStyle = '#888'; ctx.font = '10px Courier New';
+        ctx.textAlign = isMe ? 'right' : 'left';
+        ctx.fillText('🃏 Hand: ' + handCount + '  📚 Deck: ' + deckCount, nameX, py + 78);
+
+        // Field count
+        let fieldCount = isMe ? pvpState.myField.length : pvpState.oppField.length;
+        ctx.fillStyle = borderCol;
+        ctx.fillText('⚔️ Feld: ' + fieldCount + ' / 4', nameX, py + 94);
     }
+    drawPlayerPanel(false); // Gegner links
+    drawPlayerPanel(true);  // Ich rechts
 
     // Rundenanzeige (Mitte)
     ctx.fillStyle = 'rgba(155,89,182,0.8)';
