@@ -3030,49 +3030,275 @@ function applySkillTree(p) {
 let playerAkten = parseInt(lsGet('ts_akten', '0'));
 
    const CARD_DATABASE = [
-  // === STARTER DECK (20 Gewöhnliche Karten) ===
-  { id: "c_prio5", name: "Prio 5: Allg. Frage", rarity: "Gewöhnlich", color: "#2ecc71", pvpCost: 1, pvpAtk: 1, pvpDef: 2, pvpEffect: "Zieht 1 Karte bei Tod.", pveBuffType: "xp_boost", pveBuffValue: 0.05, pveDesc: "+5% EXP pro Run." },
-  { id: "c_prio4", name: "Prio 4: Workaround", rarity: "Gewöhnlich", color: "#a5d6a7", pvpCost: 2, pvpAtk: 2, pvpDef: 2, pvpEffect: "Weicht 1. Angriff aus.", pveBuffType: "dodge_chance", pveBuffValue: 0.05, pveDesc: "5% Ausweichchance." },
-  { id: "c_prio3", name: "Prio 3: Wichtig", rarity: "Gewöhnlich", color: "#f1c40f", pvpCost: 3, pvpAtk: 3, pvpDef: 3, pvpEffect: "+1 ATK pro Runde.", pveBuffType: "dmg_pct", pveBuffValue: 0.05, pveDesc: "+5% Schaden." },
-  { id: "c_1stlevel", name: "1st Level Support", rarity: "Gewöhnlich", color: "#bdc3c7", pvpCost: 2, pvpAtk: 1, pvpDef: 4, pvpEffect: "Schutz für Nachbarn.", pveBuffType: "maxhp", pveBuffValue: 10, pveDesc: "+10 Max HP." },
-  { id: "c_praktikant", name: "Praktikant", rarity: "Gewöhnlich", color: "#bdc3c7", pvpCost: 1, pvpAtk: 1, pvpDef: 1, pvpEffect: "+1 Kaffee nächste Runde.", pveBuffType: "suppe_start", pveBuffValue: 1, pveDesc: "Starte mit 1 Suppe extra." },
-  { id: "c_anlagenbed", name: "Anlagenbediener", rarity: "Gewöhnlich", color: "#bdc3c7", pvpCost: 3, pvpAtk: 4, pvpDef: 2, pvpEffect: "Solider Angreifer.", pveBuffType: "firerate_pct", pveBuffValue: 0.05, pveDesc: "+5% Feuerrate." },
-  { id: "c_stapler", name: "Gabelstapler", rarity: "Gewöhnlich", color: "#e67e22", pvpCost: 4, pvpAtk: 4, pvpDef: 4, pvpEffect: "Kann Lane wechseln.", pveBuffType: "speed", pveBuffValue: 0.2, pveDesc: "+0.2 Speed." },
-  { id: "c_lkw", name: "LKW in Entladung", rarity: "Gewöhnlich", color: "#7f8c8d", pvpCost: 3, pvpAtk: 0, pvpDef: 6, pvpEffect: "Blockiert die Lane.", pveBuffType: "dmg_reduction", pveBuffValue: 0.05, pveDesc: "5% Schadensreduktion." },
-  { id: "c_scanner", name: "LVS-Scanner", rarity: "Gewöhnlich", color: "#3498db", pvpCost: 1, pvpAtk: 0, pvpDef: 0, pvpEffect: "Betäubt Gegner 1 Runde.", pveBuffType: "stun_resist", pveBuffValue: 0.1, pveDesc: "Stun-Dauer -10%." },
-  { id: "c_pwreset", name: "Passwort Reset", rarity: "Gewöhnlich", color: "#95a5a6", pvpCost: 1, pvpAtk: 0, pvpDef: 0, pvpEffect: "Zieht 2 Karten.", pveBuffType: "weapon_swap", pveBuffValue: 0.1, pveDesc: "Waffenwechsel 10% schneller." },
-  { id: "c_reboot", name: "Haben Sie neugestartet?", rarity: "Gewöhnlich", color: "#95a5a6", pvpCost: 2, pvpAtk: 0, pvpDef: 0, pvpEffect: "Reset ATK des Gegners.", pveBuffType: "sap_resist", pveBuffValue: 0.2, pveDesc: "SAP-Debuff Dauer -20%." },
-  { id: "c_kaffee", name: "Kaffeeautomat", rarity: "Gewöhnlich", color: "#6f4e37", pvpCost: 2, pvpAtk: 0, pvpDef: 0, pvpEffect: "Gibt Verbündetem +2 ATK.", pveBuffType: "speed_boost", pveBuffValue: 0.3, pveDesc: "Längerer Speed-Boost." },
-  { id: "c_7000", name: "Status 7000: Angelegt", rarity: "Gewöhnlich", color: "#2ecc71", pvpCost: 1, pvpAtk: 0, pvpDef: 0, pvpEffect: "Spawnt 1/1 Ticket.", pveBuffType: "farm_income", pveBuffValue: 1, pveDesc: "Farmen 1s schneller." },
-  { id: "c_7040", name: "Status 7040: Freigabe", rarity: "Gewöhnlich", color: "#3498db", pvpCost: 2, pvpAtk: 0, pvpDef: 0, pvpEffect: "Heilt Leitstand um 3 HP.", pveBuffType: "regen", pveBuffValue: 1, pveDesc: "Regeneriert 1 HP alle 5s." },
-  { id: "c_7110", name: "Status 7110: Abschluss", rarity: "Gewöhnlich", color: "#f1c40f", pvpCost: 3, pvpAtk: 0, pvpDef: 0, pvpEffect: "Entfernt schwache Karte.", pveBuffType: "kill_heal_hp", pveBuffValue: 1, pveDesc: "Kills heilen 1 HP." },
-  { id: "c_4060", name: "Status 4060: Verplant", rarity: "Gewöhnlich", color: "#3498db", pvpCost: 2, pvpAtk: 2, pvpDef: 2, pvpEffect: "Kann sofort angreifen.", pveBuffType: "crit", pveBuffValue: 0.02, pveDesc: "+2% Crit-Chance." },
-  { id: "c_otrs", name: "OTRS Standard-Antwort", rarity: "Gewöhnlich", color: "#bdc3c7", pvpCost: 2, pvpAtk: 0, pvpDef: 0, pvpEffect: "+3 DEF für Verbündeten.", pveBuffType: "maxhp", pveBuffValue: 15, pveDesc: "+15 Max HP." },
-  { id: "c_teams", name: "MS Teams Ping", rarity: "Gewöhnlich", color: "#9b59b6", pvpCost: 2, pvpAtk: 0, pvpDef: 0, pvpEffect: "Gegner zahlt +1 Kaffee.", pveBuffType: "enemy_warn", pveBuffValue: 5, pveDesc: "Gegner früher sichtbar." },
-  { id: "c_schicht", name: "Schichtübergabe", rarity: "Gewöhnlich", color: "#e67e22", pvpCost: 3, pvpAtk: 0, pvpDef: 0, pvpEffect: "Handkarten neu ziehen.", pveBuffType: "kb_rate", pveBuffValue: 0.05, pveDesc: "+5% Kaffeebons." },
-  { id: "c_lvshang", name: "LVS Hänger", rarity: "Gewöhnlich", color: "#c0392b", pvpCost: 3, pvpAtk: 0, pvpDef: 0, pvpEffect: "2 DMG an alle Karten.", pveBuffType: "explosive_chance", pveBuffValue: 0.05, pveDesc: "5% Splash-Schaden." },
 
-  // === BOOSTER SET (20 Seltene/Epische/Legendäre Karten) ===
-  { id: "c_prio2", name: "Prio 2: Beeinträchtigt", rarity: "Selten", color: "#e67e22", pvpCost: 4, pvpAtk: 4, pvpDef: 4, pvpEffect: "+2 ATK am Rundenende.", pveBuffType: "dmg_pct", pveBuffValue: 0.1, pveDesc: "+10% Schaden." },
-  { id: "c_prio1", name: "Prio 1: Ausfall", rarity: "Episch", color: "#c0392b", pvpCost: 6, pvpAtk: 6, pvpDef: 3, pvpEffect: "Trample-Schaden.", pveBuffType: "boss_slayer", pveBuffValue: 0.2, pveDesc: "+20% Boss-Schaden." },
-  { id: "c_teichmann", name: "Teichmann", rarity: "Selten", color: "#f39c12", pvpCost: 3, pvpAtk: 2, pvpDef: 1, pvpEffect: "Gift: Tötet Angreifer sofort.", pveBuffType: "lucky_streak", pveBuffValue: 1, pveDesc: "Glückssträhne skaliert." },
-  { id: "c_anwender", name: "Der Anwender", rarity: "Episch", color: "#9b59b6", pvpCost: 5, pvpAtk: 5, pvpDef: 5, pvpEffect: "Teleportiert jede Runde.", pveBuffType: "dodge_chance", pveBuffValue: 0.15, pveDesc: "15% Ausweichchance." },
-  { id: "c_4090", name: "Status 4090: Storniert", rarity: "Episch", color: "#c0392b", pvpCost: 4, pvpAtk: 0, pvpDef: 0, pvpEffect: "Zerstört Gegner-Karte sofort.", pveBuffType: "crit", pveBuffValue: 0.05, pveDesc: "+5% Crit-Chance." },
-  { id: "c_idoc_abprall", name: "IDoc Abpraller", rarity: "Selten", color: "#1f618d", pvpCost: 3, pvpAtk: 0, pvpDef: 0, pvpEffect: "Reflektiert 1 Angriff.", pveBuffType: "reflect", pveBuffValue: 0.1, pveDesc: "10% Chance Reflekt." },
-  { id: "c_witron", name: "3rd Level Witron", rarity: "Legendär", color: "#e74c3c", pvpCost: 8, pvpAtk: 0, pvpDef: 0, pvpEffect: "Hard Reset: Zerstört alle Karten.", pveBuffType: "emergency_reset", pveBuffValue: 1, pveDesc: "Emergency Heal <10% HP." },
-  { id: "c_lst_hamm", name: "2nd Level LST Hamm", rarity: "Episch", color: "#d35400", pvpCost: 5, pvpAtk: 0, pvpDef: 0, pvpEffect: "Belebt Karte wieder.", pveBuffType: "farm_defense", pveBuffValue: 0.5, pveDesc: "Farmen halten 50% länger." },
-  { id: "c_cimcorp", name: "CIMCORP Totalausfall", rarity: "Legendär", color: "#c0392b", pvpCost: 7, pvpAtk: 0, pvpDef: 0, pvpEffect: "8 Direktschaden auf Leitstand.", pveBuffType: "total_annihilation", pveBuffValue: 1, pveDesc: "Kritische Treffer x3 DMG." },
-  { id: "c_boss_rian", name: "Boss: RIAN", rarity: "Episch", color: "#8e44ad", pvpCost: 5, pvpAtk: 5, pvpDef: 5, pvpEffect: "Spawnt Prio-3 Ticket (3/3).", pveBuffType: "dmg_pct", pveBuffValue: 0.15, pveDesc: "+15% Schaden." },
-  { id: "c_boss_tim", name: "Boss: TIM", rarity: "Episch", color: "#2980b9", pvpCost: 6, pvpAtk: 4, pvpDef: 8, pvpEffect: "Leitstand erleidet halben DMG.", pveBuffType: "dmg_reduction", pveBuffValue: 0.1, pveDesc: "10% DMG Reduktion." },
-  { id: "c_boss_flof", name: "Boss: FLOF", rarity: "Episch", color: "#27ae60", pvpCost: 7, pvpAtk: 7, pvpDef: 6, pvpEffect: "Instakill bei Überleben.", pveBuffType: "roll_cd", pveBuffValue: -15, pveDesc: "Hechtrolle lädt schneller." },
-  { id: "c_boss_janski", name: "Boss: JANSKI", rarity: "Episch", color: "#d35400", pvpCost: 8, pvpAtk: 8, pvpDef: 8, pvpEffect: "2 DMG an alle anderen Karten.", pveBuffType: "boss_dmg_red", pveBuffValue: 0.15, pveDesc: "Bosse machen -15% DMG." },
-  { id: "c_martin", name: "Martin, Jarl", rarity: "Legendär", color: "#f1c40f", pvpCost: 9, pvpAtk: 9, pvpDef: 9, pvpEffect: "Beine weg: Instakill Gegenüber.", pveBuffType: "boss_aura", pveBuffValue: 0.3, pveDesc: "+30% DMG, -20 Max HP." },
-  { id: "c_darius", name: "Huskarl Darius", rarity: "Episch", color: "#9b59b6", pvpCost: 4, pvpAtk: 2, pvpDef: 7, pvpEffect: "Piko Bello: Heilt Verbündete.", pveBuffType: "stationary_def", pveBuffValue: 0.2, pveDesc: "-20% DMG bei Stillstand." },
-  { id: "c_lachs", name: "Lachs der Verdammnis", rarity: "Selten", color: "#2ecc71", pvpCost: 3, pvpAtk: 0, pvpDef: 0, pvpEffect: "Gegner verliert 2 DEF/Runde.", pveBuffType: "toxic_aura", pveBuffValue: 1, pveDesc: "Gegner im Nahkampf brennen." },
-  { id: "c_bounty", name: "Laufhund Bounty", rarity: "Selten", color: "#e67e22", pvpCost: 3, pvpAtk: 4, pvpDef: 2, pvpEffect: "Direktangriff wenn Blocker >4 DEF.", pveBuffType: "auto_loot", pveBuffValue: 1, pveDesc: "Zieht Items leicht an." },
-  { id: "c_techno", name: "Techno-Maschinist", rarity: "Episch", color: "#3498db", pvpCost: 5, pvpAtk: 0, pvpDef: 0, pvpEffect: "NOCHMAL: Gegner greift sich an.", pveBuffType: "rhythm_explode", pveBuffValue: 1, pveDesc: "Jeder 10. Schuss explodiert." },
-  { id: "c_helden", name: "10 Leitstand-Helden", rarity: "Legendär", color: "#f1c40f", pvpCost: 8, pvpAtk: 0, pvpDef: 0, pvpEffect: "Zerstört ALLE Karten.", pveBuffType: "last_stand_dmg", pveBuffValue: 1, pveDesc: "Unter 25% HP: Doppelter DMG." },
-  { id: "c_endlos", name: "Endlosschleife (4 Uhr)", rarity: "Selten", color: "#3498db", pvpCost: 4, pvpAtk: 0, pvpDef: 0, pvpEffect: "Alle gegnerischen Karten -2 ATK.", pveBuffType: "stationary_turret", pveBuffValue: 0.2, pveDesc: "+20% Feuerrate, -10% Speed." }
+  // ============================================================
+  // STARTER DECK — 20 GEWÖHNLICHE KARTEN
+  // Analog: Yugi/Kaiba Starter Deck 1999
+  // Automatisch beim ersten Start, kein Lootbox nötig
+  // ============================================================
+
+  // ── MONSTER ──────────────────────────────────────────────────
+
+  // Werkshund [Silver Fang] — kleiner zuverlässiger Angreifer
+  { id:"c_werkshund",  name:"Werkshund",             rarity:"Gewöhnlich", color:"#aaaaaa",
+    pvpAtk:2, pvpDef:1,
+    pvpEffect:"Kann Monster angreifen die gerade beschworen wurden.",
+    pveBuffType:"firerate_pct", pveBuffValue:0.05, pveDesc:"+5% Feuerrate." },
+
+  // Praktikant [Mystical Elf] — schwach im Angriff, starke DEF
+  { id:"c_praktikant", name:"Praktikant",             rarity:"Gewöhnlich", color:"#bdc3c7",
+    pvpAtk:1, pvpDef:4,
+    pvpEffect:"Im DEF-Modus: Besitzer +1 LP am Rundenanfang.",
+    pveBuffType:"regen", pveBuffValue:1, pveDesc:"Regen 1 HP / 5s." },
+
+  // Anlagenbediener [La Jinn] — solider Schläger
+  { id:"c_anlagenbed", name:"Anlagenbediener",        rarity:"Gewöhnlich", color:"#bdc3c7",
+    pvpAtk:3, pvpDef:2,
+    pvpEffect:"Kein Effekt. Zuverlässiger Schläger.",
+    pveBuffType:"firerate_pct", pveBuffValue:0.05, pveDesc:"+5% Feuerrate." },
+
+  // LKW-Hänger [Battle Ox] — Durchdringungsschaden
+  { id:"c_lkw",        name:"LKW in Entladung",       rarity:"Gewöhnlich", color:"#7f8c8d",
+    pvpAtk:3, pvpDef:2,
+    pvpEffect:"Wenn er ein DEF-Monster zerstört: Durchdringungsschaden.",
+    pveBuffType:"dmg_reduction", pveBuffValue:0.05, pveDesc:"5% Schadensreduktion." },
+
+  // Schichtleiter [Rude Kaiser] — ATK-Aura
+  { id:"c_schichtleit",name:"Schichtleiter",          rarity:"Gewöhnlich", color:"#e67e22",
+    pvpAtk:3, pvpDef:2,
+    pvpEffect:"Alle eigenen Karten +1 ATK solange er lebt.",
+    pveBuffType:"kb_rate", pveBuffValue:0.05, pveDesc:"+5% Kaffeebons." },
+
+  // SAP-Festung [Giant Soldier of Stone] — Verteidiger
+  { id:"c_sapfestung", name:"SAP-Festung",            rarity:"Gewöhnlich", color:"#3498db",
+    pvpAtk:2, pvpDef:5,
+    pvpEffect:"Im DEF-Modus: Kampfschaden an LP um 1 reduziert.",
+    pveBuffType:"maxhp", pveBuffValue:10, pveDesc:"+10 Max HP." },
+
+  // Azubi Powered [Ryu-Kishin Powered] — kann sofort angreifen
+  { id:"c_azubi",      name:"Azubi Powered",          rarity:"Gewöhnlich", color:"#bdc3c7",
+    pvpAtk:3, pvpDef:2,
+    pvpEffect:"Kann in der Runde seiner Beschwörung sofort angreifen.",
+    pveBuffType:"xp_boost", pveBuffValue:0.05, pveDesc:"+5% EXP." },
+
+  // IT-Gespenst [Witty Phantom] — FLIP Effekt
+  { id:"c_itgeist",    name:"IT-Gespenst",            rarity:"Gewöhnlich", color:"#9b59b6",
+    pvpAtk:2, pvpDef:2,
+    pvpEffect:"FLIP: Sieh eine Handkarte des Gegners.",
+    pveBuffType:"enemy_warn", pveBuffValue:5, pveDesc:"Gegner früher sichtbar." },
+
+  // Aktenberge [Mammoth Graveyard] — Debuff Aura
+  { id:"c_aktenberg",  name:"Aktenberge",             rarity:"Gewöhnlich", color:"#95a5a6",
+    pvpAtk:2, pvpDef:1,
+    pvpEffect:"Alle gegnerischen Karten -1 ATK pro Runde.",
+    pveBuffType:"explosive_chance", pveBuffValue:0.05, pveDesc:"5% Splash." },
+
+  // Drucker-Golem [Destroyer Golem] — FLIP: zerstört Falle
+  { id:"c_druckgolem", name:"Drucker-Golem",          rarity:"Gewöhnlich", color:"#e67e22",
+    pvpAtk:2, pvpDef:2,
+    pvpEffect:"FLIP: Zerstört eine Falle des Gegners.",
+    pveBuffType:"speed", pveBuffValue:0.1, pveDesc:"+0.1 Speed." },
+
+  // Überstunden-Vogel [Skull Red Bird] — reiner Schläger
+  { id:"c_ubervogel",  name:"Überstunden-Vogel",      rarity:"Gewöhnlich", color:"#c0392b",
+    pvpAtk:3, pvpDef:2,
+    pvpEffect:"Kein Effekt. Verlässlicher Angreifer.",
+    pveBuffType:"firerate_pct", pveBuffValue:0.05, pveDesc:"+5% Feuerrate." },
+
+  // Prio 5: Allg. Frage [Koumori Dragon] — stirbt mit Bonus
+  { id:"c_prio5",      name:"Prio 5: Allg. Frage",   rarity:"Gewöhnlich", color:"#2ecc71",
+    pvpAtk:2, pvpDef:2,
+    pvpEffect:"Wenn er stirbt: Zieht 1 Karte.",
+    pveBuffType:"xp_boost", pveBuffValue:0.05, pveDesc:"+5% EXP." },
+
+  // ── ZAUBER (Spell Cards) ──────────────────────────────────────
+
+  // Kündigung [Fissure] — schwächstes Monster weg
+  { id:"c_kuendigung", name:"Kündigung",              rarity:"Gewöhnlich", color:"#e74c3c",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Zerstört das Monster mit dem niedrigsten ATK des Gegners.",
+    pveBuffType:"dmg_pct", pveBuffValue:0.05, pveDesc:"+5% Schaden." },
+
+  // Urlaubsantrag genehmigt [Dian Keto] — LP heilen
+  { id:"c_urlaub",     name:"Urlaubsantrag genehmigt",rarity:"Gewöhnlich", color:"#2ecc71",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Heilt 4 LP.",
+    pveBuffType:"maxhp", pveBuffValue:15, pveDesc:"+15 Max HP." },
+
+  // Überstunden angeordnet [Reinforcements] — ATK Buff
+  { id:"c_uberstunden",name:"Überstunden angeordnet", rarity:"Gewöhnlich", color:"#f1c40f",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Alle eigenen Karten +2 ATK bis Rundenende.",
+    pveBuffType:"dmg_pct", pveBuffValue:0.05, pveDesc:"+5% Schaden." },
+
+  // Betriebssicherheitsprotokoll [The Reliable Guardian] — DEF Buff
+  { id:"c_protocol",   name:"Betriebssicherheitsprotok.",rarity:"Gewöhnlich", color:"#3498db",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Alle eigenen Karten +3 DEF bis Rundenende.",
+    pveBuffType:"maxhp", pveBuffValue:10, pveDesc:"+10 Max HP." },
+
+  // ── FALLEN (Trap Cards) ───────────────────────────────────────
+
+  // Ticketfalle [Trap Hole] — Starkes Monster vernichten
+  { id:"c_ticketfall", name:"Ticketfalle",            rarity:"Gewöhnlich", color:"#c0392b",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Wenn Gegner Monster mit ≥3 ATK beschwört: sofort zerstören.",
+    pveBuffType:"stun_resist", pveBuffValue:0.1, pveDesc:"Stun -10%." },
+
+  // Krankmeldung [Waboku] — Schutz
+  { id:"c_krankmeld",  name:"Krankmeldung",           rarity:"Gewöhnlich", color:"#3498db",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Kein Kampfschaden diese Runde. Eigene Monster nicht durch Kampf zerstörbar.",
+    pveBuffType:"dodge_chance", pveBuffValue:0.05, pveDesc:"5% Dodge." },
+
+  // Problem gelöst [Remove Trap] — Falle entfernen
+  { id:"c_problemgel", name:"Problem gelöst",         rarity:"Gewöhnlich", color:"#27ae60",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Zerstört 1 Falle auf dem Feld.",
+    pveBuffType:"weapon_swap", pveBuffValue:0.1, pveDesc:"Waffenwechsel 10% schneller." },
+
+  // Passwort Reset [Stop Defense] — Modus erzwingen
+  { id:"c_pwreset",    name:"Passwort Reset",         rarity:"Gewöhnlich", color:"#95a5a6",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Ändert 1 Gegner-Monster in ATK-Modus.",
+    pveBuffType:"sap_resist", pveBuffValue:0.2, pveDesc:"SAP-Debuff -20%." },
+
+
+  // ============================================================
+  // LOOTBOX — 20 SELTENE / EPISCHE / LEGENDÄRE KARTEN
+  // Nur durch Akte (Lootbox) während des Runs erhältlich!
+  // Gewöhnliche Karten kommen hier NICHT vor.
+  // ============================================================
+
+  // ── SELTEN ───────────────────────────────────────────────────
+
+  // Leitstandchef [Judge Man] — Restschadensbonus
+  { id:"c_leitchef",   name:"Leitstandchef",          rarity:"Selten", color:"#e67e22",
+    pvpAtk:4, pvpDef:3,
+    pvpEffect:"Wenn er einen Kampf gewinnt: Gegner -1 LP Restschaden.",
+    pveBuffType:"dmg_pct", pveBuffValue:0.1, pveDesc:"+10% Schaden." },
+
+  // Sicherheitsbeauftragter [Celtic Guardian] — Schutz gegen Kleinkram
+  { id:"c_sicherheit", name:"Sicherheitsbeauftragter",rarity:"Selten", color:"#27ae60",
+    pvpAtk:3, pvpDef:2,
+    pvpEffect:"Nicht zerstörbar durch Monster mit ≤1 ATK.",
+    pveBuffType:"dodge_chance", pveBuffValue:0.08, pveDesc:"8% Dodge." },
+
+  // Urlaubssperrer [Swordstalker] — blockiert Direktangriff
+  { id:"c_urlsperr",   name:"Urlaubssperrer",         rarity:"Selten", color:"#9b59b6",
+    pvpAtk:4, pvpDef:3,
+    pvpEffect:"Solange er lebt: Gegner kann nicht direkt angreifen.",
+    pveBuffType:"lucky_streak", pveBuffValue:1, pveDesc:"Glückssträhne skaliert." },
+
+  // SAP-Drache [Koumori Dragon upgraded] — Vergiftung
+  { id:"c_sapdrache",  name:"SAP-Drache",             rarity:"Selten", color:"#e74c3c",
+    pvpAtk:3, pvpDef:2,
+    pvpEffect:"Wenn er zerstört wird: Gegner -2 LP.",
+    pveBuffType:"toxic_aura", pveBuffValue:1, pveDesc:"Gegner brennen im Nahkampf." },
+
+  // Bounty-Hund [La Jinn upgraded] — Direktangriff Bypass
+  { id:"c_bounty",     name:"Laufhund Bounty",        rarity:"Selten", color:"#f39c12",
+    pvpAtk:4, pvpDef:2,
+    pvpEffect:"Direktangriff wenn Gegner-Feld nur Monster mit ≥4 DEF hat.",
+    pveBuffType:"auto_loot", pveBuffValue:1, pveDesc:"Items ziehen automatisch." },
+
+  // Teaküchen-Elfe [Mystical Elf upgraded] — LP-Regen
+  { id:"c_teakuche",   name:"Teaküchen-Elfe",         rarity:"Selten", color:"#2ecc71",
+    pvpAtk:1, pvpDef:5,
+    pvpEffect:"Im DEF-Modus: +2 LP pro Runde.",
+    pveBuffType:"kill_heal_hp", pveBuffValue:1, pveDesc:"Kills heilen 1 HP." },
+
+  // ── EPISCH ───────────────────────────────────────────────────
+
+  // Maddin der Unaufhaltsame [Gaia the Fierce Knight]
+  { id:"c_maddin",     name:"Maddin, der Unaufhaltsame",rarity:"Episch", color:"#3498db",
+    pvpAtk:5, pvpDef:4,
+    pvpEffect:"Greift DEF-Monster an als wären sie im ATK-Modus.",
+    pveBuffType:"dmg_pct", pveBuffValue:0.15, pveDesc:"+15% Schaden." },
+
+  // Burnout-Dämon [Summoned Skull] — hoher ATK, niedrige DEF
+  { id:"c_burnout",    name:"Burnout-Dämon",          rarity:"Episch", color:"#c0392b",
+    pvpAtk:6, pvpDef:2,
+    pvpEffect:"+1 ATK pro Runde (kumulativ). Hoher Einsatz.",
+    pveBuffType:"boss_slayer", pveBuffValue:0.2, pveDesc:"+20% Boss-Schaden." },
+
+  // Huskarl Darius — Heiler
+  { id:"c_darius",     name:"Huskarl Darius",         rarity:"Episch", color:"#8e44ad",
+    pvpAtk:2, pvpDef:6,
+    pvpEffect:"Alle eigenen Monster +1 DEF pro Runde.",
+    pveBuffType:"stationary_def", pveBuffValue:0.2, pveDesc:"-20% DMG im Stillstand." },
+
+  // Boss: RIAN — starker Allrounder
+  { id:"c_boss_rian",  name:"Boss: RIAN",             rarity:"Episch", color:"#8e44ad",
+    pvpAtk:5, pvpDef:5,
+    pvpEffect:"Beschwörung: Zieht 2 Karten.",
+    pveBuffType:"dmg_pct", pveBuffValue:0.15, pveDesc:"+15% Schaden." },
+
+  // Boss: TIM — Verteidigungswall
+  { id:"c_boss_tim",   name:"Boss: TIM",              rarity:"Episch", color:"#2980b9",
+    pvpAtk:3, pvpDef:7,
+    pvpEffect:"Solange er lebt: Gegner-LP-Schaden an dich um 1 reduziert.",
+    pveBuffType:"dmg_reduction", pveBuffValue:0.1, pveDesc:"10% DMG-Reduktion." },
+
+  // ── ZAUBER SELTEN/EPISCH ──────────────────────────────────────
+
+  // Großer Betriebsausfall [Dark Hole] — Alle Monster weg
+  { id:"c_ausfall",    name:"Großer Betriebsausfall", rarity:"Selten", color:"#2c3e50",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Zerstört ALLE Monster auf dem Feld (beide Seiten).",
+    pveBuffType:"emergency_reset", pveBuffValue:1, pveDesc:"Notfall-Heilung <10% HP." },
+
+  // Wiedereingliederung [Monster Reborn]
+  { id:"c_reborn",     name:"Wiedereingliederung",    rarity:"Episch", color:"#f1c40f",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Beschwöre 1 Monster aus dem eigenen Friedhof direkt aufs Feld.",
+    pveBuffType:"farm_defense", pveBuffValue:0.5, pveDesc:"Farmen hält 50% länger." },
+
+  // Versetzung [Change of Heart]
+  { id:"c_versetzung", name:"Versetzung",             rarity:"Episch", color:"#e74c3c",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Übernimm 1 Gegner-Monster für diesen Zug (dann zerstört).",
+    pveBuffType:"rhythm_explode", pveBuffValue:1, pveDesc:"Jeder 10. Schuss explodiert." },
+
+  // Aktenvernichtung [Card Destruction]
+  { id:"c_aktenver",   name:"Aktenvernichtung",       rarity:"Selten", color:"#7f8c8d",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Beide Spieler discarden alles und ziehen 4 neue Karten.",
+    pveBuffType:"weapon_swap", pveBuffValue:0.2, pveDesc:"Waffenwechsel 20% schneller." },
+
+  // Systemabsturz [Mystical Space Typhoon]
+  { id:"c_systemabs",  name:"Systemabsturz",          rarity:"Selten", color:"#3498db",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Zerstört 1 Zauber- oder Falle-Karte auf dem Feld.",
+    pveBuffType:"crit", pveBuffValue:0.05, pveDesc:"+5% Crit-Chance." },
+
+  // ── FALLEN SELTEN/EPISCH ──────────────────────────────────────
+
+  // Doppelschicht [Two-Pronged Attack]
+  { id:"c_doppelsch",  name:"Doppelschicht",          rarity:"Selten", color:"#e67e22",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Opfere 2 eigene Monster → Zerstöre 1 Gegner-Monster sofort.",
+    pveBuffType:"boss_dmg_red", pveBuffValue:0.15, pveDesc:"Bosse -15% DMG." },
+
+  // ── LEGENDÄR ─────────────────────────────────────────────────
+
+  // Peter Bayer [Blue-Eyes White Dragon] — König des Leitstands
+  { id:"c_peterbayer", name:"Peter Bayer",            rarity:"Legendär", color:"#f1c40f",
+    pvpAtk:8, pvpDef:6,
+    pvpEffect:"Effekte des Gegners können ihn nicht als Ziel wählen. Sofortiger Direktangriff möglich.",
+    pveBuffType:"boss_aura", pveBuffValue:0.3, pveDesc:"+30% DMG, -20 Max HP." },
+
+  // Martin, Jarl [Dark Magician] — Magie des Managements
+  { id:"c_martin",     name:"Martin, Jarl",           rarity:"Legendär", color:"#9b59b6",
+    pvpAtk:7, pvpDef:6,
+    pvpEffect:"Beine weg: Wenn er einen Kampf gewinnt, greift er sofort nochmal an.",
+    pveBuffType:"last_stand_dmg", pveBuffValue:1, pveDesc:"Unter 25% HP: 2x DMG." },
+
+  // 3rd Level Witron [Exodia] — wenn alle 3 Legendären auf Feld: Sofortsieg
+  { id:"c_witron",     name:"3rd Level Witron",       rarity:"Legendär", color:"#e74c3c",
+    pvpAtk:6, pvpDef:8,
+    pvpEffect:"Hard Reset: Wenn beschworen, alle Gegner-Monster zerstören. -3 LP Selbstschaden.",
+    pveBuffType:"total_annihilation", pveBuffValue:1, pveDesc:"Krit. Treffer x3 DMG." }
 ];
 // --- STARTER DECK LOGIK ---
 let cardInventory = JSON.parse(lsGet('ts_cards', 'null'));
@@ -3122,9 +3348,10 @@ function openAkte() {
     playerAkten--; // Akte verbrauchen
     
     let roll = Math.random() * 100;
-    let targetRarity = roll < 1 ? 'Legendär' : (roll < 5 ? 'Episch' : (roll < 25 ? 'Selten' : 'Gewöhnlich'));
+    // Gewöhnliche kommen NIE aus der Lootbox — nur Selten/Episch/Legendär
+    let targetRarity = roll < 5 ? 'Legendär' : (roll < 20 ? 'Episch' : 'Selten');
     let pool = CARD_DATABASE.filter(c => c.rarity === targetRarity);
-    if(pool.length === 0) pool = CARD_DATABASE; 
+    if(pool.length === 0) pool = CARD_DATABASE.filter(c => c.rarity !== 'Gewöhnlich'); 
     
     let drawnCard = pool[Math.floor(Math.random() * pool.length)];
     
