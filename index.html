@@ -945,7 +945,7 @@ input[type="text"] {
     <div style="max-width:740px; margin:40px auto; padding:30px; border:3px solid #e74c3c; background:#0a0a0a; border-radius:4px; box-shadow:0 0 60px rgba(231,76,60,0.2);">
         <h2 style="color:#e74c3c; font-size:26px; letter-spacing:4px; margin:0 0 5px; text-transform:uppercase;">🔫 WAFFENKAMMER</h2>
         <div style="color:#aaa; font-size:13px; margin-bottom:6px;">Einmal freischalten — garantiert als erste Kiste im Run.</div>
-        <div style="color:#ffd700; font-size:16px; margin-bottom:22px;">☕ Kaffeebons: <span id="waffenKBAmount">0</span></div>
+        <div style="color:#ffd700; font-size:16px; margin-bottom:22px;">🪙 Wurmcoins: <span id="waffenKBAmount">0</span></div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;" id="waffenGrid"></div>
         <button onclick="closeWaffenkammer()" style="display:block;width:100%;margin-top:22px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
         <button onclick="closeWaffenkammer(); openSchmiede();" style="display:block;width:100%;margin-top:8px;background:#1a0a00;color:#e67e22;border:2px solid #e67e22;padding:12px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;" onmouseover="this.style.background='#e67e22';this.style.color='#000'" onmouseout="this.style.background='#1a0a00';this.style.color='#e67e22'">🔨 WAFFE AUFWERTEN (SCHMIEDE)</button>
@@ -986,7 +986,7 @@ input[type="text"] {
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:2px solid #333; padding-bottom:10px;">
             <div style="color:#e74c3c; font-size:18px; font-weight:bold;">DEINE KARTEN (<span id="cardInvCount">0</span>/100)</div>
-            <div style="color:#ffd700; font-size:14px; font-weight:bold;">☕ <span id="cardKBAmount">0</span> KB</div>
+            <div style="color:#ffd700; font-size:14px; font-weight:bold;">🪙 <span id="cardWCAmount">0</span> WC</div>
         </div>
         
         <div id="cardGrid" class="card-grid"></div>
@@ -1528,9 +1528,10 @@ function openDailyOverlay() {
     let newStreak = alreadyClaimed ? streak : Math.min(streak + 1, 7);
 
     // Belohnung berechnen
-    let baseReward = 50;
-    let streakBonus = newStreak >= 7 ? 200 : (newStreak >= 3 ? 100 : 0);
-    let totalReward = baseReward + streakBonus;
+    let baseReward = 50;
+    let streakBonus = newStreak >= 7 ? 200 : (newStreak >= 3 ? 100 : 0);
+    let totalReward = baseReward + streakBonus;
+    let wcReward = newStreak >= 7 ? 10 : 0;
 
     // Streak-Dots rendern (7 Tage)
     let dots = '';
@@ -1553,10 +1554,10 @@ function openDailyOverlay() {
         `TAG ${newStreak} VON 7`);
 
     // Belohnung anzeigen
-    let rewardText = `+${totalReward} ☕ KAFFEEBONS`;
-    if(streakBonus > 0) rewardText += `
-(Basis: +${baseReward} + Streak: +${streakBonus})`;
-    document.getElementById('daily-reward-display').innerText = rewardText;
+    let rewardText = `+${totalReward} ☕ KAFFEEBONS`;
+    if(streakBonus > 0) rewardText += `\n(Basis: +${baseReward} + Streak: +${streakBonus})`;
+    if(wcReward > 0) rewardText += `\n+${wcReward} 🪙 WURMCOINS`;
+    document.getElementById('daily-reward-display').innerText = rewardText;
 
     // Challenge
     let challenge = getTodayChallenge();
@@ -1600,20 +1601,26 @@ function claimDailyReward() {
     streak = Math.min(streak + 1, 7);
 
     let baseReward = 50;
-    let streakBonus = streak >= 7 ? 200 : (streak >= 3 ? 100 : 0);
-    let totalReward = baseReward + streakBonus;
+    let streakBonus = streak >= 7 ? 200 : (streak >= 3 ? 100 : 0);
+    let totalReward = baseReward + streakBonus;
+    let wcReward = streak >= 7 ? 10 : 0;
 
-    kaffeebons += totalReward;
-    state.lastLogin = today;
-    state.streak = streak;
-    saveDailyState(state);
-    saveProgress();
+    kaffeebons += totalReward;
+    if(wcReward > 0) {
+        wurmcoins += wcReward;
+        localStorage.setItem('ts_wurmcoins', wurmcoins);
+    }
+    state.lastLogin = today;
+    state.streak = streak;
+    saveDailyState(state);
+    saveProgress();
 
-    showToast('☕ TAGES-BONUS!', '#f1c40f', `+${totalReward} Kaffeebons — Tag ${streak}/7`);
-    document.getElementById('startKBAmount').innerText = kaffeebons;
+    let toastSub = `+${totalReward} KB` + (wcReward > 0 ? ` & +${wcReward} 🪙` : '') + ` — Tag ${streak}/7`;
+    showToast('☕ TAGES-BONUS!', '#f1c40f', toastSub);
+    document.getElementById('startKBAmount').innerText = kaffeebons;
 
-    let btn = document.getElementById('daily-claim-btn');
-    btn.innerText = '✅ KASSIERT! +' + totalReward + ' KB';
+    let btn = document.getElementById('daily-claim-btn');
+    btn.innerText = '✅ KASSIERT! +' + totalReward + ' KB' + (wcReward > 0 ? ` & +${wcReward} WC` : '');
     btn.style.background = '#333'; btn.style.color = '#2ecc71'; btn.style.cursor = 'default';
     btn.onclick = null;
 
@@ -3013,10 +3020,10 @@ let playerAkten = parseInt(localStorage.getItem('ts_akten') || '0');
   { id: "c_helden", name: "10 Leitstand-Helden", rarity: "Legendär", color: "#f1c40f", pvpCost: 8, pvpAtk: 0, pvpDef: 0, pvpEffect: "Zerstört ALLE Karten.", pveBuffType: "last_stand_dmg", pveBuffValue: 1, pveDesc: "Unter 25% HP: Doppelter DMG." },
   { id: "c_endlos", name: "Endlosschleife (4 Uhr)", rarity: "Selten", color: "#3498db", pvpCost: 4, pvpAtk: 0, pvpDef: 0, pvpEffect: "Alle gegnerischen Karten -2 ATK.", pveBuffType: "stationary_turret", pveBuffValue: 0.2, pveDesc: "+20% Feuerrate, -10% Speed." }
 ];
-   // --- STARTER DECK LOGIK ---
+// --- STARTER DECK LOGIK ---
 let cardInventory = JSON.parse(localStorage.getItem('ts_cards') || 'null');
-if (!cardInventory) {
-    // Wenn kein Speicherstand existiert, erhält der Spieler die 20 "Gewöhnlich" Karten
+if (!cardInventory || cardInventory.length === 0) {
+    // Wenn kein Speicherstand existiert oder Array leer -> 20 Standard-Karten erzwingen
     cardInventory = CARD_DATABASE.filter(c => c.rarity === 'Gewöhnlich');
     localStorage.setItem('ts_cards', JSON.stringify(cardInventory));
 }
@@ -3028,14 +3035,15 @@ function closeCardOverlay() { document.getElementById('cardOverlay').style.displ
 function renderCardOverlay() {
     document.getElementById('aktenCount').innerText = playerAkten;
     document.getElementById('cardInvCount').innerText = cardInventory.length;
-    document.getElementById('cardKBAmount').innerText = kaffeebons;
+    document.getElementById('cardWCAmount').innerText = wurmcoins; // Wurmcoins ins UI laden
     document.getElementById('btnOpenAkte').disabled = playerAkten <= 0 || cardInventory.length >= 100;
     
     let grid = document.getElementById('cardGrid');
     grid.innerHTML = '';
     
     cardInventory.forEach((card, index) => {
-        let shredVal = card.rarity === 'Legendär' ? 1000 : (card.rarity === 'Episch' ? 200 : (card.rarity === 'Selten' ? 50 : 10));
+        // Harte Skalierung für Wurmcoins
+        let shredVal = card.rarity === 'Legendär' ? 15 : (card.rarity === 'Episch' ? 5 : (card.rarity === 'Selten' ? 2 : 1));
         grid.innerHTML += `
         <div class="tcg-card" style="border-color:${card.color};">
             <div>
@@ -3049,7 +3057,7 @@ function renderCardOverlay() {
                 <div class="tcg-card-lore">PvP: ${card.pvpEffect}</div>
                 <div class="tcg-card-pve">PvE: ${card.pveDesc}</div>
             </div>
-            <button class="btn-shredder" onclick="shredCard(${index}, ${shredVal})">🗑️ SCHREDDERN (+${shredVal} KB)</button>
+            <button class="btn-shredder" onclick="shredCard(${index}, ${shredVal})">🗑️ SCHREDDERN (+${shredVal} 🪙)</button>
         </div>`;
     });
 }
@@ -3070,14 +3078,18 @@ function openAkte() {
     renderCardOverlay();
 }
 
-function shredCard(index, kbVal) {
+function shredCard(index, wcVal) {
     if(!confirm("Diese Karte in den Aktenvernichter werfen?")) return;
     cardInventory.splice(index, 1);
-    kaffeebons += kbVal;
+    
+    // Wurmcoins verrechnen und speichern
+    wurmcoins += wcVal;
+    localStorage.setItem('ts_wurmcoins', wurmcoins);
+    
     saveCardData();
     saveProgress();
     playSound('hit');
-    showToast("KARTE GESCHREDDERT", "#c0392b", `+${kbVal} Kaffeebons`);
+    showToast("KARTE GESCHREDDERT", "#c0392b", `+${wcVal} Wurmcoins 🪙`);
     renderCardOverlay();
 }
 
@@ -3469,7 +3481,7 @@ function renderPetOverlay() {
 }
 
 function adoptPet() {
-    if(wurmcoins < 50) { showToast('ZU WENIG WURMCOINS!','#e74c3c','50 🐛 nötig'); return; }
+    if(wurmcoins < 50) { showToast('ZU WENIG WURMCOINS!','#e74c3c','50 🪙 nötig'); return; }
     wurmcoins -= 50; 
     localStorage.setItem('ts_wurmcoins', wurmcoins);
     petData.active = true; petData.intimacy = 250; petData.hunger = 0;
@@ -3488,7 +3500,7 @@ const RUNE_STAT_POOL = [
     {key:'speedPct',label:'Speed',unit:'%',min:2,max:8},{key:'critPct',label:'Crit-Chance',unit:'%',min:1,max:5},
     {key:'fireDmg',label:'Feuer-DMG',unit:'%',min:5,max:20},{key:'waterDmg',label:'Wasser-DMG',unit:'%',min:5,max:20},
     {key:'windDmg',label:'Wind-DMG',unit:'%',min:5,max:20},{key:'earthDmg',label:'Erde-DMG',unit:'%',min:5,max:20},
-    {key:'kbBonus',label:'KB-Drop',unit:'%',min:5,max:15},{key:'farmSpd',label:'Farm-Speed',unit:'%',min:10,max:30}
+    {key:'wcBonus',label:'Wurmcoins 🪙',unit:'%',min:5,max:15},{key:'farmSpd',label:'Farm-Speed',unit:'%',min:10,max:30}
 ];
 const RUNE_RARITIES = [{name:'Gewöhnlich',color:'#aaa',weight:50,statCount:1,mult:1.0},{name:'Selten',color:'#3498db',weight:30,statCount:2,mult:1.3},{name:'Episch',color:'#9b59b6',weight:15,statCount:2,mult:1.7},{name:'Legendär',color:'#f1c40f',weight:5,statCount:3,mult:2.5}];
 
@@ -3507,7 +3519,7 @@ function canPlace(shapeKey,startRow,startCol,skipRuneId){let cells=shapeToGridCe
 function placeRune(runeId,startRow,startCol){let rune=runeInventory.find(r=>r.id===runeId);if(!rune)return false;removeFromGrid(runeId);if(!canPlace(rune.shape,startRow,startCol,runeId))return false;let cells=shapeToGridCells(rune.shape,startRow,startCol);cells.forEach(ci=>{runeGrid[ci]=runeId;});rune.gridPos={row:startRow,col:startCol};saveRuneData();if(runeGrid.filter(Boolean).length>=10&&typeof unlockTrophy==='function')unlockTrophy('rune_master');return true;}
 function removeFromGrid(runeId){runeGrid=runeGrid.map(cell=>cell===runeId?null:cell);let rune=runeInventory.find(r=>r.id===runeId);if(rune)rune.gridPos=null;saveRuneData();}
 function getActiveRuneStats(){let totals={},placed=new Set(runeGrid.filter(Boolean));placed.forEach(rid=>{let rune=runeInventory.find(r=>r.id===rid);if(!rune)return;rune.stats.forEach(s=>{totals[s.key]=(totals[s.key]||0)+s.value;});});return totals;}
-function applyRuneStats(p){let s=getActiveRuneStats();if(s.dmgPct)p.dmgBonus=(p.dmgBonus||0)+(p.dmgBonus+10)*s.dmgPct/100;if(s.hpFlat){p.maxHp+=s.hpFlat;p.hp+=s.hpFlat;}if(s.speedPct)p.speed+=p.speed*s.speedPct/100;if(s.critPct)p._critChance=(p._critChance||0)+s.critPct/100;if(s.fireDmg)p._fireDmgBonus=(p._fireDmgBonus||0)+s.fireDmg/100;if(s.waterDmg)p._waterDmgBonus=(p._waterDmgBonus||0)+s.waterDmg/100;if(s.windDmg)p._windDmgBonus=(p._windDmgBonus||0)+s.windDmg/100;if(s.earthDmg)p._earthDmgBonus=(p._earthDmgBonus||0)+s.earthDmg/100;if(s.farmSpd)p._stFarmBonus=(p._stFarmBonus||0)+s.farmSpd;if(s.kbBonus)p._kbDropBonus=(p._kbDropBonus||0)+s.kbBonus/100;let bonusLines=Object.entries(s).map(([k,v])=>{let stat=RUNE_STAT_POOL.find(x=>x.key===k);return stat?stat.label+'+'+v+stat.unit:'';}).filter(Boolean);if(bonusLines.length>0)showToast('🔮 RUNEN AKTIV','#00e5ff',bonusLines.slice(0,3).join(' · '));}
+function applyRuneStats(p){let s=getActiveRuneStats();if(s.dmgPct)p.dmgBonus=(p.dmgBonus||0)+(p.dmgBonus+10)*s.dmgPct/100;if(s.hpFlat){p.maxHp+=s.hpFlat;p.hp+=s.hpFlat;}if(s.speedPct)p.speed+=p.speed*s.speedPct/100;if(s.critPct)p._critChance=(p._critChance||0)+s.critPct/100;if(s.fireDmg)p._fireDmgBonus=(p._fireDmgBonus||0)+s.fireDmg/100;if(s.waterDmg)p._waterDmgBonus=(p._waterDmgBonus||0)+s.waterDmg/100;if(s.windDmg)p._windDmgBonus=(p._windDmgBonus||0)+s.windDmg/100;if(s.earthDmg)p._earthDmgBonus=(p._earthDmgBonus||0)+s.earthDmg/100;if(s.farmSpd)p._stFarmBonus=(p._stFarmBonus||0)+s.farmSpd;if(s.wcBonus)p._wcDropBonus=(p._wcDropBonus||0)+s.wcBonus/100;let bonusLines=Object.entries(s).map(([k,v])=>{let stat=RUNE_STAT_POOL.find(x=>x.key===k);return stat?stat.label+'+'+v+stat.unit:'';}).filter(Boolean);if(bonusLines.length>0)showToast('🔮 RUNEN AKTIV','#00e5ff',bonusLines.slice(0,3).join(' · '));}
 let dragRuneId=null;
 function openRuneOverlay(){renderRuneOverlay();document.getElementById('runeOverlay').style.display='block';}
 function closeRuneOverlay(){document.getElementById('runeOverlay').style.display='none';document.getElementById('startKBAmount').innerText=kaffeebons;}
@@ -3792,9 +3804,9 @@ async function loadCloudProfile() {
             if(d.runeGrid) { runeGrid = d.runeGrid;       localStorage.setItem('ts_rune_grid', JSON.stringify(runeGrid)); }
             if(d.akten !== undefined) { playerAkten = d.akten; localStorage.setItem('ts_akten', playerAkten); }
             
-            if(d.cards) { 
-                cardInventory = d.cards; 
-            } else {
+            if(d.cards && d.cards.length > 0) { 
+                cardInventory = d.cards; 
+            } else {
                 // Retrofit für alte Profile: Starter-Deck geben
                 cardInventory = CARD_DATABASE.filter(c => c.rarity === 'Gewöhnlich');
             }
@@ -4589,18 +4601,18 @@ function drawBueroDoor() {
 }
 
 function earnKaffeebons(sc) {
-    let baseRate = 0.5 + getUpgradeLevel('kb_rate') * 0.1;
-    if(player && player._stKbBonus) baseRate += player._stKbBonus;
-    
-    let earnedKb = Math.floor(sc / 100 * baseRate);
-    let earnedWc = Math.floor(sc / 50000); // 1 Wurmcoin pro 5000 Score
-    
-    kaffeebons += earnedKb;
-    wurmcoins += earnedWc;
-    
-    localStorage.setItem('ts_wurmcoins', wurmcoins);
-    saveProgress();
-    return { kb: earnedKb, wc: earnedWc };
+    let baseRate = 0.5 + getUpgradeLevel('kb_rate') * 0.1;
+    if(player && player._stKbBonus) baseRate += player._stKbBonus;
+    
+    let earnedKb = Math.floor(sc / 100 * baseRate);
+    let earnedWc = Math.floor(sc / 50000); // 1 Wurmcoin pro 50000 Score
+    
+    kaffeebons += earnedKb;
+    wurmcoins += earnedWc;
+    
+    localStorage.setItem('ts_wurmcoins', wurmcoins);
+    saveProgress();
+    return { kb: earnedKb, wc: earnedWc };
 }
 function applyUpgradesToPlayer(p) {
     UPGRADES_DEF.forEach(upg => {
