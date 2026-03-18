@@ -1135,7 +1135,7 @@ function startPreloader() {
                 if(jbtn) jbtn.innerText = currentJob ? ('⚔️ ' + (JOBS[currentJob]?.name||'JOB')) : '⚔️ JOB';
             } catch(e) {}
             
-            let best = parseInt(localStorage.getItem('ts_best_score') || '0');
+            let best = parseInt(lsGet('ts_best_score', '0'));
             if(best >= 50000) {
                 let survBtn = document.getElementById('btn-survival');
                 if(survBtn) survBtn.style.display = 'inline-block';
@@ -1307,21 +1307,21 @@ function processActiveQuest(timeSec) {
             if(currentJob) jobExp += q.exp; 
             kaffeebons += q.kb;
             if(!completedQuests.includes(q.id)) completedQuests.push(q.id);
-            localStorage.setItem('ts_completed_quests', JSON.stringify(completedQuests));
+            lsSet('ts_completed_quests', JSON.stringify(completedQuests));
             showToast("AUFTRAG ERFÜLLT!", "#2ecc71", `${q.name}: +${q.exp} EXP / +${q.kb} KB`, true);
             playSound('evolve');
             checkLevelUp(); // Level-Up direkt auslösen, falls genug EXP da sind
         }
         // Quest nach dem Run immer deaktivieren (egal ob geschafft oder nicht)
         activeQuest = null;
-        localStorage.setItem('ts_active_quest', '');
+        lsSet('ts_active_quest', '');
     }
 }
 // ---------------------------------------
    
 function saveHighscoreAndRestart() {
-    let currentBest = parseInt(localStorage.getItem('ts_best_score') || '0');
-    if (score > currentBest) localStorage.setItem('ts_best_score', score);
+    let currentBest = parseInt(lsGet('ts_best_score', '0'));
+    if (score > currentBest) lsSet('ts_best_score', score);
     saveProgress(); 
     let name = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim().substring(0,10);
     let timeSec = (Date.now() - runStartTime) / 1000;
@@ -1330,10 +1330,10 @@ function saveHighscoreAndRestart() {
     // --- NEU: S-Rang Trophäen Tracking ---
     // --- S-RANG & FELIX TROPHÄEN ---
     if(rat.grade === 'S') {
-        let sRanks = JSON.parse(localStorage.getItem('ts_s_ranks') || '[]');
+        let sRanks = JSON.parse(lsGet('ts_s_ranks', '[]'));
         if(!sRanks.includes(currentDiffLabel)) {
             sRanks.push(currentDiffLabel);
-            localStorage.setItem('ts_s_ranks', JSON.stringify(sRanks));
+            lsSet('ts_s_ranks', JSON.stringify(sRanks));
             if(sRanks.length >= 5) unlockTrophy('ceo_perk');
         }
         
@@ -1368,8 +1368,8 @@ function saveHighscoreAndRestart() {
 }
 
 function saveHighscoreAndMainMenu() {
-    let currentBest = parseInt(localStorage.getItem('ts_best_score') || '0');
-    if (score > currentBest) localStorage.setItem('ts_best_score', score);
+    let currentBest = parseInt(lsGet('ts_best_score', '0'));
+    if (score > currentBest) lsSet('ts_best_score', score);
     saveProgress(); 
     let name = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim().substring(0,10);
     let timeSec2 = (Date.now() - runStartTime) / 1000;
@@ -1377,10 +1377,10 @@ function saveHighscoreAndMainMenu() {
     let rat2 = calculateRunRating(score, runKillCount, timeSec2, runBossKilled, bestComboThisRun, lastChosenDifficulty);
     // --- S-RANG & FELIX TROPHÄEN ---
     if(rat2.grade === 'S') {
-        let sRanks = JSON.parse(localStorage.getItem('ts_s_ranks') || '[]');
+        let sRanks = JSON.parse(lsGet('ts_s_ranks', '[]'));
         if(!sRanks.includes(currentDiffLabel)) {
             sRanks.push(currentDiffLabel);
-            localStorage.setItem('ts_s_ranks', JSON.stringify(sRanks));
+            lsSet('ts_s_ranks', JSON.stringify(sRanks));
             if(sRanks.length >= 5) unlockTrophy('ceo_perk');
         }
         
@@ -1440,8 +1440,8 @@ const QUESTS = [
     { id: 'q5', name: 'Boss-Slayer', desc: 'Besiege Peter Bayer.', target: 1, type: 'boss', exp: 5000, kb: 1000 }
 ];
 
-let activeQuest = localStorage.getItem('ts_active_quest') || null;
-let completedQuests = JSON.parse(localStorage.getItem('ts_completed_quests') || '[]');
+let activeQuest = lsGet('ts_active_quest', null);
+let completedQuests = JSON.parse(lsGet('ts_completed_quests', '[]'));
 
 function openQuestBoard() {
     let cont = document.getElementById('questContent');
@@ -1486,12 +1486,23 @@ function toggleQuest(id) {
         activeQuest = id; // Annehmen
         showToast("AUFTRAG ANGENOMMEN!", "#f1c40f", QUESTS.find(q=>q.id===id).name);
     }
-    localStorage.setItem('ts_active_quest', activeQuest || '');
+    lsSet('ts_active_quest', activeQuest || '');
     openQuestBoard(); // Reload UI
 }   
 
-let kaffeebons       = parseInt(localStorage.getItem('ts_kb') || '0');
-let wurmcoins        = parseInt(localStorage.getItem('ts_wurmcoins') || '0');   
+// Safe localStorage wrapper (für Private Mode / gesperrte Cookies)
+function lsGet(key, fallback) {
+    try { let v = localStorage.getItem(key); return v !== null ? v : fallback; } catch(e) { return fallback; }
+}
+function lsSet(key, val) {
+    try { localStorage.setItem(key, val); } catch(e) { console.warn('localStorage blocked:', e); }
+}
+function lsRemove(key) {
+    try { localStorage.removeItem(key); } catch(e) {}
+}
+
+let kaffeebons       = parseInt(lsGet('ts_kb', '0'));
+let wurmcoins        = parseInt(lsGet('ts_wurmcoins', '0'));   
 
 // ============================================================
 // DAILY REWARD + STREAK + CHALLENGE SYSTEM
@@ -1526,10 +1537,10 @@ function getTodayChallenge() {
 }
 
 function getDailyState() {
-    try { return JSON.parse(localStorage.getItem('ts_daily') || '{}'); } catch(e) { return {}; }
+    try { return JSON.parse(lsGet('ts_daily', '{}')); } catch(e) { return {}; }
 }
 function saveDailyState(s) {
-    localStorage.setItem('ts_daily', JSON.stringify(s));
+    lsSet('ts_daily', JSON.stringify(s));
 }
 
 function openDailyOverlay() {
@@ -1627,7 +1638,7 @@ function claimDailyReward() {
     kaffeebons += totalReward;
     if(wcReward > 0) {
         wurmcoins += wcReward;
-        localStorage.setItem('ts_wurmcoins', wurmcoins);
+        lsSet('ts_wurmcoins', wurmcoins);
     }
     state.lastLogin = today;
     state.streak = streak;
@@ -1690,8 +1701,8 @@ function updateDailyMenuBtn() {
         btn.style.boxShadow = '0 0 10px rgba(241,196,15,0.4)';
     }
 }
-let upgradeProgress  = JSON.parse(localStorage.getItem('ts_upgrades') || '{}');
-let prestigeLevel    = parseInt(localStorage.getItem('ts_prestige') || '0');
+let upgradeProgress  = JSON.parse(lsGet('ts_upgrades', '{}'));
+let prestigeLevel    = parseInt(lsGet('ts_prestige', '0'));
 
 // --- TROPHY SYSTEM ---
 const TROPHIES_DEF = [
@@ -1724,54 +1735,54 @@ const TROPHIES_DEF = [
     { id:'rune_master', icon:'🔮', name:'Runen-Meister',   desc:'Lege 10 Runen gleichzeitig ins Grid.', perk:'Runen-Resonanz: Alle Runen-Boni +20%' }
 ];
 
-let unlockedTrophies = JSON.parse(localStorage.getItem('ts_trophies') || '[]');
-let unlockedWeapons  = JSON.parse(localStorage.getItem('ts_weapons') || '[]');
+let unlockedTrophies = JSON.parse(lsGet('ts_trophies', '[]'));
+let unlockedWeapons  = JSON.parse(lsGet('ts_weapons', '[]'));
 
 // ============================================================
 // JOB-SYSTEM — RAGNARÖK-STYLE (V2.0)
 // ============================================================
 
 // --- SCHRITT 1: DER HARD RESET (WIPE DER ALTEN DATEN) ---
-if (!localStorage.getItem('ts_ro_wipe_v2')) {
+if (!lsGet('ts_ro_wipe_v2', null)) {
     // Lösche alle alten Job- und Level-Daten (V3 Job-System — Novice Job-EXP Fix)
-    localStorage.removeItem('ts_baseexp');
-    localStorage.removeItem('ts_jobexp');
-    localStorage.removeItem('ts_baselv');
-    localStorage.removeItem('ts_joblv');
-    localStorage.removeItem('ts_job');
-    localStorage.removeItem('ts_isTrans');
-    localStorage.removeItem('ts_jobspts');
-    localStorage.removeItem('ts_jobskills');
-    localStorage.removeItem('ts_completed_jobs');
-    localStorage.removeItem('ts_rebirth_skills');
-    localStorage.removeItem('ts_ro_wipe_v1');
+    lsRemove('ts_baseexp');
+    lsRemove('ts_jobexp');
+    lsRemove('ts_baselv');
+    lsRemove('ts_joblv');
+    lsRemove('ts_job');
+    lsRemove('ts_isTrans');
+    lsRemove('ts_jobspts');
+    lsRemove('ts_jobskills');
+    lsRemove('ts_completed_jobs');
+    lsRemove('ts_rebirth_skills');
+    lsRemove('ts_ro_wipe_v1');
     
     // Setze den Marker, damit nicht bei jedem Start gelöscht wird
-    localStorage.setItem('ts_ro_wipe_v2', 'done');
+    lsSet('ts_ro_wipe_v2', 'done');
     console.log("Job-System V3 initialisiert — Novice Job-EXP & Alt-Pfade aktiv.");
 }
 // --------------------------------------------------------
 
-let baseExp       = parseInt(localStorage.getItem('ts_baseexp') || '0');
-let jobExp        = parseInt(localStorage.getItem('ts_jobexp')  || '0');
-let baseLevel     = parseInt(localStorage.getItem('ts_baselv')  || '1');
-let jobLevel      = parseInt(localStorage.getItem('ts_joblv')   || '1'); // Job startet jetzt bei 1
-let currentJob    = localStorage.getItem('ts_job') || null;
+let baseExp       = parseInt(lsGet('ts_baseexp', '0'));
+let jobExp        = parseInt(lsGet('ts_jobexp', '0'));
+let baseLevel     = parseInt(lsGet('ts_baselv', '1'));
+let jobLevel      = parseInt(lsGet('ts_joblv', '1')); // Job startet jetzt bei 1
+let currentJob    = lsGet('ts_job', null);
 // Lokale Job-ID migrieren falls veraltet
 if(currentJob && typeof JOB_ID_MIGRATION !== 'undefined' && JOB_ID_MIGRATION[currentJob]) {
     currentJob = JOB_ID_MIGRATION[currentJob];
-    localStorage.setItem('ts_job', currentJob);
+    lsSet('ts_job', currentJob);
 }
 
-let jobSkillPts   = parseInt(localStorage.getItem('ts_jobspts') || '0');
-let jobSkills     = JSON.parse(localStorage.getItem('ts_jobskills') || '{}');
-let completedJobs = JSON.parse(localStorage.getItem('ts_completed_jobs') || '[]');
-let rebirthSkills = JSON.parse(localStorage.getItem('ts_rebirth_skills') || '{}');
+let jobSkillPts   = parseInt(lsGet('ts_jobspts', '0'));
+let jobSkills     = JSON.parse(lsGet('ts_jobskills', '{}'));
+let completedJobs = JSON.parse(lsGet('ts_completed_jobs', '[]'));
+let rebirthSkills = JSON.parse(lsGet('ts_rebirth_skills', '{}'));
 
 // --- NEUE STATS-VARIABLEN FÜR DAS RO-SYSTEM ---
-let isTrans       = localStorage.getItem('ts_isTrans') === 'true'; 
-let statPoints    = parseInt(localStorage.getItem('ts_statpts') || '0');
-let stats         = JSON.parse(localStorage.getItem('ts_stats') || '{"str":1,"agi":1,"vit":1,"int":1,"dex":1,"luk":1}');
+let isTrans       = lsGet('ts_isTrans', null) === 'true'; 
+let statPoints    = parseInt(lsGet('ts_statpts', '0'));
+let stats         = JSON.parse(lsGet('ts_stats', null) || '{"str":1,"agi":1,"vit":1,"int":1,"dex":1,"luk":1}');
 // ----------------------------------------------
 
 // EXP-Kurven
@@ -1949,14 +1960,14 @@ function advanceJob(jobId) {
     let prevJob = currentJob;
     if(prevJob && !completedJobs.includes(prevJob)) {
         completedJobs.push(prevJob);
-        localStorage.setItem('ts_completed_jobs', JSON.stringify(completedJobs));
+        lsSet('ts_completed_jobs', JSON.stringify(completedJobs));
     }
     currentJob = jobId;
     jobLevel = 1;
     jobExp = 0;
-    localStorage.setItem('ts_job', currentJob);
-    localStorage.setItem('ts_joblv', jobLevel);
-    localStorage.setItem('ts_jobexp', jobExp);
+    lsSet('ts_job', currentJob);
+    lsSet('ts_joblv', jobLevel);
+    lsSet('ts_jobexp', jobExp);
     saveProgress();
     let j = JOBS[jobId];
     let classLabel = j.classLevel===1?'1. KLASSE':j.classLevel===2?'2. KLASSE':j.classLevel===3?'3. KLASSE':'🏆 4. KLASSE — ENDGAME!';
@@ -1990,14 +2001,14 @@ function performRebirth() {
     statPoints = 100;
     stats = {"str":1,"agi":1,"vit":1,"int":1,"dex":1,"luk":1};
 
-    localStorage.setItem('ts_isTrans', 'true');
-    localStorage.setItem('ts_job', '');
-    localStorage.setItem('ts_baselv', 1);
-    localStorage.setItem('ts_baseexp', 0);
-    localStorage.setItem('ts_joblv', 1);
-    localStorage.setItem('ts_jobexp', 0);
-    localStorage.setItem('ts_statpts', statPoints);
-    localStorage.setItem('ts_stats', JSON.stringify(stats));
+    lsSet('ts_isTrans', 'true');
+    lsSet('ts_job', '');
+    lsSet('ts_baselv', 1);
+    lsSet('ts_baseexp', 0);
+    lsSet('ts_joblv', 1);
+    lsSet('ts_jobexp', 0);
+    lsSet('ts_statpts', statPoints);
+    lsSet('ts_stats', JSON.stringify(stats));
 
     kaffeebons += 5000;
     saveProgress();
@@ -2086,11 +2097,11 @@ function checkLevelUp() {
         }
     }
     if(leveled) {
-        localStorage.setItem('ts_baseexp', baseExp);
-        localStorage.setItem('ts_jobexp',  jobExp);
-        localStorage.setItem('ts_baselv',  baseLevel);
-        localStorage.setItem('ts_joblv',   jobLevel);
-        localStorage.setItem('ts_statpts', statPoints);
+        lsSet('ts_baseexp', baseExp);
+        lsSet('ts_jobexp', jobExp);
+        lsSet('ts_baselv', baseLevel);
+        lsSet('ts_joblv', jobLevel);
+        lsSet('ts_statpts', statPoints);
         saveProgress();
     }
 }
@@ -2105,8 +2116,8 @@ function increaseStat(statName) {
     
     statPoints -= cost;
     stats[statName]++;
-    localStorage.setItem('ts_statpts', statPoints);
-    localStorage.setItem('ts_stats', JSON.stringify(stats));
+    lsSet('ts_statpts', statPoints);
+    lsSet('ts_stats', JSON.stringify(stats));
     saveProgress();
     renderJobOverlay(); // UI direkt aktualisieren
 }
@@ -2123,8 +2134,8 @@ function upgradeJobSkill(skillId) {
     if(sk.minJobLv && jobLevel < sk.minJobLv) { showToast(`JOB LV ${sk.minJobLv} BENÖTIGT`, '#e74c3c'); return; }
     jobSkillPts -= cost;
     jobSkills[skillId] = curLv + 1;
-    localStorage.setItem('ts_jobskills', JSON.stringify(jobSkills));
-    localStorage.setItem('ts_jobspts',  jobSkillPts);
+    lsSet('ts_jobskills', JSON.stringify(jobSkills));
+    lsSet('ts_jobspts', jobSkillPts);
     saveProgress();
     showToast('⚔️ SKILL UPGRADED!', job.color, sk.name + ' → Lv ' + jobSkills[skillId]);
     renderJobOverlay();
@@ -2238,7 +2249,7 @@ function renderJobOverlay() {
     if(currentJob && !JOBS[currentJob]) {
         console.warn('renderJobOverlay: unbekannter Job', currentJob, '→ reset');
         currentJob = null; jobLevel = 1; jobExp = 0;
-        localStorage.setItem('ts_job',''); localStorage.setItem('ts_joblv','1'); localStorage.setItem('ts_jobexp','0');
+        lsSet('ts_job', ''); lsSet('ts_joblv', '1'); lsSet('ts_jobexp', '0');
     }
     let j = currentJob ? JOBS[currentJob] : null;
     let maxBase = (j && (j.classLevel >= 3 || ((j.isAlt || j.isDoram || j.isExtended) && j.classLevel >= 2))) ? 250 : 99;
@@ -2414,12 +2425,12 @@ function renderJobOverlay() {
     cont.innerHTML = html;
 }
 
-let favoriteWeapon   = localStorage.getItem('ts_favorite') || null;
+let favoriteWeapon   = lsGet('ts_favorite', null);
 
 // ============================================================
 // SKILLTREE SYSTEM — POE-STYLE
 // ============================================================
-let unlockedSkills = JSON.parse(localStorage.getItem('ts_skills') || '[]');
+let unlockedSkills = JSON.parse(lsGet('ts_skills', '[]'));
 const ST_MAX_POINTS = 80;
 
 const ZONE_COLORS = {
@@ -2892,7 +2903,7 @@ function tryUnlockSkill(node) {
         if(!confirm('Skill "' + node.name + '" zurücksetzen?\n\nRefund: +' + refund + ' KB (50% von ' + node.cost + ')')) return;
         unlockedSkills = unlockedSkills.filter(id => id !== node.id);
         kaffeebons += refund;
-        localStorage.setItem('ts_skills', JSON.stringify(unlockedSkills));
+        lsSet('ts_skills', JSON.stringify(unlockedSkills));
         saveProgress();
         playSound('hit');
         showToast('SKILL ZURÜCKGESETZT', '#e67e22', node.name + ' → +' + refund + ' KB');
@@ -2903,7 +2914,7 @@ function tryUnlockSkill(node) {
     if(!canUnlockSkill(node)) return;
     kaffeebons -= node.cost;
     unlockedSkills.push(node.id);
-    localStorage.setItem('ts_skills', JSON.stringify(unlockedSkills));
+    lsSet('ts_skills', JSON.stringify(unlockedSkills));
     saveProgress();
     showToast('🌳 SKILL FREIGESCHALTET!', ZONE_COLORS[node.zone]||'#fff', node.name);
     renderSkillTree();
@@ -2919,7 +2930,7 @@ function resetSkillTree() {
     }
     unlockedSkills = [];
     kaffeebons += refund;
-    localStorage.setItem('ts_skills', JSON.stringify(unlockedSkills));
+    lsSet('ts_skills', JSON.stringify(unlockedSkills));
     saveProgress();
     showToast('↺ RESET', '#aaa', `+${refund} KB zurückerstattet`);
     renderSkillTree();
@@ -3003,7 +3014,7 @@ function applySkillTree(p) {
     p.hp = p.maxHp;
 }
 
-let playerAkten = parseInt(localStorage.getItem('ts_akten') || '0');
+let playerAkten = parseInt(lsGet('ts_akten', '0'));
 
    const CARD_DATABASE = [
   // === STARTER DECK (20 Gewöhnliche Karten) ===
@@ -3051,11 +3062,11 @@ let playerAkten = parseInt(localStorage.getItem('ts_akten') || '0');
   { id: "c_endlos", name: "Endlosschleife (4 Uhr)", rarity: "Selten", color: "#3498db", pvpCost: 4, pvpAtk: 0, pvpDef: 0, pvpEffect: "Alle gegnerischen Karten -2 ATK.", pveBuffType: "stationary_turret", pveBuffValue: 0.2, pveDesc: "+20% Feuerrate, -10% Speed." }
 ];
 // --- STARTER DECK LOGIK ---
-let cardInventory = JSON.parse(localStorage.getItem('ts_cards') || 'null');
+let cardInventory = JSON.parse(lsGet('ts_cards', 'null'));
 if (!cardInventory || cardInventory.length === 0) {
     // Wenn kein Speicherstand existiert oder Array leer -> 20 Standard-Karten erzwingen
     cardInventory = CARD_DATABASE.filter(c => c.rarity === 'Gewöhnlich');
-    localStorage.setItem('ts_cards', JSON.stringify(cardInventory));
+    lsSet('ts_cards', JSON.stringify(cardInventory));
 }
 // --------------------------
 
@@ -3121,7 +3132,7 @@ function shredCard(index, wcVal) {
     
     // Wurmcoins verrechnen und speichern
     wurmcoins += wcVal;
-    localStorage.setItem('ts_wurmcoins', wurmcoins);
+    lsSet('ts_wurmcoins', wurmcoins);
     
     saveCardData();
     saveProgress();
@@ -3131,8 +3142,8 @@ function shredCard(index, wcVal) {
 }
 
 function saveCardData() {
-    localStorage.setItem('ts_akten', playerAkten);
-    localStorage.setItem('ts_cards', JSON.stringify(cardInventory));
+    lsSet('ts_akten', playerAkten);
+    lsSet('ts_cards', JSON.stringify(cardInventory));
 }
    
 // ============================================================
@@ -3212,16 +3223,16 @@ function buyWeapon(id) {
     let w = WEAPON_SHOP.find(x => x.id === id);
     if(!w || hasWeaponUnlocked(id) || wurmcoins < w.cost) return;
     wurmcoins -= w.cost;
-    localStorage.setItem('ts_wurmcoins', wurmcoins);
+    lsSet('ts_wurmcoins', wurmcoins);
     unlockedWeapons.push(id);
-    localStorage.setItem('ts_weapons', JSON.stringify(unlockedWeapons));
+    lsSet('ts_weapons', JSON.stringify(unlockedWeapons));
     saveProgress();
     showToast('🔫 FREIGESCHALTET!', '#e74c3c', w.name + ' — spawnt als erste Kiste!');
     renderWaffenkammer();
 }
 function setFavorite(id) {
     favoriteWeapon = id;
-    localStorage.setItem('ts_favorite', id || '');
+    lsSet('ts_favorite', id || '');
     saveProgress();
     let w = id ? WEAPON_SHOP.find(x=>x.id===id) : null;
     showToast(id ? '⭐ FAVORIT GESETZT!' : '⭐ FAVORIT ENTFERNT',
@@ -3237,11 +3248,11 @@ const REFINE_CHANCES = { 1:100, 2:100, 3:100, 4:100, 5:60, 6:50, 7:40, 8:30, 9:2
 const REFINE_MAX = 12;
 const REFINE_COSTS = { 1:[100,0], 2:[100,0], 3:[100,0], 4:[100,0], 5:[200,1], 6:[300,1], 7:[400,2], 8:[500,2], 9:[800,3], 10:[1000,4], 11:[1500,5], 12:[2000,6] };
 
-let refineData = JSON.parse(localStorage.getItem('ts_refine') || '{}');
-let refinePity = JSON.parse(localStorage.getItem('ts_refine_pity') || '{}');
+let refineData = JSON.parse(lsGet('ts_refine', '{}'));
+let refinePity = JSON.parse(lsGet('ts_refine_pity', '{}'));
 
 function getRefineLevel(weaponId) { return refineData[weaponId] || 0; }
-function saveRefineData() { localStorage.setItem('ts_refine', JSON.stringify(refineData)); localStorage.setItem('ts_refine_pity', JSON.stringify(refinePity)); }
+function saveRefineData() { lsSet('ts_refine', JSON.stringify(refineData)); lsSet('ts_refine_pity', JSON.stringify(refinePity)); }
 
 function getRefineChance(weaponId, targetLevel) {
     let base = REFINE_CHANCES[targetLevel] || 0;
@@ -3266,7 +3277,7 @@ function renderSchmiede() {
     let es = document.getElementById('schmiedeSuppen');
     if(el) el.innerText = wurmcoins;
     
-    let storedSuppen = parseInt(localStorage.getItem('ts_suppen_persistent') || '0');
+    let storedSuppen = parseInt(lsGet('ts_suppen_persistent', '0'));
     if(es) es.innerText = gameRunning ? (player ? player.suppe : storedSuppen) : storedSuppen;
     
     let cont = document.getElementById('schmiedeContent');
@@ -3292,7 +3303,7 @@ function renderSchmiede() {
         if(!atMax && hasTrophy('refine_max')) wcCost = Math.max(1, Math.floor(wcCost * 0.8));
         
         let canAffordWC = wurmcoins >= wcCost;
-        let currentSuppeVal = gameRunning && player ? player.suppe : parseInt(localStorage.getItem('ts_suppen_persistent')||'0');
+        let currentSuppeVal = gameRunning && player ? player.suppe : parseInt(lsGet('ts_suppen_persistent', '0'));
         let canAffordSupp = currentSuppeVal >= suppCost;
         
         let probColor = chance >= 70 ? '#2ecc71' : (chance >= 40 ? '#f39c12' : '#c0392b');
@@ -3325,11 +3336,11 @@ function doRefine(weaponId) {
     if(wurmcoins < wcCost) { showToast('ZU WENIG WURMCOINS!', '#e74c3c'); return; }
     
     wurmcoins -= wcCost;
-    localStorage.setItem('ts_wurmcoins', wurmcoins);
+    lsSet('ts_wurmcoins', wurmcoins);
     // Suppen-Logik bleibt gleich
     if(suppCost > 0) { 
         if(gameRunning && player) player.suppe -= suppCost; 
-        else { let s = parseInt(localStorage.getItem('ts_suppen_persistent')||'0'); localStorage.setItem('ts_suppen_persistent', Math.max(0, s-suppCost)); }
+        else { let s = parseInt(lsGet('ts_suppen_persistent', '0')); lsSet('ts_suppen_persistent', Math.max(0, s-suppCost)); }
     }
     
     let roll = Math.random() * 100;
@@ -3365,8 +3376,8 @@ const PET_STAGES = [
 ];
 const PET_MAX_INTIMACY = 1000;
 
-let petData = JSON.parse(localStorage.getItem('ts_pet') || JSON.stringify({ active:false, name:'Hamster', intimacy:250, hunger:0, lastFed:Date.now() }));
-function savePetData() { localStorage.setItem('ts_pet', JSON.stringify(petData)); }
+let petData = JSON.parse(lsGet('ts_pet', null) || JSON.stringify({ active:false, name:'Hamster', intimacy:250, hunger:0, lastFed:Date.now() }));
+function savePetData() { lsSet('ts_pet', JSON.stringify(petData)); }
 function getPetStage() { let stage = PET_STAGES[0]; for(let s of PET_STAGES) { if(petData.intimacy >= s.minIntimacy) stage = s; } return stage; }
 let activePet = null;
 
@@ -3516,7 +3527,7 @@ function renderPetOverlay() {
 function adoptPet() {
     if(wurmcoins < 50) { showToast('ZU WENIG WURMCOINS!','#e74c3c','50 🪙 nötig'); return; }
     wurmcoins -= 50; 
-    localStorage.setItem('ts_wurmcoins', wurmcoins);
+    lsSet('ts_wurmcoins', wurmcoins);
     petData.active = true; petData.intimacy = 250; petData.hunger = 0;
     savePetData(); saveProgress(); 
     showToast('🐾 HAMSTER ADOPTIERT!','#9b59b6','Dein Begleiter wartet!'); 
@@ -3537,9 +3548,9 @@ const RUNE_STAT_POOL = [
 ];
 const RUNE_RARITIES = [{name:'Gewöhnlich',color:'#aaa',weight:50,statCount:1,mult:1.0},{name:'Selten',color:'#3498db',weight:30,statCount:2,mult:1.3},{name:'Episch',color:'#9b59b6',weight:15,statCount:2,mult:1.7},{name:'Legendär',color:'#f1c40f',weight:5,statCount:3,mult:2.5}];
 
-let runeInventory = JSON.parse(localStorage.getItem('ts_runes') || '[]');
-let runeGrid = JSON.parse(localStorage.getItem('ts_rune_grid') || JSON.stringify(Array(25).fill(null)));
-function saveRuneData() { localStorage.setItem('ts_runes',JSON.stringify(runeInventory)); localStorage.setItem('ts_rune_grid',JSON.stringify(runeGrid)); }
+let runeInventory = JSON.parse(lsGet('ts_runes', '[]'));
+let runeGrid = JSON.parse(lsGet('ts_rune_grid', null) || JSON.stringify(Array(25).fill(null)));
+function saveRuneData() { lsSet('ts_runes', JSON.stringify(runeInventory)); lsSet('ts_rune_grid', JSON.stringify(runeGrid)); }
 function rollRarity() { let total=RUNE_RARITIES.reduce((s,r)=>s+r.weight,0),r=Math.random()*total; for(let rr of RUNE_RARITIES){r-=rr.weight;if(r<=0)return rr;} return RUNE_RARITIES[0]; }
 function generateRune(sourceLabel) {
     let rarity=rollRarity(); let shapeKey=SHAPE_KEYS[Math.floor(Math.random()*SHAPE_KEYS.length)];
@@ -3676,12 +3687,12 @@ function doPrestige() {
     currentJob = null; jobLevel = 0; jobExp = 0; baseLevel = 1; baseExp = 0; jobSkillPts = 0; jobSkills = {};
     // KB Bonus für Prestige
     kaffeebons += prestigeLevel * 500;
-    localStorage.setItem('ts_prestige', prestigeLevel);
-    localStorage.setItem('ts_upgrades', JSON.stringify(upgradeProgress));
-    localStorage.setItem('ts_skills', JSON.stringify(unlockedSkills));
-    localStorage.setItem('ts_job', '');
-    localStorage.setItem('ts_baselv', 1);
-    localStorage.setItem('ts_joblv', 0);
+    lsSet('ts_prestige', prestigeLevel);
+    lsSet('ts_upgrades', JSON.stringify(upgradeProgress));
+    lsSet('ts_skills', JSON.stringify(unlockedSkills));
+    lsSet('ts_job', '');
+    lsSet('ts_baselv', 1);
+    lsSet('ts_joblv', 0);
     saveProgress();
     showToast(`⭐ PRESTIGE ${prestigeLevel}!`, '#f1c40f', `+${prestigeLevel*500} KB Bonus · Boni: +${prestigeLevel*5}% Schaden, +${prestigeLevel*10} HP`);
     closeTrophies();
@@ -3694,23 +3705,24 @@ function getUpgradeCost(upg) {
     return Math.floor(upg.baseCost * Math.pow(upg.costMult, lvl));
 }
 function saveProgress() {
+    try {
     var _name = (document.getElementById('playerName') || {value:''}).value;
     _name = (_name||'').toUpperCase().trim() || 'ANONYM';
-    localStorage.setItem('ts_kb', kaffeebons);
-    localStorage.setItem('ts_upgrades', JSON.stringify(upgradeProgress));
-    localStorage.setItem('ts_prestige', prestigeLevel);
-    localStorage.setItem('ts_name', _name);
-    localStorage.setItem('ts_trophies', JSON.stringify(unlockedTrophies));
-    localStorage.setItem('ts_weapons', JSON.stringify(unlockedWeapons));
+    lsSet('ts_kb', kaffeebons);
+    lsSet('ts_upgrades', JSON.stringify(upgradeProgress));
+    lsSet('ts_prestige', prestigeLevel);
+    lsSet('ts_name', _name);
+    lsSet('ts_trophies', JSON.stringify(unlockedTrophies));
+    lsSet('ts_weapons', JSON.stringify(unlockedWeapons));
     // --- FIX: EXP IMMER SPEICHERN ---
-    localStorage.setItem('ts_baseexp', baseExp);
-    localStorage.setItem('ts_jobexp', jobExp);
-    localStorage.setItem('ts_baselv', baseLevel);
-    localStorage.setItem('ts_joblv', jobLevel);
+    lsSet('ts_baseexp', baseExp);
+    lsSet('ts_jobexp', jobExp);
+    lsSet('ts_baselv', baseLevel);
+    lsSet('ts_joblv', jobLevel);
     // --------------------------------
     if(db && _name !== 'ANONYM') {
-        let _daily = {}; try { _daily = JSON.parse(localStorage.getItem('ts_daily')||'{}'); } catch(e){}
-        let _best  = parseInt(localStorage.getItem('ts_best_score')||'0');
+        let _daily = {}; try { _daily = JSON.parse(lsGet('ts_daily', '{}')); } catch(e){}
+        let _best  = parseInt(lsGet('ts_best_score', '0'));
         db.collection('playerProfiles').doc(_name).set({
             kb: kaffeebons, upgrades: upgradeProgress, wurmcoins: wurmcoins,
             prestige: prestigeLevel, trophies: unlockedTrophies,
@@ -3725,6 +3737,7 @@ function saveProgress() {
             lastSeen: new Date().toISOString()        
         }, {merge:true}).catch(function(){});
     }
+    } catch(e) { console.warn("saveProgress localStorage error:", e); }
 }
 
 // ============================================================
@@ -3786,12 +3799,12 @@ async function loadCloudProfile() {
             favoriteWeapon   = d.favorite  || null;
             unlockedSkills   = d.skills    || [];
             // Daily + BestScore aus Firebase wiederherstellen
-            if(d.daily)     { localStorage.setItem('ts_daily',      JSON.stringify(d.daily)); }
-            if(d.bestScore) { localStorage.setItem('ts_best_score', d.bestScore); }
-            localStorage.setItem('ts_skills',   JSON.stringify(unlockedSkills));
-            localStorage.setItem('ts_trophies', JSON.stringify(unlockedTrophies));
-            localStorage.setItem('ts_weapons',  JSON.stringify(unlockedWeapons));
-            if(favoriteWeapon) localStorage.setItem('ts_favorite', favoriteWeapon);
+            if(d.daily)     { lsSet('ts_daily', JSON.stringify(d.daily)); }
+            if(d.bestScore) { lsSet('ts_best_score', d.bestScore); }
+            lsSet('ts_skills', JSON.stringify(unlockedSkills));
+            lsSet('ts_trophies', JSON.stringify(unlockedTrophies));
+            lsSet('ts_weapons', JSON.stringify(unlockedWeapons));
+            if(favoriteWeapon) lsSet('ts_favorite', favoriteWeapon);
             completedJobs = d.completedJobs || [];
             rebirthSkills = d.rebirthSkills || {};
             // ── Job-Daten vollständig aus Cloud laden ──
@@ -3806,17 +3819,17 @@ async function loadCloudProfile() {
             if(d.statPoints !== undefined) statPoints = d.statPoints || 0;
             if(d.stats)   stats = d.stats;
             // Alles in localStorage sichern
-            localStorage.setItem('ts_job',     currentJob || '');
-            localStorage.setItem('ts_baselv',  baseLevel);
-            localStorage.setItem('ts_joblv',   jobLevel);
-            localStorage.setItem('ts_baseexp', baseExp);
-            localStorage.setItem('ts_jobexp',  jobExp);
-            localStorage.setItem('ts_isTrans', isTrans ? 'true' : 'false');
-            localStorage.setItem('ts_statpts', statPoints);
-            if(d.stats) localStorage.setItem('ts_stats', JSON.stringify(d.stats));
-            if(d.runeInv)  { runeInventory = d.runeInv;  localStorage.setItem('ts_runes', JSON.stringify(runeInventory)); }
-            if(d.runeGrid) { runeGrid = d.runeGrid;       localStorage.setItem('ts_rune_grid', JSON.stringify(runeGrid)); }
-            if(d.akten !== undefined) { playerAkten = d.akten; localStorage.setItem('ts_akten', playerAkten); }
+            lsSet('ts_job', currentJob || '');
+            lsSet('ts_baselv', baseLevel);
+            lsSet('ts_joblv', jobLevel);
+            lsSet('ts_baseexp', baseExp);
+            lsSet('ts_jobexp', jobExp);
+            lsSet('ts_isTrans', isTrans ? 'true' : 'false');
+            lsSet('ts_statpts', statPoints);
+            if(d.stats) lsSet('ts_stats', JSON.stringify(d.stats));
+            if(d.runeInv)  { runeInventory = d.runeInv;  lsSet('ts_runes', JSON.stringify(runeInventory)); }
+            if(d.runeGrid) { runeGrid = d.runeGrid;       lsSet('ts_rune_grid', JSON.stringify(runeGrid)); }
+            if(d.akten !== undefined) { playerAkten = d.akten; lsSet('ts_akten', playerAkten); }
             
             if(d.cards && d.cards.length > 0) { 
                 cardInventory = d.cards; 
@@ -3824,9 +3837,9 @@ async function loadCloudProfile() {
                 // Retrofit für alte Profile: Starter-Deck geben
                 cardInventory = CARD_DATABASE.filter(c => c.rarity === 'Gewöhnlich');
             }
-            localStorage.setItem('ts_cards', JSON.stringify(cardInventory));
-            localStorage.setItem('ts_completed_jobs', JSON.stringify(completedJobs));
-            localStorage.setItem('ts_rebirth_skills', JSON.stringify(rebirthSkills));
+            lsSet('ts_cards', JSON.stringify(cardInventory));
+            lsSet('ts_completed_jobs', JSON.stringify(completedJobs));
+            lsSet('ts_rebirth_skills', JSON.stringify(rebirthSkills));
             var el2 = document.getElementById('startKBAmount');
             if(el2) el2.innerText = kaffeebons;
             // Job-Button aktualisieren
@@ -3836,15 +3849,15 @@ async function loadCloudProfile() {
             // Lade-Logik einfügen:
             kaffeebons = d.kb||0; 
             wurmcoins = d.wurmcoins||0;
-            localStorage.setItem('ts_wurmcoins', wurmcoins);
+            lsSet('ts_wurmcoins', wurmcoins);
             
             if(d.stats) {
                 stats = d.stats;
-                localStorage.setItem('ts_stats', JSON.stringify(stats));
+                lsSet('ts_stats', JSON.stringify(stats));
             }
             if(d.statPoints !== undefined) {
                 statPoints = d.statPoints;
-                localStorage.setItem('ts_statpts', statPoints);
+                lsSet('ts_statpts', statPoints);
             }
         } else { showToast('NEUES PROFIL','#2ecc71',name+' — Viel Erfolg!'); }
     } catch(e){ showToast('LADEFEHLER','#f00','Firebase nicht erreichbar'); }
@@ -4624,7 +4637,7 @@ function earnKaffeebons(sc) {
     kaffeebons += earnedKb;
     wurmcoins += earnedWc;
     
-    localStorage.setItem('ts_wurmcoins', wurmcoins);
+    lsSet('ts_wurmcoins', wurmcoins);
     saveProgress();
     return { kb: earnedKb, wc: earnedWc };
 }
@@ -4661,7 +4674,7 @@ function renderShop() {
     document.getElementById('shopKBAmount').innerText = kaffeebons;
     let grid = document.getElementById('shopGrid');
     grid.innerHTML = '';
-    let best = parseInt(localStorage.getItem('ts_best_score') || '0');
+    let best = parseInt(lsGet('ts_best_score', '0'));
     if(best >= 50000) { let s = document.getElementById('btn-survival'); if(s) s.style.display = 'inline-block'; }
     UPGRADES_DEF.forEach(upg => {
         if (upg.minScore && best < upg.minScore) return;
@@ -6896,6 +6909,9 @@ function pvpBuildDeck() {
 function initPvPBoard(matchData, opponentName) {
     document.getElementById('pvpLobbyOverlay').style.display = 'none';
     document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('doom-hud').style.display = 'none';
+    document.getElementById('status-overlay').style.display = 'none';
+    document.getElementById('stationInfo').style.display = 'none';
 
     gamePhase = 'pvp';
 
@@ -7264,6 +7280,9 @@ function pvpCleanup() {
     if (pvpCanvas) { pvpCanvas.removeEventListener('click', pvpHandleClick); pvpCanvas.remove(); pvpCanvas = null; }
     pvpState = null; pvpMatchId = null; pvpPlayerRole = null;
     document.getElementById('startScreen').style.display = 'block';
+    document.getElementById('doom-hud').style.display = 'flex';
+    document.getElementById('status-overlay').style.display = 'block';
+    document.getElementById('stationInfo').style.display = 'block';
 }
 
 // --- Input ---
@@ -7381,11 +7400,75 @@ function pvpHandleClick(e) {
         return;
     }
 
+    // Aufgeben-Button (links unten)
+    if (mx >= 20 && mx <= 120 && my >= pvpCanvas.height/2 - 20 && my <= pvpCanvas.height/2 + 15) {
+        if (confirm('Duell aufgeben?')) { pvpEndGame(false); }
+        return;
+    }
+
+    // Anleitung-Button
+    let _hl = pvpGetCardLayout();
+    if (_hl) {
+        let _hbtn = _hl.endTurnBtn;
+        if (mx >= _hbtn.x && mx <= _hbtn.x + _hbtn.w && my >= _hbtn.y + 60 && my <= _hbtn.y + 100) {
+            pvpShowHelp();
+            return;
+        }
+    }
+
     // Klick ins Leere → Deselect
     pvpSelectedCard = null;
 }
 
 // --- Rendering ---
+
+function pvpShowHelp() {
+    // Overlay aus dem DOM
+    let ol = document.getElementById('pvpHelpOverlay');
+    if (!ol) {
+        ol = document.createElement('div');
+        ol.id = 'pvpHelpOverlay';
+        ol.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.93);z-index:1100;display:flex;align-items:center;justify-content:center;font-family:"Courier New",monospace;';
+        ol.innerHTML = `
+        <div style="max-width:560px;width:90%;border:3px solid #9b59b6;background:#0a0a14;border-radius:8px;padding:30px;color:#fff;max-height:80vh;overflow-y:auto;">
+            <h2 style="color:#9b59b6;font-size:22px;letter-spacing:4px;margin:0 0 18px;text-align:center;">⚔️ DUELL-ANLEITUNG</h2>
+            <div style="line-height:1.9;font-size:13px;">
+                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">🎯 ZIEL</div>
+                <div style="color:#aaa;margin-bottom:14px;">Reduziere die gegnerischen HP auf 0. Jeder Spieler startet mit <strong style="color:#e74c3c;">30 HP</strong>.</div>
+
+                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">💧 MANA</div>
+                <div style="color:#aaa;margin-bottom:14px;">Jede Runde bekommst du mehr Mana (Runde 1 = 3, max 10). Karten kosten Mana — sieh die <strong style="color:#00e5ff;">blaue Zahl</strong> oben links auf jeder Karte.</div>
+
+                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">🃏 KARTE AUSSPIELEN</div>
+                <div style="color:#aaa;margin-bottom:14px;"><strong>1.</strong> Karte in deiner Hand (unten) anklicken → wird gelb markiert<br><strong>2.</strong> Auf die <em>untere Feldhälfte</em> klicken → Karte wird platziert</div>
+
+                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">⚔️ ANGREIFEN</div>
+                <div style="color:#aaa;margin-bottom:14px;"><strong>1.</strong> Eigene Feldkarte (untere Mitte) anklicken → wird markiert<br><strong>2a.</strong> Auf gegnerische Feldkarte klicken → Karte vs. Karte (beide nehmen Schaden)<br><strong>2b.</strong> Auf den <em>Gegner-Bereich oben</em> klicken → Direktangriff (nur wenn Gegner kein Feld hat!)</div>
+
+                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">🛡️ VERTEIDIGUNG</div>
+                <div style="color:#aaa;margin-bottom:14px;">Hat der Gegner Karten auf dem Feld, musst du zuerst diese eliminieren bevor du direkt angreifen kannst.</div>
+
+                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">🔄 ZUG BEENDEN</div>
+                <div style="color:#aaa;margin-bottom:14px;">Klicke <strong>ZUG BEENDEN</strong> (rechts) wenn du fertig bist. Danach ist der Gegner dran.</div>
+
+                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">📊 KARTEN-STATS</div>
+                <div style="color:#aaa;margin-bottom:6px;"><span style="color:#e74c3c;">⚔ ATK</span> — Angriffswert | <span style="color:#3498db;">🛡 DEF</span> — Lebenspunkte der Karte</div>
+                <div style="color:#aaa;margin-bottom:14px;">Hovere über eine Karte für Details und Effekt-Beschreibung.</div>
+
+                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">🏆 GEWINN</div>
+                <div style="color:#aaa;">Wer zuerst 0 HP erreicht verliert. Sieger erhält <strong style="color:#f1c40f;">+300 KB</strong>.</div>
+            </div>
+            <button onclick="document.getElementById('pvpHelpOverlay').remove()" 
+                style="display:block;width:100%;margin-top:20px;background:#9b59b6;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;border-radius:4px;">
+                ✖ SCHLIESSEN
+            </button>
+        </div>`;
+        document.body.appendChild(ol);
+    } else {
+        ol.style.display = ol.style.display === 'none' ? 'flex' : 'none';
+    }
+}
+
 function pvpRenderLoop() {
     if (!pvpCanvas || !pvpCtx || gamePhase !== 'pvp') return;
     pvpFrame++;
@@ -7404,77 +7487,148 @@ function pvpRenderLoop() {
 function pvpRenderCard(ctx, card, x, y, w, h, selected, exhausted, facedown) {
     ctx.save();
     let hover = pvpHoverCard && pvpHoverCard.card === card;
-    if (selected) { ctx.translate(x + w/2, y + h/2); ctx.scale(1.08, 1.08); ctx.translate(-w/2, -h/2); x = 0; y = 0; }
-    else if (hover) { ctx.translate(0, -8); }
+    let liftY = selected ? -12 : (hover ? -6 : 0);
+    ctx.translate(0, liftY);
+    if (selected) {
+        ctx.shadowColor = '#f1c40f'; ctx.shadowBlur = 25;
+    }
 
     // Karten-Rücken
     if (facedown) {
-        ctx.fillStyle = '#1a1a2e';
-        ctx.strokeStyle = '#9b59b6';
-        ctx.lineWidth = 2;
+        ctx.fillStyle = '#1a1a2e'; ctx.strokeStyle = '#9b59b6'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.roundRect(x, y, w, h, 6); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#9b59b6';
-        ctx.font = 'bold 28px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('⚔️', x + w/2, y + h/2 + 10);
-        ctx.restore();
-        return;
+        ctx.font = 'bold 30px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#9b59b6'; ctx.fillText('⚔️', x + w/2, y + h/2);
+        ctx.textBaseline = 'alphabetic';
+        ctx.restore(); return;
     }
 
-    // Karten-Hintergrund
-    let bg = exhausted ? '#1a1a1a' : '#0d1117';
-    ctx.fillStyle = bg;
-    ctx.strokeStyle = selected ? '#f1c40f' : (exhausted ? '#333' : (card.color || '#555'));
+    let rarityColors = { 'Gewöhnlich': '#aaa', 'Selten': '#3498db', 'Episch': '#9b59b6', 'Legendär': '#f1c40f' };
+    let rCol = rarityColors[card.rarity] || '#aaa';
+
+    // Schatten
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.beginPath(); ctx.roundRect(x+4, y+4, w, h, 6); ctx.fill();
+
+    // Hintergrund
+    ctx.fillStyle = exhausted ? '#0f0f0f' : '#0d1117';
+    ctx.strokeStyle = selected ? '#f1c40f' : (exhausted ? '#222' : rCol);
     ctx.lineWidth = selected ? 3 : 2;
-    ctx.shadowColor = selected ? '#f1c40f' : (card.color || '#333');
-    ctx.shadowBlur = selected ? 20 : (hover ? 12 : 5);
+    if (!selected) { ctx.shadowColor = rCol; ctx.shadowBlur = hover ? 14 : 4; }
     ctx.beginPath(); ctx.roundRect(x, y, w, h, 6); ctx.fill(); ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // Rarity-Streifen oben
-    let rarityColors = { 'Gewöhnlich': '#aaa', 'Selten': '#3498db', 'Episch': '#9b59b6', 'Legendär': '#f1c40f' };
-    ctx.fillStyle = rarityColors[card.rarity] || '#aaa';
-    ctx.beginPath(); ctx.roundRect(x + 2, y + 2, w - 4, 8, [4, 4, 0, 0]); ctx.fill();
+    // Rarity-Banner oben
+    ctx.fillStyle = rCol;
+    ctx.beginPath(); ctx.roundRect(x+2, y+2, w-4, 10, [4,4,0,0]); ctx.fill();
 
-    // Kosten (oben links)
-    ctx.fillStyle = '#1a3a5c';
-    ctx.beginPath(); ctx.arc(x + 16, y + 24, 14, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#00e5ff'; ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'center';
-    ctx.fillText(card.pvpCost, x + 16, y + 29);
+    // Kosten-Badge
+    ctx.fillStyle = '#051525';
+    ctx.beginPath(); ctx.arc(x+16, y+26, 13, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#00e5ff'; ctx.font = 'bold 12px Courier New'; ctx.textAlign = 'center';
+    ctx.fillText(card.pvpCost, x+16, y+31);
 
-    // Name
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Courier New'; ctx.textAlign = 'center';
-    let name = card.name.length > 16 ? card.name.substring(0, 15) + '…' : card.name;
-    ctx.fillText(name, x + w/2, y + 28);
+    // Name (zweizeilig wenn nötig)
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Courier New'; ctx.textAlign = 'center';
+    let words = (card.name || '').split(' ');
+    let line1 = '', line2 = '';
+    for (let w2 of words) {
+        if ((line1 + w2).length <= 12) line1 += (line1 ? ' ' : '') + w2;
+        else line2 += (line2 ? ' ' : '') + w2;
+    }
+    if (line2.length > 14) line2 = line2.substring(0,13) + '…';
+    ctx.fillText(line1, x + w/2, y + 28);
+    if (line2) { ctx.font = '9px Courier New'; ctx.fillText(line2, x + w/2, y + 40); }
 
-    // Großes Emoji / Icon
-    ctx.font = '36px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(pvpCardIcon(card), x + w/2, y + h/2 - 5);
+    // Icon
+    ctx.font = '30px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(pvpCardIcon(card), x + w/2, y + h*0.48);
     ctx.textBaseline = 'alphabetic';
 
-    // HP-Balken (wenn auf dem Feld)
+    // Effekt-Text (mehrzeilig, klein)
+    let effect = card.pvpEffect || '';
+    ctx.fillStyle = 'rgba(200,200,200,0.85)'; ctx.font = '8px Courier New'; ctx.textAlign = 'center';
+    let effectWords = effect.split(' ');
+    let eLine = ''; let eLines = [];
+    for (let ew of effectWords) {
+        if ((eLine + ew).length <= 16) eLine += (eLine ? ' ' : '') + ew;
+        else { eLines.push(eLine); eLine = ew; }
+    }
+    if (eLine) eLines.push(eLine);
+    eLines.slice(0,2).forEach((el, i) => ctx.fillText(el, x + w/2, y + h - 32 + i * 11));
+
+    // HP-Balken
     if (card.curHp !== undefined) {
         let hpPct = Math.max(0, card.curHp / card.pvpDef);
-        ctx.fillStyle = '#111'; ctx.fillRect(x + 4, y + h - 24, w - 8, 8);
+        ctx.fillStyle = '#0a0a0a'; ctx.fillRect(x+4, y+h-20, w-8, 7);
         ctx.fillStyle = hpPct > 0.5 ? '#2ecc71' : (hpPct > 0.25 ? '#f39c12' : '#e74c3c');
-        ctx.fillRect(x + 4, y + h - 24, (w - 8) * hpPct, 8);
+        ctx.fillRect(x+4, y+h-20, (w-8)*hpPct, 7);
     }
 
     // ATK / DEF
-    ctx.font = 'bold 12px Courier New';
+    ctx.font = 'bold 11px Courier New';
     ctx.fillStyle = '#e74c3c'; ctx.textAlign = 'left';
-    ctx.fillText('⚔' + card.pvpAtk, x + 5, y + h - 6);
+    let atkVal = card.pvpAtk !== undefined ? card.pvpAtk : 0;
+    ctx.fillText('⚔' + atkVal, x+4, y+h-5);
     ctx.fillStyle = '#3498db'; ctx.textAlign = 'right';
-    let hp = card.curHp !== undefined ? card.curHp : card.pvpDef;
-    ctx.fillText('🛡' + hp, x + w - 5, y + h - 6);
+    let hp2 = card.curHp !== undefined ? card.curHp : (card.pvpDef || 0);
+    ctx.fillText('🛡' + hp2, x+w-4, y+h-5);
 
-    // Erschöpft-Overlay
+    // Exhausted-Overlay
     if (exhausted) {
-        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.beginPath(); ctx.roundRect(x, y, w, h, 6); ctx.fill();
+        ctx.fillStyle = '#555'; ctx.font = 'bold 11px Courier New'; ctx.textAlign = 'center';
+        ctx.fillText('ERSCHÖPFT', x+w/2, y+h/2);
+    }
+
+    // Hover-Tooltip (große Info-Box)
+    if (hover && !facedown && !exhausted) {
+        pvpDrawTooltip(ctx, card, x, y, w, h);
     }
 
     ctx.restore();
+}
+
+function pvpDrawTooltip(ctx, card, cx, cy, cw, ch) {
+    let W = pvpCanvas ? pvpCanvas.width : 1280;
+    let H = pvpCanvas ? pvpCanvas.height : 720;
+    let tw = 220, th = 130;
+    let tx = cx + cw + 8;
+    if (tx + tw > W - 20) tx = cx - tw - 8;
+    let ty = Math.min(cy, H - th - 10);
+
+    ctx.fillStyle = 'rgba(10,10,20,0.97)';
+    ctx.strokeStyle = card.color || '#9b59b6';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = card.color || '#9b59b6'; ctx.shadowBlur = 15;
+    ctx.beginPath(); ctx.roundRect(tx, ty, tw, th, 8); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px Courier New'; ctx.textAlign = 'left';
+    ctx.fillText(card.name, tx+10, ty+20);
+    let rCol = { 'Gewöhnlich': '#aaa', 'Selten': '#3498db', 'Episch': '#9b59b6', 'Legendär': '#f1c40f' }[card.rarity] || '#aaa';
+    ctx.fillStyle = rCol; ctx.font = '10px Courier New';
+    ctx.fillText(card.rarity, tx+10, ty+35);
+
+    ctx.fillStyle = '#00e5ff'; ctx.font = 'bold 11px Courier New';
+    ctx.fillText('Kosten: ' + card.pvpCost + ' 💧', tx+10, ty+52);
+    ctx.fillStyle = '#e74c3c';
+    ctx.fillText('Angriff: ' + (card.pvpAtk||0), tx+10, ty+67);
+    ctx.fillStyle = '#3498db';
+    ctx.fillText('Verteidigung: ' + (card.pvpDef||0), tx+10, ty+82);
+
+    ctx.fillStyle = '#f1c40f'; ctx.font = 'bold 10px Courier New';
+    ctx.fillText('Effekt:', tx+10, ty+99);
+    ctx.fillStyle = '#ccc'; ctx.font = '9px Courier New';
+    let effect = card.pvpEffect || 'Kein Effekt.';
+    let ew = effect.split(' '); let eLine = ''; let eY = ty+112;
+    for (let w2 of ew) {
+        if ((eLine+w2).length <= 28) eLine += (eLine?' ':'')+w2;
+        else { ctx.fillText(eLine, tx+10, eY); eY+=11; eLine=w2; if(eY>ty+th-5) break; }
+    }
+    if (eLine && eY <= ty+th-5) ctx.fillText(eLine, tx+10, eY);
 }
 
 function pvpCardIcon(card) {
@@ -7625,23 +7779,21 @@ function pvpDraw() {
     ctx.font = 'bold 14px Courier New'; ctx.textAlign = 'center';
     ctx.fillText('ZUG BEENDEN', btn.x + btn.w/2, btn.y + btn.h/2 + 5);
 
+    // Help Button
+    ctx.fillStyle = '#0a0a1a'; ctx.strokeStyle = '#3498db'; ctx.lineWidth = 2;
+    ctx.shadowColor = '#3498db'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.roundRect(btn.x, btn.y + 60, btn.w, 40, 6); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#3498db'; ctx.font = 'bold 13px Courier New';
+    ctx.fillText('❓ ANLEITUNG', btn.x + btn.w/2, btn.y + 86);
+
     // Aufgeben-Button (links)
     ctx.fillStyle = '#1a0000'; ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.roundRect(20, H/2 - 20, 100, 35, 4); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#c0392b'; ctx.font = 'bold 11px Courier New';
     ctx.fillText('AUFGEBEN', 70, H/2 + 4);
 
-    // Aufgeben-Click-Detection (rudimentär über Canvas-Click-Event schon registriert)
-    if (pvpCanvas._quitSetup !== true) {
-        pvpCanvas._quitSetup = true;
-        pvpCanvas.addEventListener('click', function _quitCheck(e) {
-            let r = pvpCanvas.getBoundingClientRect();
-            let mx2 = e.clientX - r.left, my2 = e.clientY - r.top;
-            if (mx2 >= 20 && mx2 <= 120 && my2 >= H/2 - 20 && my2 <= H/2 + 15) {
-                if (confirm('Duell aufgeben?')) { pvpEndGame(false); }
-            }
-        });
-    }
+    // Aufgeben-Button wird in pvpHandleClick behandelt
 
     // Log (rechts unten)
     ctx.fillStyle = 'rgba(0,0,0,0.6)';
