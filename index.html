@@ -6795,1299 +6795,897 @@ if ((activeBoss && activeBoss.hp > 0) || (gamePhase === 'bossroom' && bossRoomSt
 // ============================================================
 // PHASE 5: TCG PVP MATCHMAKING & LOBBY
 // ============================================================
-let pvpMatchId = null;
+let pvpMatchId     = null;
 let pvpUnsubscribe = null;
-let pvpPlayerRole = null; // 'player1' oder 'player2'
-
-function openPvPLobby() {
-    if(cardInventory.length < 20) {
-        showToast("NICHT GENUG KARTEN!", "#e74c3c", `Du hast ${cardInventory.length}/20 Karten.`);
-        return;
-    }
-    document.getElementById('pvpLobbyOverlay').style.display = 'flex';
-    document.getElementById('pvpLobbyStatus').innerText = "STATUS: BEREIT";
-    document.getElementById('pvpSearchBtn').style.display = 'block';
-    document.getElementById('pvpQueuePanel').style.display = 'none';
-}
-
-
+let pvpPlayerRole  = null;
+let pvpStateListener = null;
 let pvpQueueListener = null;
-let pvpMyQueueName = null;
+let pvpMyQueueName   = null;
 
-function openPvPLobbyScreen() {
-    if(!db) { showToast("KEINE VERBINDUNG!", "#f00", "Firebase offline."); return; }
-    let pName = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim().substring(0,10);
-    if(!pName || pName === 'ANONYM') { showToast("NAME EINGEBEN!", "#f39c12", "Bitte zuerst Namen setzen."); return; }
-    pvpMyQueueName = pName;
-
-    // Eigenen Queue-Eintrag erstellen
-    db.collection('pvp_queue').doc(pName).set({
-        name: pName,
-        ts: firebase.firestore.FieldValue.serverTimestamp(),
-        status: 'waiting',         // waiting | challenged | in_match
-        challengeFrom: null,
-        matchId: null,
-    }).catch(e => console.warn('Queue set:', e));
-
-    // Queue UI zeigen
-    document.getElementById('pvpSearchBtn').style.display = 'none';
-    document.getElementById('pvpQueuePanel').style.display = 'block';
-    document.getElementById('pvpLobbyStatus').innerText = "ONLINE — WARTE AUF HERAUSFORDERER";
-    document.getElementById('pvpLobbyStatus').style.color = "#2ecc71";
-
-    // Queue listener starten
-    pvpStartQueueListener(pName);
-}
-
-function pvpStartQueueListener(myName) {
-    if (pvpQueueListener) pvpQueueListener();
-    // Listen to entire queue for player list
-    pvpQueueListener = db.collection('pvp_queue').onSnapshot(snap => {
-        let players = [];
-        snap.forEach(doc => {
-            let d = doc.data();
-            if (d.name !== myName && d.status === 'waiting') players.push(d.name);
-        });
-        pvpRenderQueueList(players);
-
-        // Check if we got challenged
-        let myDoc = snap.docs.find(d => d.id === myName);
-        if (myDoc) {
-            let myData = myDoc.data();
-            if (myData.challengeFrom && myData.status === 'challenged') {
-                pvpHandleIncomingChallenge(myData.challengeFrom, myData.matchId);
-            }
-            if (myData.status === 'in_match' && myData.matchId && !pvpMatchId) {
-                // We were accepted into a match
-                pvpMatchId = myData.matchId;
-                pvpPlayerRole = 'player2';
-                pvpJoinMatch(myData.challengeFrom);
-            }
-        }
-    });
-}
-
-function pvpRenderQueueList(players) {
-    let el = document.getElementById('pvpPlayerList');
-    if (!el) return;
-    if (players.length === 0) {
-        el.innerHTML = '<div style="color:#555;font-size:13px;padding:16px;text-align:center;">Keine anderen Spieler online...<br><span style="font-size:11px;">Warte oder lade einen Freund ein!</span></div>';
-        return;
+// ── helpers ──────────────────────────────────────────────
+function pvpShuffle(a) {
+    let arr = [...a];
+    for (let i = arr.length-1; i > 0; i--) {
+        let j = Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]];
     }
-    el.innerHTML = players.map(p => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #1a1a1a;">
-            <span style="color:#fff;font-size:14px;letter-spacing:1px;">⚔️ ${p}</span>
-            <button onclick="pvpSendChallenge('${p}')" style="background:#9b59b6;color:#fff;border:none;padding:7px 18px;cursor:pointer;font-family:'Courier New',monospace;font-size:12px;font-weight:bold;border-radius:3px;letter-spacing:1px;">HERAUSFORDERN</button>
-        </div>`).join('');
+    return arr;
+}
+function pvpLog(msg) { if(pvpState){ pvpState.log.unshift(msg); if(pvpState.log.length>10) pvpState.log.pop(); } }
+function pvpFlash(msg, col) { if(pvpState){ pvpState.flashMsg=msg; pvpState.flashColor=col||'#f1c40f'; pvpState.flashTimer=110; } }
+function pvpFloat(txt, x, y, col) { if(pvpState) pvpState.floats.push({txt,x,y,col:col||'#fff',life:80,vy:-1.2}); }
+function pvpPushState(update) {
+    if(!db||!pvpMatchId) return;
+    db.collection('pvp_matches').doc(pvpMatchId).update(update).catch(e=>console.warn('pvp push:',e));
+}
+function pvpSyncMyState(extra) {
+    if(!db||!pvpMatchId||!pvpState) return;
+    let r = pvpState.role;
+    db.collection('pvp_matches').doc(pvpMatchId).update({
+        [r+'Hp']:    pvpState.myHp,
+        [r+'Field']: pvpState.myField.map(c=>({id:c.id, hp:c.curHp??c.pvpDef, atk:c.pvpAtk, def:c.pvpDef, mode:c.mode||'atk'})),
+        [r+'HandCount']: pvpState.myHand.length,
+        [r+'DeckCount']: pvpState.myDeck.length,
+        [r+'Mana']:  pvpState.myMana,
+        ...(extra||{})
+    }).catch(e=>console.warn('sync:',e));
 }
 
-function pvpSendChallenge(targetName) {
-    if (!pvpMyQueueName || !db) return;
-    let myName = pvpMyQueueName;
-    // Create match document
-    db.collection('pvp_matches').add({
-        status: 'waiting',
-        player1: myName,
-        player2: targetName,
-        p1Hp: 30, p2Hp: 30,
-        p1Field: [], p2Field: [],
-        p1HandCount: 4, p2HandCount: 4,
-        turn: 1, activePlayer: 'player1',
-        lastAction: null, gameOver: null,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(docRef => {
-        pvpMatchId = docRef.id;
-        pvpPlayerRole = 'player1';
-        // Write challenge to target
-        db.collection('pvp_queue').doc(targetName).update({
-            status: 'challenged',
-            challengeFrom: myName,
-            matchId: docRef.id
-        });
-        // Update own queue entry
-        db.collection('pvp_queue').doc(myName).update({ status: 'in_match', matchId: docRef.id });
-        document.getElementById('pvpLobbyStatus').innerText = "WARTET AUF " + targetName + "...";
-        document.getElementById('pvpLobbyStatus').style.color = "#f1c40f";
-        // Listen for opponent to join
-        listenToPvPMatchStart();
-    }).catch(e => console.error('Challenge:', e));
-}
-
-function pvpHandleIncomingChallenge(fromName, matchId) {
-    // Show accept/decline UI
-    let statusEl = document.getElementById('pvpLobbyStatus');
-    statusEl.style.color = "#e74c3c";
-    statusEl.innerHTML = `⚔️ HERAUSFORDERUNG VON <strong>${fromName}</strong>!<br>
-        <button onclick="pvpAcceptChallenge('${fromName}','${matchId}')" style="margin-top:10px;background:#27ae60;color:#fff;border:none;padding:10px 24px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;margin-right:10px;">✔ ANNEHMEN</button>
-        <button onclick="pvpDeclineChallenge('${fromName}')" style="background:#c0392b;color:#fff;border:none;padding:10px 24px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;">✖ ABLEHNEN</button>`;
-}
-
-function pvpAcceptChallenge(fromName, matchId) {
-    pvpMatchId = matchId;
-    pvpPlayerRole = 'player2';
-    // Update queue entries
-    db.collection('pvp_queue').doc(pvpMyQueueName).update({ status: 'in_match', matchId });
-    // Signal match is running
-    db.collection('pvp_matches').doc(matchId).update({ status: 'running' });
-    pvpJoinMatch(fromName);
-}
-
-function pvpDeclineChallenge(fromName) {
-    db.collection('pvp_queue').doc(pvpMyQueueName).update({ status: 'waiting', challengeFrom: null, matchId: null });
-    db.collection('pvp_queue').doc(fromName).update({ status: 'waiting', matchId: null });
-    document.getElementById('pvpLobbyStatus').innerText = "ONLINE — WARTE AUF HERAUSFORDERER";
-    document.getElementById('pvpLobbyStatus').style.color = "#2ecc71";
-    pvpMatchId = null;
-}
-
-function pvpJoinMatch(opponentName) {
-    if (pvpQueueListener) { pvpQueueListener(); pvpQueueListener = null; }
-    // Clean up own queue entry
-    if (pvpMyQueueName) db.collection('pvp_queue').doc(pvpMyQueueName).delete().catch(()=>{});
-    document.getElementById('pvpLobbyStatus').style.color = "#2ecc71";
-    document.getElementById('pvpLobbyStatus').innerText = "VERBUNDEN MIT: " + opponentName;
-    setTimeout(() => {
-        db.collection('pvp_matches').doc(pvpMatchId).get().then(doc => {
-            if (doc.exists) initPvPBoard(doc.data(), opponentName);
-        });
-    }, 1200);
-}
-
-function listenToPvPMatchStart() {
-    // Player1 waits for status=running
-    if (pvpUnsubscribe) pvpUnsubscribe();
-    pvpUnsubscribe = db.collection('pvp_matches').doc(pvpMatchId).onSnapshot(doc => {
-        if (!doc.exists) return;
-        let d = doc.data();
-        if (d.status === 'running' && pvpPlayerRole === 'player1') {
-            if (pvpQueueListener) { pvpQueueListener(); pvpQueueListener = null; }
-            if (pvpMyQueueName) db.collection('pvp_queue').doc(pvpMyQueueName).delete().catch(()=>{});
-            let oppName = d.player2;
-            document.getElementById('pvpLobbyStatus').innerText = "VERBUNDEN MIT: " + oppName;
-            document.getElementById('pvpLobbyStatus').style.color = "#2ecc71";
-            setTimeout(() => initPvPBoard(d, oppName), 1200);
-            if (pvpUnsubscribe) { pvpUnsubscribe(); pvpUnsubscribe = null; }
-        }
-    });
-}
-
-function closePvPLobby() {
-    // Clean up queue
-    if (pvpMyQueueName && db) db.collection('pvp_queue').doc(pvpMyQueueName).delete().catch(()=>{});
-    if (pvpQueueListener) { pvpQueueListener(); pvpQueueListener = null; }
-    pvpMyQueueName = null;
-    document.getElementById('pvpLobbyOverlay').style.display = 'none';
-    document.getElementById('pvpSearchBtn').style.display = 'block';
-    document.getElementById('pvpQueuePanel').style.display = 'none';
-    document.getElementById('pvpLobbyStatus').innerText = "STATUS: BEREIT";
-    document.getElementById('pvpLobbyStatus').style.color = "#f1c40f";
-}
-
-// Legacy alias
-function startPvPMatchmaking() { openPvPLobbyScreen(); }
-
-// ============================================================
-// PVP CARD GAME — VOLLSTÄNDIGE IMPLEMENTIERUNG
-// ============================================================
-
-let pvpState = null; // Lokaler Spielzustand
-let pvpCanvas = null, pvpCtx = null;
-let pvpAnimFrame = null;
-let pvpHoverCard = null;
-let pvpSelectedCard = null;
-let pvpDragging = false;
-let pvpFrame = 0;
-
-// --- Hilfsfunktionen ---
-function pvpShuffle(arr) {
-    let a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-        let j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-}
-
-function pvpBuildDeck() {
-    // Nimm die cardInventory des Spielers (max 20), shuffle
-    let deck = pvpShuffle([...cardInventory]).slice(0, 20);
-    return deck;
-}
-
+// ── init ─────────────────────────────────────────────────
 function initPvPBoard(matchData, opponentName) {
     document.getElementById('pvpLobbyOverlay').style.display = 'none';
-    document.getElementById('startScreen').style.display = 'none';
-    document.getElementById('doom-hud').style.display = 'none';
+    document.getElementById('startScreen').style.display    = 'none';
+    document.getElementById('doom-hud').style.display       = 'none';
     document.getElementById('status-overlay').style.display = 'none';
-    document.getElementById('stationInfo').style.display = 'none';
-
+    document.getElementById('stationInfo').style.display    = 'none';
     gamePhase = 'pvp';
 
-    let myDeck = pvpBuildDeck();
-    let myHand = myDeck.splice(0, 4); // 4 Startkarten
+    let deck = pvpShuffle([...cardInventory]).slice(0,20);
+    let hand = deck.splice(0,4);
 
     pvpState = {
-        matchId: pvpMatchId,
-        role: pvpPlayerRole,
+        role:         pvpPlayerRole,
         opponentName: opponentName,
-        myName: (document.getElementById('playerName').value || 'ANONYM').toUpperCase().trim(),
-        myHp: 30,
-        myDeck: myDeck,
-        myHand: myHand,
-        myField: [],
-        myMana: pvpPlayerRole === 'player1' ? 3 : 3,
-        myMaxMana: pvpPlayerRole === 'player1' ? 3 : 3,
-        oppHp: 30,
-        oppHandCount: 4,
-        oppDeckCount: 16,
-        oppMana: 3,
-        oppMaxMana: 3,
-        oppField: [],
-        myTurn: pvpPlayerRole === 'player1',
+        myName:       (document.getElementById('playerName').value||'ANONYM').toUpperCase().trim(),
+        myHp: 30, oppHp: 30,
+        myDeck: deck, myHand: hand, myField: [],
+        oppField: [], oppHandCount: 4, oppDeckCount: 16,
+        myMana: 0, myMaxMana: 0, oppMana: 0,
+        myTurn:    pvpPlayerRole === 'player1',
+        phase:     pvpPlayerRole === 'player1' ? 'draw' : 'wait',
         turn: 1,
+        summonedThisTurn: false,
         attackedThisTurn: [],
-        log: [],
-        flashMsg: null, flashTimer: 0, flashColor: '#f1c40f',
-        floats: [],
-        attackAnim: null,
-        _lastActionId: null,
-        _gameOverHandled: false,
+        log: ['Duell beginnt!'],
+        flashMsg: null, flashTimer: 0, flashColor:'#f1c40f',
+        floats: [], attackAnim: null,
+        _lastActionId: null, _gameOverHandled: false,
+        selectedHandIdx: null, selectedFieldIdx: null,
     };
 
-    // Initial state in Firebase pushen (player1 legt Felder an)
     if (pvpPlayerRole === 'player1') {
         pvpPushState({
-            player1Hp: 30, player2Hp: 30,
-            player1Field: [], player2Field: [],
-            player1HandCount: pvpState.myHand.length,
-            player1DeckCount: pvpState.myDeck.length,
-            player1Mana: 3,
-            player2HandCount: 4,
-            player2DeckCount: 16,
-            player2Mana: 3,
-            turn: 1,
-            activePlayer: 'player1',
-            phase: 'main',
-            lastAction: null,
-            gameOver: null,
+            player1Hp:30, player2Hp:30,
+            player1Field:[], player2Field:[],
+            player1HandCount:4, player2HandCount:4,
+            player1DeckCount: deck.length, player2DeckCount:16,
+            player1Mana:0, player2Mana:0,
+            turn:1, activePlayer:'player1', phase:'draw',
+            lastAction:null, gameOver:null,
         });
     }
 
-    // Canvas erstellen
+    // Canvas
     pvpCanvas = document.createElement('canvas');
     pvpCanvas.id = 'pvpCanvas';
-    pvpCanvas.style.cssText = 'position:absolute;inset:0;z-index:900;cursor:default;';
-    pvpCanvas.width = window.innerWidth;
-    pvpCanvas.height = window.innerHeight - 110;
+    pvpCanvas.style.cssText = 'position:absolute;inset:0;z-index:900;cursor:default;touch-action:none;';
+    pvpCanvas.width  = window.innerWidth;
+    pvpCanvas.height = window.innerHeight;
     document.body.appendChild(pvpCanvas);
     pvpCtx = pvpCanvas.getContext('2d');
+    pvpCanvas.addEventListener('click',    pvpHandleClick);
+    pvpCanvas.addEventListener('mousemove',pvpHandleMove);
+    window.addEventListener('resize', pvpOnResize);
 
-    pvpCanvas.addEventListener('click', pvpHandleClick);
-    pvpCanvas.addEventListener('mousemove', pvpHandleMove);
-    window.addEventListener('resize', pvpResizeCanvas);
-
-    showToast('⚔️ DUELL GESTARTET!', '#9b59b6', 'Gegner: ' + opponentName);
-    pvpLog('Duell beginnt! Du spielst als ' + pvpState.role.toUpperCase());
-
-    // Firebase-Listener
     listenToPvPState();
+    showToast('⚔️ DUELL GESTARTET!','#9b59b6','Gegner: '+opponentName);
 
-    // Render-Loop starten
+    // Auto draw-phase for player1
+    if (pvpPlayerRole === 'player1') {
+        pvpState.phase = 'main';
+        pvpState.myMana = 3; pvpState.myMaxMana = 3;
+        pvpLog('Runde 1 — Dein Zug! (Keine Ziehphase Runde 1)');
+        pvpFlash('DEIN ZUG!','#2ecc71');
+    }
+
     pvpRenderLoop();
 }
 
-function pvpResizeCanvas() {
-    if (!pvpCanvas) return;
-    pvpCanvas.width = window.innerWidth;
-    pvpCanvas.height = window.innerHeight - 110;
-}
-
-function pvpLog(msg) {
-    if (!pvpState) return;
-    pvpState.log.unshift(msg);
-    if (pvpState.log.length > 8) pvpState.log.pop();
-}
-
-function pvpFlash(msg, color) {
-    if (!pvpState) return;
-    pvpState.flashMsg = msg;
-    pvpState.flashColor = color || '#f1c40f';
-    pvpState.flashTimer = 120;
-}
-
-function pvpFloat(text, x, y, color) {
-    if (!pvpState) return;
-    pvpState.floats.push({ text, x, y, color: color || '#fff', life: 80 });
-}
-
-// --- Firebase Sync ---
-function pvpPushState(update) {
-    if (!db || !pvpMatchId) return;
-    db.collection('pvp_matches').doc(pvpMatchId).update(update).catch(e => console.warn('PvP push:', e));
-}
-
-function pvpPushAction(action) {
-    if (!db || !pvpMatchId || !pvpState) return;
-    let role = pvpState.role;
-    let update = {
-        lastAction: action,
-        [role + 'Field']: pvpState.myField.map(c => ({
-            id: c.id,
-            hp: c.curHp !== undefined ? c.curHp : c.pvpDef,
-            atk: c.pvpAtk,
-            def: c.pvpDef
-        })),
-        [role + 'Hp']: pvpState.myHp,
-        [role + 'HandCount']: pvpState.myHand.length,
-        [role + 'Mana']: pvpState.myMana,
-        [role + 'DeckCount']: pvpState.myDeck.length,
-    };
-    db.collection('pvp_matches').doc(pvpMatchId).update(update)
-        .catch(e => console.warn('PvP action push:', e));
-}
-
-let pvpStateListener = null;
+// ── firebase listener ─────────────────────────────────────
 function listenToPvPState() {
-    if (pvpStateListener) pvpStateListener();
-    pvpStateListener = db.collection('pvp_matches').doc(pvpMatchId).onSnapshot(doc => {
-        if (!doc.exists || !pvpState) return;
-        let data = doc.data();
+    if(pvpStateListener) pvpStateListener();
+    pvpStateListener = db.collection('pvp_matches').doc(pvpMatchId).onSnapshot(doc=>{
+        if(!doc.exists||!pvpState) return;
+        let d = doc.data();
+        let me = pvpState.role, opp = me==='player1'?'player2':'player1';
 
-        let myRole = pvpState.role;
-        let oppRole = myRole === 'player1' ? 'player2' : 'player1';
-
-        // === Gegner-Stats aus Firebase ===
-        let newOppHp = data[oppRole + 'Hp'];
-        if (newOppHp !== undefined && newOppHp !== pvpState.oppHp) {
-            let diff = newOppHp - pvpState.oppHp;
-            if (diff < 0 && pvpCanvas) pvpFloat(diff + ' HP', pvpCanvas.width * 0.3, 80, '#e74c3c');
+        // Opp stats
+        let newOppHp = d[opp+'Hp'];
+        if(newOppHp !== undefined && newOppHp !== pvpState.oppHp) {
+            if(newOppHp < pvpState.oppHp && pvpCanvas) pvpFloat('⚔️ -'+(pvpState.oppHp-newOppHp), pvpCanvas.width*0.75, pvpCanvas.height*0.2, '#e74c3c');
             pvpState.oppHp = newOppHp;
         }
-        let newOppHand = data[oppRole + 'HandCount'];
-        if (newOppHand !== undefined) pvpState.oppHandCount = newOppHand;
-        let newOppDeck = data[oppRole + 'DeckCount'];
-        if (newOppDeck !== undefined) pvpState.oppDeckCount = newOppDeck;
-        let newOppMana = data[oppRole + 'Mana'];
-        if (newOppMana !== undefined) pvpState.oppMana = newOppMana;
+        if(d[opp+'HandCount']!==undefined) pvpState.oppHandCount = d[opp+'HandCount'];
+        if(d[opp+'DeckCount']!==undefined) pvpState.oppDeckCount = d[opp+'DeckCount'];
+        if(d[opp+'Mana']!==undefined) pvpState.oppMana = d[opp+'Mana'];
 
-        // === Gegner-Feld aus Firebase (source of truth) ===
-        let oppFieldData = data[oppRole + 'Field'] || [];
-        pvpState.oppField = oppFieldData.map(f => {
-            let existing = pvpState.oppField.find(c => c.id === f.id);
-            if (existing) {
-                existing.curHp = f.hp;
-                existing.pvpAtk = f.atk;
-                return existing;
-            }
-            let cardDef = CARD_DATABASE.find(c => c.id === f.id);
-            if (cardDef) return { ...cardDef, curHp: f.hp, pvpAtk: f.atk };
-            return { id: f.id, name: '???', pvpAtk: f.atk || 0, pvpDef: f.def || f.hp, curHp: f.hp, color: '#555', rarity: 'Gewöhnlich', pvpCost: 1 };
-        });
-
-        // === Eigene HP-Korrektur (falls opponent hat uns geschaden) ===
-        let newMyHp = data[myRole + 'Hp'];
-        if (newMyHp !== undefined && newMyHp < pvpState.myHp) {
-            // Gegner hat unsere HP aktualisiert (z.B. durch Angriff)
+        // My HP (opponent may have updated it)
+        let newMyHp = d[me+'Hp'];
+        if(newMyHp !== undefined && newMyHp < pvpState.myHp) {
+            pvpFloat('💔 -'+(pvpState.myHp-newMyHp), pvpCanvas ? pvpCanvas.width*0.25 : 200, pvpCanvas ? pvpCanvas.height*0.75 : 600, '#e74c3c');
             pvpState.myHp = newMyHp;
         }
 
-        // === Zug-Wechsel ===
-        let isMyTurn = data.activePlayer === myRole;
-        let newTurn = data.turn || pvpState.turn;
-        if (isMyTurn && !pvpState.myTurn) {
+        // Opp field
+        let oppFieldData = d[opp+'Field']||[];
+        pvpState.oppField = oppFieldData.map(f=>{
+            let ex = pvpState.oppField.find(c=>c.id===f.id);
+            if(ex){ ex.curHp=f.hp; ex.pvpAtk=f.atk; ex.pvpDef=f.def||ex.pvpDef; ex.mode=f.mode||'atk'; return ex; }
+            let def = CARD_DATABASE.find(c=>c.id===f.id);
+            return def ? {...def, curHp:f.hp, pvpAtk:f.atk, pvpDef:f.def||def.pvpDef, mode:f.mode||'atk'}
+                       : {id:f.id,name:'???',pvpAtk:f.atk,pvpDef:f.def||f.hp,curHp:f.hp,color:'#555',rarity:'Gewöhnlich',pvpCost:1,mode:'atk'};
+        });
+
+        // Turn change
+        let isMyTurn = d.activePlayer === me;
+        if(isMyTurn && !pvpState.myTurn) {
             pvpState.myTurn = true;
-            pvpState.turn = newTurn;
+            pvpState.turn = d.turn || pvpState.turn;
+            pvpState.summonedThisTurn = false;
             pvpState.attackedThisTurn = [];
-            pvpState.myMana = Math.min(10, newTurn + 1);
-            pvpState.myMaxMana = pvpState.myMana;
-            pvpApplyStartOfTurnEffects();
-            pvpDrawCard();
-            pvpFlash('DEIN ZUG!', '#2ecc71');
-            pvpLog('Runde ' + newTurn + ' — Dein Zug!');
-        } else if (!isMyTurn) {
+            pvpState.phase = 'draw';
+            let mana = Math.min(10, pvpState.turn + 1);
+            pvpState.myMana = mana; pvpState.myMaxMana = mana;
+            // Draw a card
+            if(pvpState.myDeck.length > 0) {
+                let c = pvpState.myDeck.splice(0,1)[0];
+                pvpState.myHand.push(c);
+                pvpLog('Gezogen: '+c.name);
+            } else { pvpLog('Kein Deck mehr! Kein Ziehen.'); }
+            pvpState.phase = 'main';
+            pvpFlash('DEIN ZUG!','#2ecc71');
+            pvpLog('Runde '+pvpState.turn+' — Dein Zug!');
+            pvpSyncMyState();
+        } else if(!isMyTurn && pvpState.myTurn) {
             pvpState.myTurn = false;
-            pvpState.turn = newTurn;
+            pvpState.phase = 'wait';
+            pvpState.selectedHandIdx = null; pvpState.selectedFieldIdx = null;
         }
 
-        // === Gegner-Aktionen ===
-        let action = data.lastAction;
-        if (action && action.by !== myRole && action.id !== pvpState._lastActionId) {
+        // Opponent action
+        let action = d.lastAction;
+        if(action && action.by!==me && action.id!==pvpState._lastActionId) {
             pvpState._lastActionId = action.id;
             pvpProcessOpponentAction(action);
         }
 
-        // === Game Over ===
-        if (data.gameOver && !pvpState._gameOverHandled) {
+        // Game over
+        if(d.gameOver && !pvpState._gameOverHandled) {
             pvpState._gameOverHandled = true;
-            pvpHandleGameOver(data.gameOver);
+            pvpHandleGameOver(d.gameOver);
         }
     });
 }
 
+// ── opponent action processing ────────────────────────────
 function pvpProcessOpponentAction(action) {
-    if (!pvpState) return;
-    if (action.type === 'play_card') {
-        // Nur Log + Float — Feld wird bereits durch Firebase-Field-Sync gesetzt
-        let cardDef = CARD_DATABASE.find(c => c.id === action.cardId);
-        if (cardDef) {
-            pvpLog(pvpState.opponentName + ' spielt ' + cardDef.name);
-            pvpFloat(cardDef.name + '!', pvpCanvas.width * 0.5, pvpCanvas.height * 0.35, cardDef.color || '#9b59b6');
+    if(!pvpState||!pvpCanvas) return;
+    if(action.type === 'summon') {
+        let def = CARD_DATABASE.find(c=>c.id===action.cardId);
+        if(def) {
+            pvpState.oppField.push({...def, curHp:def.pvpDef, mode:'atk'});
+            pvpLog(pvpState.opponentName+' beschwört '+def.name);
+            pvpFloat(def.name+'!', pvpCanvas.width*0.5, pvpCanvas.height*0.3, def.color||'#9b59b6');
         }
-    } else if (action.type === 'attack') {
-        // Gegner greift an
-        let attCard = pvpState.oppField.find(c => c.id === action.attackerId);
-        let dmg = action.dmg || (attCard ? attCard.pvpAtk : 1);
-        if (action.targetType === 'player') {
-            pvpState.myHp -= dmg;
-            pvpLog(pvpState.opponentName + ' greift direkt an! -' + dmg + ' HP');
-            pvpFloat('-' + dmg + ' HP!', pvpCanvas.width * 0.3, pvpCanvas.height * 0.5, '#e74c3c');
-            pvpState.attackAnim = { type: 'opp_direct', timer: 30 };
-        } else if (action.targetType === 'card') {
-            let myTarget = pvpState.myField.find(c => c.id === action.targetId);
-            if (myTarget) {
-                dmg = pvpApplyDodge(myTarget, dmg);
-                myTarget.curHp -= dmg;
-                if (myTarget.curHp <= 0) {
-                    pvpState.myField = pvpState.myField.filter(c => c.id !== action.targetId);
-                    pvpLog(pvpState.opponentName + ' zerstört ' + myTarget.name);
-                }
-                // Gegenangriff
-                if (attCard && myTarget.pvpAtk > 0) {
-                    attCard.curHp = (attCard.curHp !== undefined ? attCard.curHp : attCard.pvpDef) - myTarget.pvpAtk;
-                    if (attCard.curHp <= 0) {
-                        pvpState.oppField = pvpState.oppField.filter(c => c.id !== attCard.id);
+    } else if(action.type === 'attack') {
+        let dmg = action.dmg||0;
+        if(action.targetType === 'player') {
+            let realDmg = Math.max(0, dmg);
+            pvpState.myHp = Math.max(0, pvpState.myHp - realDmg);
+            pvpLog(pvpState.opponentName+' Direktangriff! -'+realDmg+' LP');
+            pvpFloat('-'+realDmg+' LP!', pvpCanvas.width*0.25, pvpCanvas.height*0.6, '#e74c3c');
+            pvpPushState({[pvpState.role+'Hp']: pvpState.myHp});
+        } else if(action.targetType === 'card') {
+            let myCard = pvpState.myField.find(c=>c.id===action.targetId);
+            if(myCard) {
+                if(myCard.mode==='atk') {
+                    let netDmg = Math.max(0, dmg - myCard.pvpAtk);
+                    myCard.curHp -= dmg;
+                    if(netDmg > 0) {
+                        pvpState.myHp = Math.max(0, pvpState.myHp - netDmg);
+                        pvpLog(myCard.name+' besiegt! -'+netDmg+' LP Restschaden');
+                        pvpPushState({[pvpState.role+'Hp']: pvpState.myHp});
+                    }
+                } else { // def mode
+                    let netDmg = Math.max(0, dmg - myCard.pvpDef);
+                    myCard.curHp -= dmg;
+                    if(netDmg > 0) {
+                        pvpState.myHp = Math.max(0, pvpState.myHp - netDmg);
+                        pvpPushState({[pvpState.role+'Hp']: pvpState.myHp});
                     }
                 }
+                if(myCard.curHp <= 0) {
+                    pvpState.myField = pvpState.myField.filter(c=>c.id!==myCard.id);
+                    pvpLog(myCard.name+' zerstört!');
+                    pvpFloat('💥 '+myCard.name, pvpCanvas.width*0.25, pvpCanvas.height*0.6, '#e74c3c');
+                }
+                pvpSyncMyState();
             }
         }
-    } else if (action.type === 'end_turn') {
-        pvpLog(pvpState.opponentName + ' beendet Zug.');
-        // Gegner-Mana resetten (nur visuell)
-        pvpState.oppMana = 0;
+    } else if(action.type === 'end_turn') {
+        pvpLog(pvpState.opponentName+' beendet Zug.');
     }
-
-    // Game Over Check lokal
-    if (pvpState.myHp <= 0) {
-        pvpEndGame(false);
-    }
+    if(pvpState.myHp <= 0 && !pvpState._gameOverHandled) pvpEndGame(false);
 }
 
-// --- Spielaktionen ---
-function pvpDrawCard() {
-    if (!pvpState || pvpState.myDeck.length === 0) return;
-    let card = pvpState.myDeck.splice(0, 1)[0];
-    pvpState.myHand.push(card);
-    pvpLog('Karte gezogen: ' + card.name);
+// ── my actions ────────────────────────────────────────────
+function pvpDoSummon(handIdx) {
+    if(!pvpState||!pvpState.myTurn) return;
+    if(pvpState.phase !== 'main') { pvpFlash('HAUPTPHASE NÖTIG!','#e74c3c'); return; }
+    if(pvpState.summonedThisTurn) { pvpFlash('BEREITS BESCHWOREN!','#e74c3c'); return; }
+    if(pvpState.myField.length >= 4) { pvpFlash('FELD VOLL!','#e74c3c'); return; }
+    let card = pvpState.myHand[handIdx];
+    if(!card) return;
+
+    pvpState.myHand.splice(handIdx,1);
+    let fc = {...card, curHp:card.pvpDef, mode:'atk'};
+    pvpState.myField.push(fc);
+    pvpState.summonedThisTurn = true;
+    pvpState.selectedHandIdx  = null;
+    pvpLog('Beschworen: '+card.name+' (ATK:'+card.pvpAtk+' DEF:'+card.pvpDef+')');
+    pvpFloat('⚡ '+card.name, pvpCanvas.width*0.4, pvpCanvas.height*0.55, card.color||'#f1c40f');
+
+    let aid = Date.now()+'_summon';
+    pvpSyncMyState({lastAction:{type:'summon',cardId:card.id,by:pvpState.role,id:aid}});
+    if(pvpState.oppHp <= 0 && !pvpState._gameOverHandled) pvpEndGame(true);
 }
 
-function pvpPlayCard(cardIndex) {
-    if (!pvpState || !pvpState.myTurn) return;
-    let card = pvpState.myHand[cardIndex];
-    if (!card) return;
-    if (pvpState.myMana < card.pvpCost) {
-        pvpFlash('ZU WENIG MANA!', '#e74c3c');
-        return;
-    }
-    if (pvpState.myField.length >= 4) {
-        pvpFlash('FELD VOLL!', '#e74c3c');
-        return;
-    }
-    pvpState.myMana -= card.pvpCost;
-    pvpState.myHand.splice(cardIndex, 1);
-    let fieldCard = { ...card, curHp: card.pvpDef, justPlayed: true };
-    pvpState.myField.push(fieldCard);
-    pvpApplyOnPlayEffect(fieldCard);
-    pvpLog('Du spielst: ' + card.name);
-    pvpFloat('+' + card.name, pvpCanvas.width * 0.3, pvpCanvas.height * 0.65, card.color || '#9b59b6');
+function pvpDoAttack(myFieldIdx, targetType, targetId) {
+    if(!pvpState||!pvpState.myTurn) return;
+    if(pvpState.phase !== 'battle' && pvpState.phase !== 'main') { pvpFlash('KAMPFPHASE NÖTIG!','#e74c3c'); return; }
+    let atk = pvpState.myField[myFieldIdx];
+    if(!atk) return;
+    if(pvpState.attackedThisTurn.includes(atk.id)) { pvpFlash('BEREITS ANGEGRIFFEN!','#e74c3c'); return; }
+    pvpState.attackedThisTurn.push(atk.id);
+    pvpState.phase = 'battle';
+    pvpState.selectedFieldIdx = null;
 
-    // Firebase update
-    let actionId = Date.now() + '_' + Math.random().toString(36).substr(2,5);
-    pvpPushAction({
-        type: 'play_card',
-        cardId: card.id,
-        by: pvpState.role,
-        id: actionId
-    });
-}
+    let atkVal = atk.pvpAtk;
+    let aid = Date.now()+'_atk_'+Math.random().toString(36).substr(2,4);
 
-function pvpAttackWithCard(cardIndex, targetType, targetId) {
-    if (!pvpState || !pvpState.myTurn) return;
-    let card = pvpState.myField[cardIndex];
-    if (!card) return;
-    if (pvpState.attackedThisTurn.includes(card.id)) {
-        pvpFlash('BEREITS ANGEGRIFFEN!', '#e74c3c');
-        return;
-    }
-    pvpState.attackedThisTurn.push(card.id);
+    if(targetType === 'player') {
+        if(pvpState.oppField.length > 0) { pvpFlash('GEGNER HAT MONSTER!','#e74c3c'); pvpState.attackedThisTurn.pop(); return; }
+        pvpState.oppHp = Math.max(0, pvpState.oppHp - atkVal);
+        pvpLog(atk.name+' → Direktangriff! -'+atkVal+' LP');
+        pvpFloat('⚔️ -'+atkVal+' LP', pvpCanvas.width*0.65, pvpCanvas.height*0.25, '#e74c3c');
+        pvpSyncMyState({lastAction:{type:'attack',attackerId:atk.id,targetType:'player',dmg:atkVal,by:pvpState.role,id:aid}});
+    } else {
+        let target = pvpState.oppField.find(c=>c.id===targetId);
+        if(!target) return;
+        let tIdx = pvpState.oppField.indexOf(target);
+        let defVal = target.mode==='def' ? target.pvpDef : target.pvpAtk;
 
-    let dmg = card.pvpAtk;
-    let actionId = Date.now() + '_' + Math.random().toString(36).substr(2,5);
-
-    if (targetType === 'player') {
-        // Direkt angreifen — nur wenn Gegner kein Feld hat
-        if (pvpState.oppField.length > 0) {
-            pvpFlash('GEGNER HAT VERTEIDIGER!', '#e74c3c');
-            pvpState.attackedThisTurn.pop();
-            return;
+        if(target.mode==='def') {
+            // DEF mode: pierce if atk > def, no LP damage to opponent, but card destroyed
+            target.curHp -= atkVal;
+            pvpLog(atk.name+' → '+target.name+' (DEF)');
+            if(target.curHp <= 0) {
+                pvpState.oppField.splice(tIdx,1);
+                pvpLog(target.name+' zerstört!');
+                pvpFloat('💥',pvpCanvas.width*0.65,pvpCanvas.height*0.3,'#f1c40f');
+            }
+            // Pierce damage
+            let pierce = Math.max(0, atkVal - target.pvpDef);
+            if(pierce > 0) { pvpState.oppHp = Math.max(0, pvpState.oppHp-pierce); pvpFloat('Pierce -'+pierce+'!',pvpCanvas.width*0.65,pvpCanvas.height*0.25,'#e74c3c'); }
+        } else {
+            // ATK mode battle
+            target.curHp -= atkVal;
+            atk.curHp   -= target.pvpAtk;
+            pvpLog(atk.name+'('+atkVal+') vs '+target.name+'('+target.pvpAtk+')');
+            let atkDiff = atkVal - target.pvpAtk;
+            if(atkDiff > 0) {
+                pvpState.oppHp = Math.max(0, pvpState.oppHp - atkDiff);
+                pvpFloat('⚔️ -'+atkDiff+' LP', pvpCanvas.width*0.65, pvpCanvas.height*0.25, '#e74c3c');
+            } else if(atkDiff < 0) {
+                pvpState.myHp = Math.max(0, pvpState.myHp + atkDiff); // atkDiff is negative
+                pvpFloat('💔 '+atkDiff+' LP', pvpCanvas.width*0.35, pvpCanvas.height*0.75, '#e74c3c');
+            }
+            if(target.curHp <= 0) { pvpState.oppField.splice(tIdx,1); pvpLog(target.name+' zerstört!'); pvpFloat('💥',pvpCanvas.width*0.65,pvpCanvas.height*0.3,'#f1c40f'); }
+            if(atk.curHp   <= 0) { pvpState.myField = pvpState.myField.filter(c=>c.id!==atk.id); pvpLog(atk.name+' fällt!'); }
         }
-        pvpState.oppHp -= dmg;
-        pvpLog(card.name + ' greift direkt an! -' + dmg + ' HP');
-        pvpFloat('-' + dmg + '!', pvpCanvas.width * 0.65, pvpCanvas.height * 0.25, '#e74c3c');
-        pvpState.attackAnim = { type: 'my_direct', attIdx: cardIndex, timer: 30 };
-    } else if (targetType === 'card') {
-        let oppCard = pvpState.oppField.find(c => c.id === targetId);
-        if (!oppCard) return;
-        let oppCardIdx = pvpState.oppField.indexOf(oppCard);
-        oppCard.curHp = (oppCard.curHp !== undefined ? oppCard.curHp : oppCard.pvpDef) - dmg;
-        // Gegenangriff
-        card.curHp = (card.curHp !== undefined ? card.curHp : card.pvpDef) - oppCard.pvpAtk;
-        pvpLog(card.name + ' vs ' + oppCard.name);
-        pvpFloat(card.name + ' greift an!', pvpCanvas.width * 0.5, pvpCanvas.height * 0.5, '#f1c40f');
-        // Karten zerstören
-        if (oppCard.curHp <= 0) {
-            pvpState.oppField.splice(oppCardIdx, 1);
-            pvpLog(oppCard.name + ' zerstört!');
-        }
-        if (card.curHp <= 0) {
-            pvpState.myField.splice(cardIndex, 1);
-            pvpLog(card.name + ' fällt!');
-        }
-        pvpState.attackAnim = { type: 'card_vs_card', timer: 30 };
+        pvpSyncMyState({lastAction:{type:'attack',attackerId:atk.id,targetType:'card',targetId,dmg:atkVal,by:pvpState.role,id:aid}});
     }
-
-    // Firebase
-    pvpPushAction({
-        type: 'attack',
-        attackerId: card.id,
-        targetType,
-        targetId: targetId || null,
-        dmg,
-        by: pvpState.role,
-        id: actionId
-    });
-
-    // Meine HP an Firebase melden
-    pvpPushState({ [`${pvpState.role}Hp`]: pvpState.myHp });
-
-    // Game Over?
-    if (pvpState.oppHp <= 0) {
-        pvpEndGame(true);
-    }
+    if((pvpState.oppHp<=0 || pvpState.myHp<=0) && !pvpState._gameOverHandled) pvpEndGame(pvpState.oppHp<=0);
 }
 
-function pvpEndTurn() {
-    if (!pvpState || !pvpState.myTurn) return;
-    pvpState.myTurn = false;
-    let oppRole = pvpState.role === 'player1' ? 'player2' : 'player1';
-    let nextTurn = pvpState.turn + (pvpState.role === 'player2' ? 1 : 0);
-    let actionId = Date.now() + '_end';
-    pvpPushAction({ type: 'end_turn', by: pvpState.role, id: actionId });
-    pvpPushState({
-        activePlayer: oppRole,
+function pvpDoEndTurn() {
+    if(!pvpState||!pvpState.myTurn) return;
+    pvpState.myTurn = false; pvpState.phase = 'wait';
+    pvpState.selectedHandIdx = null; pvpState.selectedFieldIdx = null;
+    let opp = pvpState.role==='player1'?'player2':'player1';
+    let nextTurn = pvpState.turn + (pvpState.role==='player2'?1:0);
+    let aid = Date.now()+'_end';
+    pvpSyncMyState({
+        lastAction:{type:'end_turn',by:pvpState.role,id:aid},
+        activePlayer: opp,
         turn: nextTurn,
-        [`${pvpState.role}Hp`]: pvpState.myHp,
-        [`${pvpState.role}Field`]: pvpState.myField.map(c => ({ id: c.id, hp: c.curHp || c.pvpDef, atk: c.pvpAtk })),
-        [`${pvpState.role}HandCount`]: pvpState.myHand.length,
     });
-    pvpLog('Zug beendet. Gegner ist dran.');
-    pvpFlash("GEGNER IST DRAN", '#aaa');
+    pvpLog('Zug beendet.');
+    pvpFlash('GEGNER IST DRAN','#aaa');
 }
 
 function pvpEndGame(iWon) {
-    if (!pvpState) return;
-    let result = iWon ? pvpState.role : (pvpState.role === 'player1' ? 'player2' : 'player1');
-    pvpPushState({ gameOver: { winner: result, ts: Date.now() } });
-    pvpHandleGameOver({ winner: result });
+    if(!pvpState||pvpState._gameOverHandled) return;
+    pvpState._gameOverHandled = true;
+    let winner = iWon ? pvpState.role : (pvpState.role==='player1'?'player2':'player1');
+    pvpPushState({gameOver:{winner,ts:Date.now()}, status:'done'});
+    pvpHandleGameOver({winner});
 }
-
 function pvpHandleGameOver(data) {
-    if (!pvpState) return;
-    let iWon = data.winner === pvpState.role;
-    pvpFlash(iWon ? '🏆 SIEG!' : '💀 NIEDERLAGE!', iWon ? '#f1c40f' : '#e74c3c');
-    pvpLog(iWon ? '--- DU HAST GEWONNEN! ---' : '--- DU HAST VERLOREN! ---');
-    if (iWon) { kaffeebons += 300; saveProgress(); showToast('⚔️ DUELL GEWONNEN!', '#f1c40f', '+300 KB Belohnung!'); }
-    setTimeout(() => pvpCleanup(), 4000);
+    if(!pvpState) return;
+    let iWon = data.winner===pvpState.role;
+    pvpFlash(iWon?'🏆 SIEG!':'💀 NIEDERLAGE!', iWon?'#f1c40f':'#e74c3c');
+    pvpLog(iWon?'=== SIEG! ==='   :'=== NIEDERLAGE ===');
+    if(iWon){ kaffeebons+=300; saveProgress(); showToast('⚔️ DUELL GEWONNEN!','#f1c40f','+300 KB!'); }
+    else { showToast('💀 VERLOREN','#e74c3c','Besser nächstes Mal!'); }
+    setTimeout(pvpCleanup, 4500);
 }
-
 function pvpCleanup() {
-    gamePhase = 'normal';
-    if (pvpStateListener) { pvpStateListener(); pvpStateListener = null; }
-    if (pvpUnsubscribe) { pvpUnsubscribe(); pvpUnsubscribe = null; }
-    if (pvpAnimFrame) { cancelAnimationFrame(pvpAnimFrame); pvpAnimFrame = null; }
-    if (pvpCanvas) { pvpCanvas.removeEventListener('click', pvpHandleClick); pvpCanvas.remove(); pvpCanvas = null; }
-    pvpState = null; pvpMatchId = null; pvpPlayerRole = null;
-    document.getElementById('startScreen').style.display = 'block';
-    document.getElementById('doom-hud').style.display = 'flex';
-    document.getElementById('status-overlay').style.display = 'block';
-    document.getElementById('stationInfo').style.display = 'block';
+    gamePhase='normal';
+    if(pvpStateListener){ pvpStateListener(); pvpStateListener=null; }
+    if(pvpQueueListener){ pvpQueueListener(); pvpQueueListener=null; }
+    if(pvpUnsubscribe){ pvpUnsubscribe(); pvpUnsubscribe=null; }
+    if(pvpAnimFrame){ cancelAnimationFrame(pvpAnimFrame); pvpAnimFrame=null; }
+    if(pvpCanvas){ pvpCanvas.remove(); pvpCanvas=null; }
+    pvpState=null; pvpMatchId=null; pvpPlayerRole=null; pvpMyQueueName=null;
+    document.getElementById('startScreen').style.display='block';
+    document.getElementById('doom-hud').style.display='flex';
+    document.getElementById('status-overlay').style.display='block';
+    document.getElementById('stationInfo').style.display='block';
+    window.removeEventListener('resize',pvpOnResize);
+}
+function pvpOnResize(){ if(pvpCanvas){ pvpCanvas.width=window.innerWidth; pvpCanvas.height=window.innerHeight; } }
+
+// ── lobby / matchmaking ───────────────────────────────────
+function openPvPLobby() {
+    if(cardInventory.length < 20) {
+        showToast('NICHT GENUG KARTEN!','#e74c3c',`${cardInventory.length}/20 Karten.`);
+        return;
+    }
+    document.getElementById('pvpLobbyOverlay').style.display='flex';
+    document.getElementById('pvpSearchBtn').style.display='block';
+    document.getElementById('pvpQueuePanel').style.display='none';
+    document.getElementById('pvpLobbyStatus').innerText='STATUS: BEREIT';
+    document.getElementById('pvpLobbyStatus').style.color='#f1c40f';
+}
+function closePvPLobby() {
+    if(pvpMyQueueName&&db) db.collection('pvp_queue').doc(pvpMyQueueName).delete().catch(()=>{});
+    if(pvpQueueListener){ pvpQueueListener(); pvpQueueListener=null; }
+    pvpMyQueueName=null;
+    document.getElementById('pvpLobbyOverlay').style.display='none';
+    document.getElementById('pvpSearchBtn').style.display='block';
+    document.getElementById('pvpQueuePanel').style.display='none';
+}
+function openPvPLobbyScreen() {
+    if(!db){ showToast('KEIN FIREBASE','#f00'); return; }
+    let pName=(document.getElementById('playerName').value||'').toUpperCase().trim().substring(0,10);
+    if(!pName||pName==='ANONYM'){ showToast('NAME EINGEBEN!','#f39c12','Zuerst Namen setzen.'); return; }
+    pvpMyQueueName=pName;
+    db.collection('pvp_queue').doc(pName).set({name:pName,ts:firebase.firestore.FieldValue.serverTimestamp(),status:'waiting',challengeFrom:null,matchId:null}).catch(e=>console.warn('Queue:',e));
+    document.getElementById('pvpSearchBtn').style.display='none';
+    document.getElementById('pvpQueuePanel').style.display='block';
+    document.getElementById('pvpLobbyStatus').innerText='ONLINE — WARTE AUF HERAUSFORDERER';
+    document.getElementById('pvpLobbyStatus').style.color='#2ecc71';
+    pvpStartQueueListener(pName);
+}
+function pvpStartQueueListener(myName) {
+    if(pvpQueueListener) pvpQueueListener();
+    pvpQueueListener=db.collection('pvp_queue').onSnapshot(snap=>{
+        let players=[];
+        snap.forEach(doc=>{ let d=doc.data(); if(d.name!==myName&&d.status==='waiting') players.push(d.name); });
+        pvpRenderQueueList(players);
+        let myDoc=snap.docs.find(d=>d.id===myName);
+        if(myDoc){
+            let md=myDoc.data();
+            if(md.status==='challenged'&&md.challengeFrom) pvpHandleIncomingChallenge(md.challengeFrom,md.matchId);
+            if(md.status==='in_match'&&md.matchId&&!pvpMatchId){
+                pvpMatchId=md.matchId; pvpPlayerRole='player2';
+                pvpJoinMatch(md.challengeFrom||'???');
+            }
+        }
+    });
+}
+function pvpRenderQueueList(players) {
+    let el=document.getElementById('pvpPlayerList'); if(!el) return;
+    if(!players.length){ el.innerHTML='<div style="color:#555;font-size:13px;padding:16px;text-align:center;">Keine anderen Spieler online...<br><small>Warte oder lade einen Freund ein!</small></div>'; return; }
+    el.innerHTML=players.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #1a1a1a;"><span style="color:#fff;font-size:14px;">⚔️ ${p}</span><button onclick="pvpSendChallenge('${p}')" style="background:#9b59b6;color:#fff;border:none;padding:7px 18px;cursor:pointer;font-family:'Courier New',monospace;font-size:12px;font-weight:bold;border-radius:3px;">HERAUSFORDERN</button></div>`).join('');
+}
+function pvpSendChallenge(targetName) {
+    if(!pvpMyQueueName||!db) return;
+    let myName=pvpMyQueueName;
+    db.collection('pvp_matches').add({
+        status:'waiting',player1:myName,player2:targetName,
+        player1Hp:30,player2Hp:30,player1Field:[],player2Field:[],
+        player1HandCount:4,player2HandCount:4,player1DeckCount:16,player2DeckCount:16,
+        player1Mana:0,player2Mana:0,turn:1,activePlayer:'player1',
+        lastAction:null,gameOver:null,createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    }).then(ref=>{
+        pvpMatchId=ref.id; pvpPlayerRole='player1';
+        db.collection('pvp_queue').doc(targetName).update({status:'challenged',challengeFrom:myName,matchId:ref.id});
+        db.collection('pvp_queue').doc(myName).update({status:'in_match',matchId:ref.id});
+        document.getElementById('pvpLobbyStatus').innerText='Wartet auf '+targetName+'...';
+        document.getElementById('pvpLobbyStatus').style.color='#f1c40f';
+        listenToPvPMatchStart();
+    }).catch(e=>console.error('Challenge:',e));
+}
+function pvpHandleIncomingChallenge(fromName,matchId) {
+    document.getElementById('pvpLobbyStatus').style.color='#e74c3c';
+    document.getElementById('pvpLobbyStatus').innerHTML=`⚔️ HERAUSFORDERUNG VON <strong>${fromName}</strong>!<br><button onclick="pvpAcceptChallenge('${fromName}','${matchId}')" style="margin-top:10px;background:#27ae60;color:#fff;border:none;padding:10px 24px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;margin-right:10px;">✔ ANNEHMEN</button><button onclick="pvpDeclineChallenge('${fromName}')" style="background:#c0392b;color:#fff;border:none;padding:10px 24px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;">✖ ABLEHNEN</button>`;
+}
+function pvpAcceptChallenge(fromName,matchId) {
+    pvpMatchId=matchId; pvpPlayerRole='player2';
+    db.collection('pvp_queue').doc(pvpMyQueueName).update({status:'in_match',matchId});
+    db.collection('pvp_matches').doc(matchId).update({status:'running'});
+    pvpJoinMatch(fromName);
+}
+function pvpDeclineChallenge(fromName) {
+    db.collection('pvp_queue').doc(pvpMyQueueName).update({status:'waiting',challengeFrom:null,matchId:null});
+    if(pvpMatchId) db.collection('pvp_queue').doc(fromName).update({status:'waiting',matchId:null}).catch(()=>{});
+    pvpMatchId=null;
+    document.getElementById('pvpLobbyStatus').innerText='ONLINE — WARTE AUF HERAUSFORDERER';
+    document.getElementById('pvpLobbyStatus').style.color='#2ecc71';
+}
+function pvpJoinMatch(opponentName) {
+    if(pvpQueueListener){ pvpQueueListener(); pvpQueueListener=null; }
+    if(pvpMyQueueName) db.collection('pvp_queue').doc(pvpMyQueueName).delete().catch(()=>{});
+    document.getElementById('pvpLobbyStatus').style.color='#2ecc71';
+    document.getElementById('pvpLobbyStatus').innerText='VERBUNDEN MIT: '+opponentName;
+    setTimeout(()=>{
+        db.collection('pvp_matches').doc(pvpMatchId).get().then(doc=>{ if(doc.exists) initPvPBoard(doc.data(),opponentName); });
+    },1200);
+}
+function listenToPvPMatchStart() {
+    if(pvpUnsubscribe) pvpUnsubscribe();
+    pvpUnsubscribe=db.collection('pvp_matches').doc(pvpMatchId).onSnapshot(doc=>{
+        if(!doc.exists) return;
+        let d=doc.data();
+        if(d.status==='running'&&pvpPlayerRole==='player1') {
+            if(pvpQueueListener){ pvpQueueListener(); pvpQueueListener=null; }
+            if(pvpMyQueueName) db.collection('pvp_queue').doc(pvpMyQueueName).delete().catch(()=>{});
+            document.getElementById('pvpLobbyStatus').innerText='VERBUNDEN MIT: '+d.player2;
+            document.getElementById('pvpLobbyStatus').style.color='#2ecc71';
+            setTimeout(()=>initPvPBoard(d,d.player2),1200);
+            if(pvpUnsubscribe){ pvpUnsubscribe(); pvpUnsubscribe=null; }
+        }
+    });
+}
+function startPvPMatchmaking() { openPvPLobbyScreen(); } // legacy
+
+// ── input ─────────────────────────────────────────────────
+
+function pvpLayout() {
+    if(!pvpCanvas||!pvpState) return null;
+    let W=pvpCanvas.width, H=pvpCanvas.height;
+    let cw=108, ch=152, gap=12;
+    let panelH=130;
+    // My hand bottom
+    let handY = H - ch - 18;
+    let handCards = pvpState.myHand.map((card,i)=>{
+        let tot=pvpState.myHand.length*(cw+gap)-gap;
+        return {x:W/2-tot/2+i*(cw+gap), y:handY, w:cw, h:ch, i, zone:'hand', card};
+    });
+    // My field
+    let myFieldY = H - ch - 195;
+    let myFieldSlots = Array(4).fill(null).map((_,i)=>{
+        let tot=4*(cw+gap)-gap; let sx=W/2-tot/2;
+        return {x:sx+i*(cw+gap), y:myFieldY, w:cw, h:ch, i, zone:'myField', card:pvpState.myField[i]||null};
+    });
+    // Opp field
+    let oppFieldY = panelH + 14;
+    let oppFieldSlots = Array(4).fill(null).map((_,i)=>{
+        let tot=4*(cw+gap)-gap; let sx=W/2-tot/2;
+        return {x:sx+i*(cw+gap), y:oppFieldY, w:cw, h:ch, i, zone:'oppField', card:pvpState.oppField[i]||null};
+    });
+    // Opp hand (face down)
+    let oppHandY = oppFieldY + ch + 10;
+    let oppHandSlots = Array(Math.min(pvpState.oppHandCount,7)).fill(null).map((_,i)=>{
+        let tot=Math.min(pvpState.oppHandCount,7)*(50+6)-6; let sx=W/2-tot/2;
+        return {x:sx+i*56, y:oppHandY, w:50, h:70, i, zone:'oppHand'};
+    });
+    let endTurnBtn = {x:W-175, y:H/2-28, w:155, h:46, zone:'endTurn'};
+    let phaseBtn   = {x:W-175, y:H/2+26, w:155, h:36, zone:'phase'};
+    let quitBtn    = {x:14, y:H/2-18, w:105, h:36, zone:'quit'};
+    let helpBtn    = {x:14, y:H/2+24, w:105, h:36, zone:'help'};
+    return {handCards, myFieldSlots, oppFieldSlots, oppHandSlots, endTurnBtn, phaseBtn, quitBtn, helpBtn, cw, ch, W, H};
 }
 
-// --- Input ---
-function pvpGetCardLayout() {
-    if (!pvpCanvas || !pvpState) return null;
-    let W = pvpCanvas.width, H = pvpCanvas.height;
-    let cw = 110, ch = 155; // Kartenbreite/höhe
-    let gap = 14;
-    // Meine Hand (unten)
-    let handY = H - ch - 20;
-    let handCards = pvpState.myHand.map((card, i) => {
-        let totalW = pvpState.myHand.length * (cw + gap) - gap;
-        let startX = W / 2 - totalW / 2;
-        return { x: startX + i * (cw + gap), y: handY, w: cw, h: ch, index: i, zone: 'hand', card };
-    });
-    // Mein Feld (unten-mitte)
-    let myFieldY = H - ch - 200;
-    let myFieldCards = pvpState.myField.map((card, i) => {
-        let totalW = 4 * (cw + gap) - gap;
-        let startX = W / 2 - totalW / 2;
-        return { x: startX + i * (cw + gap), y: myFieldY, w: cw, h: ch, index: i, zone: 'myField', card };
-    });
-    // Gegner-Feld (oben-mitte)
-    let oppFieldY = 160;
-    let oppFieldCards = pvpState.oppField.map((card, i) => {
-        let totalW = 4 * (cw + gap) - gap;
-        let startX = W / 2 - totalW / 2;
-        return { x: startX + i * (cw + gap), y: oppFieldY, w: cw, h: ch, index: i, zone: 'oppField', card };
-    });
-    // Buttons
-    let endTurnBtn = { x: W - 180, y: H/2 - 25, w: 160, h: 50, zone: 'endTurn' };
-    return { handCards, myFieldCards, oppFieldCards, endTurnBtn, cw, ch };
-}
-
-function pvpHitTest(mx, my, rect) {
-    return mx >= rect.x && mx <= rect.x + rect.w && my >= rect.y && my <= rect.y + rect.h;
-}
+function pvpHit(mx,my,r){ return mx>=r.x&&mx<=r.x+r.w&&my>=r.y&&my<=r.y+r.h; }
 
 function pvpHandleMove(e) {
-    if (!pvpState) return;
-    let rect = pvpCanvas.getBoundingClientRect();
-    let mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    let layout = pvpGetCardLayout();
-    if (!layout) return;
-    pvpHoverCard = null;
-    pvpCanvas.style.cursor = 'default';
-    for (let c of [...layout.handCards, ...layout.myFieldCards, ...layout.oppFieldCards]) {
-        if (pvpHitTest(mx, my, c)) { pvpHoverCard = c; pvpCanvas.style.cursor = 'pointer'; break; }
+    if(!pvpState||!pvpCanvas) return;
+    let r=pvpCanvas.getBoundingClientRect();
+    let mx=e.clientX-r.left, my=e.clientY-r.top;
+    let lay=pvpLayout(); if(!lay) return;
+    pvpHoverCard=null; pvpCanvas.style.cursor='default';
+    for(let c of [...lay.handCards,...lay.myFieldSlots,...lay.oppFieldSlots]) {
+        if(c.card&&pvpHit(mx,my,c)){ pvpHoverCard=c; pvpCanvas.style.cursor='pointer'; break; }
     }
-    if (pvpHitTest(mx, my, layout.endTurnBtn)) pvpCanvas.style.cursor = 'pointer';
+    for(let b of [lay.endTurnBtn,lay.phaseBtn,lay.quitBtn,lay.helpBtn]) {
+        if(pvpHit(mx,my,b)){ pvpCanvas.style.cursor='pointer'; break; }
+    }
 }
 
 function pvpHandleClick(e) {
-    if (!pvpState) return;
-    let rect = pvpCanvas.getBoundingClientRect();
-    let mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    let layout = pvpGetCardLayout();
-    if (!layout) return;
+    if(!pvpState||!pvpCanvas) return;
+    let r=pvpCanvas.getBoundingClientRect();
+    let mx=e.clientX-r.left, my=e.clientY-r.top;
+    let lay=pvpLayout(); if(!lay) return;
 
-    // End Turn Button
-    if (pvpHitTest(mx, my, layout.endTurnBtn)) { pvpEndTurn(); return; }
-
-    // Hand — Karte auswählen
-    for (let c of layout.handCards) {
-        if (pvpHitTest(mx, my, c)) {
-            if (pvpSelectedCard && pvpSelectedCard.zone === 'hand' && pvpSelectedCard.index === c.index) {
-                pvpSelectedCard = null; // Deselect
-            } else {
-                pvpSelectedCard = c;
-            }
-            return;
-        }
-    }
-
-    // Eigenes Feld — Angreifer auswählen oder Karte ausspielen
-    if (pvpSelectedCard && pvpSelectedCard.zone === 'hand') {
-        // Klick auf eigenes Feld → Karte ausspielen
-        let fieldSlot = { x: layout.myFieldCards[0]?.x - 14 || pvpCanvas.width/2 - 250, y: layout.myFieldCards[0]?.y || pvpCanvas.height - 370, w: 4 * (layout.cw + 14) - 14 + 28, h: layout.ch + 28 };
-        if (pvpHitTest(mx, my, fieldSlot)) {
-            pvpPlayCard(pvpSelectedCard.index);
-            pvpSelectedCard = null;
-            return;
-        }
-    }
-
-    for (let c of layout.myFieldCards) {
-        if (pvpHitTest(mx, my, c)) {
-            if (!pvpState.attackedThisTurn.includes(c.card.id) && pvpState.myTurn) {
-                if (pvpSelectedCard && pvpSelectedCard.zone === 'myField') {
-                    pvpSelectedCard = null;
-                } else {
-                    pvpSelectedCard = c;
-                }
-            }
-            return;
-        }
-    }
-
-    // Gegner-Feld — Angriff auf Gegner-Karte
-    for (let c of layout.oppFieldCards) {
-        if (pvpHitTest(mx, my, c)) {
-            if (pvpSelectedCard && pvpSelectedCard.zone === 'myField') {
-                pvpAttackWithCard(pvpSelectedCard.index, 'card', c.card.id);
-                pvpSelectedCard = null;
-            }
-            return;
-        }
-    }
-
-    // Klick auf Gegner-HP-Bereich → Direktangriff
-    let oppHpArea = { x: pvpCanvas.width * 0.35, y: 20, w: pvpCanvas.width * 0.3, h: 130 };
-    if (pvpHitTest(mx, my, oppHpArea) && pvpSelectedCard && pvpSelectedCard.zone === 'myField') {
-        pvpAttackWithCard(pvpSelectedCard.index, 'player', null);
-        pvpSelectedCard = null;
+    // Buttons
+    if(pvpHit(mx,my,lay.endTurnBtn)){ pvpDoEndTurn(); return; }
+    if(pvpHit(mx,my,lay.phaseBtn)){
+        if(pvpState.myTurn&&pvpState.phase==='main'){ pvpState.phase='battle'; pvpFlash('KAMPFPHASE!','#e74c3c'); }
+        else if(pvpState.myTurn&&pvpState.phase==='battle'){ pvpState.phase='main'; pvpFlash('HAUPTPHASE!','#f1c40f'); }
         return;
     }
+    if(pvpHit(mx,my,lay.quitBtn)){ if(confirm('Aufgeben?')) pvpEndGame(false); return; }
+    if(pvpHit(mx,my,lay.helpBtn)){ pvpShowHelp(); return; }
 
-    // Aufgeben-Button (links unten)
-    if (mx >= 20 && mx <= 120 && my >= pvpCanvas.height/2 - 20 && my <= pvpCanvas.height/2 + 15) {
-        if (confirm('Duell aufgeben?')) { pvpEndGame(false); }
-        return;
-    }
-
-    // Anleitung-Button
-    let _hl = pvpGetCardLayout();
-    if (_hl) {
-        let _hbtn = _hl.endTurnBtn;
-        if (mx >= _hbtn.x && mx <= _hbtn.x + _hbtn.w && my >= _hbtn.y + 60 && my <= _hbtn.y + 100) {
-            pvpShowHelp();
+    // My hand → select to summon
+    for(let slot of lay.handCards) {
+        if(pvpHit(mx,my,slot)) {
+            if(pvpState.myTurn&&pvpState.phase==='main') {
+                if(pvpState.selectedHandIdx===slot.i){ pvpState.selectedHandIdx=null; }
+                else { pvpState.selectedHandIdx=slot.i; pvpState.selectedFieldIdx=null; }
+            }
             return;
         }
     }
 
-    // Klick ins Leere → Deselect
-    pvpSelectedCard = null;
-}
-
-// --- Rendering ---
-
-function pvpShowHelp() {
-    // Overlay aus dem DOM
-    let ol = document.getElementById('pvpHelpOverlay');
-    if (!ol) {
-        ol = document.createElement('div');
-        ol.id = 'pvpHelpOverlay';
-        ol.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.93);z-index:1100;display:flex;align-items:center;justify-content:center;font-family:"Courier New",monospace;';
-        ol.innerHTML = `
-        <div style="max-width:560px;width:90%;border:3px solid #9b59b6;background:#0a0a14;border-radius:8px;padding:30px;color:#fff;max-height:80vh;overflow-y:auto;">
-            <h2 style="color:#9b59b6;font-size:22px;letter-spacing:4px;margin:0 0 18px;text-align:center;">⚔️ DUELL-ANLEITUNG</h2>
-            <div style="line-height:1.9;font-size:13px;">
-                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">🎯 ZIEL</div>
-                <div style="color:#aaa;margin-bottom:14px;">Reduziere die gegnerischen HP auf 0. Jeder Spieler startet mit <strong style="color:#e74c3c;">30 HP</strong>.</div>
-
-                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">💧 MANA</div>
-                <div style="color:#aaa;margin-bottom:14px;">Jede Runde bekommst du mehr Mana (Runde 1 = 3, max 10). Karten kosten Mana — sieh die <strong style="color:#00e5ff;">blaue Zahl</strong> oben links auf jeder Karte.</div>
-
-                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">🃏 KARTE AUSSPIELEN</div>
-                <div style="color:#aaa;margin-bottom:14px;"><strong>1.</strong> Karte in deiner Hand (unten) anklicken → wird gelb markiert<br><strong>2.</strong> Auf die <em>untere Feldhälfte</em> klicken → Karte wird platziert</div>
-
-                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">⚔️ ANGREIFEN</div>
-                <div style="color:#aaa;margin-bottom:14px;"><strong>1.</strong> Eigene Feldkarte (untere Mitte) anklicken → wird markiert<br><strong>2a.</strong> Auf gegnerische Feldkarte klicken → Karte vs. Karte (beide nehmen Schaden)<br><strong>2b.</strong> Auf den <em>Gegner-Bereich oben</em> klicken → Direktangriff (nur wenn Gegner kein Feld hat!)</div>
-
-                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">🛡️ VERTEIDIGUNG</div>
-                <div style="color:#aaa;margin-bottom:14px;">Hat der Gegner Karten auf dem Feld, musst du zuerst diese eliminieren bevor du direkt angreifen kannst.</div>
-
-                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">🔄 ZUG BEENDEN</div>
-                <div style="color:#aaa;margin-bottom:14px;">Klicke <strong>ZUG BEENDEN</strong> (rechts) wenn du fertig bist. Danach ist der Gegner dran.</div>
-
-                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">📊 KARTEN-STATS</div>
-                <div style="color:#aaa;margin-bottom:6px;"><span style="color:#e74c3c;">⚔ ATK</span> — Angriffswert | <span style="color:#3498db;">🛡 DEF</span> — Lebenspunkte der Karte</div>
-                <div style="color:#aaa;margin-bottom:14px;">Hovere über eine Karte für Details und Effekt-Beschreibung.</div>
-
-                <div style="color:#f1c40f;font-weight:bold;margin-bottom:6px;">🏆 GEWINN</div>
-                <div style="color:#aaa;">Wer zuerst 0 HP erreicht verliert. Sieger erhält <strong style="color:#f1c40f;">+300 KB</strong>.</div>
-            </div>
-            <button onclick="document.getElementById('pvpHelpOverlay').remove()" 
-                style="display:block;width:100%;margin-top:20px;background:#9b59b6;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;border-radius:4px;">
-                ✖ SCHLIESSEN
-            </button>
-        </div>`;
-        document.body.appendChild(ol);
-    } else {
-        ol.style.display = ol.style.display === 'none' ? 'flex' : 'none';
-    }
-}
-
-
-// ============================================================
-// KARTENEFFEKTE
-// ============================================================
-function pvpApplyOnPlayEffect(card) {
-    if (!card.pvpEffect || !pvpState) return;
-    let e = card.pvpEffect.toLowerCase();
-
-    // "Zieht X Karte(n)"
-    let drawMatch = e.match(/zieht (\d+) karte/);
-    if (drawMatch) {
-        let n = parseInt(drawMatch[1]);
-        for (let i = 0; i < n; i++) pvpDrawCard();
-        pvpFloat('+' + n + ' Karte!', pvpCanvas.width*0.5, pvpCanvas.height*0.6, '#2ecc71');
-    }
-
-    // "+X ATK" für eigene Karten
-    let atkBuffMatch = e.match(/alle eigenen karten \+(\d+) atk/);
-    if (atkBuffMatch) {
-        let val = parseInt(atkBuffMatch[1]);
-        pvpState.myField.forEach(c => { if (c !== card) c.pvpAtk += val; });
-        pvpFloat('Alle +' + val + ' ATK!', pvpCanvas.width*0.5, pvpCanvas.height*0.6, '#e74c3c');
-    }
-
-    // "Heilt X HP"
-    let healMatch = e.match(/heilt? (\d+) hp/i);
-    if (healMatch) {
-        let val = parseInt(healMatch[1]);
-        pvpState.myHp = Math.min(30, pvpState.myHp + val);
-        pvpFloat('+' + val + ' HP!', pvpCanvas.width*0.7, pvpCanvas.height*0.5, '#2ecc71');
-    }
-
-    // "-X ATK für alle gegnerischen Karten"
-    let debuffMatch = e.match(/alle gegnerischen karten -(\d+) atk/);
-    if (debuffMatch) {
-        let val = parseInt(debuffMatch[1]);
-        pvpState.oppField.forEach(c => { c.pvpAtk = Math.max(0, (c.pvpAtk||0) - val); });
-        pvpFloat('Gegner -' + val + ' ATK!', pvpCanvas.width*0.5, pvpCanvas.height*0.4, '#9b59b6');
-    }
-
-    // "Weicht 1. Angriff aus" — mark card
-    if (e.includes('weicht') && e.includes('angriff')) {
-        card._dodge = true;
-        pvpFloat('Ausweich-Effekt!', pvpCanvas.width*0.5, pvpCanvas.height*0.6, '#f1c40f');
-    }
-
-    // "+X ATK pro Runde"
-    if (e.includes('atk pro runde')) {
-        card._atkPerRound = parseInt(e.match(/\+(\d+) atk pro runde/)?.[1] || 1);
-    }
-
-    // Push updated HP to Firebase
-    pvpPushState({ [pvpState.role + 'Hp']: pvpState.myHp });
-}
-
-function pvpApplyStartOfTurnEffects() {
-    if (!pvpState) return;
-    pvpState.myField.forEach(card => {
-        if (card._atkPerRound) {
-            card.pvpAtk += card._atkPerRound;
-            pvpFloat(card.name + ' +' + card._atkPerRound + ' ATK!', pvpCanvas.width*0.5, pvpCanvas.height*0.6, '#e74c3c');
+    // My field click (select attacker OR place selected hand card)
+    for(let slot of lay.myFieldSlots) {
+        if(pvpHit(mx,my,slot)) {
+            if(pvpState.selectedHandIdx!==null&&!slot.card&&pvpState.myTurn&&pvpState.phase==='main') {
+                // Place card from hand to field
+                pvpDoSummon(pvpState.selectedHandIdx); return;
+            }
+            if(slot.card&&pvpState.myTurn&&(pvpState.phase==='main'||pvpState.phase==='battle')) {
+                if(pvpState.selectedFieldIdx===slot.i){ pvpState.selectedFieldIdx=null; }
+                else { pvpState.selectedFieldIdx=slot.i; pvpState.selectedHandIdx=null; }
+            }
+            return;
         }
-    });
-}
-
-function pvpApplyDodge(card, dmg) {
-    if (card._dodge) {
-        card._dodge = false;
-        pvpFloat('AUSGEWICHEN!', pvpCanvas.width*0.5, pvpCanvas.height*0.5, '#f1c40f');
-        return 0; // kein Schaden
     }
-    return dmg;
+
+    // Opponent field → attack
+    for(let slot of lay.oppFieldSlots) {
+        if(pvpHit(mx,my,slot)) {
+            if(pvpState.selectedFieldIdx!==null) {
+                let targetId = slot.card ? slot.card.id : null;
+                if(targetId) pvpDoAttack(pvpState.selectedFieldIdx,'card',targetId);
+                else pvpFlash('Kein Monster dort!','#e74c3c');
+            }
+            return;
+        }
+    }
+
+    // Opponent LP zone → direct attack
+    let oppLpZone={x:lay.W*0.3,y:0,w:lay.W*0.4,h:120};
+    if(pvpHit(mx,my,oppLpZone)&&pvpState.selectedFieldIdx!==null) {
+        pvpDoAttack(pvpState.selectedFieldIdx,'player',null); return;
+    }
+
+    // Deselect on empty click
+    pvpState.selectedHandIdx=null; pvpState.selectedFieldIdx=null;
 }
 
+// ── rendering ─────────────────────────────────────────────
 function pvpRenderLoop() {
-    if (!pvpCanvas || !pvpCtx || gamePhase !== 'pvp') return;
+    if(!pvpCanvas||!pvpCtx||gamePhase!=='pvp'){ pvpAnimFrame=null; return; }
     pvpFrame++;
+    if(pvpState) {
+        pvpState.floats=pvpState.floats.filter(f=>{ f.y+=f.vy; return --f.life>0; });
+        if(pvpState.flashTimer>0) pvpState.flashTimer--;
+    }
     pvpDraw();
+    pvpAnimFrame=requestAnimationFrame(pvpRenderLoop);
+}
 
-    // Floats updaten
-    if (pvpState) {
-        pvpState.floats = pvpState.floats.filter(f => f.life-- > 0);
-        if (pvpState.flashTimer > 0) pvpState.flashTimer--;
-        if (pvpState.attackAnim && --pvpState.attackAnim.timer <= 0) pvpState.attackAnim = null;
+function pvpDraw() {
+    if(!pvpCtx||!pvpCanvas||!pvpState) return;
+    let ctx=pvpCtx, W=pvpCanvas.width, H=pvpCanvas.height;
+    let lay=pvpLayout(); if(!lay) return;
+
+    // BG
+    ctx.fillStyle='#050810'; ctx.fillRect(0,0,W,H);
+    // Field BG
+    let fH=H-280; let fY=125;
+    ctx.fillStyle='rgba(15,20,35,0.9)'; ctx.fillRect(40,fY,W-80,fH);
+    ctx.strokeStyle='rgba(100,80,200,0.2)'; ctx.lineWidth=1; ctx.strokeRect(40,fY,W-80,fH);
+    // Midfield line
+    ctx.strokeStyle='rgba(155,89,182,0.35)'; ctx.lineWidth=2; ctx.setLineDash([6,6]);
+    ctx.beginPath(); ctx.moveTo(60,H/2-20); ctx.lineTo(W-60,H/2-20); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Zone labels
+    ctx.fillStyle='rgba(255,255,255,0.04)'; ctx.font='bold 64px Arial'; ctx.textAlign='center';
+    ctx.fillText('GEGNER',W/2,H*0.29); ctx.fillText('ICH',W/2,H*0.68);
+
+    // Empty field slot outlines
+    for(let sl of [...lay.myFieldSlots,...lay.oppFieldSlots]) {
+        ctx.strokeStyle=sl.zone==='myField'?'rgba(46,204,113,0.2)':'rgba(231,76,60,0.2)';
+        ctx.lineWidth=1; ctx.setLineDash([3,3]);
+        ctx.beginPath(); ctx.roundRect(sl.x,sl.y,sl.w,sl.h,5); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    // CARDS
+    lay.myFieldSlots.forEach(sl=>{ if(sl.card) pvpRenderCard(ctx,sl.card,sl.x,sl.y,sl.w,sl.h, pvpState.selectedFieldIdx===sl.i, false, false); });
+    lay.oppFieldSlots.forEach(sl=>{ if(sl.card) pvpRenderCard(ctx,sl.card,sl.x,sl.y,sl.w,sl.h, false,false,false); });
+    // Opp hand facedown
+    lay.oppHandSlots.forEach(sl=>pvpRenderCard(ctx,{},sl.x,sl.y,sl.w,sl.h,false,false,true));
+    // My hand
+    lay.handCards.forEach(sl=>pvpRenderCard(ctx,sl.card,sl.x,sl.y,sl.w,sl.h, pvpState.selectedHandIdx===sl.i,false,false));
+
+    // PLAYER PANELS
+    pvpDrawPanel(ctx, false, 14,    14,  220, 110, lay); // Opponent top-left
+    pvpDrawPanel(ctx, true,  W-234, 14,  220, 110, lay); // Me top-right
+
+    // DECK PILES
+    pvpDrawDeckPile(ctx, false, W/2-160, lay.oppFieldSlots[0].y+lay.ch+8,  pvpState.oppDeckCount);
+    pvpDrawDeckPile(ctx, true,  W/2-160, lay.myFieldSlots[0].y-44,           pvpState.myDeck.length);
+
+    // BUTTONS
+    pvpDrawButton(ctx, lay.endTurnBtn, pvpState.myTurn?'#27ae60':'#1a2a1a', pvpState.myTurn?'#2ecc71':'#2a3a2a', pvpState.myTurn?'#fff':'#3a5a3a', 'ZUG BEENDEN', pvpState.myTurn?12:8);
+    let phaseLabel = pvpState.phase==='main'?'→ KAMPFPHASE':(pvpState.phase==='battle'?'→ HAUPTPHASE':'—');
+    pvpDrawButton(ctx, lay.phaseBtn, pvpState.myTurn?'#1a0a0a':'#0a0a0a', pvpState.myTurn?'#e74c3c':'#222', pvpState.myTurn?'#e74c3c':'#333', phaseLabel, 8);
+    pvpDrawButton(ctx, lay.quitBtn,  '#1a0000','#c0392b','#c0392b','AUFGEBEN',8);
+    pvpDrawButton(ctx, lay.helpBtn,  '#001020','#3498db','#3498db','❓ HILFE',8);
+
+    // Phase indicator
+    let phaseColors={'main':'#f1c40f','battle':'#e74c3c','wait':'#555','draw':'#3498db'};
+    ctx.fillStyle=phaseColors[pvpState.phase]||'#888';
+    ctx.font='bold 13px Courier New'; ctx.textAlign='center';
+    let phaseName={'main':'HAUPTPHASE','battle':'KAMPFPHASE','wait':'WARTE...','draw':'ZIEHPHASE'}[pvpState.phase]||pvpState.phase.toUpperCase();
+    ctx.fillText('[ '+phaseName+' ]', W/2, H/2-26);
+    ctx.fillStyle=pvpState.myTurn?'#2ecc71':'#e74c3c';
+    ctx.font='12px Courier New';
+    ctx.fillText(pvpState.myTurn?'▶ DEIN ZUG — RUNDE '+pvpState.turn:'⏳ GEGNER — RUNDE '+pvpState.turn, W/2, H/2-10);
+
+    // LOG
+    ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.strokeStyle='#1a1a2a'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.roundRect(W-248,H-195,238,180,6); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#9b59b6'; ctx.font='bold 10px Courier New'; ctx.textAlign='left';
+    ctx.fillText('📋 LOG',W-238,H-179);
+    ctx.fillStyle='#777'; ctx.font='9.5px Courier New';
+    pvpState.log.slice(0,9).forEach((l,i)=>ctx.fillText(l.substring(0,32),W-238,H-164+i*18));
+
+    // FLASH
+    if(pvpState.flashTimer>0) {
+        let a=Math.min(1,pvpState.flashTimer/25);
+        ctx.globalAlpha=a;
+        ctx.fillStyle=pvpState.flashColor; ctx.font='bold 46px Courier New'; ctx.textAlign='center';
+        ctx.shadowColor=pvpState.flashColor; ctx.shadowBlur=24;
+        ctx.fillText(pvpState.flashMsg,W/2,H/2-70);
+        ctx.shadowBlur=0; ctx.globalAlpha=1;
     }
 
-    pvpAnimFrame = requestAnimationFrame(pvpRenderLoop);
+    // FLOATS
+    pvpState.floats.forEach(f=>{
+        ctx.globalAlpha=Math.max(0,f.life/80);
+        ctx.fillStyle=f.col; ctx.font='bold 18px Courier New'; ctx.textAlign='center';
+        ctx.fillText(f.txt,f.x,f.y);
+        ctx.globalAlpha=1;
+    });
+
+    // TOOLTIP
+    if(pvpHoverCard&&pvpHoverCard.card) pvpDrawTooltip(ctx,pvpHoverCard.card,pvpHoverCard.x,pvpHoverCard.y,pvpHoverCard.w,pvpHoverCard.h);
+
+    // HINT
+    if(pvpState.selectedHandIdx!==null&&pvpState.myTurn) {
+        ctx.fillStyle='rgba(241,196,15,0.85)'; ctx.font='12px Courier New'; ctx.textAlign='center';
+        ctx.fillText('→ Klicke auf einen freien Slot im unteren Feld',W/2,H-lay.ch-215);
+    } else if(pvpState.selectedFieldIdx!==null&&pvpState.myTurn) {
+        ctx.fillStyle='rgba(231,76,60,0.85)'; ctx.font='12px Courier New'; ctx.textAlign='center';
+        ctx.fillText('→ Klicke auf ein Gegner-Monster oder Gegner-Bereich (oben) für Direktangriff',W/2,H-lay.ch-215);
+    }
+}
+
+function pvpDrawPanel(ctx, isMe, x, y, w, h, lay) {
+    let col=isMe?'#2ecc71':'#e74c3c';
+    let hp=isMe?pvpState.myHp:pvpState.oppHp;
+    let name=isMe?pvpState.myName:pvpState.opponentName;
+    ctx.fillStyle='rgba(5,5,15,0.92)'; ctx.strokeStyle=col; ctx.lineWidth=2;
+    ctx.shadowColor=col; ctx.shadowBlur=6;
+    ctx.beginPath(); ctx.roundRect(x,y,w,h,8); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur=0;
+    // Name
+    ctx.fillStyle='#ddd'; ctx.font='bold 11px Courier New';
+    ctx.textAlign=isMe?'right':'left';
+    ctx.fillText((isMe?'👤 ':'⚔️ ')+name, isMe?x+w-10:x+10, y+18);
+    // HP bar
+    let hpPct=Math.max(0,hp/30);
+    ctx.fillStyle='#0a0a0a'; ctx.fillRect(x+8,y+24,w-16,14);
+    ctx.fillStyle=hpPct>0.5?'#2ecc71':hpPct>0.25?'#f39c12':'#e74c3c';
+    ctx.fillRect(x+8,y+24,(w-16)*hpPct,14);
+    ctx.strokeStyle='#222'; ctx.lineWidth=1; ctx.strokeRect(x+8,y+24,w-16,14);
+    ctx.fillStyle='#fff'; ctx.font='bold 10px Courier New'; ctx.textAlign='center';
+    ctx.fillText('❤️ '+hp+' / 30',x+w/2,y+34);
+    // Mana
+    let mana=isMe?pvpState.myMana:pvpState.oppMana;
+    let maxMana=isMe?pvpState.myMaxMana:(pvpState.turn+1);
+    ctx.fillStyle='#3498db'; ctx.font='9px Courier New'; ctx.textAlign=isMe?'right':'left';
+    ctx.fillText('💧'+mana+'/'+maxMana, isMe?x+w-10:x+10, y+56);
+    // Summon status
+    if(isMe) {
+        ctx.fillStyle=pvpState.summonedThisTurn?'#555':'#f1c40f';
+        ctx.fillText(pvpState.summonedThisTurn?'✅ Beschworen':'⚡ Kann beschwören', x+10,y+56);
+    }
+    // Deck + hand
+    ctx.fillStyle='#666'; ctx.font='9px Courier New'; ctx.textAlign=isMe?'right':'left';
+    let deck=isMe?pvpState.myDeck.length:pvpState.oppDeckCount;
+    let hand=isMe?pvpState.myHand.length:pvpState.oppHandCount;
+    ctx.fillText('🃏 Hand:'+hand+'  📚 Deck:'+deck, isMe?x+w-10:x+10, y+70);
+    // Field count
+    let field=isMe?pvpState.myField.length:pvpState.oppField.length;
+    ctx.fillStyle=col; ctx.fillText('⚔️ Feld: '+field+'/4', isMe?x+w-10:x+10, y+84);
+    // Attacked this turn
+    if(isMe&&pvpState.attackedThisTurn.length>0) {
+        ctx.fillStyle='#e74c3c';
+        ctx.fillText('⚔️ Angr.: '+pvpState.attackedThisTurn.length, x+10, y+84);
+    }
+}
+
+function pvpDrawDeckPile(ctx, isMe, x, y, count) {
+    let col=isMe?'#2ecc71':'#e74c3c';
+    ctx.fillStyle='rgba(10,10,20,0.9)'; ctx.strokeStyle=col; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.roundRect(x,y,44,30,4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=count>0?col:'#444'; ctx.font='bold 11px Courier New'; ctx.textAlign='center';
+    ctx.fillText('📚 '+count, x+22, y+20);
+}
+
+function pvpDrawButton(ctx, r, bg, border, textCol, label, blur) {
+    ctx.fillStyle=bg; ctx.strokeStyle=border; ctx.lineWidth=2;
+    ctx.shadowColor=border; ctx.shadowBlur=blur||0;
+    ctx.beginPath(); ctx.roundRect(r.x,r.y,r.w,r.h,5); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur=0;
+    ctx.fillStyle=textCol; ctx.font='bold 12px Courier New'; ctx.textAlign='center';
+    ctx.fillText(label, r.x+r.w/2, r.y+r.h/2+4);
 }
 
 function pvpRenderCard(ctx, card, x, y, w, h, selected, exhausted, facedown) {
     ctx.save();
-    let hover = pvpHoverCard && pvpHoverCard.card === card;
-    let liftY = selected ? -12 : (hover ? -6 : 0);
-    ctx.translate(0, liftY);
-    if (selected) {
-        ctx.shadowColor = '#f1c40f'; ctx.shadowBlur = 25;
-    }
-
-    // Karten-Rücken
-    if (facedown) {
-        ctx.fillStyle = '#1a1a2e'; ctx.strokeStyle = '#9b59b6'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.roundRect(x, y, w, h, 6); ctx.fill(); ctx.stroke();
-        ctx.font = 'bold 30px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#9b59b6'; ctx.fillText('⚔️', x + w/2, y + h/2);
-        ctx.textBaseline = 'alphabetic';
+    if(facedown) {
+        ctx.fillStyle='#0d1020'; ctx.strokeStyle='#4a2a8a'; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.roundRect(x,y,w,h,5); ctx.fill(); ctx.stroke();
+        ctx.fillStyle='rgba(100,50,200,0.15)';
+        ctx.beginPath(); ctx.roundRect(x+3,y+3,w-6,h-6,3); ctx.fill();
+        ctx.fillStyle='#3a2060'; ctx.font=(w<60?'16px':'22px')+' Arial';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText('⚔️',x+w/2,y+h/2); ctx.textBaseline='alphabetic';
         ctx.restore(); return;
     }
-
-    let rarityColors = { 'Gewöhnlich': '#aaa', 'Selten': '#3498db', 'Episch': '#9b59b6', 'Legendär': '#f1c40f' };
-    let rCol = rarityColors[card.rarity] || '#aaa';
-
-    // Schatten
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.beginPath(); ctx.roundRect(x+4, y+4, w, h, 6); ctx.fill();
-
-    // Hintergrund
-    ctx.fillStyle = exhausted ? '#0f0f0f' : '#0d1117';
-    ctx.strokeStyle = selected ? '#f1c40f' : (exhausted ? '#222' : rCol);
-    ctx.lineWidth = selected ? 3 : 2;
-    if (!selected) { ctx.shadowColor = rCol; ctx.shadowBlur = hover ? 14 : 4; }
-    ctx.beginPath(); ctx.roundRect(x, y, w, h, 6); ctx.fill(); ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    // Rarity-Banner oben
-    ctx.fillStyle = rCol;
-    ctx.beginPath(); ctx.roundRect(x+2, y+2, w-4, 10, [4,4,0,0]); ctx.fill();
-
-    // Kosten-Badge
-    ctx.fillStyle = '#051525';
-    ctx.beginPath(); ctx.arc(x+16, y+26, 13, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.fillStyle = '#00e5ff'; ctx.font = 'bold 12px Courier New'; ctx.textAlign = 'center';
-    ctx.fillText(card.pvpCost, x+16, y+31);
-
-    // Name (zweizeilig wenn nötig)
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Courier New'; ctx.textAlign = 'center';
-    let words = (card.name || '').split(' ');
-    let line1 = '', line2 = '';
-    for (let w2 of words) {
-        if ((line1 + w2).length <= 12) line1 += (line1 ? ' ' : '') + w2;
-        else line2 += (line2 ? ' ' : '') + w2;
-    }
-    if (line2.length > 14) line2 = line2.substring(0,13) + '…';
-    ctx.fillText(line1, x + w/2, y + 28);
-    if (line2) { ctx.font = '9px Courier New'; ctx.fillText(line2, x + w/2, y + 40); }
-
+    let isHover=pvpHoverCard&&pvpHoverCard.card===card;
+    let liftY=selected?-14:(isHover?-5:0);
+    ctx.translate(0,liftY);
+    let rCol={'Gewöhnlich':'#888','Selten':'#3498db','Episch':'#9b59b6','Legendär':'#f1c40f'}[card.rarity]||'#888';
+    // Shadow
+    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.roundRect(x+3,y+4,w,h,5); ctx.fill();
+    // BG
+    ctx.fillStyle='#0c1018'; ctx.strokeStyle=selected?'#f1c40f':rCol; ctx.lineWidth=selected?3:1.5;
+    ctx.shadowColor=selected?'#f1c40f':rCol; ctx.shadowBlur=selected?22:(isHover?12:3);
+    ctx.beginPath(); ctx.roundRect(x,y,w,h,5); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
+    // Rarity bar
+    ctx.fillStyle=rCol; ctx.beginPath(); ctx.roundRect(x+2,y+2,w-4,7,[3,3,0,0]); ctx.fill();
+    // Cost
+    ctx.fillStyle='#040d18'; ctx.beginPath(); ctx.arc(x+14,y+22,12,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#00e5ff'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='#00e5ff'; ctx.font='bold 11px Courier New'; ctx.textAlign='center';
+    ctx.fillText(card.pvpCost??0,x+14,y+26);
+    // Name (2 lines)
+    ctx.fillStyle='#eee'; ctx.font='bold 9px Courier New'; ctx.textAlign='center';
+    let words=(card.name||'').split(' '); let l1='',l2='';
+    for(let ww of words){ if((l1+ww).length<=13) l1+=(l1?' ':'')+ww; else l2+=(l2?' ':'')+ww; }
+    if(l2.length>14) l2=l2.substr(0,13)+'…';
+    ctx.fillText(l1,x+w/2,y+26); if(l2){ctx.font='8px Courier New';ctx.fillText(l2,x+w/2,y+36);}
     // Icon
-    ctx.font = '30px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(pvpCardIcon(card), x + w/2, y + h*0.48);
-    ctx.textBaseline = 'alphabetic';
-
-    // Effekt-Text (mehrzeilig, klein)
-    let effect = card.pvpEffect || '';
-    ctx.fillStyle = 'rgba(200,200,200,0.85)'; ctx.font = '8px Courier New'; ctx.textAlign = 'center';
-    let effectWords = effect.split(' ');
-    let eLine = ''; let eLines = [];
-    for (let ew of effectWords) {
-        if ((eLine + ew).length <= 16) eLine += (eLine ? ' ' : '') + ew;
-        else { eLines.push(eLine); eLine = ew; }
+    ctx.font=(w<90?'22px':'28px')+' Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(pvpCardIcon(card),x+w/2,y+h*0.47); ctx.textBaseline='alphabetic';
+    // Mode badge
+    if(card.mode==='def') {
+        ctx.fillStyle='rgba(52,152,219,0.8)'; ctx.font='bold 8px Courier New'; ctx.textAlign='center';
+        ctx.fillText('DEF',x+w/2,y+h-36);
     }
-    if (eLine) eLines.push(eLine);
-    eLines.slice(0,2).forEach((el, i) => ctx.fillText(el, x + w/2, y + h - 32 + i * 11));
-
-    // HP-Balken
-    if (card.curHp !== undefined) {
-        let hpPct = Math.max(0, card.curHp / card.pvpDef);
-        ctx.fillStyle = '#0a0a0a'; ctx.fillRect(x+4, y+h-20, w-8, 7);
-        ctx.fillStyle = hpPct > 0.5 ? '#2ecc71' : (hpPct > 0.25 ? '#f39c12' : '#e74c3c');
-        ctx.fillRect(x+4, y+h-20, (w-8)*hpPct, 7);
+    // HP bar
+    if(card.curHp!==undefined) {
+        let pct=Math.max(0,card.curHp/(card.pvpDef||1));
+        ctx.fillStyle='#0a0a0a'; ctx.fillRect(x+4,y+h-23,w-8,7);
+        ctx.fillStyle=pct>0.5?'#2ecc71':pct>0.25?'#f39c12':'#e74c3c';
+        ctx.fillRect(x+4,y+h-23,(w-8)*pct,7);
     }
-
-    // ATK / DEF
-    ctx.font = 'bold 11px Courier New';
-    ctx.fillStyle = '#e74c3c'; ctx.textAlign = 'left';
-    let atkVal = card.pvpAtk !== undefined ? card.pvpAtk : 0;
-    ctx.fillText('⚔' + atkVal, x+4, y+h-5);
-    ctx.fillStyle = '#3498db'; ctx.textAlign = 'right';
-    let hp2 = card.curHp !== undefined ? card.curHp : (card.pvpDef || 0);
-    ctx.fillText('🛡' + hp2, x+w-4, y+h-5);
-
-    // Exhausted-Overlay
-    if (exhausted) {
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.beginPath(); ctx.roundRect(x, y, w, h, 6); ctx.fill();
-        ctx.fillStyle = '#555'; ctx.font = 'bold 11px Courier New'; ctx.textAlign = 'center';
-        ctx.fillText('ERSCHÖPFT', x+w/2, y+h/2);
+    // ATK/DEF stats
+    ctx.font='bold 10px Courier New';
+    ctx.fillStyle='#e74c3c'; ctx.textAlign='left';
+    ctx.fillText('⚔'+(card.pvpAtk??0),x+3,y+h-7);
+    ctx.fillStyle='#3498db'; ctx.textAlign='right';
+    ctx.fillText('🛡'+(card.curHp??card.pvpDef??0),x+w-3,y+h-7);
+    // Exhausted overlay
+    if(exhausted||pvpState?.attackedThisTurn?.includes(card.id)) {
+        ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.beginPath(); ctx.roundRect(x,y,w,h,5); ctx.fill();
+        ctx.fillStyle='rgba(200,200,200,0.5)'; ctx.font='bold 9px Courier New'; ctx.textAlign='center';
+        ctx.fillText('◌',x+w/2,y+h/2);
     }
-
-    // Hover-Tooltip (große Info-Box)
-    if (hover && !facedown && !exhausted) {
-        pvpDrawTooltip(ctx, card, x, y, w, h);
-    }
-
     ctx.restore();
 }
 
-function pvpDrawTooltip(ctx, card, cx, cy, cw, ch) {
-    let W = pvpCanvas ? pvpCanvas.width : 1280;
-    let H = pvpCanvas ? pvpCanvas.height : 720;
-    let tw = 230, th = 160;
-    // Always try to appear ABOVE the card first
-    let tx = Math.max(10, Math.min(W - tw - 10, cx + cw/2 - tw/2));
-    let ty;
-    if (cy - th - 8 > 10) {
-        ty = cy - th - 8; // above
-    } else {
-        ty = cy + ch + 8; // below if no space above
-        if (ty + th > H - 10) ty = Math.max(10, H - th - 10);
-    }
-
-    ctx.fillStyle = 'rgba(10,10,20,0.97)';
-    ctx.strokeStyle = card.color || '#9b59b6';
-    ctx.lineWidth = 2;
-    ctx.shadowColor = card.color || '#9b59b6'; ctx.shadowBlur = 15;
-    ctx.beginPath(); ctx.roundRect(tx, ty, tw, th, 8); ctx.fill(); ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px Courier New'; ctx.textAlign = 'left';
-    ctx.fillText(card.name, tx+10, ty+20);
-    let rCol = { 'Gewöhnlich': '#aaa', 'Selten': '#3498db', 'Episch': '#9b59b6', 'Legendär': '#f1c40f' }[card.rarity] || '#aaa';
-    ctx.fillStyle = rCol; ctx.font = '10px Courier New';
-    ctx.fillText(card.rarity, tx+10, ty+35);
-
-    ctx.fillStyle = '#00e5ff'; ctx.font = 'bold 11px Courier New';
-    ctx.fillText('Kosten: ' + card.pvpCost + ' 💧', tx+10, ty+52);
-    ctx.fillStyle = '#e74c3c';
-    ctx.fillText('Angriff: ' + (card.pvpAtk||0), tx+10, ty+67);
-    ctx.fillStyle = '#3498db';
-    ctx.fillText('Verteidigung: ' + (card.pvpDef||0), tx+10, ty+82);
-
-    ctx.fillStyle = '#f1c40f'; ctx.font = 'bold 10px Courier New';
-    ctx.fillText('Effekt:', tx+10, ty+99);
-    ctx.fillStyle = '#ccc'; ctx.font = '9px Courier New';
-    let effect = card.pvpEffect || 'Kein Effekt.';
-    let ew = effect.split(' '); let eLine = ''; let eY = ty+112;
-    for (let w2 of ew) {
-        if ((eLine+w2).length <= 28) eLine += (eLine?' ':'')+w2;
-        else { ctx.fillText(eLine, tx+10, eY); eY+=11; eLine=w2; if(eY>ty+th-5) break; }
-    }
-    if (eLine && eY <= ty+th-5) ctx.fillText(eLine, tx+10, eY);
-}
-
 function pvpCardIcon(card) {
-    const icons = {
-        'Gewöhnlich': '📄', 'Selten': '⚡', 'Episch': '🔥', 'Legendär': '👑'
-    };
-    // Try to match by name keywords
-    let n = card.name.toLowerCase();
-    if (n.includes('prio 1') || n.includes('prio1')) return '☠';
-    if (n.includes('prio 2') || n.includes('prio2')) return '⚡';
-    if (n.includes('prio 3') || n.includes('prio3')) return '⚙';
-    if (n.includes('prio 4') || n.includes('prio4')) return '📄';
-    if (n.includes('prio 5') || n.includes('prio5')) return '🪱';
-    if (n.includes('bayer')) return '😡';
-    if (n.includes('maddin') || n.includes('martin')) return '👔';
-    if (n.includes('azubi') || n.includes('turret')) return '👷';
-    if (n.includes('kloska')) return '🔧';
-    if (n.includes('sap')) return '💿';
-    if (n.includes('teich')) return '👻';
-    if (n.includes('farm') || n.includes('server')) return '🖥️';
-    if (n.includes('vodka')) return '🍺';
-    if (n.includes('maus') || n.includes('mouse')) return '🖱️';
-    if (n.includes('rail')) return '⚡';
-    if (n.includes('rakete') || n.includes('rocket')) return '🚀';
-    if (n.includes('schrot') || n.includes('shotgun')) return '💥';
-    if (n.includes('urlaub') || n.includes('vacation')) return '🏖️';
-    return icons[card.rarity] || '🃏';
+    let n=(card.name||'').toLowerCase();
+    if(n.includes('prio 1')||n.includes('prio1')) return '☠️';
+    if(n.includes('prio 2')||n.includes('prio2')) return '⚡';
+    if(n.includes('prio 3')||n.includes('prio3')) return '⚙️';
+    if(n.includes('prio 4')||n.includes('prio4')) return '📋';
+    if(n.includes('prio 5')||n.includes('prio5')) return '🪲';
+    if(n.includes('bayer')) return '😡';
+    if(n.includes('maddin')||n.includes('martin')) return '👔';
+    if(n.includes('azubi')) return '👷';
+    if(n.includes('kloska')) return '🔧';
+    if(n.includes('lkw')) return '🚛';
+    if(n.includes('schicht')) return '🕐';
+    if(n.includes('praktikant')) return '📚';
+    if(n.includes('sap')) return '💿';
+    if(n.includes('farm')||n.includes('server')) return '🖥️';
+    if(n.includes('vodka')||n.includes('fachkraft')) return '🍺';
+    if(n.includes('rail')||n.includes('anlagen')) return '🔩';
+    if(n.includes('status')) return '📊';
+    if(n.includes('urlaub')) return '🏖️';
+    let icons={'Gewöhnlich':'📄','Selten':'⚡','Episch':'🔥','Legendär':'👑'};
+    return icons[card.rarity]||'🃏';
 }
 
-function pvpDraw() {
-    if (!pvpCtx || !pvpCanvas || !pvpState) return;
-    let ctx = pvpCtx;
-    let W = pvpCanvas.width, H = pvpCanvas.height;
+function pvpDrawTooltip(ctx, card, cx, cy, cw, ch) {
+    if(!pvpCanvas) return;
+    let W=pvpCanvas.width, H=pvpCanvas.height;
+    let tw=240, th=170;
+    let tx=Math.max(10,Math.min(W-tw-10, cx+cw/2-tw/2));
+    let ty = cy-th-10 > 10 ? cy-th-10 : cy+ch+6;
+    if(ty+th>H-10) ty=Math.max(10,H-th-10);
+    let rCol={'Gewöhnlich':'#888','Selten':'#3498db','Episch':'#9b59b6','Legendär':'#f1c40f'}[card.rarity]||'#888';
+    ctx.fillStyle='rgba(5,5,20,0.98)'; ctx.strokeStyle=rCol; ctx.lineWidth=2;
+    ctx.shadowColor=rCol; ctx.shadowBlur=16;
+    ctx.beginPath(); ctx.roundRect(tx,ty,tw,th,8); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
+    ctx.fillStyle='#fff'; ctx.font='bold 13px Courier New'; ctx.textAlign='left';
+    ctx.fillText(card.name, tx+10, ty+20);
+    ctx.fillStyle=rCol; ctx.font='10px Courier New';
+    ctx.fillText(card.rarity, tx+10, ty+35);
+    ctx.fillStyle='#00e5ff'; ctx.font='bold 11px Courier New';
+    ctx.fillText('Kosten: '+(card.pvpCost??0)+' 💧', tx+10, ty+52);
+    ctx.fillStyle='#e74c3c'; ctx.fillText('ATK: '+(card.pvpAtk??0), tx+10, ty+67);
+    ctx.fillStyle='#3498db'; ctx.fillText('DEF: '+(card.pvpDef??0), tx+10, ty+82);
+    ctx.fillStyle='#f1c40f'; ctx.font='bold 10px Courier New'; ctx.fillText('Effekt:', tx+10, ty+100);
+    ctx.fillStyle='#ccc'; ctx.font='9px Courier New';
+    let words=(card.pvpEffect||'Kein Effekt.').split(' '); let ln=''; let ey=ty+114;
+    for(let ww of words){ if((ln+ww).length<=30) ln+=(ln?' ':'')+ww; else { ctx.fillText(ln,tx+10,ey); ey+=13; ln=ww; if(ey>ty+th-8) break; } }
+    if(ln&&ey<=ty+th-8) ctx.fillText(ln,tx+10,ey);
+}
 
-    // Hintergrund
-    ctx.fillStyle = '#0a0a0a';
-    ctx.fillRect(0, 0, W, H);
-
-    // Spielfeld-Trennlinie
-    ctx.strokeStyle = 'rgba(155,89,182,0.4)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([8, 8]);
-    ctx.beginPath(); ctx.moveTo(50, H/2); ctx.lineTo(W-50, H/2); ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Zonen-Labels
-    ctx.fillStyle = 'rgba(255,255,255,0.06)';
-    ctx.font = 'bold 80px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('GEGNER', W/2, H*0.32);
-    ctx.fillText('ICH', W/2, H*0.78);
-
-    let layout = pvpGetCardLayout();
-    if (!layout) return;
-
-    // Feld-Slots (leere Platzhalter)
-    let { cw, ch } = layout;
-    let gap = 14;
-    // Mein Feld
-    let myTotalW = 4 * (cw + gap) - gap;
-    let myStartX = W/2 - myTotalW/2;
-    for (let i = 0; i < 4; i++) {
-        ctx.strokeStyle = 'rgba(46,204,113,0.25)';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([4,4]);
-        ctx.beginPath(); ctx.roundRect(myStartX + i*(cw+gap), H-ch-200, cw, ch, 6); ctx.stroke();
-    }
-    ctx.setLineDash([]);
-    // Gegner-Feld
-    for (let i = 0; i < 4; i++) {
-        ctx.strokeStyle = 'rgba(231,76,60,0.25)';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([4,4]);
-        ctx.beginPath(); ctx.roundRect(myStartX + i*(cw+gap), 160, cw, ch, 6); ctx.stroke();
-    }
-    ctx.setLineDash([]);
-
-    // Karten rendern
-    layout.myFieldCards.forEach(c => pvpRenderCard(ctx, c.card, c.x, c.y, c.w, c.h,
-        pvpSelectedCard && pvpSelectedCard.zone === 'myField' && pvpSelectedCard.index === c.index,
-        pvpState.attackedThisTurn.includes(c.card.id), false));
-
-    layout.oppFieldCards.forEach(c => pvpRenderCard(ctx, c.card, c.x, c.y, c.w, c.h, false, false, false));
-
-    // Hand (eigene, sichtbar)
-    layout.handCards.forEach(c => pvpRenderCard(ctx, c.card, c.x, c.y, c.w, c.h,
-        pvpSelectedCard && pvpSelectedCard.zone === 'hand' && pvpSelectedCard.index === c.index,
-        false, false));
-
-    // Gegner-Hand (verdeckt)
-    for (let i = 0; i < pvpState.oppHandCount; i++) {
-        let totalW = pvpState.oppHandCount * (cw + gap) - gap;
-        let sx = W/2 - totalW/2;
-        pvpRenderCard(ctx, {}, sx + i*(cw+gap), 15, cw-10, ch-20, false, false, true);
-    }
-
-    // ===== SPIELER-PANELS =====
-    function drawPlayerPanel(isMe) {
-        let px = isMe ? W - 240 : 20;
-        let py = 14;
-        let pw = 220, ph = 120;
-        let borderCol = isMe ? '#2ecc71' : '#e74c3c';
-        let name = isMe ? pvpState.myName : pvpState.opponentName;
-        let hp = isMe ? pvpState.myHp : pvpState.oppHp;
-        let maxHp = 30;
-        let mana = isMe ? pvpState.myMana : (pvpState.oppMana || 0);
-        let maxMana = isMe ? pvpState.myMaxMana : (pvpState.turn + 1);
-        let deckCount = isMe ? pvpState.myDeck.length : (pvpState.oppDeckCount || '?');
-        let handCount = isMe ? pvpState.myHand.length : pvpState.oppHandCount;
-
-        // Background
-        ctx.fillStyle = 'rgba(5,5,15,0.92)';
-        ctx.strokeStyle = borderCol; ctx.lineWidth = 2;
-        ctx.shadowColor = borderCol; ctx.shadowBlur = 8;
-        ctx.beginPath(); ctx.roundRect(px, py, pw, ph, 8); ctx.fill(); ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        // Name
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 12px Courier New';
-        ctx.textAlign = isMe ? 'right' : 'left';
-        let nameX = isMe ? px + pw - 10 : px + 10;
-        ctx.fillText((isMe ? '👤 ' : '⚔️ ') + name, nameX, py + 20);
-
-        // HP bar
-        let hpPct = Math.max(0, hp / maxHp);
-        ctx.fillStyle = '#0a0a0a'; ctx.fillRect(px + 8, py + 26, pw - 16, 12);
-        ctx.fillStyle = hpPct > 0.5 ? '#2ecc71' : (hpPct > 0.25 ? '#f39c12' : '#e74c3c');
-        ctx.fillRect(px + 8, py + 26, (pw - 16) * hpPct, 12);
-        ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
-        ctx.strokeRect(px + 8, py + 26, pw - 16, 12);
-        // HP text on bar
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Courier New'; ctx.textAlign = 'center';
-        ctx.fillText('❤️ ' + hp + ' / ' + maxHp, px + pw/2, py + 36);
-
-        // Mana gems
-        let manaY = py + 50;
-        let gemSize = 9; let gemGap = 11;
-        let totalManaW = Math.min(maxMana, 10) * (gemSize + gemGap);
-        let manaStartX = px + (pw - totalManaW) / 2;
-        ctx.font = '9px Courier New'; ctx.textAlign = 'left';
-        ctx.fillStyle = '#3498db';
-        ctx.fillText('💧 MANA', px + 10, manaY + 8);
-        for (let i = 0; i < Math.min(maxMana, 10); i++) {
-            let gx = px + pw - 14 - i * (gemSize + 3);
-            ctx.fillStyle = i < mana ? '#3498db' : '#1a2030';
-            ctx.strokeStyle = '#2980b9'; ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.arc(gx, manaY + 4, gemSize/2, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-        }
-
-        // Deck + Hand counts
-        ctx.fillStyle = '#888'; ctx.font = '10px Courier New';
-        ctx.textAlign = isMe ? 'right' : 'left';
-        ctx.fillText('🃏 Hand: ' + handCount + '  📚 Deck: ' + deckCount, nameX, py + 78);
-
-        // Field count
-        let fieldCount = isMe ? pvpState.myField.length : pvpState.oppField.length;
-        ctx.fillStyle = borderCol;
-        ctx.fillText('⚔️ Feld: ' + fieldCount + ' / 4', nameX, py + 94);
-    }
-    drawPlayerPanel(false); // Gegner links
-    drawPlayerPanel(true);  // Ich rechts
-
-    // Rundenanzeige (Mitte)
-    ctx.fillStyle = 'rgba(155,89,182,0.8)';
-    ctx.font = 'bold 14px Courier New'; ctx.textAlign = 'center';
-    ctx.fillText('RUNDE ' + pvpState.turn, W/2, H/2 - 15);
-    let turnColor = pvpState.myTurn ? '#2ecc71' : '#e74c3c';
-    ctx.fillStyle = turnColor;
-    ctx.font = 'bold 16px Courier New';
-    ctx.fillText(pvpState.myTurn ? '▶ DEIN ZUG' : '⏳ GEGNER...', W/2, H/2 + 10);
-
-    // End Turn Button
-    let btn = layout.endTurnBtn;
-    let btnActive = pvpState.myTurn;
-    ctx.fillStyle = btnActive ? '#27ae60' : '#1a1a1a';
-    ctx.strokeStyle = btnActive ? '#2ecc71' : '#333';
-    ctx.lineWidth = 2;
-    ctx.shadowColor = btnActive ? '#2ecc71' : 'transparent';
-    ctx.shadowBlur = btnActive ? 15 : 0;
-    ctx.beginPath(); ctx.roundRect(btn.x, btn.y, btn.w, btn.h, 6); ctx.fill(); ctx.stroke();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = btnActive ? '#fff' : '#555';
-    ctx.font = 'bold 14px Courier New'; ctx.textAlign = 'center';
-    ctx.fillText('ZUG BEENDEN', btn.x + btn.w/2, btn.y + btn.h/2 + 5);
-
-    // Help Button
-    ctx.fillStyle = '#0a0a1a'; ctx.strokeStyle = '#3498db'; ctx.lineWidth = 2;
-    ctx.shadowColor = '#3498db'; ctx.shadowBlur = 8;
-    ctx.beginPath(); ctx.roundRect(btn.x, btn.y + 60, btn.w, 40, 6); ctx.fill(); ctx.stroke();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#3498db'; ctx.font = 'bold 13px Courier New';
-    ctx.fillText('❓ ANLEITUNG', btn.x + btn.w/2, btn.y + 86);
-
-    // Aufgeben-Button (links)
-    ctx.fillStyle = '#1a0000'; ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.roundRect(20, H/2 - 20, 100, 35, 4); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#c0392b'; ctx.font = 'bold 11px Courier New';
-    ctx.fillText('AUFGEBEN', 70, H/2 + 4);
-
-    // Aufgeben-Button wird in pvpHandleClick behandelt
-
-    // Log (rechts unten)
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.beginPath(); ctx.roundRect(W-250, H-200, 240, 165, 6); ctx.fill();
-    ctx.strokeStyle = '#333'; ctx.lineWidth = 1; ctx.stroke();
-    ctx.fillStyle = '#9b59b6'; ctx.font = 'bold 11px Courier New'; ctx.textAlign = 'left';
-    ctx.fillText('📋 LOG', W-240, H-183);
-    ctx.fillStyle = '#888'; ctx.font = '10px Courier New';
-    pvpState.log.slice(0, 7).forEach((line, i) => {
-        ctx.fillText(line.substring(0, 30), W-240, H-167 + i*21);
-    });
-
-    // Flash-Message
-    if (pvpState.flashTimer > 0) {
-        let alpha = Math.min(1, pvpState.flashTimer / 30);
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = pvpState.flashColor || '#f1c40f';
-        ctx.font = 'bold 40px Courier New'; ctx.textAlign = 'center';
-        ctx.shadowColor = pvpState.flashColor; ctx.shadowBlur = 20;
-        ctx.fillText(pvpState.flashMsg, W/2, H/2 - 60);
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 1;
-    }
-
-    // Floating Texts
-    pvpState.floats.forEach(f => {
-        ctx.globalAlpha = f.life / 80;
-        ctx.fillStyle = f.color;
-        ctx.font = 'bold 18px Courier New'; ctx.textAlign = 'center';
-        f.y -= 0.8;
-        ctx.fillText(f.text, f.x, f.y);
-        ctx.globalAlpha = 1;
-    });
-
-    // Auswahlhinweis
-    if (pvpSelectedCard && pvpState.myTurn) {
-        ctx.fillStyle = '#f1c40f'; ctx.font = '13px Courier New'; ctx.textAlign = 'center';
-        let hint = pvpSelectedCard.zone === 'hand'
-            ? '→ Klicke auf dein Feld (untere Zone) um die Karte auszuspielen'
-            : '→ Klicke auf eine Gegner-Karte oder den Gegner-Bereich (oben) zum Angreifen';
-        ctx.fillText(hint, W/2, H - ch - 230);
-    }
+function pvpShowHelp() {
+    let ol=document.getElementById('pvpHelpOverlay');
+    if(!ol) {
+        ol=document.createElement('div');
+        ol.id='pvpHelpOverlay';
+        ol.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,0.95);z-index:1100;display:flex;align-items:center;justify-content:center;font-family:"Courier New",monospace;';
+        ol.innerHTML=`<div style="max-width:560px;width:90%;border:3px solid #9b59b6;background:#080814;border-radius:8px;padding:28px;color:#fff;max-height:85vh;overflow-y:auto;"><h2 style="color:#9b59b6;font-size:20px;letter-spacing:4px;margin:0 0 16px;text-align:center;">⚔️ LEITSTAND-DUELL — REGELN</h2><div style="line-height:2;font-size:13px;"><div style="color:#f1c40f;font-weight:bold;">🎯 Ziel</div><div style="color:#aaa;margin-bottom:10px;">Reduziere die Gegner-LP auf 0. Jeder startet mit <b style="color:#e74c3c;">30 LP</b>.</div><div style="color:#f1c40f;font-weight:bold;">🔄 Zugreihenfolge</div><div style="color:#aaa;margin-bottom:10px;">Jede Runde: <b>Karte ziehen</b> (außer Runde 1 für P1) → <b>Hauptphase</b> → optional <b>Kampfphase</b> → <b>Zug beenden</b>.<br>Mana pro Runde = Rundenanzahl + 1 (max 10) — aber <b>keine Mana-Kosten für Beschwörung</b>, 1 Beschwörung/Zug.</div><div style="color:#f1c40f;font-weight:bold;">🃏 Karte beschwören (HAUPTPHASE)</div><div style="color:#aaa;margin-bottom:10px;">1. Handkarte klicken (→ gelb markiert)<br>2. Freien Feld-Slot (untere Zone) klicken → Karte steht jetzt auf dem Feld.<br><b>Nur 1 Beschwörung pro Zug!</b></div><div style="color:#f1c40f;font-weight:bold;">⚔️ Angreifen (KAMPFPHASE oder HAUPTPHASE)</div><div style="color:#aaa;margin-bottom:10px;">1. Eigene Feldkarte klicken (→ rot markiert)<br>2a. Gegner-Karte klicken → Kampf: beide nehmen ATK-Schaden. Höhere ATK gewinnt + Restschaden geht an LP.<br>2b. Gegner-Bereich (oben) klicken → <b>Direktangriff</b> (nur wenn Gegner kein Feld hat!)<br>Jede Karte kann nur 1x pro Zug angreifen.</div><div style="color:#f1c40f;font-weight:bold;">📊 Stats</div><div style="color:#aaa;margin-bottom:10px;"><span style="color:#e74c3c;">⚔ ATK</span> — Angriffswert &nbsp;|&nbsp; <span style="color:#3498db;">🛡 DEF</span> — Trefferpunkte der Karte<br>Hover → Tooltip mit vollem Effekt-Text.</div><div style="color:#f1c40f;font-weight:bold;">🏆 Sieg</div><div style="color:#aaa;">Gegner-LP = 0 → Du gewinnst + <b style="color:#f1c40f;">+300 KB</b>!</div></div><button onclick="document.getElementById('pvpHelpOverlay').remove()" style="display:block;width:100%;margin-top:18px;background:#9b59b6;color:#fff;border:none;padding:13px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:4px;">✖ SCHLIESSEN</button></div>`;
+        document.body.appendChild(ol);
+    } else { ol.remove(); }
 }
 
 // ============================================================
