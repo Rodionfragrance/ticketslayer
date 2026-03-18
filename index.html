@@ -823,7 +823,6 @@ input[type="text"] {
             </div>
         </div>
         <button class="btn-easy" onclick="closeKloskaShop()" style="margin-top:20px; width:100%; background:#222; border-color:#9b59b6; color:#9b59b6;">LAGER VERLASSEN</button>
-        <button onclick="closeKloskaShop(); openSchmiede();" style="display:block;width:100%;margin-top:8px;background:#1a0a00;color:#e67e22;border:2px solid #e67e22;padding:12px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;transition:0.2s;" onmouseover="this.style.background='#e67e22';this.style.color='#000'" onmouseout="this.style.background='#1a0a00';this.style.color='#e67e22'">🔨 WAFFEN-SCHMIEDE (REFINEMENT)</button>
     </div>
 </div>
 
@@ -1473,6 +1472,7 @@ function toggleQuest(id) {
 }   
 
 let kaffeebons       = parseInt(localStorage.getItem('ts_kb') || '0');
+let wurmcoins        = parseInt(localStorage.getItem('ts_wurmcoins') || '0');   
 
 // ============================================================
 // DAILY REWARD + STREAK + CHALLENGE SYSTEM
@@ -2967,9 +2967,8 @@ function applySkillTree(p) {
 }
 
 let playerAkten = parseInt(localStorage.getItem('ts_akten') || '0');
-let cardInventory = JSON.parse(localStorage.getItem('ts_cards') || '[]');
 
-const CARD_DATABASE = [
+   const CARD_DATABASE = [
   // === STARTER DECK (20 Gewöhnliche Karten) ===
   { id: "c_prio5", name: "Prio 5: Allg. Frage", rarity: "Gewöhnlich", color: "#2ecc71", pvpCost: 1, pvpAtk: 1, pvpDef: 2, pvpEffect: "Zieht 1 Karte bei Tod.", pveBuffType: "xp_boost", pveBuffValue: 0.05, pveDesc: "+5% EXP pro Run." },
   { id: "c_prio4", name: "Prio 4: Workaround", rarity: "Gewöhnlich", color: "#a5d6a7", pvpCost: 2, pvpAtk: 2, pvpDef: 2, pvpEffect: "Weicht 1. Angriff aus.", pveBuffType: "dodge_chance", pveBuffValue: 0.05, pveDesc: "5% Ausweichchance." },
@@ -3014,6 +3013,14 @@ const CARD_DATABASE = [
   { id: "c_helden", name: "10 Leitstand-Helden", rarity: "Legendär", color: "#f1c40f", pvpCost: 8, pvpAtk: 0, pvpDef: 0, pvpEffect: "Zerstört ALLE Karten.", pveBuffType: "last_stand_dmg", pveBuffValue: 1, pveDesc: "Unter 25% HP: Doppelter DMG." },
   { id: "c_endlos", name: "Endlosschleife (4 Uhr)", rarity: "Selten", color: "#3498db", pvpCost: 4, pvpAtk: 0, pvpDef: 0, pvpEffect: "Alle gegnerischen Karten -2 ATK.", pveBuffType: "stationary_turret", pveBuffValue: 0.2, pveDesc: "+20% Feuerrate, -10% Speed." }
 ];
+   // --- STARTER DECK LOGIK ---
+let cardInventory = JSON.parse(localStorage.getItem('ts_cards') || 'null');
+if (!cardInventory) {
+    // Wenn kein Speicherstand existiert, erhält der Spieler die 20 "Gewöhnlich" Karten
+    cardInventory = CARD_DATABASE.filter(c => c.rarity === 'Gewöhnlich');
+    localStorage.setItem('ts_cards', JSON.stringify(cardInventory));
+}
+// --------------------------
 
 function openCardOverlay() { renderCardOverlay(); document.getElementById('cardOverlay').style.display = 'block'; }
 function closeCardOverlay() { document.getElementById('cardOverlay').style.display = 'none'; document.getElementById('startKBAmount').innerText = kaffeebons; }
@@ -3083,12 +3090,12 @@ function saveCardData() {
 // WAFFENKAMMER — Meta-Shop mit Kaffeebons
 // ============================================================
 const WEAPON_SHOP = [
-    { id:'minigun',  icon:'🌀', name:'Minigun',       desc:'Sehr hohe Feuerrate, leichte Streuung.',        cost:20000 },
-    { id:'shotgun',  icon:'💥', name:'Schrotflinte',  desc:'5-Pellet Fächer. Brutal auf kurze Distanz.',    cost:25000 },
-    { id:'flamer',   icon:'🔥', name:'Flammenwerfer', desc:'Setzt Gegner in Brand (DoT). Kurze Reichweite.',cost:35000 },
-    { id:'mouse',    icon:'🖱️', name:'Orbit-Maus',    desc:'Kreist um dich, knockt zurück (50 Dmg).',       cost:30000 },
-    { id:'rocket',   icon:'🚀', name:'Raketenwerfer', desc:'Splash-Damage 150px. Rückstoß schiebt zurück.', cost:40000 },
-    { id:'railgun',  icon:'⚡', name:'Railgun',        desc:'Durchdringt Gegner in einer Linie. Stark.',     cost:50000 },
+    { id:'minigun',  icon:'🌀', name:'Minigun',       desc:'Sehr hohe Feuerrate, leichte Streuung.',        cost:20 },
+    { id:'shotgun',  icon:'💥', name:'Schrotflinte',  desc:'5-Pellet Fächer. Brutal auf kurze Distanz.',    cost:25 },
+    { id:'flamer',   icon:'🔥', name:'Flammenwerfer', desc:'Setzt Gegner in Brand (DoT). Kurze Reichweite.',cost:35 },
+    { id:'mouse',    icon:'🖱️', name:'Orbit-Maus',    desc:'Kreist um dich, knockt zurück (50 Dmg).',       cost:30 },
+    { id:'rocket',   icon:'🚀', name:'Raketenwerfer', desc:'Splash-Damage 150px. Rückstoß schiebt zurück.', cost:40 },
+    { id:'railgun',  icon:'⚡', name:'Railgun',        desc:'Durchdringt Gegner in einer Linie. Stark.',     cost:50 },
 ];
 
 function hasWeaponUnlocked(id) { return unlockedWeapons.includes(id); }
@@ -3099,15 +3106,13 @@ function openWaffenkammer() {
 }
 function closeWaffenkammer() {
     document.getElementById('waffenOverlay').style.display = 'none';
-    document.getElementById('startKBAmount').innerText = kaffeebons;
 }
 
 function renderWaffenkammer() {
-    document.getElementById('waffenKBAmount').innerText = kaffeebons;
+    document.getElementById('waffenKBAmount').innerText = wurmcoins + " Wurmcoins";
     let grid = document.getElementById('waffenGrid');
     grid.innerHTML = '';
 
-    // Info-Banner
     let favName = favoriteWeapon ? (WEAPON_SHOP.find(x=>x.id===favoriteWeapon)||{}).name||'' : null;
     let banner = favoriteWeapon
         ? `<div style="grid-column:1/-1;background:rgba(231,76,60,0.1);border:1px solid #e74c3c;padding:10px;text-align:center;color:#e74c3c;font-size:13px;border-radius:3px;margin-bottom:4px;">
@@ -3119,15 +3124,15 @@ function renderWaffenkammer() {
     WEAPON_SHOP.forEach(w => {
         let owned = hasWeaponUnlocked(w.id);
         let isFav = favoriteWeapon === w.id;
-        let cantAfford = kaffeebons < w.cost;
+        let cantAfford = wurmcoins < w.cost;
         let borderColor = isFav ? '#f1c40f' : (owned ? '#2ecc71' : (cantAfford ? '#333' : '#e74c3c'));
         let opacity = (!owned && cantAfford) ? '0.5' : '1';
         let bg = isFav ? 'rgba(241,196,15,0.08)' : '#111';
 
         let statusLine = '';
         if(!owned) {
-            statusLine = `<div style="margin-top:8px;font-size:13px;font-weight:bold;color:${cantAfford?'#555':'#ffd700'};">
-                ${cantAfford ? '🔒 ' : '☕ '}${w.cost} KB${cantAfford?' (zu wenig)':''}</div>`;
+            statusLine = `<div style="margin-top:8px;font-size:13px;font-weight:bold;color:${cantAfford?'#555':'#e74c3c'};">
+                ${cantAfford ? '🔒 ' : '🪙 '}${w.cost} WC${cantAfford?' (zu wenig)':''}</div>`;
         } else {
             statusLine = `
                 <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -3154,6 +3159,17 @@ function renderWaffenkammer() {
     });
 }
 
+function buyWeapon(id) {
+    let w = WEAPON_SHOP.find(x => x.id === id);
+    if(!w || hasWeaponUnlocked(id) || wurmcoins < w.cost) return;
+    wurmcoins -= w.cost;
+    localStorage.setItem('ts_wurmcoins', wurmcoins);
+    unlockedWeapons.push(id);
+    localStorage.setItem('ts_weapons', JSON.stringify(unlockedWeapons));
+    saveProgress();
+    showToast('🔫 FREIGESCHALTET!', '#e74c3c', w.name + ' — spawnt als erste Kiste!');
+    renderWaffenkammer();
+}
 function setFavorite(id) {
     favoriteWeapon = id;
     localStorage.setItem('ts_favorite', id || '');
@@ -3412,7 +3428,7 @@ function renderPetOverlay() {
             <div style="color:#9b59b6;font-size:16px;font-weight:bold;margin-bottom:8px;">AZUBI-HAMSTER ADOPTIEREN</div>
             <div style="color:#888;font-size:12px;margin-bottom:16px;">Permanenter Begleiter für alle Runs.</div>
             <button onclick="adoptPet()" style="background:#9b59b6;color:#fff;border:none;padding:12px 30px;font-size:14px;font-weight:bold;font-family:monospace;cursor:pointer;text-transform:uppercase;border-radius:3px;">
-                🐾 ADOPTIEREN (500 KB)
+                🐾 ADOPTIEREN (50 🪙)
             </button>
         </div>`;
         return;
@@ -3453,10 +3469,13 @@ function renderPetOverlay() {
 }
 
 function adoptPet() {
-    if(kaffeebons<500) { showToast('ZU WENIG KB!','#e74c3c','500 KB nötig'); return; }
-    kaffeebons-=500; localStorage.setItem('ts_kb',kaffeebons);
-    petData.active=true; petData.intimacy=250; petData.hunger=0;
-    savePetData(); saveProgress(); showToast('🐾 HAMSTER ADOPTIERT!','#9b59b6','Dein Begleiter wartet!'); renderPetOverlay();
+    if(wurmcoins < 50) { showToast('ZU WENIG WURMCOINS!','#e74c3c','50 🐛 nötig'); return; }
+    wurmcoins -= 50; 
+    localStorage.setItem('ts_wurmcoins', wurmcoins);
+    petData.active = true; petData.intimacy = 250; petData.hunger = 0;
+    savePetData(); saveProgress(); 
+    showToast('🐾 HAMSTER ADOPTIERT!','#9b59b6','Dein Begleiter wartet!'); 
+    renderPetOverlay();
 }
 
 // ============================================================
@@ -3667,16 +3686,17 @@ function saveProgress() {
         let _daily = {}; try { _daily = JSON.parse(localStorage.getItem('ts_daily')||'{}'); } catch(e){}
         let _best  = parseInt(localStorage.getItem('ts_best_score')||'0');
         db.collection('playerProfiles').doc(_name).set({
-            kb: kaffeebons, upgrades: upgradeProgress,
+            kb: kaffeebons, upgrades: upgradeProgress, wurmcoins: wurmcoins,
             prestige: prestigeLevel, trophies: unlockedTrophies,
             weapons: unlockedWeapons, favorite: favoriteWeapon||null, skills: unlockedSkills,
             baseLevel, jobLevel, baseExp, jobExp, currentJob: currentJob||null,
             isTrans: isTrans||false, statPoints: statPoints||0, stats: stats||{},
             jobSkillPts, jobSkills, completedJobs, rebirthSkills,
-            runeInv: runeInventory, runeGrid: runeGrid,
+            runeInv: typeof runeInventory !== 'undefined' ? runeInventory : [],
+            runeGrid: typeof runeGrid !== 'undefined' ? runeGrid : [],
             akten: playerAkten, cards: cardInventory,
             daily: _daily, bestScore: _best,
-            lastSeen: new Date().toISOString()
+            lastSeen: new Date().toISOString()        
         }, {merge:true}).catch(function(){});
     }
 }
@@ -3771,7 +3791,14 @@ async function loadCloudProfile() {
             if(d.runeInv)  { runeInventory = d.runeInv;  localStorage.setItem('ts_runes', JSON.stringify(runeInventory)); }
             if(d.runeGrid) { runeGrid = d.runeGrid;       localStorage.setItem('ts_rune_grid', JSON.stringify(runeGrid)); }
             if(d.akten !== undefined) { playerAkten = d.akten; localStorage.setItem('ts_akten', playerAkten); }
-            if(d.cards) { cardInventory = d.cards; localStorage.setItem('ts_cards', JSON.stringify(cardInventory)); }
+            
+            if(d.cards) { 
+                cardInventory = d.cards; 
+            } else {
+                // Retrofit für alte Profile: Starter-Deck geben
+                cardInventory = CARD_DATABASE.filter(c => c.rarity === 'Gewöhnlich');
+            }
+            localStorage.setItem('ts_cards', JSON.stringify(cardInventory));
             localStorage.setItem('ts_completed_jobs', JSON.stringify(completedJobs));
             localStorage.setItem('ts_rebirth_skills', JSON.stringify(rebirthSkills));
             var el2 = document.getElementById('startKBAmount');
@@ -3780,6 +3807,19 @@ async function loadCloudProfile() {
             let jbtn2 = document.getElementById('job-menu-btn');
             if(jbtn2) jbtn2.innerText = currentJob ? ('⚔️ ' + (JOBS[currentJob]?.name||'JOB')) : '⚔️ JOB';
             showToast('PROFIL GELADEN','#00e5ff','Willkommen zurück, '+name+'!');
+            // Lade-Logik einfügen:
+            kaffeebons = d.kb||0; 
+            wurmcoins = d.wurmcoins||0;
+            localStorage.setItem('ts_wurmcoins', wurmcoins);
+            
+            if(d.stats) {
+                stats = d.stats;
+                localStorage.setItem('ts_stats', JSON.stringify(stats));
+            }
+            if(d.statPoints !== undefined) {
+                statPoints = d.statPoints;
+                localStorage.setItem('ts_statpts', statPoints);
+            }
         } else { showToast('NEUES PROFIL','#2ecc71',name+' — Viel Erfolg!'); }
     } catch(e){ showToast('LADEFEHLER','#f00','Firebase nicht erreichbar'); }
 }
@@ -4549,12 +4589,18 @@ function drawBueroDoor() {
 }
 
 function earnKaffeebons(sc) {
-    let baseRate = 0.5 + getUpgradeLevel('kb_rate') * 0.1; // Basis halbiert
+    let baseRate = 0.5 + getUpgradeLevel('kb_rate') * 0.1;
     if(player && player._stKbBonus) baseRate += player._stKbBonus;
-    let earned = Math.floor(sc / 100 * baseRate);
-    kaffeebons += earned;
+    
+    let earnedKb = Math.floor(sc / 100 * baseRate);
+    let earnedWc = Math.floor(sc / 50000); // 1 Wurmcoin pro 5000 Score
+    
+    kaffeebons += earnedKb;
+    wurmcoins += earnedWc;
+    
+    localStorage.setItem('ts_wurmcoins', wurmcoins);
     saveProgress();
-    return earned;
+    return { kb: earnedKb, wc: earnedWc };
 }
 function applyUpgradesToPlayer(p) {
     UPGRADES_DEF.forEach(upg => {
@@ -5020,9 +5066,9 @@ function checkGameOver(){
             document.getElementById('goTitle').innerText = "ARBEITSUNFALL";
             document.getElementById('goTitle').style.color = "#f00";
         }
-        let earned=earnKaffeebons(score);
-        document.getElementById('finalScore').innerText=score;
-        document.getElementById('goEarnedKB').innerText=earned;
+        let earned = earnKaffeebons(score);
+        document.getElementById('finalScore').innerText = score;
+        document.getElementById('goEarnedKB').innerText = earned.kb + " KB / " + earned.wc + " Wurmcoins";
         // EXP diese Runde — inkl. Zeitbonus
         let timeSec = (Date.now() - runStartTime) / 1000;
         let timeExpBonus = Math.floor(timeSec / 60) * 20;
@@ -6255,7 +6301,7 @@ if(!bueroDoor && currentBossStage >= 4 && !activeBoss && gamePhase === 'normal' 
 
     // ====== PENTAGRAMM-BESCHWÖRUNG (Late Endgame) ======
     // Voraussetzung: 5+ Prio-1-Gegner, kein aktiver Boss, Score > 25000
-    if(!ritualState && !activeBoss && !systemCollapse && score > 25000 && gamePhase === 'normal') {
+    if(!ritualState && !activeBoss && systemCollapse && score > 25000) {
         let prio1s = enemies.filter(e => e.type === 1 && e.label !== 'DEIN SCHATTEN' && e.label !== 'TOTALAUSFALL');
         if(prio1s.length >= 5) {
             // Prüfe: Sind 5 davon nah beieinander?
