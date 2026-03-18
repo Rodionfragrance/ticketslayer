@@ -974,9 +974,9 @@ input[type="text"] {
 </div>
 
 <!-- SCHMIEDE / REFINEMENT / KARTEN -->
-<div id="cardOverlay">
-    <div id="cardInner">
-        <h2>🎴 KARTENALBUM & GACHA</h2>
+<div id="cardOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.95); z-index:650; overflow-y:auto; font-family:'Courier New',monospace;">
+    <div id="cardInner" style="max-width:900px; margin:30px auto; padding:28px; border:3px solid #e74c3c; background:#0a0a0a; border-radius:4px; box-shadow:0 0 80px rgba(231,76,60,0.15);">
+        <h2 style="color:#e74c3c; font-size:24px; letter-spacing:4px; margin:0 0 4px; text-transform:uppercase;">🎴 KARTENALBUM & GACHA</h2>
         <div style="color:#888;font-size:12px;margin-bottom:15px;">Ziehe Karten aus Akten. Nutze sie später im PvP oder sockle sie in Waffen.</div>
         
         <div style="background:#1a0f14; border:2px solid #9b59b6; padding:20px; border-radius:4px; text-align:center; margin-bottom:20px;">
@@ -995,34 +995,19 @@ input[type="text"] {
     </div>
 </div> 
 
-</div>
-</div>   
-
 <div id="pvpLobbyOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.97); z-index:750; flex-direction:column; justify-content:center; align-items:center; font-family:'Courier New',monospace; color:#fff; border:4px solid #9b59b6;">
     <h2 style="color:#9b59b6; font-size:42px; letter-spacing:6px; text-shadow:0 0 20px #9b59b6; margin:0 0 10px;">⚔️ LEITSTAND-DUELL</h2>
     <p style="color:#888; font-size:14px; letter-spacing:2px; margin-bottom:40px;">Hostile Takeover. Verliere nicht deinen Job.</p>
-    
-    <div id="pvpLobbyStatus" style="background:#111; border:2px solid #333; padding:20px; width:400px; text-align:center; font-size:18px; color:#f1c40f; font-weight:bold; border-radius:4px; margin-bottom:20px;">
-        STATUS: BEREIT
-    </div>
-    
-    <button onclick="startPvPMatchmaking()" id="btnPvPSearch" style="background:#c0392b; color:#fff; border:none; padding:18px 40px; font-size:20px; font-weight:bold; cursor:pointer; font-family:'Courier New',monospace; text-transform:uppercase; letter-spacing:3px; margin-bottom:15px; border-radius:3px; transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-        🔍 GEGNER SUCHEN
-    </button>
-    <button onclick="closePvPLobby()" style="background:transparent; color:#555; border:1px solid #333; padding:10px 20px; font-size:14px; cursor:pointer; font-family:'Courier New',monospace; text-transform:uppercase;">
-        ✖ ABBRECHEN
-    </button>
+    <div id="pvpLobbyStatus" style="background:#111; border:2px solid #333; padding:20px; width:400px; text-align:center; font-size:18px; color:#f1c40f; font-weight:bold; border-radius:4px; margin-bottom:20px;">STATUS: BEREIT</div>
+    <button onclick="startPvPMatchmaking()" id="btnPvPSearch" style="background:#c0392b; color:#fff; border:none; padding:18px 40px; font-size:20px; font-weight:bold; cursor:pointer; font-family:'Courier New',monospace; text-transform:uppercase; letter-spacing:3px; margin-bottom:15px; border-radius:3px;">🔍 GEGNER SUCHEN</button>
+    <button onclick="closePvPLobby()" style="background:transparent; color:#555; border:1px solid #333; padding:10px 20px; font-size:14px; cursor:pointer;">✖ ABBRECHEN</button>
 </div>
 
-<div id="schmiedeOverlay">
-    <div id="schmiedeInner">
-        <h2>🔨 WAFFEN-SCHMIEDE</h2>   
-   
-<div id="schmiedeOverlay">
-    <div id="schmiedeInner">
-        <h2>🔨 WAFFEN-SCHMIEDE</h2>
+<div id="schmiedeOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.93); z-index:600; overflow-y:auto; font-family:'Courier New',monospace;">
+    <div id="schmiedeInner" style="max-width:680px; margin:40px auto; padding:30px; border:3px solid #e67e22; background:#0a0a0a; border-radius:4px; box-shadow:0 0 60px rgba(230,126,34,0.2);">
+        <h2 style="color:#e67e22; font-size:24px; letter-spacing:4px; margin:0 0 4px; text-transform:uppercase;">🔨 WAFFEN-SCHMIEDE</h2>
         <div style="color:#888;font-size:12px;margin-bottom:6px;">NPC Kloska · Aufwertung der Favoriten-Waffe</div>
-        <div style="color:#ffd700;font-size:14px;margin-bottom:18px;">☕ KB: <span id="schmiedeKB">0</span> &nbsp;|&nbsp; 🥣 Suppen: <span id="schmiedeSuppen">0</span></div>
+        <div style="color:#ffd700;font-size:14px;margin-bottom:18px;">🪙 WC: <span id="schmiedeWC">0</span> &nbsp;|&nbsp; 🥣 Suppen: <span id="schmiedeSuppen">0</span></div>
         <div id="schmiedeContent"></div>
         <button onclick="closeSchmiede()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
     </div>
@@ -2271,15 +2256,15 @@ function renderJobOverlay() {
         </div>
     </div>`;
 
-    // ── Aktive Perks & Boni ──
-    let p = player || new Player(); 
-    let boniText = `DMG-Bonus: +${Math.floor(p.dmgBonus)} | Speed: ${p.speed.toFixed(1)} | Max HP: ${p.maxHp}`;
-    if(p._critChance) boniText += ` | Crit: ${Math.round(p._critChance*100)}%`;
-    if(p._dmgReduction) boniText += ` | Resistenz: ${Math.round(p._dmgReduction*100)}%`;
-    
+    // ── Aktive Perks & Boni Anzeige ──
+    let p = player || { dmgBonus: 0, speed: 5, maxHp: 100 };
+    let perksHtml = `Schaden: +${Math.floor(p.dmgBonus)} | Speed: ${p.speed.toFixed(1)} | Max HP: ${p.maxHp}`;
+    if(p._critChance) perksHtml += ` | Crit: ${Math.round(p._critChance*100)}%`;
+    if(p._dmgReduction) perksHtml += ` | Schutz: ${Math.round(p._dmgReduction*100)}%`;
+
     html += `<div style="background:#111;border:1px solid #2ecc71;padding:10px;border-radius:4px;margin-bottom:12px;">
-        <div style="color:#2ecc71;font-size:11px;letter-spacing:1px;margin-bottom:4px;">✨ AKTIVE PERKS & BONI (Durch Skilltree/Trophäen/Job)</div>
-        <div style="color:#aaa;font-size:11px;line-height:1.5;">${boniText}</div>
+        <div style="color:#2ecc71;font-size:10px;letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;">✨ Aktive Boni (Skilltree & Job)</div>
+        <div style="color:#aaa;font-size:11px;line-height:1.4;">${perksHtml}</div>
     </div>`;
 
     // ── Stat-Menü ──
@@ -3264,102 +3249,103 @@ function closeSchmiede() {
     document.getElementById('startKBAmount').innerText = kaffeebons;
     openWaffenkammer();
 }
+// Neue Kosten in Wurmcoins (deutlich niedriger, da WC seltener sind)
+const REFINE_COSTS = { 
+    1:[1,0], 2:[1,0], 3:[2,0], 4:[2,0], 
+    5:[3,1], 6:[4,1], 7:[5,2], 8:[6,2], 
+    9:[8,3], 10:[10,4], 11:[12,5], 12:[15,6] 
+};
 
 function renderSchmiede() {
-    let el = document.getElementById('schmiedeKB'); let es = document.getElementById('schmiedeSuppen');
-    if(el) el.innerText = kaffeebons;
+    // Update der Anzeige auf Wurmcoins
+    let el = document.getElementById('schmiedeWC'); 
+    let es = document.getElementById('schmiedeSuppen');
+    if(el) el.innerText = wurmcoins;
+    
     let storedSuppen = parseInt(localStorage.getItem('ts_suppen_persistent') || '0');
     if(es) es.innerText = gameRunning ? (player ? player.suppe : storedSuppen) : storedSuppen;
+    
     let cont = document.getElementById('schmiedeContent');
     if(!cont) return;
+    
     if(unlockedWeapons.length === 0) {
         cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;border:2px dashed #222;border-radius:4px;">🔒 Keine Waffen — kaufe zuerst eine Waffe!</div>';
         return;
     }
-    let html2 = '<div style="background:#111;border:1px solid #333;padding:12px;border-radius:4px;margin-bottom:16px;font-size:12px;color:#888;line-height:1.7;"><strong style="color:#e67e22;">SCHMIEDE</strong><br>• <span style="color:#2ecc71;">+1 bis +4</span>: 100% sicher<br>• <span style="color:#f39c12;">+5+</span>: Risiko — Fehlschlag → <strong style="color:#c0392b;">+0</strong>!<br>• Pity: Jeder Fehlschlag erhöht nächste Chance<br>• Jede Stufe: <span style="color:#f1c40f;">+10% Schaden</span></div>';
+
+    let html2 = '<div style="background:#111;border:1px solid #333;padding:12px;border-radius:4px;margin-bottom:16px;font-size:12px;color:#888;line-height:1.7;"><strong style="color:#e67e22;">SCHMIEDE (WURMCOIN EDITION)</strong><br>• Nutze 🪙 WC für permanente Power-Ups.</div>';
+    
     unlockedWeapons.forEach(function(wid) {
-        let w = WEAPON_SHOP.find(function(x){ return x.id === wid; }); if(!w) return;
-        let curRef = getRefineLevel(wid); let isFav = favoriteWeapon === wid;
-        let targetRef = curRef + 1; let atMax = curRef >= REFINE_MAX;
+        let w = WEAPON_SHOP.find(x => x.id === wid); if(!w) return;
+        let curRef = getRefineLevel(wid);
+        let targetRef = curRef + 1;
+        let atMax = curRef >= REFINE_MAX;
         let chance = atMax ? 0 : getRefineChance(wid, targetRef);
-        let costs = atMax ? [0,0] : (REFINE_COSTS[targetRef] || [999,9]);
-        let kbCost = costs[0], suppCost = costs[1];
-        if(!atMax && hasTrophy('refine_max')) kbCost = Math.floor(kbCost * 0.8);
-        let canAffordKB = kaffeebons >= kbCost;
+        let costs = atMax ? [0,0] : (REFINE_COSTS[targetRef] || [99,9]);
+        let wcCost = costs[0], suppCost = costs[1];
+        
+        // Trophäen-Rabatt
+        if(!atMax && hasTrophy('refine_max')) wcCost = Math.max(1, Math.floor(wcCost * 0.8));
+        
+        let canAffordWC = wurmcoins >= wcCost;
         let currentSuppeVal = gameRunning && player ? player.suppe : parseInt(localStorage.getItem('ts_suppen_persistent')||'0');
-        let canAffordSupp = suppCost === 0 || currentSuppeVal >= suppCost;
-        let canRefine = !atMax && canAffordKB && canAffordSupp;
-        let badgeClass = curRef === 0 ? '' : (curRef <= 4 ? 'safe' : (curRef <= 7 ? 'risky' : 'danger'));
+        let canAffordSupp = currentSuppeVal >= suppCost;
+        
         let probColor = chance >= 70 ? '#2ecc71' : (chance >= 40 ? '#f39c12' : '#c0392b');
-        let refBadge = curRef > 0 ? '<span class="refine-level-badge ' + badgeClass + '">+' + curRef + '</span>' : '<span style="color:#555;font-size:12px;">–</span>';
-        let dmgLabel = curRef > 0 ? ' <span style="color:#f1c40f;font-size:11px;">+' + (curRef*10) + '% DMG</span>' : '';
-        let favLabel = isFav ? '⭐ ' : '';
-        let favColor = isFav ? '#f1c40f' : '#fff';
-        let cardClass = isFav ? 'refine-weapon-card selected' : 'refine-weapon-card';
-        html2 += '<div class="' + cardClass + '">';
-        html2 += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
-        html2 += '<div><span style="font-size:22px;">' + w.icon + '</span>';
-        html2 += '<span style="color:' + favColor + ';font-size:14px;font-weight:bold;margin-left:8px;">' + favLabel + w.name + '</span></div>';
-        html2 += '<div>' + refBadge + dmgLabel + '</div></div>';
-        if(atMax) {
-            html2 += '<div style="color:#f1c40f;text-align:center;padding:10px;border:1px solid #f1c40f;border-radius:3px;">🏆 MAX (+' + REFINE_MAX + ')</div>';
+        let refBadge = curRef > 0 ? '<span class="refine-level-badge">+' + curRef + '</span>' : '–';
+
+        html2 += `<div class="refine-weapon-card ${favoriteWeapon === wid ? 'selected' : ''}">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-weight:bold;color:#fff;">${w.icon} ${w.name}</span>
+                <span>${refBadge} <span style="color:#f1c40f;">+${curRef*10}% DMG</span></span>
+            </div>`;
+        
+        if(!atMax) {
+            html2 += `<div style="font-size:11px;color:#888;">Ziel: +${targetRef} | Chance: <span style="color:${probColor}">${Math.floor(chance)}%</span> | Kosten: ${wcCost} 🪙 ${suppCost>0?'+ '+suppCost+' 🥣':''}</div>
+                <div class="refine-prob-bar-outer"><div class="refine-prob-bar-inner" style="width:${chance}%;background:${probColor};"></div></div>
+                <button class="refine-anvil-btn" onclick="doRefine('${wid}')" ${(!canAffordWC || !canAffordSupp)?'disabled':''}>🔨 AUFWERTEN</button>`;
         } else {
-            let safeWarn = targetRef > 4 ? '<div style="color:#c0392b;font-size:10px;margin-bottom:4px;">⚠ Fehlschlag → +0!</div>' : '<div style="color:#2ecc71;font-size:10px;margin-bottom:4px;">✅ Sicher</div>';
-            let suppStr = suppCost > 0 ? ' + <span style="color:#ff9f43;">' + suppCost + ' 🥣</span>' : '';
-            let notKB = !canAffordKB ? ' — ZU WENIG KB' : '';
-            let notSupp = !canAffordSupp ? ' — ZU WENIG SUPPEN' : '';
-            html2 += '<div style="color:#888;font-size:11px;margin-bottom:6px;">→ <strong style="color:#fff;">+' + targetRef + '</strong> | Chance: <strong style="color:' + probColor + ';">' + Math.floor(chance) + '%</strong> | Kosten: <span style="color:#ffd700;">' + kbCost + ' KB</span>' + suppStr + '</div>';
-            html2 += '<div class="refine-prob-bar-outer"><div class="refine-prob-bar-inner" style="width:' + Math.floor(chance) + '%;background:' + probColor + ';"></div></div>';
-            html2 += safeWarn;
-            let btnAttr = canRefine ? '' : ' disabled';
-            html2 += '<button class="refine-anvil-btn" data-wid="' + wid + '"' + btnAttr + '>🔨 AUFWERTEN auf +' + targetRef + notKB + notSupp + '</button>';
+            html2 += '<div style="color:#f1c40f;text-align:center;font-weight:bold;">MAXIMALSTUFE ERREICHT</div>';
         }
         html2 += '</div>';
     });
     cont.innerHTML = html2;
-    // Attach button events after render (avoids inline onclick quoting issues)
-    cont.querySelectorAll('.refine-anvil-btn[data-wid]').forEach(function(btn) {
-        btn.addEventListener('click', function() { doRefine(btn.getAttribute('data-wid')); });
-    });
 }
 
 function doRefine(weaponId) {
     let curRef = getRefineLevel(weaponId); if(curRef >= REFINE_MAX) return;
     let targetRef = curRef + 1;
-    let [kbCost, suppCost] = REFINE_COSTS[targetRef] || [999,9];
-    if(hasTrophy('refine_max')) kbCost = Math.floor(kbCost * 0.8);
-    let chance = getRefineChance(weaponId, targetRef);
-    if(kaffeebons < kbCost) { showToast('ZU WENIG KB!', '#e74c3c', 'Brauchst ' + kbCost + ' KB'); return; }
-    let currentSuppeVal = gameRunning && player ? player.suppe : parseInt(localStorage.getItem('ts_suppen_persistent')||'0');
-    if(suppCost > 0 && currentSuppeVal < suppCost) { showToast('ZU WENIG SUPPE!', '#e74c3c', 'Brauchst ' + suppCost + ' 🥣'); return; }
-    kaffeebons -= kbCost;
-    if(suppCost > 0) { if(gameRunning && player) player.suppe -= suppCost; else { let s = parseInt(localStorage.getItem('ts_suppen_persistent')||'0'); localStorage.setItem('ts_suppen_persistent', Math.max(0, s-suppCost)); } }
-    localStorage.setItem('ts_kb', kaffeebons);
-    saveProgress();
-    let roll = Math.random() * 100;
-    let pityKey = weaponId + '_' + targetRef;
-    let cont = document.getElementById('schmiedeContent');
-    if(roll < chance) {
-        refineData[weaponId] = targetRef; delete refinePity[pityKey]; saveRefineData();
-        if(gameRunning && player && favoriteWeapon === weaponId) player._refineBonus = targetRef * 0.10;
-        if(targetRef >= 10) unlockTrophy('refine_max');
-        showToast('+'+targetRef+' AUFWERTUNG!', '#2ecc71', '✅ +'+targetRef*10+'% Schaden permanent!');
-        playSound('evolve');
-        let flash = document.createElement('div'); flash.className = 'refine-result-success';
-        flash.innerHTML = '🔨 +'+targetRef+' ERFOLG! +'+targetRef*10+'% SCHADEN!';
-        if(cont) { cont.insertBefore(flash, cont.firstChild); setTimeout(()=>flash.remove(), 2500); }
-    } else {
-        refineData[weaponId] = 0; refinePity[pityKey] = (refinePity[pityKey]||0) + 1; saveRefineData();
-        if(gameRunning && player && favoriteWeapon === weaponId) player._refineBonus = 0;
-        showToast('💥 FEHLSCHLAG!', '#c0392b', (WEAPON_SHOP.find(x=>x.id===weaponId)?.name||weaponId) + ' auf +0! (Pity gespeichert)');
-        playSound('hit');
-        let flash = document.createElement('div'); flash.className = 'refine-result-fail';
-        flash.innerHTML = '💥 FEHLSCHLAG! +0 | Nächste Chance: ' + Math.floor(getRefineChance(weaponId, targetRef)) + '%';
-        if(cont) { cont.insertBefore(flash, cont.firstChild); setTimeout(()=>flash.remove(), 3000); }
+    let [wcCost, suppCost] = REFINE_COSTS[targetRef] || [99,9];
+    if(hasTrophy('refine_max')) wcCost = Math.max(1, Math.floor(wcCost * 0.8));
+    
+    if(wurmcoins < wcCost) { showToast('ZU WENIG WURMCOINS!', '#e74c3c'); return; }
+    
+    wurmcoins -= wcCost;
+    localStorage.setItem('ts_wurmcoins', wurmcoins);
+    // Suppen-Logik bleibt gleich
+    if(suppCost > 0) { 
+        if(gameRunning && player) player.suppe -= suppCost; 
+        else { let s = parseInt(localStorage.getItem('ts_suppen_persistent')||'0'); localStorage.setItem('ts_suppen_persistent', Math.max(0, s-suppCost)); }
     }
-    let kbEl = document.getElementById('schmiedeKB'); if(kbEl) kbEl.innerText = kaffeebons;
-    let sEl = document.getElementById('schmiedeSuppen'); if(sEl && gameRunning && player) sEl.innerText = player.suppe;
-    setTimeout(() => renderSchmiede(), 400);
+    
+    let roll = Math.random() * 100;
+    let chance = getRefineChance(weaponId, targetRef);
+    
+    if(roll < chance) {
+        refineData[weaponId] = targetRef;
+        delete refinePity[weaponId + '_' + targetRef];
+        showToast('🔨 ERFOLG! +' + targetRef, '#2ecc71');
+        playSound('evolve');
+    } else {
+        refineData[weaponId] = 0; // Zurück auf 0 bei Fail
+        refinePity[weaponId + '_' + targetRef] = (refinePity[weaponId + '_' + targetRef] || 0) + 1;
+        showToast('💥 FEHLSCHLAG! +0', '#c0392b');
+        playSound('hit');
+    }
+    
+    saveRefineData();
+    saveProgress();
+    renderSchmiede();
 }
 
 
