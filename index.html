@@ -1067,7 +1067,7 @@ input[type="text"] {
     </div>
     <div class="hud-section hud-right">
         <div><span class="hud-label">SUPPE 🥣</span><span id="hud-suppe" class="hud-value" style="color:#ff9f43;">0</span></div>
-        <div><span class="hud-label">☕ KAFFEEBONS</span><span id="hud-kb" class="hud-value hud-kb">0</span></div>
+        <div><span class="hud-label">🪙 WURMCOINS</span><span id="hud-kb" class="hud-value hud-kb">0</span></div>
         <div><span class="hud-label">URLAUB [G]</span><span id="hud-slips" class="hud-value">2</span></div>
         <div><span class="hud-label" id="hud-weapon-name">STANDARD</span><div id="weapon-bar-container"><div id="weapon-bar"></div></div></div>
     </div>
@@ -6696,7 +6696,8 @@ function updateHUD(){
     document.getElementById('hud-score').innerText = score;
     document.getElementById('hud-slips').innerText = player.yellowSlips;
     document.getElementById('hud-suppe').innerText = player.suppe || 0;
-    document.getElementById('hud-kb').innerText = kaffeebons;
+    // document.getElementById('hud-kb').innerText = kaffeebons;
+    document.getElementById('hud-kb').innerText = wurmcoins; // Zeigt jetzt Wurmcoins statt Kaffeebons an
     document.getElementById('hud-shift').innerText = currentShift === 0 ? "FRÜH" : (currentShift === 1 ? "SPÄT" : "NACHT");
 
     // Modus-Anzeige mit Farbe
