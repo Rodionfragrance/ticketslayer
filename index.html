@@ -3038,7 +3038,7 @@ function openSchmiede() { renderSchmiede(); document.getElementById('schmiedeOve
 function closeSchmiede() {
     document.getElementById('schmiedeOverlay').style.display = 'none';
     document.getElementById('startKBAmount').innerText = kaffeebons;
-    renderWaffenkammer();
+    openWaffenkammer();
 }
 
 function renderSchmiede() {
@@ -7154,9 +7154,9 @@ function buyKloskaItem(item, cost) {
             showToast("STRG+ALT+ENTF", "#f00", "SYSTEM NEUGESTARTET");
         }
     } else {
-        showToast("ZU WENIG SUPPE!", "#e74c3c", `Brauchst ${cost}
-        playSound('hit');
-    }
+        showToast("ZU WENIG SUPPE!", "#e74c3c", `Brauchst ${cost} 🥣, hast ${player.suppe}`);
+        playSound('hit');
+    }
 }
 </script>
 <script>
@@ -7172,4 +7172,3 @@ setTimeout(function(){
 </script>
 </body>
 </html>
-
