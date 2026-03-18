@@ -3298,13 +3298,209 @@ let playerAkten = parseInt(lsGet('ts_akten', '0'));
   { id:"c_witron",     name:"3rd Level Witron",       rarity:"Legendär", color:"#e74c3c",
     pvpAtk:6, pvpDef:8,
     pvpEffect:"Hard Reset: Wenn beschworen, alle Gegner-Monster zerstören. -3 LP Selbstschaden.",
-    pveBuffType:"total_annihilation", pveBuffValue:1, pveDesc:"Krit. Treffer x3 DMG." }
+    pveBuffType:"total_annihilation", pveBuffValue:1, pveDesc:"Krit. Treffer x3 DMG." },
+
+  // ============================================================
+  // ERWEITERUNG — SEASON 1 BOOSTER
+  // LOB: Legend of Blue Eyes / MRD: Metal Raiders
+  // Alle Seltenheiten möglich — auch Gewöhnlich (Pech = Pech!)
+  // ============================================================
+
+  // ── LOB MONSTER ──────────────────────────────────────────────
+
+  // Gabelstapler [Dark Magician Girl] — Selten, ATK steigt mit toten Magiern
+  { id:"c_gabelstapler", name:"Gabelstapler", rarity:"Selten", color:"#f39c12",
+    pvpAtk:4, pvpDef:3,
+    pvpEffect:"+1 ATK für jede Karte im eigenen Friedhof (max +3).",
+    pveBuffType:"speed", pveBuffValue:0.2, pveDesc:"+0.2 Speed." },
+
+  // Fachkraft Vodka [Tri-Horned Dragon] — Legendär, schwerer Hitter
+  { id:"c_vodka", name:"Fachkraft Vodka", rarity:"Legendär", color:"#8e44ad",
+    pvpAtk:9, pvpDef:5,
+    pvpEffect:"Kann nicht durch Fallen zerstört werden.",
+    pveBuffType:"boss_slayer", pveBuffValue:0.25, pveDesc:"+25% Boss-Schaden." },
+
+  // LVS Hänger [Toon Mermaid] — Gewöhnlich (Pech!)
+  { id:"c_lvshang", name:"LVS Hänger", rarity:"Gewöhnlich", color:"#3498db",
+    pvpAtk:2, pvpDef:3,
+    pvpEffect:"Kann nicht in Runde 1 angreifen.",
+    pveBuffType:"farm_income", pveBuffValue:1, pveDesc:"Farmen 1s schneller." },
+
+  // Kabelfrass [Man-Eater Bug] — Selten, FLIP Monster
+  { id:"c_kabelfrass", name:"Kabelfrass", rarity:"Selten", color:"#27ae60",
+    pvpAtk:1, pvpDef:2,
+    pvpEffect:"FLIP: Zerstört 1 Monster deiner Wahl auf dem Feld (auch deins).",
+    pveBuffType:"toxic_aura", pveBuffValue:1, pveDesc:"Nahkampf-Gegner brennen." },
+
+  // Schlafender Riese [Sleeping Giant Und] — Gewöhnlich (Pech!)
+  { id:"c_schlafriese", name:"Schlafender Riese", rarity:"Gewöhnlich", color:"#7f8c8d",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Kann nie angreifen oder verteidigen. Blockiert nur einen Slot.",
+    pveBuffType:"maxhp", pveBuffValue:5, pveDesc:"+5 Max HP." },
+
+  // Firewall [Wall of Illusion] — Selten, returnt Angreifer
+  { id:"c_firewall", name:"Firewall", rarity:"Selten", color:"#2980b9",
+    pvpAtk:2, pvpDef:5,
+    pvpEffect:"Wenn ein Monster dieses angreift: Es kehrt in die Hand zurück (kein Kampf).",
+    pveBuffType:"reflect", pveBuffValue:0.15, pveDesc:"15% Reflekt-Chance." },
+
+  // Schwarzer Kanal [Shadow Ghoul] — Selten, wächst mit Friedhof
+  { id:"c_schwarzkanal", name:"Schwarzer Kanal", rarity:"Selten", color:"#2c3e50",
+    pvpAtk:3, pvpDef:3,
+    pvpEffect:"+1 ATK für jedes Monster im Friedhof (beide Seiten).",
+    pveBuffType:"kill_heal_hp", pveBuffValue:2, pveDesc:"Kills heilen 2 HP." },
+
+  // Kloska Ultimate [Dark Magician upgraded] — Episch
+  { id:"c_kloska_ult", name:"Kloska Supreme", rarity:"Episch", color:"#9b59b6",
+    pvpAtk:5, pvpDef:5,
+    pvpEffect:"Wenn ein Zauber gespielt wird: +2 ATK dauerhaft.",
+    pveBuffType:"dmg_pct", pveBuffValue:0.2, pveDesc:"+20% Schaden." },
+
+  // Teichmann [Harpie Lady] — Selten, zerstört Fallen beim Sterben
+  { id:"c_teichmann", name:"Teichmann", rarity:"Selten", color:"#f39c12",
+    pvpAtk:3, pvpDef:2,
+    pvpEffect:"Wenn er zerstört wird: Zerstört 1 Falle auf dem Feld.",
+    pveBuffType:"lucky_streak", pveBuffValue:1, pveDesc:"Glückssträhne skaliert." },
+
+  // CIMCORP Totalausfall [Gate Guardian] — Legendär, muss 3 Karten opfern
+  { id:"c_cimcorp", name:"CIMCORP Totalausfall", rarity:"Legendär", color:"#c0392b",
+    pvpAtk:9, pvpDef:8,
+    pvpEffect:"Beschwörung kostet 3 Karten vom Feld. Kann nicht durch Effekte zerstört werden.",
+    pveBuffType:"total_annihilation", pveBuffValue:1, pveDesc:"Krit. Treffer x3 DMG." },
+
+  // ── LOB ZAUBER ────────────────────────────────────────────────
+
+  // Blitzentlassung [Raigeki] — Legendär, alle Gegner weg
+  { id:"c_raigeki", name:"Blitzentlassung", rarity:"Legendär", color:"#f1c40f",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Zerstört ALLE Monster des Gegners. Deine bleiben.",
+    pveBuffType:"emergency_reset", pveBuffValue:1, pveDesc:"Notfall-Heal <10% HP." },
+
+  // Koffeinkick [Pot of Greed] — Selten, einfach 2 Karten ziehen
+  { id:"c_koffeinkick", name:"Koffeinkick", rarity:"Selten", color:"#6f4e37",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Ziehe 2 Karten.",
+    pveBuffType:"xp_boost", pveBuffValue:0.1, pveDesc:"+10% EXP." },
+
+  // Frühschicht-Sperre [Swords of Revealing Light] — Episch, 3 Runden Sperre
+  { id:"c_fruehsperre", name:"Frühschicht-Sperre", rarity:"Episch", color:"#f1c40f",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Gegner kann 3 Runden lang nicht angreifen. Alle face-down Monster umdrehen.",
+    pveBuffType:"stun_resist", pveBuffValue:0.3, pveDesc:"Stun -30%." },
+
+  // Gehaltserhöhung [Graceful Charity] — Episch, 3 ziehen 2 discard
+  { id:"c_gehaltserhoe", name:"Gehaltserhöhung", rarity:"Episch", color:"#2ecc71",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Ziehe 3 Karten, discard danach 2.",
+    pveBuffType:"speed_boost", pveBuffValue:0.3, pveDesc:"Speed-Boost verlängert." },
+
+  // MS Teams Ping [Messenger of Peace] — Gewöhnlich (Pech!)
+  { id:"c_teams", name:"MS Teams Ping", rarity:"Gewöhnlich", color:"#9b59b6",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Monster mit ≥4 ATK können nicht angreifen (beide Seiten).",
+    pveBuffType:"enemy_warn", pveBuffValue:5, pveDesc:"Gegner früher sichtbar." },
+
+  // Systemsturm [Heavy Storm] — Episch, alle Zauber/Fallen weg
+  { id:"c_systemsturm", name:"Systemsturm", rarity:"Episch", color:"#3498db",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Zerstört ALLE Zauber und Fallen auf dem Feld (beide Seiten).",
+    pveBuffType:"explosive_chance", pveBuffValue:0.1, pveDesc:"10% Splash-Schaden." },
+
+  // Extraschicht [Premature Burial] — Selten, Monster aus Friedhof holen
+  { id:"c_extraschicht", name:"Extraschicht", rarity:"Selten", color:"#e67e22",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Bezahle 4 LP: Beschwöre 1 Monster aus deinem Friedhof.",
+    pveBuffType:"farm_defense", pveBuffValue:0.3, pveDesc:"Farmen 30% länger." },
+
+  // OTRS Standard-Antwort [Magical Mallet] — Gewöhnlich (Pech!)
+  { id:"c_otrs", name:"OTRS Standard-Antwort", rarity:"Gewöhnlich", color:"#bdc3c7",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Mische beliebig viele Handkarten ins Deck und ziehe dieselbe Anzahl.",
+    pveBuffType:"weapon_swap", pveBuffValue:0.1, pveDesc:"Waffenwechsel 10% schneller." },
+
+  // ── MRD FALLEN ────────────────────────────────────────────────
+
+  // Spiegel des Vertrauens [Mirror Force] — Legendär, alle Angreifer weg
+  { id:"c_mirrorforce", name:"Spiegel des Vertrauens", rarity:"Legendär", color:"#f1c40f",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Wenn du angegriffen wirst: Zerstöre ALLE angreifenden Monster des Gegners.",
+    pveBuffType:"reflect", pveBuffValue:0.25, pveDesc:"25% Reflekt-Chance." },
+
+  // Sofortige Ablehnung [Solemn Judgment] — Legendär, negate alles, halbe LP
+  { id:"c_sofortabl", name:"Sofortige Ablehnung", rarity:"Legendär", color:"#2c3e50",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Zahle die Hälfte deiner LP: Negiere Beschwörung oder Effekt des Gegners.",
+    pveBuffType:"boss_dmg_red", pveBuffValue:0.2, pveDesc:"Bosse -20% DMG." },
+
+  // Aufgaben-Umleitung [Magic Jammer] — Selten, Counter Trap
+  { id:"c_magumleit", name:"Aufgaben-Umleitung", rarity:"Selten", color:"#9b59b6",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Discard 1 Karte: Negiere einen Zauber des Gegners und zerstöre ihn.",
+    pveBuffType:"sap_resist", pveBuffValue:0.2, pveDesc:"SAP-Debuff -20%." },
+
+  // Betriebssicherheitsmauer [Castle Walls] — Gewöhnlich (Pech!)
+  { id:"c_bsmauer", name:"Betriebssicherheitsmauer", rarity:"Gewöhnlich", color:"#3498db",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"1 eigenes Monster +4 DEF bis Rundenende.",
+    pveBuffType:"maxhp", pveBuffValue:8, pveDesc:"+8 Max HP." },
+
+  // Ruf des Betriebsleiters [Call of the Haunted] — Episch, permanent reborn
+  { id:"c_rufleiter", name:"Ruf des Betriebsleiters", rarity:"Episch", color:"#e74c3c",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Dauerhaft: Beschwöre 1 Monster aus dem Friedhof. Wenn diese Falle entfernt wird, wird das Monster auch zerstört.",
+    pveBuffType:"auto_loot", pveBuffValue:1, pveDesc:"Items ziehen automatisch." },
+
+  // Leitstand-Pause [Ceasefire] — Selten, alle face-down umdrehen + Schaden
+  { id:"c_pause", name:"Leitstand-Pause", rarity:"Selten", color:"#f39c12",
+    pvpAtk:0, pvpDef:0,
+    pvpEffect:"Alle face-down Monster werden umgedreht. Gegner verliert 1 LP pro umgedrehtem Monster.",
+    pveBuffType:"crit", pveBuffValue:0.05, pveDesc:"+5% Crit-Chance." },
+
+  // ── MRD MONSTER EXTRA ─────────────────────────────────────────
+
+  // RAIL-System [Barrel Dragon] — Episch, 50% Chancen-Monster
+  { id:"c_railsystem", name:"RAIL-System", rarity:"Episch", color:"#e74c3c",
+    pvpAtk:6, pvpDef:4,
+    pvpEffect:"Einmal pro Runde: 50% Chance, 1 Monster des Gegners zu zerstören.",
+    pveBuffType:"explosive_chance", pveBuffValue:0.15, pveDesc:"15% Splash-Schaden." },
+
+  // 1st Level Support [Magician of Faith] — Selten, Zauber zurückholen
+  { id:"c_1stlevel", name:"1st Level Support", rarity:"Selten", color:"#bdc3c7",
+    pvpAtk:1, pvpDef:3,
+    pvpEffect:"FLIP: Nimm 1 Zauber aus deinem Friedhof zurück in die Hand.",
+    pveBuffType:"maxhp", pveBuffValue:10, pveDesc:"+10 Max HP." },
+
+  // Endlosschleife [Jirai Gumo] — Selten, Risiko-Monster
+  { id:"c_endlosschl", name:"Endlosschleife (4 Uhr)", rarity:"Selten", color:"#3498db",
+    pvpAtk:5, pvpDef:3,
+    pvpEffect:"Beim Angriff: 50% Chance, dass du selbst 3 LP verlierst.",
+    pveBuffType:"stationary_turret", pveBuffValue:0.2, pveDesc:"+20% Feuerrate, -10% Speed." },
+
+  // Prio 2: Beeinträchtigt [7 Colored Fish] — Selten, starker Schläger ohne Effekt
+  { id:"c_prio2", name:"Prio 2: Beeinträchtigt", rarity:"Selten", color:"#e67e22",
+    pvpAtk:4, pvpDef:3,
+    pvpEffect:"Kein Effekt. Starker Angreifer, hat jedoch -1 ATK pro Runde nach Runde 3.",
+    pveBuffType:"dmg_pct", pveBuffValue:0.1, pveDesc:"+10% Schaden." },
+
+  // Prio 1: Ausfall [Summoned Skull upgraded] — Episch
+  { id:"c_prio1", name:"Prio 1: Ausfall", rarity:"Episch", color:"#c0392b",
+    pvpAtk:7, pvpDef:3,
+    pvpEffect:"Trample: Restschaden nach Zerstörung eines Monsters geht direkt an LP.",
+    pveBuffType:"boss_slayer", pveBuffValue:0.2, pveDesc:"+20% Boss-Schaden." },
+
+  // Schichtübergabe [Mystic Tomato] — Gewöhnlich (Pech!), zieht neues Monster
+  { id:"c_schichtuebergabe", name:"Schichtübergabe", rarity:"Gewöhnlich", color:"#e67e22",
+    pvpAtk:2, pvpDef:2,
+    pvpEffect:"Wenn er stirbt: Beschwöre direkt 1 Gewöhnliche Karte aus dem Deck.",
+    pveBuffType:"kb_rate", pveBuffValue:0.05, pveDesc:"+5% Kaffeebons." },
+
 ];
 // --- STARTER DECK LOGIK ---
 let cardInventory = JSON.parse(lsGet('ts_cards', 'null'));
 if (!cardInventory || cardInventory.length === 0) {
     // Wenn kein Speicherstand existiert oder Array leer -> 20 Standard-Karten erzwingen
-    cardInventory = CARD_DATABASE.filter(c => c.rarity === 'Gewöhnlich');
+    let _starterIds = ["c_werkshund", "c_praktikant", "c_anlagenbed", "c_lkw", "c_schichtleit", "c_sapfestung", "c_azubi", "c_itgeist", "c_aktenberg", "c_druckgolem", "c_ubervogel", "c_prio5", "c_kuendigung", "c_urlaub", "c_uberstunden", "c_protocol", "c_ticketfall", "c_krankmeld", "c_problemgel", "c_pwreset"];
+    cardInventory = CARD_DATABASE.filter(c => _starterIds.includes(c.id));
     lsSet('ts_cards', JSON.stringify(cardInventory));
 }
 // --------------------------
@@ -3348,10 +3544,10 @@ function openAkte() {
     playerAkten--; // Akte verbrauchen
     
     let roll = Math.random() * 100;
-    // Gewöhnliche kommen NIE aus der Lootbox — nur Selten/Episch/Legendär
-    let targetRarity = roll < 5 ? 'Legendär' : (roll < 20 ? 'Episch' : 'Selten');
+    // Lootbox-Chancen: Legendär 3% | Episch 12% | Selten 55% | Gewöhnlich 30% (Pech!)
+    let targetRarity = roll < 3 ? 'Legendär' : (roll < 15 ? 'Episch' : (roll < 70 ? 'Selten' : 'Gewöhnlich'));
     let pool = CARD_DATABASE.filter(c => c.rarity === targetRarity);
-    if(pool.length === 0) pool = CARD_DATABASE.filter(c => c.rarity !== 'Gewöhnlich'); 
+    if(pool.length === 0) pool = CARD_DATABASE; 
     
     let drawnCard = pool[Math.floor(Math.random() * pool.length)];
     
@@ -4075,7 +4271,8 @@ async function loadCloudProfile() {
                 cardInventory = d.cards; 
             } else {
                 // Retrofit für alte Profile: Starter-Deck geben
-                cardInventory = CARD_DATABASE.filter(c => c.rarity === 'Gewöhnlich');
+                let _sIds = ["c_werkshund", "c_praktikant", "c_anlagenbed", "c_lkw", "c_schichtleit", "c_sapfestung", "c_azubi", "c_itgeist", "c_aktenberg", "c_druckgolem", "c_ubervogel", "c_prio5", "c_kuendigung", "c_urlaub", "c_uberstunden", "c_protocol", "c_ticketfall", "c_krankmeld", "c_problemgel", "c_pwreset"];
+                cardInventory = CARD_DATABASE.filter(c => _sIds.includes(c.id));
             }
             lsSet('ts_cards', JSON.stringify(cardInventory));
             lsSet('ts_completed_jobs', JSON.stringify(completedJobs));
