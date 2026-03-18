@@ -483,7 +483,7 @@ input[type="text"] {
 <!-- EMAIL OVERLAY -->
 <div id="emailOverlay">
     <div class="email-header">
-        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3e525b574a4d4a5f505a7e44524d13565f5353105a5b">[email&#160;protected]</a>&gt;</div>
+        <div class="email-row"><span class="email-label">VON:</span> ZLS Hamm &lt;tickets@zls-hamm.de&gt;</div>
         <div class="email-row"><span class="email-label">AN:</span> Alle Mitarbeiter</div>
         <div class="email-row email-subject">PFLICHTLEKTÜRE: Neue Prozessanweisung V20 — Vollständige Revision</div>
     </div>
@@ -963,7 +963,7 @@ input[type="text"] {
 </div>
 
 <!-- PASSWORT LOGIK -->
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 var GAME_PASSWORD = 'Vollzeit2025';
 var SESSION_HOURS = 8;
 
@@ -3002,14 +3002,18 @@ function renderSchmiede() {
     if(es) es.innerText = gameRunning ? (player ? player.suppe : storedSuppen) : storedSuppen;
     let cont = document.getElementById('schmiedeContent');
     if(!cont) return;
-    if(unlockedWeapons.length === 0) { cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;border:2px dashed #222;border-radius:4px;">🔒 Keine Waffen — kaufe zuerst eine Waffe!</div>'; return; }
+    if(unlockedWeapons.length === 0) {
+        cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;border:2px dashed #222;border-radius:4px;">🔒 Keine Waffen — kaufe zuerst eine Waffe!</div>';
+        return;
+    }
     let html2 = '<div style="background:#111;border:1px solid #333;padding:12px;border-radius:4px;margin-bottom:16px;font-size:12px;color:#888;line-height:1.7;"><strong style="color:#e67e22;">SCHMIEDE</strong><br>• <span style="color:#2ecc71;">+1 bis +4</span>: 100% sicher<br>• <span style="color:#f39c12;">+5+</span>: Risiko — Fehlschlag → <strong style="color:#c0392b;">+0</strong>!<br>• Pity: Jeder Fehlschlag erhöht nächste Chance<br>• Jede Stufe: <span style="color:#f1c40f;">+10% Schaden</span></div>';
-    unlockedWeapons.forEach(wid => {
-        let w = WEAPON_SHOP.find(x => x.id === wid); if(!w) return;
+    unlockedWeapons.forEach(function(wid) {
+        let w = WEAPON_SHOP.find(function(x){ return x.id === wid; }); if(!w) return;
         let curRef = getRefineLevel(wid); let isFav = favoriteWeapon === wid;
         let targetRef = curRef + 1; let atMax = curRef >= REFINE_MAX;
         let chance = atMax ? 0 : getRefineChance(wid, targetRef);
-        let [kbCost, suppCost] = atMax ? [0,0] : (REFINE_COSTS[targetRef] || [999,9]);
+        let costs = atMax ? [0,0] : (REFINE_COSTS[targetRef] || [999,9]);
+        let kbCost = costs[0], suppCost = costs[1];
         if(!atMax && hasTrophy('refine_max')) kbCost = Math.floor(kbCost * 0.8);
         let canAffordKB = kaffeebons >= kbCost;
         let currentSuppeVal = gameRunning && player ? player.suppe : parseInt(localStorage.getItem('ts_suppen_persistent')||'0');
@@ -3017,12 +3021,36 @@ function renderSchmiede() {
         let canRefine = !atMax && canAffordKB && canAffordSupp;
         let badgeClass = curRef === 0 ? '' : (curRef <= 4 ? 'safe' : (curRef <= 7 ? 'risky' : 'danger'));
         let probColor = chance >= 70 ? '#2ecc71' : (chance >= 40 ? '#f39c12' : '#c0392b');
-        html2 += '<div class="refine-weapon-card ' + (isFav?'selected':'') + '"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><div><span style="font-size:22px;">' + w.icon + '</span><span style="color:' + (isFav?'#f1c40f':'#fff') + ';font-size:14px;font-weight:bold;margin-left:8px;">' + (isFav?'⭐ ':'') + w.name + '</span></div><div>' + (curRef>0?'<span class="refine-level-badge '+badgeClass+'">+'+curRef+'</span>':'<span style="color:#555;font-size:12px;">–</span>') + (curRef>0?' <span style="color:#f1c40f;font-size:11px;">+'+curRef*10+'% DMG</span>':'') + '</div></div>';
-        if(atMax) html2 += '<div style="color:#f1c40f;text-align:center;padding:10px;border:1px solid #f1c40f;border-radius:3px;">🏆 MAX (+'+REFINE_MAX+')</div>';
-        else html2 += '<div style="color:#888;font-size:11px;margin-bottom:6px;">→ <strong style="color:#fff;">+'+targetRef+'</strong> | Chance: <strong style="color:'+probColor+';">'+Math.floor(chance)+'%</strong> | Kosten: <span style="color:#ffd700;">'+kbCost+' KB</span>'+(suppCost>0?' + <span style="color:#ff9f43;">'+suppCost+' 🥣</span>':'')+'</div><div class="refine-prob-bar-outer"><div class="refine-prob-bar-inner" style="width:'+Math.floor(chance)+'%;background:'+probColor+';"></div></div>'+(targetRef>4?'<div style="color:#c0392b;font-size:10px;margin-bottom:4px;">⚠ Fehlschlag → +0!</div>':'<div style="color:#2ecc71;font-size:10px;margin-bottom:4px;">✅ Sicher</div>')+'<button class="refine-anvil-btn" onclick="doRefine(''+wid+'')" '+(canRefine?'':'disabled')+'>🔨 AUFWERTEN auf +'+targetRef+((!canAffordKB)?' — ZU WENIG KB':'')+((!canAffordSupp)?' — ZU WENIG SUPPEN':'')+'</button>';
+        let refBadge = curRef > 0 ? '<span class="refine-level-badge ' + badgeClass + '">+' + curRef + '</span>' : '<span style="color:#555;font-size:12px;">–</span>';
+        let dmgLabel = curRef > 0 ? ' <span style="color:#f1c40f;font-size:11px;">+' + (curRef*10) + '% DMG</span>' : '';
+        let favLabel = isFav ? '⭐ ' : '';
+        let favColor = isFav ? '#f1c40f' : '#fff';
+        let cardClass = isFav ? 'refine-weapon-card selected' : 'refine-weapon-card';
+        html2 += '<div class="' + cardClass + '">';
+        html2 += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+        html2 += '<div><span style="font-size:22px;">' + w.icon + '</span>';
+        html2 += '<span style="color:' + favColor + ';font-size:14px;font-weight:bold;margin-left:8px;">' + favLabel + w.name + '</span></div>';
+        html2 += '<div>' + refBadge + dmgLabel + '</div></div>';
+        if(atMax) {
+            html2 += '<div style="color:#f1c40f;text-align:center;padding:10px;border:1px solid #f1c40f;border-radius:3px;">🏆 MAX (+' + REFINE_MAX + ')</div>';
+        } else {
+            let safeWarn = targetRef > 4 ? '<div style="color:#c0392b;font-size:10px;margin-bottom:4px;">⚠ Fehlschlag → +0!</div>' : '<div style="color:#2ecc71;font-size:10px;margin-bottom:4px;">✅ Sicher</div>';
+            let suppStr = suppCost > 0 ? ' + <span style="color:#ff9f43;">' + suppCost + ' 🥣</span>' : '';
+            let notKB = !canAffordKB ? ' — ZU WENIG KB' : '';
+            let notSupp = !canAffordSupp ? ' — ZU WENIG SUPPEN' : '';
+            html2 += '<div style="color:#888;font-size:11px;margin-bottom:6px;">→ <strong style="color:#fff;">+' + targetRef + '</strong> | Chance: <strong style="color:' + probColor + ';">' + Math.floor(chance) + '%</strong> | Kosten: <span style="color:#ffd700;">' + kbCost + ' KB</span>' + suppStr + '</div>';
+            html2 += '<div class="refine-prob-bar-outer"><div class="refine-prob-bar-inner" style="width:' + Math.floor(chance) + '%;background:' + probColor + ';"></div></div>';
+            html2 += safeWarn;
+            let btnAttr = canRefine ? '' : ' disabled';
+            html2 += '<button class="refine-anvil-btn" data-wid="' + wid + '"' + btnAttr + '>🔨 AUFWERTEN auf +' + targetRef + notKB + notSupp + '</button>';
+        }
         html2 += '</div>';
     });
     cont.innerHTML = html2;
+    // Attach button events after render (avoids inline onclick quoting issues)
+    cont.querySelectorAll('.refine-anvil-btn[data-wid]').forEach(function(btn) {
+        btn.addEventListener('click', function() { doRefine(btn.getAttribute('data-wid')); });
+    });
 }
 
 function doRefine(weaponId) {
@@ -3171,12 +3199,58 @@ function openPetOverlay() { renderPetOverlay(); document.getElementById('petOver
 function closePetOverlay() { document.getElementById('petOverlay').style.display='none'; }
 
 function renderPetOverlay() {
-    let cont=document.getElementById('petOverlayContent'); if(!cont) return;
-    let stg=getPetStage(); let hungerPct=Math.max(0,100-petData.hunger);
-    let hungerColor=hungerPct>60?'#2ecc71':(hungerPct>30?'#f39c12':'#e74c3c');
-    let intimacyPct=Math.round(petData.intimacy/PET_MAX_INTIMACY*100);
-    let stagesHtml=PET_STAGES.map(s=>{let active=stg.name===s.name;let reached=petData.intimacy>=s.minIntimacy;return '<div style="padding:8px 12px;border:1px solid '+(active?s.color:'#222')+';border-radius:3px;background:'+(active?s.color+'22':'#0a0a0a')+';display:flex;justify-content:space-between;align-items:center;"><span style="color:'+(reached?s.color:'#333')+';font-weight:bold;">'+s.emoji+' '+s.name+(active?' ← AKTIV':'')+'</span><span style="color:#555;font-size:11px;">'+s.minIntimacy+' Zuneigung'+(s.buff?' · '+s.buff:' · kein Buff')+'</span></div>';}).join('');
-    cont.innerHTML=(!petData.active?'<div style="text-align:center;padding:20px;border:2px dashed #9b59b6;border-radius:4px;margin-bottom:16px;"><div style="font-size:48px;margin-bottom:10px;">🐾</div><div style="color:#9b59b6;font-size:16px;font-weight:bold;margin-bottom:8px;">AZUBI-HAMSTER ADOPTIEREN</div><div style="color:#888;font-size:12px;margin-bottom:16px;">Permanenter Begleiter für alle Runs.</div><button onclick="adoptPet()" style="background:#9b59b6;color:#fff;border:none;padding:12px 30px;font-size:14px;font-weight:bold;font-family:'Courier New',monospace;cursor:pointer;text-transform:uppercase;border-radius:3px;">🐾 ADOPTIEREN (500 KB)</button></div>':'<div style="background:#111;border:2px solid '+stg.color+';padding:16px;border-radius:4px;margin-bottom:14px;display:flex;gap:16px;align-items:center;"><div style="font-size:52px;line-height:1;">'+stg.emoji+'</div><div style="flex:1;"><div style="color:'+stg.color+';font-size:16px;font-weight:bold;">Hamster · '+stg.name.toUpperCase()+'</div><div style="color:#888;font-size:11px;margin:4px 0;">Zuneigung: '+petData.intimacy+' / '+PET_MAX_INTIMACY+'</div><div style="background:#1a1a1a;height:8px;border-radius:4px;margin:6px 0;"><div style="background:'+stg.color+';height:8px;border-radius:4px;width:'+intimacyPct+'%;"></div></div><div style="color:#aaa;font-size:11px;">Sättigung: <span style="color:'+hungerColor+';">'+hungerPct+'%</span> <span style="color:#555;">(Ideal: 60–80%)</span></div></div></div>')+'<div style="background:#0a0a0a;border:1px solid #333;padding:12px;border-radius:4px;margin-bottom:14px;font-size:11px;color:#888;line-height:1.8;"><strong style="color:#9b59b6;">FÜTTER-GUIDE [C] im Run:</strong><br>🟢 60–80% Sättigung → <span style="color:#2ecc71;">+25 Zuneigung</span><br>🟡 40–60% → <span style="color:#f1c40f;">+10</span><br>🔴 >80% (überfüttert) → <span style="color:#e74c3c;">-10</span><br>💀 <20% Hunger → <span style="color:#e74c3c;">-8 automatisch</span></div><div><div style="color:#888;font-size:11px;letter-spacing:2px;margin-bottom:8px;">STUFEN</div><div style="display:flex;flex-direction:column;gap:6px;">'+stagesHtml+'</div></div>';
+    let cont = document.getElementById('petOverlayContent');
+    if(!cont) return;
+    let stg = getPetStage();
+    let hungerPct = Math.max(0, 100 - petData.hunger);
+    let hungerColor = hungerPct > 60 ? '#2ecc71' : (hungerPct > 30 ? '#f39c12' : '#e74c3c');
+    let intimacyPct = Math.round(petData.intimacy / PET_MAX_INTIMACY * 100);
+
+    if(!petData.active) {
+        cont.innerHTML = `
+        <div style="text-align:center;padding:20px;border:2px dashed #9b59b6;border-radius:4px;margin-bottom:16px;">
+            <div style="font-size:48px;margin-bottom:10px;">🐾</div>
+            <div style="color:#9b59b6;font-size:16px;font-weight:bold;margin-bottom:8px;">AZUBI-HAMSTER ADOPTIEREN</div>
+            <div style="color:#888;font-size:12px;margin-bottom:16px;">Permanenter Begleiter für alle Runs.</div>
+            <button onclick="adoptPet()" style="background:#9b59b6;color:#fff;border:none;padding:12px 30px;font-size:14px;font-weight:bold;font-family:monospace;cursor:pointer;text-transform:uppercase;border-radius:3px;">
+                🐾 ADOPTIEREN (500 KB)
+            </button>
+        </div>`;
+        return;
+    }
+
+    let stagesHtml = PET_STAGES.map(s => {
+        let active = stg.name === s.name;
+        let reached = petData.intimacy >= s.minIntimacy;
+        return `<div style="padding:8px 12px;border:1px solid ${active ? s.color : '#222'};border-radius:3px;background:${active ? s.color + '22' : '#0a0a0a'};display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:${reached ? s.color : '#333'};font-weight:bold;">${s.emoji} ${s.name}${active ? ' ← AKTIV' : ''}</span>
+            <span style="color:#555;font-size:11px;">${s.minIntimacy} Zuneigung${s.buff ? ' · ' + s.buff : ' · kein Buff'}</span>
+        </div>`;
+    }).join('');
+
+    cont.innerHTML = `
+    <div style="background:#111;border:2px solid ${stg.color};padding:16px;border-radius:4px;margin-bottom:14px;display:flex;gap:16px;align-items:center;">
+        <div style="font-size:52px;line-height:1;">${stg.emoji}</div>
+        <div style="flex:1;">
+            <div style="color:${stg.color};font-size:16px;font-weight:bold;">Hamster · ${stg.name.toUpperCase()}</div>
+            <div style="color:#888;font-size:11px;margin:4px 0;">Zuneigung: ${petData.intimacy} / ${PET_MAX_INTIMACY}</div>
+            <div style="background:#1a1a1a;height:8px;border-radius:4px;margin:6px 0;">
+                <div style="background:${stg.color};height:8px;border-radius:4px;width:${intimacyPct}%;"></div>
+            </div>
+            <div style="color:#aaa;font-size:11px;">Sättigung: <span style="color:${hungerColor};">${hungerPct}%</span> <span style="color:#555;">(Ideal: 60–80%)</span></div>
+        </div>
+    </div>
+    <div style="background:#0a0a0a;border:1px solid #333;padding:12px;border-radius:4px;margin-bottom:14px;font-size:11px;color:#888;line-height:1.8;">
+        <strong style="color:#9b59b6;">FÜTTER-GUIDE [C] im Run:</strong><br>
+        🟢 60–80% Sättigung → <span style="color:#2ecc71;">+25 Zuneigung</span><br>
+        🟡 40–60% → <span style="color:#f1c40f;">+10</span><br>
+        🔴 &gt;80% (überfüttert) → <span style="color:#e74c3c;">-10</span><br>
+        💀 &lt;20% Hunger → <span style="color:#e74c3c;">-8 automatisch</span>
+    </div>
+    <div>
+        <div style="color:#888;font-size:11px;letter-spacing:2px;margin-bottom:8px;">STUFEN</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">${stagesHtml}</div>
+    </div>`;
 }
 
 function adoptPet() {
@@ -3219,16 +3293,75 @@ function applyRuneStats(p){let s=getActiveRuneStats();if(s.dmgPct)p.dmgBonus=(p.
 let dragRuneId=null;
 function openRuneOverlay(){renderRuneOverlay();document.getElementById('runeOverlay').style.display='block';}
 function closeRuneOverlay(){document.getElementById('runeOverlay').style.display='none';document.getElementById('startKBAmount').innerText=kaffeebons;}
-function renderRuneOverlay(){
-    let cont=document.getElementById('runeContent');if(!cont)return;
-    let placed=new Set(runeGrid.filter(Boolean));let activeStats=getActiveRuneStats();
-    let statsHtml=Object.entries(activeStats).map(([k,v])=>{let s=RUNE_STAT_POOL.find(x=>x.key===k);return s?'<span style="color:#00e5ff;margin-right:10px;">+'+v+s.unit+' '+s.label+'</span>':'';}).join('');
-    let gridHtml='<div class="rune-grid-wrapper" id="runeGridEl">';
-    for(let r=0;r<5;r++)for(let c=0;c<5;c++){let ci=r*5+c;let rid=runeGrid[ci];let rune=rid?runeInventory.find(x=>x.id===rid):null;let cellContent=rune?'<div style="width:100%;height:100%;background:'+rune.rarityColor+'22;display:flex;align-items:center;justify-content:center;font-size:16px;" title="'+rune.name+'">🔮</div>':'';gridHtml+='<div class="rune-cell '+(rune?'filled':'')+'" data-row="'+r+'" data-col="'+c+'" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="onDropCell(event,'+r+','+c+')" onclick="onCellClick('+r+','+c+')">'+cellContent+'</div>';}
-    gridHtml+='</div>';
-    let invHtml=runeInventory.length===0?'<div style="color:#555;font-size:12px;text-align:center;padding:20px;border:2px dashed #1a3040;border-radius:4px;">Keine Runen.<br><span style="font-size:10px;">Besiege Bosse!</span></div>':'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+runeInventory.map(rune=>{let shape=RUNE_SHAPES[rune.shape];let isPlaced=placed.has(rune.id);let sgHtml='<div class="rune-shape-preview" style="grid-template-columns:repeat('+shape[0].length+',12px);">';shape.forEach(row=>row.forEach(cell=>{sgHtml+='<div class="rune-shape-cell '+(cell?'':'empty')+'"></div>';}));sgHtml+='</div>';return '<div class="rune-card '+(isPlaced?'equipped':'')+'" draggable="true" ondragstart="dragRuneId=''+rune.id+'';this.classList.add('dragging')" ondragend="this.classList.remove('dragging')" onclick="onRuneCardClick(''+rune.id+'')">'+'<div style="display:flex;justify-content:space-between;align-items:flex-start;"><div>'+sgHtml+'<div style="color:'+rune.rarityColor+';font-size:11px;font-weight:bold;">'+rune.name+'</div><div style="color:#555;font-size:9px;">'+rune.source+'</div></div>'+(isPlaced?'<span style="color:#f1c40f;font-size:10px;">IM GRID</span>':'')+'</div><div style="margin-top:6px;">'+rune.stats.map(s=>'<div style="color:#aaa;font-size:11px;">+'+s.value+s.unit+' '+s.label+'</div>').join('')+'</div>'+(isPlaced?'<button onclick="event.stopPropagation();removeFromGrid(''+rune.id+'');renderRuneOverlay()" style="width:100%;margin-top:6px;background:#1a0000;color:#e74c3c;border:1px solid #e74c3c;padding:3px;font-size:10px;cursor:pointer;font-family:'Courier New',monospace;">✖ ENTFERNEN</button>':'<button onclick="event.stopPropagation();deleteRune(''+rune.id+'')" style="width:100%;margin-top:6px;background:#0a0a0a;color:#555;border:1px solid #222;padding:3px;font-size:10px;cursor:pointer;font-family:'Courier New',monospace;">🗑 LÖSCHEN</button>')+'</div>';}).join('')+'</div>';
-    cont.innerHTML='<div style="background:#0a1a20;border:1px solid #1a3040;padding:10px 14px;border-radius:4px;margin-bottom:14px;font-size:11px;"><strong style="color:#00e5ff;">AKTIVE RUNEN-BONI:</strong> '+(statsHtml||'<span style="color:#333;">— Keine Runen im Grid</span>')+'</div><div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start;"><div><div style="color:#555;font-size:10px;letter-spacing:2px;margin-bottom:8px;">5×5 GRID</div>'+gridHtml+'<div style="color:#555;font-size:9px;margin-top:6px;">'+placed.size+' Zellen belegt</div></div><div><div style="color:#555;font-size:10px;letter-spacing:2px;margin-bottom:8px;">INVENTAR ('+runeInventory.length+')</div>'+invHtml+'</div></div>';
+function renderRuneOverlay() {
+    let cont = document.getElementById('runeContent');
+    if(!cont) return;
+    let placed = new Set(runeGrid.filter(Boolean));
+    let activeStats = getActiveRuneStats();
+
+    let statsHtml = Object.entries(activeStats).map(([k,v]) => {
+        let s = RUNE_STAT_POOL.find(x => x.key === k);
+        return s ? `<span style="color:#00e5ff;margin-right:10px;">+${v}${s.unit} ${s.label}</span>` : '';
+    }).join('');
+
+    let gridHtml = '<div class="rune-grid-wrapper" id="runeGridEl">';
+    for(let r=0;r<5;r++) {
+        for(let c=0;c<5;c++) {
+            let ci = r*5+c;
+            let rid = runeGrid[ci];
+            let rune = rid ? runeInventory.find(x => x.id===rid) : null;
+            let cellContent = rune ? `<div style="width:100%;height:100%;background:${rune.rarityColor}22;display:flex;align-items:center;justify-content:center;font-size:16px;" title="${rune.name}">🔮</div>` : '';
+            gridHtml += `<div class="rune-cell ${rune?'filled':''}" data-row="${r}" data-col="${c}" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="onDropCell(event,${r},${c})" onclick="onCellClick(${r},${c})">${cellContent}</div>`;
+        }
+    }
+    gridHtml += '</div>';
+
+    let invHtml = runeInventory.length === 0
+        ? '<div style="color:#555;font-size:12px;text-align:center;padding:20px;border:2px dashed #1a3040;border-radius:4px;">Keine Runen.<br><span style="font-size:10px;">Besiege Bosse!</span></div>'
+        : '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + runeInventory.map(rune => {
+            let shape = RUNE_SHAPES[rune.shape];
+            let isPlaced = placed.has(rune.id);
+            let sgHtml = `<div class="rune-shape-preview" style="grid-template-columns:repeat(${shape[0].length},12px);">`;
+            shape.forEach(row => row.forEach(cell => { sgHtml += `<div class="rune-shape-cell ${cell?'':'empty'}"></div>`; }));
+            sgHtml += '</div>';
+            let statsHtmlRune = rune.stats.map(s => `<div style="color:#aaa;font-size:11px;">+${s.value}${s.unit} ${s.label}</div>`).join('');
+            let removeBtn = isPlaced
+                ? `<button data-rid="${rune.id}" class="rune-remove-btn" style="width:100%;margin-top:6px;background:#1a0000;color:#e74c3c;border:1px solid #e74c3c;padding:3px;font-size:10px;cursor:pointer;font-family:monospace;">✖ ENTFERNEN</button>`
+                : `<button data-rid="${rune.id}" class="rune-delete-btn" style="width:100%;margin-top:6px;background:#0a0a0a;color:#555;border:1px solid #222;padding:3px;font-size:10px;cursor:pointer;font-family:monospace;">🗑 LÖSCHEN</button>`;
+            return `<div class="rune-card ${isPlaced?'equipped':''}" draggable="true" data-rid="${rune.id}">${sgHtml}<div style="color:${rune.rarityColor};font-size:11px;font-weight:bold;">${rune.name}</div><div style="color:#555;font-size:9px;">${rune.source}</div>${isPlaced?'<span style=\"color:#f1c40f;font-size:10px;\">IM GRID</span>':''}<div style="margin-top:6px;">${statsHtmlRune}</div>${removeBtn}</div>`;
+        }).join('') + '</div>';
+
+    cont.innerHTML = `
+    <div style="background:#0a1a20;border:1px solid #1a3040;padding:10px 14px;border-radius:4px;margin-bottom:14px;font-size:11px;">
+        <strong style="color:#00e5ff;">AKTIVE RUNEN-BONI:</strong> ${statsHtml || '<span style="color:#333;">— Keine Runen im Grid</span>'}
+    </div>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start;">
+        <div>
+            <div style="color:#555;font-size:10px;letter-spacing:2px;margin-bottom:8px;">5×5 GRID</div>
+            ${gridHtml}
+            <div style="color:#555;font-size:9px;margin-top:6px;">${placed.size} Zellen belegt</div>
+        </div>
+        <div>
+            <div style="color:#555;font-size:10px;letter-spacing:2px;margin-bottom:8px;">INVENTAR (${runeInventory.length})</div>
+            ${invHtml}
+        </div>
+    </div>`;
+
+    // Attach drag/click events after render
+    cont.querySelectorAll('.rune-card[data-rid]').forEach(function(card) {
+        let rid = card.getAttribute('data-rid');
+        card.addEventListener('dragstart', function() { dragRuneId = rid; card.classList.add('dragging'); });
+        card.addEventListener('dragend', function() { card.classList.remove('dragging'); });
+        card.addEventListener('click', function() { onRuneCardClick(rid); });
+    });
+    cont.querySelectorAll('.rune-remove-btn[data-rid]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) { e.stopPropagation(); removeFromGrid(btn.getAttribute('data-rid')); renderRuneOverlay(); });
+    });
+    cont.querySelectorAll('.rune-delete-btn[data-rid]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) { e.stopPropagation(); deleteRune(btn.getAttribute('data-rid')); });
+    });
 }
+
 function onDropCell(event,row,col){event.preventDefault();document.querySelectorAll('.rune-cell').forEach(c=>c.classList.remove('drag-over'));if(!dragRuneId)return;let ok=placeRune(dragRuneId,row,col);dragRuneId=null;if(!ok)showToast('KEIN PLATZ!','#e74c3c','Rune passt nicht');renderRuneOverlay();}
 function onRuneCardClick(runeId){let rune=runeInventory.find(r=>r.id===runeId);if(!rune||rune.gridPos)return;let shape=RUNE_SHAPES[rune.shape];let h=shape.length,w=shape[0].length;for(let r=0;r<=5-h;r++)for(let c=0;c<=5-w;c++){if(canPlace(rune.shape,r,c,runeId)){placeRune(runeId,r,c);renderRuneOverlay();return;}}showToast('GRID VOLL!','#e74c3c','Kein Platz');}
 function onCellClick(row,col){let ci=row*5+col;let rid=runeGrid[ci];if(rid){removeFromGrid(rid);renderRuneOverlay();}}
