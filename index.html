@@ -997,11 +997,24 @@ input[type="text"] {
 </div> 
 
 <div id="pvpLobbyOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.97); z-index:750; flex-direction:column; justify-content:center; align-items:center; font-family:'Courier New',monospace; color:#fff; border:4px solid #9b59b6;">
-    <h2 style="color:#9b59b6; font-size:42px; letter-spacing:6px; text-shadow:0 0 20px #9b59b6; margin:0 0 10px;">⚔️ LEITSTAND-DUELL</h2>
-    <p style="color:#888; font-size:14px; letter-spacing:2px; margin-bottom:40px;">Hostile Takeover. Verliere nicht deinen Job.</p>
-    <div id="pvpLobbyStatus" style="background:#111; border:2px solid #333; padding:20px; width:400px; text-align:center; font-size:18px; color:#f1c40f; font-weight:bold; border-radius:4px; margin-bottom:20px;">STATUS: BEREIT</div>
-    <button onclick="startPvPMatchmaking()" id="btnPvPSearch" style="background:#c0392b; color:#fff; border:none; padding:18px 40px; font-size:20px; font-weight:bold; cursor:pointer; font-family:'Courier New',monospace; text-transform:uppercase; letter-spacing:3px; margin-bottom:15px; border-radius:3px;">🔍 GEGNER SUCHEN</button>
-    <button onclick="closePvPLobby()" style="background:transparent; color:#555; border:1px solid #333; padding:10px 20px; font-size:14px; cursor:pointer;">✖ ABBRECHEN</button>
+    <h2 style="color:#9b59b6; font-size:38px; letter-spacing:6px; text-shadow:0 0 20px #9b59b6; margin:0 0 6px;">⚔️ LEITSTAND-DUELL</h2>
+    <p style="color:#888; font-size:13px; letter-spacing:2px; margin-bottom:20px;">Hostile Takeover. Verliere nicht deinen Job.</p>
+    <div id="pvpLobbyStatus" style="background:#111; border:2px solid #333; padding:14px 20px; width:460px; text-align:center; font-size:16px; color:#f1c40f; font-weight:bold; border-radius:4px; margin-bottom:16px; min-height:48px;">STATUS: BEREIT</div>
+
+    <!-- Vor dem Einloggen in die Queue -->
+    <div id="pvpSearchBtn">
+        <button onclick="openPvPLobbyScreen()" style="background:#9b59b6; color:#fff; border:none; padding:16px 40px; font-size:18px; font-weight:bold; cursor:pointer; font-family:'Courier New',monospace; text-transform:uppercase; letter-spacing:3px; margin-bottom:12px; border-radius:3px; display:block;">🔍 LOBBY BETRETEN</button>
+        <button onclick="closePvPLobby()" style="background:transparent; color:#555; border:1px solid #333; padding:8px 20px; font-size:13px; cursor:pointer; display:block; margin:0 auto;">✖ ABBRECHEN</button>
+    </div>
+
+    <!-- Queue-Panel: sichtbar wenn man in der Queue ist -->
+    <div id="pvpQueuePanel" style="display:none; width:480px;">
+        <div style="color:#aaa; font-size:12px; letter-spacing:2px; margin-bottom:8px; text-align:center;">🟢 ONLINE-SPIELER</div>
+        <div id="pvpPlayerList" style="background:#0a0a0a; border:2px solid #1a1a2e; border-radius:4px; min-height:80px; max-height:240px; overflow-y:auto; margin-bottom:14px;">
+            <div style="color:#555;font-size:13px;padding:16px;text-align:center;">Lade Spielerliste...</div>
+        </div>
+        <button onclick="closePvPLobby()" style="background:transparent; color:#555; border:1px solid #333; padding:8px 20px; font-size:13px; cursor:pointer; width:100%;">✖ LOBBY VERLASSEN</button>
+    </div>
 </div>
 
 <div id="schmiedeOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.93); z-index:600; overflow-y:auto; font-family:'Courier New',monospace;">
@@ -6796,87 +6809,181 @@ function openPvPLobby() {
     document.getElementById('btnPvPSearch').style.display = 'block';
 }
 
-function closePvPLobby() {
-    if(pvpUnsubscribe) { pvpUnsubscribe(); pvpUnsubscribe = null; }
-    if(pvpMatchId && pvpPlayerRole === 'player1') {
-        // Eigene, noch offene Lobby wieder löschen, wenn man abbricht
-        if(db) db.collection('pvp_matches').doc(pvpMatchId).delete().catch(()=>{});
-    }
-    pvpMatchId = null;
-    document.getElementById('pvpLobbyOverlay').style.display = 'none';
-}
 
-function startPvPMatchmaking() {
+let pvpQueueListener = null;
+let pvpMyQueueName = null;
+
+function openPvPLobbyScreen() {
     if(!db) { showToast("KEINE VERBINDUNG!", "#f00", "Firebase offline."); return; }
-    
-    document.getElementById('btnPvPSearch').style.display = 'none';
-    let statusEl = document.getElementById('pvpLobbyStatus');
-    statusEl.innerText = "SUCHE GEGNER IM NETZWERK...";
-    
     let pName = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim().substring(0,10);
-    
-    // 1. Suche nach offenen Matches ('waiting')
-    db.collection('pvp_matches').where('status', '==', 'waiting').limit(1).get()
-    .then(snap => {
-        if(snap.empty) {
-            // Szenario A: Niemand sucht gerade. Wir erstellen eine eigene Lobby.
-            statusEl.innerText = "WARTE AUF HERAUSFORDERER...";
-            pvpPlayerRole = 'player1';
-            db.collection('pvp_matches').add({
-                status: 'waiting',
-                player1: pName,
-                player2: null,
-                p1Ready: false,
-                p2Ready: false,
-                round: 1,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(docRef => {
-                pvpMatchId = docRef.id;
-                listenToPvPMatch();
-            });
-        } else {
-            // Szenario B: Offenes Match gefunden. Wir treten als Player 2 bei.
-            statusEl.innerText = "GEGNER GEFUNDEN! VERBINDE...";
-            pvpPlayerRole = 'player2';
-            let matchDoc = snap.docs[0];
-            pvpMatchId = matchDoc.id;
-            
-            // Match auf 'running' setzen
-            db.collection('pvp_matches').doc(pvpMatchId).update({
-                status: 'running',
-                player2: pName
-            }).then(() => {
-                listenToPvPMatch();
-            });
+    if(!pName || pName === 'ANONYM') { showToast("NAME EINGEBEN!", "#f39c12", "Bitte zuerst Namen setzen."); return; }
+    pvpMyQueueName = pName;
+
+    // Eigenen Queue-Eintrag erstellen
+    db.collection('pvp_queue').doc(pName).set({
+        name: pName,
+        ts: firebase.firestore.FieldValue.serverTimestamp(),
+        status: 'waiting',         // waiting | challenged | in_match
+        challengeFrom: null,
+        matchId: null,
+    }).catch(e => console.warn('Queue set:', e));
+
+    // Queue UI zeigen
+    document.getElementById('pvpSearchBtn').style.display = 'none';
+    document.getElementById('pvpQueuePanel').style.display = 'block';
+    document.getElementById('pvpLobbyStatus').innerText = "ONLINE — WARTE AUF HERAUSFORDERER";
+    document.getElementById('pvpLobbyStatus').style.color = "#2ecc71";
+
+    // Queue listener starten
+    pvpStartQueueListener(pName);
+}
+
+function pvpStartQueueListener(myName) {
+    if (pvpQueueListener) pvpQueueListener();
+    // Listen to entire queue for player list
+    pvpQueueListener = db.collection('pvp_queue').onSnapshot(snap => {
+        let players = [];
+        snap.forEach(doc => {
+            let d = doc.data();
+            if (d.name !== myName && d.status === 'waiting') players.push(d.name);
+        });
+        pvpRenderQueueList(players);
+
+        // Check if we got challenged
+        let myDoc = snap.docs.find(d => d.id === myName);
+        if (myDoc) {
+            let myData = myDoc.data();
+            if (myData.challengeFrom && myData.status === 'challenged') {
+                pvpHandleIncomingChallenge(myData.challengeFrom, myData.matchId);
+            }
+            if (myData.status === 'in_match' && myData.matchId && !pvpMatchId) {
+                // We were accepted into a match
+                pvpMatchId = myData.matchId;
+                pvpPlayerRole = 'player2';
+                pvpJoinMatch(myData.challengeFrom);
+            }
         }
-    }).catch(err => {
-        statusEl.innerText = "FEHLER BEI DER SUCHE!";
-        console.error(err);
-        document.getElementById('btnPvPSearch').style.display = 'block';
     });
 }
 
-function listenToPvPMatch() {
+function pvpRenderQueueList(players) {
+    let el = document.getElementById('pvpPlayerList');
+    if (!el) return;
+    if (players.length === 0) {
+        el.innerHTML = '<div style="color:#555;font-size:13px;padding:16px;text-align:center;">Keine anderen Spieler online...<br><span style="font-size:11px;">Warte oder lade einen Freund ein!</span></div>';
+        return;
+    }
+    el.innerHTML = players.map(p => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #1a1a1a;">
+            <span style="color:#fff;font-size:14px;letter-spacing:1px;">⚔️ ${p}</span>
+            <button onclick="pvpSendChallenge('${p}')" style="background:#9b59b6;color:#fff;border:none;padding:7px 18px;cursor:pointer;font-family:'Courier New',monospace;font-size:12px;font-weight:bold;border-radius:3px;letter-spacing:1px;">HERAUSFORDERN</button>
+        </div>`).join('');
+}
+
+function pvpSendChallenge(targetName) {
+    if (!pvpMyQueueName || !db) return;
+    let myName = pvpMyQueueName;
+    // Create match document
+    db.collection('pvp_matches').add({
+        status: 'waiting',
+        player1: myName,
+        player2: targetName,
+        p1Hp: 30, p2Hp: 30,
+        p1Field: [], p2Field: [],
+        p1HandCount: 4, p2HandCount: 4,
+        turn: 1, activePlayer: 'player1',
+        lastAction: null, gameOver: null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(docRef => {
+        pvpMatchId = docRef.id;
+        pvpPlayerRole = 'player1';
+        // Write challenge to target
+        db.collection('pvp_queue').doc(targetName).update({
+            status: 'challenged',
+            challengeFrom: myName,
+            matchId: docRef.id
+        });
+        // Update own queue entry
+        db.collection('pvp_queue').doc(myName).update({ status: 'in_match', matchId: docRef.id });
+        document.getElementById('pvpLobbyStatus').innerText = "WARTET AUF " + targetName + "...";
+        document.getElementById('pvpLobbyStatus').style.color = "#f1c40f";
+        // Listen for opponent to join
+        listenToPvPMatchStart();
+    }).catch(e => console.error('Challenge:', e));
+}
+
+function pvpHandleIncomingChallenge(fromName, matchId) {
+    // Show accept/decline UI
+    let statusEl = document.getElementById('pvpLobbyStatus');
+    statusEl.style.color = "#e74c3c";
+    statusEl.innerHTML = `⚔️ HERAUSFORDERUNG VON <strong>${fromName}</strong>!<br>
+        <button onclick="pvpAcceptChallenge('${fromName}','${matchId}')" style="margin-top:10px;background:#27ae60;color:#fff;border:none;padding:10px 24px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;margin-right:10px;">✔ ANNEHMEN</button>
+        <button onclick="pvpDeclineChallenge('${fromName}')" style="background:#c0392b;color:#fff;border:none;padding:10px 24px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;">✖ ABLEHNEN</button>`;
+}
+
+function pvpAcceptChallenge(fromName, matchId) {
+    pvpMatchId = matchId;
+    pvpPlayerRole = 'player2';
+    // Update queue entries
+    db.collection('pvp_queue').doc(pvpMyQueueName).update({ status: 'in_match', matchId });
+    // Signal match is running
+    db.collection('pvp_matches').doc(matchId).update({ status: 'running' });
+    pvpJoinMatch(fromName);
+}
+
+function pvpDeclineChallenge(fromName) {
+    db.collection('pvp_queue').doc(pvpMyQueueName).update({ status: 'waiting', challengeFrom: null, matchId: null });
+    db.collection('pvp_queue').doc(fromName).update({ status: 'waiting', matchId: null });
+    document.getElementById('pvpLobbyStatus').innerText = "ONLINE — WARTE AUF HERAUSFORDERER";
+    document.getElementById('pvpLobbyStatus').style.color = "#2ecc71";
+    pvpMatchId = null;
+}
+
+function pvpJoinMatch(opponentName) {
+    if (pvpQueueListener) { pvpQueueListener(); pvpQueueListener = null; }
+    // Clean up own queue entry
+    if (pvpMyQueueName) db.collection('pvp_queue').doc(pvpMyQueueName).delete().catch(()=>{});
+    document.getElementById('pvpLobbyStatus').style.color = "#2ecc71";
+    document.getElementById('pvpLobbyStatus').innerText = "VERBUNDEN MIT: " + opponentName;
+    setTimeout(() => {
+        db.collection('pvp_matches').doc(pvpMatchId).get().then(doc => {
+            if (doc.exists) initPvPBoard(doc.data(), opponentName);
+        });
+    }, 1200);
+}
+
+function listenToPvPMatchStart() {
+    // Player1 waits for status=running
+    if (pvpUnsubscribe) pvpUnsubscribe();
     pvpUnsubscribe = db.collection('pvp_matches').doc(pvpMatchId).onSnapshot(doc => {
-        if(!doc.exists) { 
-            closePvPLobby(); 
-            showToast("DUELL ABGEBROCHEN", "#f00", "Der Gegner hat das Netzwerk verlassen."); 
-            return; 
-        }
-        
-        let data = doc.data();
-        if(data.status === 'running') {
-            let oppName = pvpPlayerRole === 'player1' ? data.player2 : data.player1;
-            document.getElementById('pvpLobbyStatus').style.color = "#2ecc71";
+        if (!doc.exists) return;
+        let d = doc.data();
+        if (d.status === 'running' && pvpPlayerRole === 'player1') {
+            if (pvpQueueListener) { pvpQueueListener(); pvpQueueListener = null; }
+            if (pvpMyQueueName) db.collection('pvp_queue').doc(pvpMyQueueName).delete().catch(()=>{});
+            let oppName = d.player2;
             document.getElementById('pvpLobbyStatus').innerText = "VERBUNDEN MIT: " + oppName;
-            
-            // Verzögerung für den dramatischen Effekt
-            setTimeout(() => {
-                initPvPBoard(data, oppName);
-            }, 1500);
+            document.getElementById('pvpLobbyStatus').style.color = "#2ecc71";
+            setTimeout(() => initPvPBoard(d, oppName), 1200);
+            if (pvpUnsubscribe) { pvpUnsubscribe(); pvpUnsubscribe = null; }
         }
     });
 }
+
+function closePvPLobby() {
+    // Clean up queue
+    if (pvpMyQueueName && db) db.collection('pvp_queue').doc(pvpMyQueueName).delete().catch(()=>{});
+    if (pvpQueueListener) { pvpQueueListener(); pvpQueueListener = null; }
+    pvpMyQueueName = null;
+    document.getElementById('pvpLobbyOverlay').style.display = 'none';
+    document.getElementById('pvpSearchBtn').style.display = 'block';
+    document.getElementById('pvpQueuePanel').style.display = 'none';
+    document.getElementById('pvpLobbyStatus').innerText = "STATUS: BEREIT";
+    document.getElementById('pvpLobbyStatus').style.color = "#f1c40f";
+}
+
+// Legacy alias
+function startPvPMatchmaking() { openPvPLobbyScreen(); }
 
 // ============================================================
 // PVP CARD GAME — VOLLSTÄNDIGE IMPLEMENTIERUNG
@@ -7091,12 +7198,11 @@ function listenToPvPState() {
 function pvpProcessOpponentAction(action) {
     if (!pvpState) return;
     if (action.type === 'play_card') {
-        // Gegner hat Karte gespielt
+        // Nur Log + Float — Feld wird bereits durch Firebase-Field-Sync gesetzt
         let cardDef = CARD_DATABASE.find(c => c.id === action.cardId);
         if (cardDef) {
-            pvpState.oppField.push({ ...cardDef, curHp: cardDef.pvpDef });
             pvpLog(pvpState.opponentName + ' spielt ' + cardDef.name);
-            pvpFloat(cardDef.name + ' gespielt!', pvpCanvas.width * 0.5, pvpCanvas.height * 0.35, cardDef.color);
+            pvpFloat(cardDef.name + '!', pvpCanvas.width * 0.5, pvpCanvas.height * 0.35, cardDef.color || '#9b59b6');
         }
     } else if (action.type === 'attack') {
         // Gegner greift an
@@ -7594,10 +7700,17 @@ function pvpRenderCard(ctx, card, x, y, w, h, selected, exhausted, facedown) {
 function pvpDrawTooltip(ctx, card, cx, cy, cw, ch) {
     let W = pvpCanvas ? pvpCanvas.width : 1280;
     let H = pvpCanvas ? pvpCanvas.height : 720;
-    let tw = 220, th = 130;
-    let tx = cx + cw + 8;
-    if (tx + tw > W - 20) tx = cx - tw - 8;
-    let ty = Math.min(cy, H - th - 10);
+    let tw = 220, th = 155;
+    // Smart positioning: prefer right, else left, else above
+    let tx, ty;
+    if (cx + cw + 8 + tw < W - 10) {
+        tx = cx + cw + 8; // right
+    } else if (cx - tw - 8 > 10) {
+        tx = cx - tw - 8; // left
+    } else {
+        tx = Math.max(10, Math.min(W - tw - 10, cx)); // centered below card
+    }
+    ty = Math.max(10, Math.min(cy, H - th - 10));
 
     ctx.fillStyle = 'rgba(10,10,20,0.97)';
     ctx.strokeStyle = card.color || '#9b59b6';
