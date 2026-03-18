@@ -772,7 +772,8 @@ input[type="text"] {
             <button onclick="openTrophies()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🏆 TROPHÄEN</button>
             <button onclick="openWaffenkammer()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#e74c3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#e74c3c'">🔫 WAFFEN</button>
             <button onclick="openCardOverlay()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#e74c3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#e74c3c'">🎴 KARTEN</button>
-            <button onclick="openDailyOverlay()" id="daily-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;">☕ TAGES-BONUS</button>
+            <button onclick="openPvPLobby()" style="background:#111;color:#9b59b6;border:2px solid #9b59b6;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#9b59b6';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#9b59b6'">⚔️ PVP DUELL</button>
+           <button onclick="openDailyOverlay()" id="daily-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;">☕ TAGES-BONUS</button>
             <button onclick="openQuestBoard()" style="background:#111;color:#2ecc71;border:2px solid #2ecc71;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#2ecc71';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#2ecc71'">📋 AUFTRÄGE</button>
             <button onclick="openJobOverlay()" id="job-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">⚔️ JOB</button>
             <button onclick="openPetOverlay()" id="pet-menu-btn" style="background:#111;color:#9b59b6;border:2px solid #9b59b6;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#9b59b6';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#9b59b6'">🐾 PET</button>
@@ -992,7 +993,31 @@ input[type="text"] {
         <div id="cardGrid" class="card-grid"></div>
         <button onclick="closeCardOverlay()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
     </div>
+</div> 
+
+</div>
 </div>   
+
+<div id="pvpLobbyOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.97); z-index:750; flex-direction:column; justify-content:center; align-items:center; font-family:'Courier New',monospace; color:#fff; border:4px solid #9b59b6;">
+    <h2 style="color:#9b59b6; font-size:42px; letter-spacing:6px; text-shadow:0 0 20px #9b59b6; margin:0 0 10px;">⚔️ LEITSTAND-DUELL</h2>
+    <p style="color:#888; font-size:14px; letter-spacing:2px; margin-bottom:40px;">Hostile Takeover. Verliere nicht deinen Job.</p>
+    
+    <div id="pvpLobbyStatus" style="background:#111; border:2px solid #333; padding:20px; width:400px; text-align:center; font-size:18px; color:#f1c40f; font-weight:bold; border-radius:4px; margin-bottom:20px;">
+        STATUS: BEREIT
+    </div>
+    
+    <button onclick="startPvPMatchmaking()" id="btnPvPSearch" style="background:#c0392b; color:#fff; border:none; padding:18px 40px; font-size:20px; font-weight:bold; cursor:pointer; font-family:'Courier New',monospace; text-transform:uppercase; letter-spacing:3px; margin-bottom:15px; border-radius:3px; transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        🔍 GEGNER SUCHEN
+    </button>
+    <button onclick="closePvPLobby()" style="background:transparent; color:#555; border:1px solid #333; padding:10px 20px; font-size:14px; cursor:pointer; font-family:'Courier New',monospace; text-transform:uppercase;">
+        ✖ ABBRECHEN
+    </button>
+</div>
+
+<div id="schmiedeOverlay">
+    <div id="schmiedeInner">
+        <h2>🔨 WAFFEN-SCHMIEDE</h2>   
+   
 <div id="schmiedeOverlay">
     <div id="schmiedeInner">
         <h2>🔨 WAFFEN-SCHMIEDE</h2>
@@ -1239,8 +1264,8 @@ function renderHsMenu(tab) {
         let all = []; snap.forEach(doc => all.push(doc.data()));
         let weekStart = getWeeklyResetDate();
         let entries = tab === 'weekly' ? all.filter(d => d.date && new Date(d.date) >= weekStart) : all;
-        let modes = ["WEGFLEXEN","SURVIVAL","BURNOUT","VOLLZEIT","PRAKTIKANT"];
-        let modeColors = {WEGFLEXEN:'#f00',SURVIVAL:'#8e44ad',BURNOUT:'#c0392b',VOLLZEIT:'#f1c40f',PRAKTIKANT:'#2ecc71'};
+        let modes = ["WEIL WEGEN FELIX", "WEGFLEXEN","SURVIVAL","BURNOUT","VOLLZEIT","PRAKTIKANT"];
+        let modeColors = {'WEIL WEGEN FELIX':'#f39c12', WEGFLEXEN:'#f00',SURVIVAL:'#8e44ad',BURNOUT:'#c0392b',VOLLZEIT:'#f1c40f',PRAKTIKANT:'#2ecc71'};
         const TIME_BONUS = 3000;
         let html = tab === 'weekly' ? `<div style="text-align:center;color:#555;font-size:11px;margin-bottom:12px;">Reset: Sonntag 22:00 CET</div>` : '';
         modes.forEach(mode => {
@@ -2238,12 +2263,23 @@ function renderJobOverlay() {
             <div style="background:#222;height:6px;border-radius:3px;margin:6px 0;"><div style="background:#f1c40f;height:6px;border-radius:3px;width:${bPct}%;"></div></div>
             <div style="color:#555;font-size:10px;">${baseExp} / ${bexpNext} EXP</div>
         </div>
-        <div style="flex:1;min-width:180px;background:#111;border:2px solid ${j?j.color:'#bdc3c7'};padding:12px;border-radius:4px;">
-            <div style="color:${j?j.color:'#bdc3c7'};font-size:11px;letter-spacing:2px;margin-bottom:4px;">💼 JOB LEVEL ${!currentJob?'(AZUBI)':''}</div>
+        <div style="flex:1;min-width:180px;background:#111;border:2px solid #3498db;padding:12px;border-radius:4px;">
+            <div style="color:#3498db;font-size:11px;letter-spacing:2px;margin-bottom:4px;">💼 JOB LEVEL ${!currentJob?'(AZUBI)':''}</div>
             <div style="color:#fff;font-size:26px;font-weight:bold;">${jobLevel}<span style="font-size:13px;color:#555;"> / ${jobCap}</span></div>
-            <div style="background:#222;height:6px;border-radius:3px;margin:6px 0;"><div style="background:${j?j.color:'#bdc3c7'};height:6px;border-radius:3px;width:${jPct}%;"></div></div>
+            <div style="background:#222;height:6px;border-radius:3px;margin:6px 0;"><div style="background:#3498db;height:6px;border-radius:3px;width:${jPct}%;"></div></div>
             <div style="color:#555;font-size:10px;">${jobExp} / ${jexpNext} Job-EXP</div>
         </div>
+    </div>`;
+
+    // ── Aktive Perks & Boni ──
+    let p = player || new Player(); 
+    let boniText = `DMG-Bonus: +${Math.floor(p.dmgBonus)} | Speed: ${p.speed.toFixed(1)} | Max HP: ${p.maxHp}`;
+    if(p._critChance) boniText += ` | Crit: ${Math.round(p._critChance*100)}%`;
+    if(p._dmgReduction) boniText += ` | Resistenz: ${Math.round(p._dmgReduction*100)}%`;
+    
+    html += `<div style="background:#111;border:1px solid #2ecc71;padding:10px;border-radius:4px;margin-bottom:12px;">
+        <div style="color:#2ecc71;font-size:11px;letter-spacing:1px;margin-bottom:4px;">✨ AKTIVE PERKS & BONI (Durch Skilltree/Trophäen/Job)</div>
+        <div style="color:#aaa;font-size:11px;line-height:1.5;">${boniText}</div>
     </div>`;
 
     // ── Stat-Menü ──
@@ -3911,14 +3947,14 @@ function enterBossRoom() {
         startTime: Date.now()
     };
     // WAFFEN EINFRIEREN: Alle aktiven Waffen/Buffs bleiben für den gesamten Boss-Kampf
-    // if(player) {
-    //    for(let w in player.activeWeapons) {
-    //        if(player.activeWeapons[w] !== Infinity && player.activeWeapons[w] > 0) player.activeWeapons[w] = Infinity;
-    //    }
-    //    if(player.mouseTimer > 0) player.mouseTimer = Infinity;
-    //    if(player.shieldTimer > 0) player.shieldTimer = Infinity;
-    //    if(player.vodkaTimer > 0) player.vodkaTimer = Infinity;
-    // }
+    if(player) {
+        for(let w in player.activeWeapons) {
+            if(player.activeWeapons[w] > 0 && w !== 'railgun') {
+                player.activeWeapons[w] = Infinity;
+            }
+        }
+        if(player.mouseTimer > 0) player.mouseTimer = Infinity;
+    }
     let _wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫'};
     let _carried = [];
     if(player) {
@@ -6218,10 +6254,16 @@ function generateWorld(){
 // SECTION 13 — SPAWN & EVENT LOGIC
 // ============================================================
 function spawnLogic(){
+    if(ritualGlobalCooldown > 0) ritualGlobalCooldown--;
+
     if(systemCollapse) {
         collapseTimer++;
         let rate = Math.max(4, 25 - Math.floor(collapseTimer / 60));
-        if(frame % rate === 0) {
+        
+        // 70% weniger Totalausfälle während der Beschwörung
+        if(ritualState) rate = rate * 3.33; 
+        
+        if(frame % Math.floor(rate) === 0) {
             let p1 = new Enemy();
             p1.type = 1; p1.color = '#c0392b'; p1.hp = 450; p1.maxHp = 450;
             p1.speed = 1.2 + (collapseTimer / 1800);
@@ -6313,7 +6355,7 @@ if(!bueroDoor && currentBossStage >= 4 && !activeBoss && gamePhase === 'normal' 
 
     // ====== PENTAGRAMM-BESCHWÖRUNG (Late Endgame) ======
     // Voraussetzung: 5+ Prio-1-Gegner, kein aktiver Boss, Score > 25000
-    if(!ritualState && !activeBoss && systemCollapse && score > 25000) {
+    if(!ritualState && !activeBoss && systemCollapse && score > 25000 && ritualGlobalCooldown <= 0) {
         let prio1s = enemies.filter(e => e.type === 1 && e.label !== 'DEIN SCHATTEN' && e.label !== 'TOTALAUSFALL');
         if(prio1s.length >= 5) {
             // Prüfe: Sind 5 davon nah beieinander?
@@ -6375,6 +6417,7 @@ if(!bueroDoor && currentBossStage >= 4 && !activeBoss && gamePhase === 'normal' 
             ritualSpawnDebuff = 3600; // 60s reduzierter Spawn nach Beschwörung
             ritualState.summonCount++;
             ritualState.phase = 'done'; ritualState.timer = 0;
+            ritualGlobalCooldown = 3600; // 1 Minute interne Abklingzeit
             ritualState = null;
         }
     }
@@ -6743,7 +6786,116 @@ if ((activeBoss && activeBoss.hp > 0) || (gamePhase === 'bossroom' && bossRoomSt
     document.getElementById('status-overlay').innerHTML = statusHtml;
 }
 
+// ============================================================
+// PHASE 5: TCG PVP MATCHMAKING & LOBBY
+// ============================================================
+let pvpMatchId = null;
+let pvpUnsubscribe = null;
+let pvpPlayerRole = null; // 'player1' oder 'player2'
 
+function openPvPLobby() {
+    if(cardInventory.length < 20) {
+        showToast("NICHT GENUG KARTEN!", "#e74c3c", `Du hast ${cardInventory.length}/20 Karten.`);
+        return;
+    }
+    document.getElementById('pvpLobbyOverlay').style.display = 'flex';
+    document.getElementById('pvpLobbyStatus').innerText = "STATUS: BEREIT";
+    document.getElementById('btnPvPSearch').style.display = 'block';
+}
+
+function closePvPLobby() {
+    if(pvpUnsubscribe) { pvpUnsubscribe(); pvpUnsubscribe = null; }
+    if(pvpMatchId && pvpPlayerRole === 'player1') {
+        // Eigene, noch offene Lobby wieder löschen, wenn man abbricht
+        if(db) db.collection('pvp_matches').doc(pvpMatchId).delete().catch(()=>{});
+    }
+    pvpMatchId = null;
+    document.getElementById('pvpLobbyOverlay').style.display = 'none';
+}
+
+function startPvPMatchmaking() {
+    if(!db) { showToast("KEINE VERBINDUNG!", "#f00", "Firebase offline."); return; }
+    
+    document.getElementById('btnPvPSearch').style.display = 'none';
+    let statusEl = document.getElementById('pvpLobbyStatus');
+    statusEl.innerText = "SUCHE GEGNER IM NETZWERK...";
+    
+    let pName = (document.getElementById('playerName').value || "ANONYM").toUpperCase().trim().substring(0,10);
+    
+    // 1. Suche nach offenen Matches ('waiting')
+    db.collection('pvp_matches').where('status', '==', 'waiting').limit(1).get()
+    .then(snap => {
+        if(snap.empty) {
+            // Szenario A: Niemand sucht gerade. Wir erstellen eine eigene Lobby.
+            statusEl.innerText = "WARTE AUF HERAUSFORDERER...";
+            pvpPlayerRole = 'player1';
+            db.collection('pvp_matches').add({
+                status: 'waiting',
+                player1: pName,
+                player2: null,
+                p1Ready: false,
+                p2Ready: false,
+                round: 1,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(docRef => {
+                pvpMatchId = docRef.id;
+                listenToPvPMatch();
+            });
+        } else {
+            // Szenario B: Offenes Match gefunden. Wir treten als Player 2 bei.
+            statusEl.innerText = "GEGNER GEFUNDEN! VERBINDE...";
+            pvpPlayerRole = 'player2';
+            let matchDoc = snap.docs[0];
+            pvpMatchId = matchDoc.id;
+            
+            // Match auf 'running' setzen
+            db.collection('pvp_matches').doc(pvpMatchId).update({
+                status: 'running',
+                player2: pName
+            }).then(() => {
+                listenToPvPMatch();
+            });
+        }
+    }).catch(err => {
+        statusEl.innerText = "FEHLER BEI DER SUCHE!";
+        console.error(err);
+        document.getElementById('btnPvPSearch').style.display = 'block';
+    });
+}
+
+function listenToPvPMatch() {
+    pvpUnsubscribe = db.collection('pvp_matches').doc(pvpMatchId).onSnapshot(doc => {
+        if(!doc.exists) { 
+            closePvPLobby(); 
+            showToast("DUELL ABGEBROCHEN", "#f00", "Der Gegner hat das Netzwerk verlassen."); 
+            return; 
+        }
+        
+        let data = doc.data();
+        if(data.status === 'running') {
+            let oppName = pvpPlayerRole === 'player1' ? data.player2 : data.player1;
+            document.getElementById('pvpLobbyStatus').style.color = "#2ecc71";
+            document.getElementById('pvpLobbyStatus').innerText = "VERBUNDEN MIT: " + oppName;
+            
+            // Verzögerung für den dramatischen Effekt
+            setTimeout(() => {
+                initPvPBoard(data, oppName);
+            }, 1500);
+        }
+    });
+}
+
+function initPvPBoard(matchData, opponentName) {
+    document.getElementById('pvpLobbyOverlay').style.display = 'none';
+    document.getElementById('startScreen').style.display = 'none';
+    
+    // Engine in den neuen Render-Status zwingen
+    gamePhase = 'pvp';
+    
+    showToast("ZEIT FÜR EIN DUELL!", "#9b59b6", "Gegner: " + opponentName);
+    
+    // HIER FOLGT IM NÄCHSTEN SCHRITT DAS CANVAS-RENDERING FÜR DAS FELD
+}
 
 // ============================================================
 // SECTION 16 — MAIN LOOP
