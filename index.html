@@ -6795,6 +6795,12 @@ if ((activeBoss && activeBoss.hp > 0) || (gamePhase === 'bossroom' && bossRoomSt
 // ============================================================
 // PHASE 5: TCG PVP MATCHMAKING & LOBBY
 // ============================================================
+let pvpState       = null;
+let pvpCanvas      = null, pvpCtx = null;
+let pvpAnimFrame   = null;
+let pvpHoverCard   = null;
+let pvpSelectedCard = null;
+let pvpFrame       = 0;
 let pvpMatchId     = null;
 let pvpUnsubscribe = null;
 let pvpPlayerRole  = null;
@@ -7005,12 +7011,14 @@ function pvpProcessOpponentAction(action) {
                         pvpLog(myCard.name+' besiegt! -'+netDmg+' LP Restschaden');
                         pvpPushState({[pvpState.role+'Hp']: pvpState.myHp});
                     }
-                } else { // def mode
-                    let netDmg = Math.max(0, dmg - myCard.pvpDef);
+                } else { // def mode — ATK < DEF → Angreifer (Gegner) nimmt Schaden
                     myCard.curHp -= dmg;
-                    if(netDmg > 0) {
-                        pvpState.myHp = Math.max(0, pvpState.myHp - netDmg);
-                        pvpPushState({[pvpState.role+'Hp']: pvpState.myHp});
+                    let selfDmg = Math.max(0, myCard.pvpDef - dmg);
+                    if(selfDmg > 0) {
+                        // Gegner nimmt Rückprall-Schaden — in Firebase updaten
+                        pvpPushState({[pvpState.role==='player1'?'player2Hp':'player1Hp']: Math.max(0, pvpState.oppHp - selfDmg)});
+                        pvpState.oppHp = Math.max(0, pvpState.oppHp - selfDmg);
+                        pvpFloat('Abprall! -'+selfDmg+' LP', pvpCanvas.width*0.65, pvpCanvas.height*0.3, '#f39c12');
                     }
                 }
                 if(myCard.curHp <= 0) {
@@ -7075,17 +7083,23 @@ function pvpDoAttack(myFieldIdx, targetType, targetId) {
         let defVal = target.mode==='def' ? target.pvpDef : target.pvpAtk;
 
         if(target.mode==='def') {
-            // DEF mode: pierce if atk > def, no LP damage to opponent, but card destroyed
-            target.curHp -= atkVal;
-            pvpLog(atk.name+' → '+target.name+' (DEF)');
-            if(target.curHp <= 0) {
+            // DEF mode (1999 Regeln):
+            // ATK > DEF → Monster zerstört, kein LP-Schaden
+            // ATK = DEF → kein Schaden
+            // ATK < DEF → Angreifer nimmt Differenz als LP-Schaden!
+            pvpLog(atk.name+' → '+target.name+' (DEF '+target.pvpDef+')');
+            if(atkVal > target.pvpDef) {
                 pvpState.oppField.splice(tIdx,1);
                 pvpLog(target.name+' zerstört!');
-                pvpFloat('💥',pvpCanvas.width*0.65,pvpCanvas.height*0.3,'#f1c40f');
+                pvpFloat('💥 '+target.name, pvpCanvas.width*0.65, pvpCanvas.height*0.3, '#f1c40f');
+            } else if(atkVal < target.pvpDef) {
+                let selfDmg = target.pvpDef - atkVal;
+                pvpState.myHp = Math.max(0, pvpState.myHp - selfDmg);
+                pvpLog('Abprall! -'+selfDmg+' LP');
+                pvpFloat('🛡 Abprall -'+selfDmg+' LP!', pvpCanvas.width*0.4, pvpCanvas.height*0.6, '#f39c12');
+                pvpPushState({[pvpState.role+'Hp']: pvpState.myHp});
             }
-            // Pierce damage
-            let pierce = Math.max(0, atkVal - target.pvpDef);
-            if(pierce > 0) { pvpState.oppHp = Math.max(0, pvpState.oppHp-pierce); pvpFloat('Pierce -'+pierce+'!',pvpCanvas.width*0.65,pvpCanvas.height*0.25,'#e74c3c'); }
+            // ATK = DEF → kein Schaden, keine Zerstörung
         } else {
             // ATK mode battle
             target.curHp -= atkVal;
