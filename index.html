@@ -1059,7 +1059,7 @@ input[type="text"] {
 </div>
 
 <!-- PASSWORT LOGIK -->
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 var GAME_PASSWORD = 'Vollzeit2025';
 var SESSION_HOURS = 8;
 
@@ -3250,11 +3250,6 @@ function closeSchmiede() {
     openWaffenkammer();
 }
 // Neue Kosten in Wurmcoins (deutlich niedriger, da WC seltener sind)
-const REFINE_COSTS = { 
-    1:[1,0], 2:[1,0], 3:[2,0], 4:[2,0], 
-    5:[3,1], 6:[4,1], 7:[5,2], 8:[6,2], 
-    9:[8,3], 10:[10,4], 11:[12,5], 12:[15,6] 
-};
 
 function renderSchmiede() {
     // Update der Anzeige auf Wurmcoins
@@ -3627,25 +3622,6 @@ function onCellClick(row,col){let ci=row*5+col;let rid=runeGrid[ci];if(rid){remo
 function deleteRune(runeId){if(!confirm('Rune löschen?'))return;runeInventory=runeInventory.filter(r=>r.id!==runeId);runeGrid=runeGrid.map(c=>c===runeId?null:c);saveRuneData();renderRuneOverlay();}
 function dropRuneFragment(sourceLabel){let rune=generateRune(sourceLabel);runeInventory.push(rune);saveRuneData();showToast('🔮 RUNEN-FRAGMENT!',rune.rarityColor,'['+rune.rarity+'] '+rune.stats.map(s=>'+'+s.value+s.unit+' '+s.label).join(', '));}
 
-function buyWeapon(id) {
-    let w = WEAPON_SHOP.find(x => x.id === id);
-    if(!w || hasWeaponUnlocked(id) || kaffeebons < w.cost) return;
-    kaffeebons -= w.cost;
-    unlockedWeapons.push(id);
-    localStorage.setItem('ts_weapons', JSON.stringify(unlockedWeapons));
-    localStorage.setItem('ts_skills',  JSON.stringify(unlockedSkills));
-    localStorage.setItem('ts_baseexp', baseExp);
-    localStorage.setItem('ts_jobexp',  jobExp);
-    localStorage.setItem('ts_baselv',  baseLevel);
-    localStorage.setItem('ts_joblv',   jobLevel);
-    localStorage.setItem('ts_job',     currentJob||'');
-    localStorage.setItem('ts_jobspts', jobSkillPts);
-    localStorage.setItem('ts_jobskills', JSON.stringify(jobSkills));
-    if(favoriteWeapon) localStorage.setItem('ts_favorite', favoriteWeapon);
-    saveProgress();
-    showToast('🔫 FREIGESCHALTET!', '#e74c3c', w.name + ' — spawnt als erste Kiste!');
-    renderWaffenkammer();
-}
 
 function hasTrophy(id) { return unlockedTrophies.includes(id); }
 function unlockTrophy(id) {
