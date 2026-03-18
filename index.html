@@ -3100,15 +3100,22 @@ function renderCardOverlay() {
 
 function openAkte() {
     if(playerAkten <= 0 || cardInventory.length >= 100) return;
-    playerAkten--;
+    
+    playerAkten--; // Akte verbrauchen
+    
     let roll = Math.random() * 100;
     let targetRarity = roll < 1 ? 'Legendär' : (roll < 5 ? 'Episch' : (roll < 25 ? 'Selten' : 'Gewöhnlich'));
     let pool = CARD_DATABASE.filter(c => c.rarity === targetRarity);
-    if(pool.length === 0) pool = CARD_DATABASE; // Fallback
+    if(pool.length === 0) pool = CARD_DATABASE; 
+    
     let drawnCard = pool[Math.floor(Math.random() * pool.length)];
     
-    cardInventory.push(drawnCard);
-    saveCardData();
+    cardInventory.push(drawnCard); // Karte ins Inventar
+    
+    // WICHTIG: Sofort lokal UND in der Cloud speichern
+    saveCardData(); 
+    saveProgress(); // Dies sendet den neuen Stand (weniger Akten, mehr Karten) an Firebase
+    
     playSound('powerup');
     showToast("AKTE GEÖFFNET!", drawnCard.color, `Du ziehst: ${drawnCard.name} (${drawnCard.rarity})`);
     renderCardOverlay();
