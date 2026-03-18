@@ -4646,7 +4646,6 @@ function playSound(type) {
 const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
 const WORLD_WIDTH=4000, WORLD_HEIGHT=4000;
 const camera={x:0,y:0};
-
 let ritualState = null;
 let ritualSpawnDebuff = 0;
 let gameRunning=false, gamePaused=false;
@@ -7156,3 +7155,21 @@ function buyKloskaItem(item, cost) {
         }
     } else {
         showToast("ZU WENIG SUPPE!", "#e74c3c", `Brauchst ${cost}
+        playSound('hit');
+    }
+}
+</script>
+<script>
+// Fallback: Wenn Preloader nach 5s noch läuft → forcierter Start
+setTimeout(function(){
+    var ls = document.getElementById('loadingScreen');
+    if(ls && ls.style.display !== 'none') {
+        ls.style.display = 'none';
+        var ss = document.getElementById('startScreen');
+        if(ss) ss.style.display = 'block';
+    }
+}, 5000);
+</script>
+</body>
+</html>
+
