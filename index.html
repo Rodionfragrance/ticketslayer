@@ -424,6 +424,26 @@ input[type="text"] {
 .rune-shape-preview { display:grid; gap:2px; margin-bottom:8px; width:fit-content; }
 .rune-shape-cell { width:12px; height:12px; border-radius:1px; background:#00e5ff; display:inline-block; }
 .rune-shape-cell.empty { background:transparent; }
+
+/* ============================================================
+   KARTENSYSTEM (PHASE 4)
+   ============================================================ */
+#cardOverlay { display:none; position:absolute; inset:0; background:rgba(0,0,0,0.95); z-index:650; overflow-y:auto; font-family:'Courier New',monospace; }
+#cardInner { max-width:900px; margin:30px auto; padding:28px; border:3px solid #e74c3c; background:#0a0a0a; border-radius:4px; box-shadow:0 0 80px rgba(231,76,60,0.15); }
+#cardInner h2 { color:#e74c3c; font-size:24px; letter-spacing:4px; margin:0 0 4px; text-transform:uppercase; }
+.card-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px; margin-top:15px; }
+.tcg-card { background:#111; border:2px solid #333; border-radius:6px; padding:12px; position:relative; transition:0.2s; display:flex; flex-direction:column; justify-content:space-between; }
+.tcg-card:hover { transform:scale(1.05); z-index:10; box-shadow:0 0 20px rgba(255,255,255,0.1); }
+.tcg-card-header { font-size:12px; font-weight:bold; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #333; text-transform:uppercase; }
+.tcg-card-stats { display:flex; justify-content:space-between; margin-top:8px; font-size:14px; font-weight:bold; background:#000; padding:4px; border-radius:3px; }
+.tcg-card-lore { font-size:9px; color:#666; font-style:italic; margin-top:8px; line-height:1.2; }
+.tcg-card-pve { font-size:10px; color:#2ecc71; margin-top:6px; border-top:1px dashed #333; padding-top:4px; }
+.btn-akte { background:linear-gradient(45deg, #8e44ad, #9b59b6); color:#fff; border:2px solid #fff; padding:15px; font-size:18px; font-weight:bold; cursor:pointer; width:100%; border-radius:4px; font-family:'Courier New',monospace; letter-spacing:2px; transition:0.2s; }
+.btn-akte:hover:not(:disabled) { transform:scale(1.02); box-shadow:0 0 20px #9b59b6; }
+.btn-akte:disabled { opacity:0.4; cursor:default; filter:grayscale(100%); }
+.btn-shredder { background:#c0392b; color:#fff; border:none; padding:6px; width:100%; margin-top:10px; cursor:pointer; font-family:monospace; font-weight:bold; border-radius:3px; }
+.btn-shredder:hover { background:#e74c3c; } 
+   
 /* ============================================================
    SCHMIEDE / REFINEMENT OVERLAY
    ============================================================ */
@@ -751,6 +771,7 @@ input[type="text"] {
             <button onclick="openShop()" style="background:#111;color:#00e5ff;border:2px solid #00e5ff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#00e5ff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#00e5ff'">☕ UPGRADES</button>
             <button onclick="openTrophies()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🏆 TROPHÄEN</button>
             <button onclick="openWaffenkammer()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#e74c3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#e74c3c'">🔫 WAFFEN</button>
+            <button onclick="openCardOverlay()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#e74c3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#e74c3c'">🎴 KARTEN</button>
             <button onclick="openDailyOverlay()" id="daily-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;">☕ TAGES-BONUS</button>
             <button onclick="openQuestBoard()" style="background:#111;color:#2ecc71;border:2px solid #2ecc71;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#2ecc71';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#2ecc71'">📋 AUFTRÄGE</button>
             <button onclick="openJobOverlay()" id="job-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">⚔️ JOB</button>
@@ -952,7 +973,27 @@ input[type="text"] {
     </div>
 </div>
 
-<!-- SCHMIEDE / REFINEMENT -->
+<!-- SCHMIEDE / REFINEMENT / KARTEN -->
+<div id="cardOverlay">
+    <div id="cardInner">
+        <h2>🎴 KARTENALBUM & GACHA</h2>
+        <div style="color:#888;font-size:12px;margin-bottom:15px;">Ziehe Karten aus Akten. Nutze sie später im PvP oder sockle sie in Waffen.</div>
+        
+        <div style="background:#1a0f14; border:2px solid #9b59b6; padding:20px; border-radius:4px; text-align:center; margin-bottom:20px;">
+            <div style="color:#9b59b6; font-size:14px; margin-bottom:10px; font-weight:bold;">GESCHLOSSENE AKTEN (BOOSTER): <span id="aktenCount" style="font-size:24px;color:#fff;">0</span> 📁</div>
+            <button id="btnOpenAkte" class="btn-akte" onclick="openAkte()">📁 AKTE ÖFFNEN (Zieht 1 Karte)</button>
+            <div style="color:#555; font-size:10px; margin-top:8px;">Droprate: Normal 0.1% | Boss 10% | MVP 100%</div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:2px solid #333; padding-bottom:10px;">
+            <div style="color:#e74c3c; font-size:18px; font-weight:bold;">DEINE KARTEN (<span id="cardInvCount">0</span>/100)</div>
+            <div style="color:#ffd700; font-size:14px; font-weight:bold;">☕ <span id="cardKBAmount">0</span> KB</div>
+        </div>
+        
+        <div id="cardGrid" class="card-grid"></div>
+        <button onclick="closeCardOverlay()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
+    </div>
+</div>   
 <div id="schmiedeOverlay">
     <div id="schmiedeInner">
         <h2>🔨 WAFFEN-SCHMIEDE</h2>
@@ -2925,7 +2966,119 @@ function applySkillTree(p) {
     p.hp = p.maxHp;
 }
 
+let playerAkten = parseInt(localStorage.getItem('ts_akten') || '0');
+let cardInventory = JSON.parse(localStorage.getItem('ts_cards') || '[]');
 
+const CARD_DATABASE = [
+  // === STARTER DECK (20 Gewöhnliche Karten) ===
+  { id: "c_prio5", name: "Prio 5: Allg. Frage", rarity: "Gewöhnlich", color: "#2ecc71", pvpCost: 1, pvpAtk: 1, pvpDef: 2, pvpEffect: "Zieht 1 Karte bei Tod.", pveBuffType: "xp_boost", pveBuffValue: 0.05, pveDesc: "+5% EXP pro Run." },
+  { id: "c_prio4", name: "Prio 4: Workaround", rarity: "Gewöhnlich", color: "#a5d6a7", pvpCost: 2, pvpAtk: 2, pvpDef: 2, pvpEffect: "Weicht 1. Angriff aus.", pveBuffType: "dodge_chance", pveBuffValue: 0.05, pveDesc: "5% Ausweichchance." },
+  { id: "c_prio3", name: "Prio 3: Wichtig", rarity: "Gewöhnlich", color: "#f1c40f", pvpCost: 3, pvpAtk: 3, pvpDef: 3, pvpEffect: "+1 ATK pro Runde.", pveBuffType: "dmg_pct", pveBuffValue: 0.05, pveDesc: "+5% Schaden." },
+  { id: "c_1stlevel", name: "1st Level Support", rarity: "Gewöhnlich", color: "#bdc3c7", pvpCost: 2, pvpAtk: 1, pvpDef: 4, pvpEffect: "Schutz für Nachbarn.", pveBuffType: "maxhp", pveBuffValue: 10, pveDesc: "+10 Max HP." },
+  { id: "c_praktikant", name: "Praktikant", rarity: "Gewöhnlich", color: "#bdc3c7", pvpCost: 1, pvpAtk: 1, pvpDef: 1, pvpEffect: "+1 Kaffee nächste Runde.", pveBuffType: "suppe_start", pveBuffValue: 1, pveDesc: "Starte mit 1 Suppe extra." },
+  { id: "c_anlagenbed", name: "Anlagenbediener", rarity: "Gewöhnlich", color: "#bdc3c7", pvpCost: 3, pvpAtk: 4, pvpDef: 2, pvpEffect: "Solider Angreifer.", pveBuffType: "firerate_pct", pveBuffValue: 0.05, pveDesc: "+5% Feuerrate." },
+  { id: "c_stapler", name: "Gabelstapler", rarity: "Gewöhnlich", color: "#e67e22", pvpCost: 4, pvpAtk: 4, pvpDef: 4, pvpEffect: "Kann Lane wechseln.", pveBuffType: "speed", pveBuffValue: 0.2, pveDesc: "+0.2 Speed." },
+  { id: "c_lkw", name: "LKW in Entladung", rarity: "Gewöhnlich", color: "#7f8c8d", pvpCost: 3, pvpAtk: 0, pvpDef: 6, pvpEffect: "Blockiert die Lane.", pveBuffType: "dmg_reduction", pveBuffValue: 0.05, pveDesc: "5% Schadensreduktion." },
+  { id: "c_scanner", name: "LVS-Scanner", rarity: "Gewöhnlich", color: "#3498db", pvpCost: 1, pvpAtk: 0, pvpDef: 0, pvpEffect: "Betäubt Gegner 1 Runde.", pveBuffType: "stun_resist", pveBuffValue: 0.1, pveDesc: "Stun-Dauer -10%." },
+  { id: "c_pwreset", name: "Passwort Reset", rarity: "Gewöhnlich", color: "#95a5a6", pvpCost: 1, pvpAtk: 0, pvpDef: 0, pvpEffect: "Zieht 2 Karten.", pveBuffType: "weapon_swap", pveBuffValue: 0.1, pveDesc: "Waffenwechsel 10% schneller." },
+  { id: "c_reboot", name: "Haben Sie neugestartet?", rarity: "Gewöhnlich", color: "#95a5a6", pvpCost: 2, pvpAtk: 0, pvpDef: 0, pvpEffect: "Reset ATK des Gegners.", pveBuffType: "sap_resist", pveBuffValue: 0.2, pveDesc: "SAP-Debuff Dauer -20%." },
+  { id: "c_kaffee", name: "Kaffeeautomat", rarity: "Gewöhnlich", color: "#6f4e37", pvpCost: 2, pvpAtk: 0, pvpDef: 0, pvpEffect: "Gibt Verbündetem +2 ATK.", pveBuffType: "speed_boost", pveBuffValue: 0.3, pveDesc: "Längerer Speed-Boost." },
+  { id: "c_7000", name: "Status 7000: Angelegt", rarity: "Gewöhnlich", color: "#2ecc71", pvpCost: 1, pvpAtk: 0, pvpDef: 0, pvpEffect: "Spawnt 1/1 Ticket.", pveBuffType: "farm_income", pveBuffValue: 1, pveDesc: "Farmen 1s schneller." },
+  { id: "c_7040", name: "Status 7040: Freigabe", rarity: "Gewöhnlich", color: "#3498db", pvpCost: 2, pvpAtk: 0, pvpDef: 0, pvpEffect: "Heilt Leitstand um 3 HP.", pveBuffType: "regen", pveBuffValue: 1, pveDesc: "Regeneriert 1 HP alle 5s." },
+  { id: "c_7110", name: "Status 7110: Abschluss", rarity: "Gewöhnlich", color: "#f1c40f", pvpCost: 3, pvpAtk: 0, pvpDef: 0, pvpEffect: "Entfernt schwache Karte.", pveBuffType: "kill_heal_hp", pveBuffValue: 1, pveDesc: "Kills heilen 1 HP." },
+  { id: "c_4060", name: "Status 4060: Verplant", rarity: "Gewöhnlich", color: "#3498db", pvpCost: 2, pvpAtk: 2, pvpDef: 2, pvpEffect: "Kann sofort angreifen.", pveBuffType: "crit", pveBuffValue: 0.02, pveDesc: "+2% Crit-Chance." },
+  { id: "c_otrs", name: "OTRS Standard-Antwort", rarity: "Gewöhnlich", color: "#bdc3c7", pvpCost: 2, pvpAtk: 0, pvpDef: 0, pvpEffect: "+3 DEF für Verbündeten.", pveBuffType: "maxhp", pveBuffValue: 15, pveDesc: "+15 Max HP." },
+  { id: "c_teams", name: "MS Teams Ping", rarity: "Gewöhnlich", color: "#9b59b6", pvpCost: 2, pvpAtk: 0, pvpDef: 0, pvpEffect: "Gegner zahlt +1 Kaffee.", pveBuffType: "enemy_warn", pveBuffValue: 5, pveDesc: "Gegner früher sichtbar." },
+  { id: "c_schicht", name: "Schichtübergabe", rarity: "Gewöhnlich", color: "#e67e22", pvpCost: 3, pvpAtk: 0, pvpDef: 0, pvpEffect: "Handkarten neu ziehen.", pveBuffType: "kb_rate", pveBuffValue: 0.05, pveDesc: "+5% Kaffeebons." },
+  { id: "c_lvshang", name: "LVS Hänger", rarity: "Gewöhnlich", color: "#c0392b", pvpCost: 3, pvpAtk: 0, pvpDef: 0, pvpEffect: "2 DMG an alle Karten.", pveBuffType: "explosive_chance", pveBuffValue: 0.05, pveDesc: "5% Splash-Schaden." },
+
+  // === BOOSTER SET (20 Seltene/Epische/Legendäre Karten) ===
+  { id: "c_prio2", name: "Prio 2: Beeinträchtigt", rarity: "Selten", color: "#e67e22", pvpCost: 4, pvpAtk: 4, pvpDef: 4, pvpEffect: "+2 ATK am Rundenende.", pveBuffType: "dmg_pct", pveBuffValue: 0.1, pveDesc: "+10% Schaden." },
+  { id: "c_prio1", name: "Prio 1: Ausfall", rarity: "Episch", color: "#c0392b", pvpCost: 6, pvpAtk: 6, pvpDef: 3, pvpEffect: "Trample-Schaden.", pveBuffType: "boss_slayer", pveBuffValue: 0.2, pveDesc: "+20% Boss-Schaden." },
+  { id: "c_teichmann", name: "Teichmann", rarity: "Selten", color: "#f39c12", pvpCost: 3, pvpAtk: 2, pvpDef: 1, pvpEffect: "Gift: Tötet Angreifer sofort.", pveBuffType: "lucky_streak", pveBuffValue: 1, pveDesc: "Glückssträhne skaliert." },
+  { id: "c_anwender", name: "Der Anwender", rarity: "Episch", color: "#9b59b6", pvpCost: 5, pvpAtk: 5, pvpDef: 5, pvpEffect: "Teleportiert jede Runde.", pveBuffType: "dodge_chance", pveBuffValue: 0.15, pveDesc: "15% Ausweichchance." },
+  { id: "c_4090", name: "Status 4090: Storniert", rarity: "Episch", color: "#c0392b", pvpCost: 4, pvpAtk: 0, pvpDef: 0, pvpEffect: "Zerstört Gegner-Karte sofort.", pveBuffType: "crit", pveBuffValue: 0.05, pveDesc: "+5% Crit-Chance." },
+  { id: "c_idoc_abprall", name: "IDoc Abpraller", rarity: "Selten", color: "#1f618d", pvpCost: 3, pvpAtk: 0, pvpDef: 0, pvpEffect: "Reflektiert 1 Angriff.", pveBuffType: "reflect", pveBuffValue: 0.1, pveDesc: "10% Chance Reflekt." },
+  { id: "c_witron", name: "3rd Level Witron", rarity: "Legendär", color: "#e74c3c", pvpCost: 8, pvpAtk: 0, pvpDef: 0, pvpEffect: "Hard Reset: Zerstört alle Karten.", pveBuffType: "emergency_reset", pveBuffValue: 1, pveDesc: "Emergency Heal <10% HP." },
+  { id: "c_lst_hamm", name: "2nd Level LST Hamm", rarity: "Episch", color: "#d35400", pvpCost: 5, pvpAtk: 0, pvpDef: 0, pvpEffect: "Belebt Karte wieder.", pveBuffType: "farm_defense", pveBuffValue: 0.5, pveDesc: "Farmen halten 50% länger." },
+  { id: "c_cimcorp", name: "CIMCORP Totalausfall", rarity: "Legendär", color: "#c0392b", pvpCost: 7, pvpAtk: 0, pvpDef: 0, pvpEffect: "8 Direktschaden auf Leitstand.", pveBuffType: "total_annihilation", pveBuffValue: 1, pveDesc: "Kritische Treffer x3 DMG." },
+  { id: "c_boss_rian", name: "Boss: RIAN", rarity: "Episch", color: "#8e44ad", pvpCost: 5, pvpAtk: 5, pvpDef: 5, pvpEffect: "Spawnt Prio-3 Ticket (3/3).", pveBuffType: "dmg_pct", pveBuffValue: 0.15, pveDesc: "+15% Schaden." },
+  { id: "c_boss_tim", name: "Boss: TIM", rarity: "Episch", color: "#2980b9", pvpCost: 6, pvpAtk: 4, pvpDef: 8, pvpEffect: "Leitstand erleidet halben DMG.", pveBuffType: "dmg_reduction", pveBuffValue: 0.1, pveDesc: "10% DMG Reduktion." },
+  { id: "c_boss_flof", name: "Boss: FLOF", rarity: "Episch", color: "#27ae60", pvpCost: 7, pvpAtk: 7, pvpDef: 6, pvpEffect: "Instakill bei Überleben.", pveBuffType: "roll_cd", pveBuffValue: -15, pveDesc: "Hechtrolle lädt schneller." },
+  { id: "c_boss_janski", name: "Boss: JANSKI", rarity: "Episch", color: "#d35400", pvpCost: 8, pvpAtk: 8, pvpDef: 8, pvpEffect: "2 DMG an alle anderen Karten.", pveBuffType: "boss_dmg_red", pveBuffValue: 0.15, pveDesc: "Bosse machen -15% DMG." },
+  { id: "c_martin", name: "Martin, Jarl", rarity: "Legendär", color: "#f1c40f", pvpCost: 9, pvpAtk: 9, pvpDef: 9, pvpEffect: "Beine weg: Instakill Gegenüber.", pveBuffType: "boss_aura", pveBuffValue: 0.3, pveDesc: "+30% DMG, -20 Max HP." },
+  { id: "c_darius", name: "Huskarl Darius", rarity: "Episch", color: "#9b59b6", pvpCost: 4, pvpAtk: 2, pvpDef: 7, pvpEffect: "Piko Bello: Heilt Verbündete.", pveBuffType: "stationary_def", pveBuffValue: 0.2, pveDesc: "-20% DMG bei Stillstand." },
+  { id: "c_lachs", name: "Lachs der Verdammnis", rarity: "Selten", color: "#2ecc71", pvpCost: 3, pvpAtk: 0, pvpDef: 0, pvpEffect: "Gegner verliert 2 DEF/Runde.", pveBuffType: "toxic_aura", pveBuffValue: 1, pveDesc: "Gegner im Nahkampf brennen." },
+  { id: "c_bounty", name: "Laufhund Bounty", rarity: "Selten", color: "#e67e22", pvpCost: 3, pvpAtk: 4, pvpDef: 2, pvpEffect: "Direktangriff wenn Blocker >4 DEF.", pveBuffType: "auto_loot", pveBuffValue: 1, pveDesc: "Zieht Items leicht an." },
+  { id: "c_techno", name: "Techno-Maschinist", rarity: "Episch", color: "#3498db", pvpCost: 5, pvpAtk: 0, pvpDef: 0, pvpEffect: "NOCHMAL: Gegner greift sich an.", pveBuffType: "rhythm_explode", pveBuffValue: 1, pveDesc: "Jeder 10. Schuss explodiert." },
+  { id: "c_helden", name: "10 Leitstand-Helden", rarity: "Legendär", color: "#f1c40f", pvpCost: 8, pvpAtk: 0, pvpDef: 0, pvpEffect: "Zerstört ALLE Karten.", pveBuffType: "last_stand_dmg", pveBuffValue: 1, pveDesc: "Unter 25% HP: Doppelter DMG." },
+  { id: "c_endlos", name: "Endlosschleife (4 Uhr)", rarity: "Selten", color: "#3498db", pvpCost: 4, pvpAtk: 0, pvpDef: 0, pvpEffect: "Alle gegnerischen Karten -2 ATK.", pveBuffType: "stationary_turret", pveBuffValue: 0.2, pveDesc: "+20% Feuerrate, -10% Speed." }
+];
+
+function openCardOverlay() { renderCardOverlay(); document.getElementById('cardOverlay').style.display = 'block'; }
+function closeCardOverlay() { document.getElementById('cardOverlay').style.display = 'none'; document.getElementById('startKBAmount').innerText = kaffeebons; }
+
+function renderCardOverlay() {
+    document.getElementById('aktenCount').innerText = playerAkten;
+    document.getElementById('cardInvCount').innerText = cardInventory.length;
+    document.getElementById('cardKBAmount').innerText = kaffeebons;
+    document.getElementById('btnOpenAkte').disabled = playerAkten <= 0 || cardInventory.length >= 100;
+    
+    let grid = document.getElementById('cardGrid');
+    grid.innerHTML = '';
+    
+    cardInventory.forEach((card, index) => {
+        let shredVal = card.rarity === 'Legendär' ? 1000 : (card.rarity === 'Episch' ? 200 : (card.rarity === 'Selten' ? 50 : 10));
+        grid.innerHTML += `
+        <div class="tcg-card" style="border-color:${card.color};">
+            <div>
+                <div class="tcg-card-header" style="color:${card.color};">${card.name}</div>
+                <div style="color:#aaa; font-size:10px;">${card.rarity}</div>
+                <div class="tcg-card-stats">
+                    <span style="color:#3498db;">☕ ${card.pvpCost}</span>
+                    <span style="color:#e74c3c;">⚔️ ${card.pvpAtk}</span>
+                    <span style="color:#2ecc71;">🛡️ ${card.pvpDef}</span>
+                </div>
+                <div class="tcg-card-lore">PvP: ${card.pvpEffect}</div>
+                <div class="tcg-card-pve">PvE: ${card.pveDesc}</div>
+            </div>
+            <button class="btn-shredder" onclick="shredCard(${index}, ${shredVal})">🗑️ SCHREDDERN (+${shredVal} KB)</button>
+        </div>`;
+    });
+}
+
+function openAkte() {
+    if(playerAkten <= 0 || cardInventory.length >= 100) return;
+    playerAkten--;
+    let roll = Math.random() * 100;
+    let targetRarity = roll < 1 ? 'Legendär' : (roll < 5 ? 'Episch' : (roll < 25 ? 'Selten' : 'Gewöhnlich'));
+    let pool = CARD_DATABASE.filter(c => c.rarity === targetRarity);
+    if(pool.length === 0) pool = CARD_DATABASE; // Fallback
+    let drawnCard = pool[Math.floor(Math.random() * pool.length)];
+    
+    cardInventory.push(drawnCard);
+    saveCardData();
+    playSound('powerup');
+    showToast("AKTE GEÖFFNET!", drawnCard.color, `Du ziehst: ${drawnCard.name} (${drawnCard.rarity})`);
+    renderCardOverlay();
+}
+
+function shredCard(index, kbVal) {
+    if(!confirm("Diese Karte in den Aktenvernichter werfen?")) return;
+    cardInventory.splice(index, 1);
+    kaffeebons += kbVal;
+    saveCardData();
+    saveProgress();
+    playSound('hit');
+    showToast("KARTE GESCHREDDERT", "#c0392b", `+${kbVal} Kaffeebons`);
+    renderCardOverlay();
+}
+
+function saveCardData() {
+    localStorage.setItem('ts_akten', playerAkten);
+    localStorage.setItem('ts_cards', JSON.stringify(cardInventory));
+}
+   
 // ============================================================
 // WAFFENKAMMER — Meta-Shop mit Kaffeebons
 // ============================================================
@@ -3521,6 +3674,7 @@ function saveProgress() {
             isTrans: isTrans||false, statPoints: statPoints||0, stats: stats||{},
             jobSkillPts, jobSkills, completedJobs, rebirthSkills,
             runeInv: runeInventory, runeGrid: runeGrid,
+            akten: playerAkten, cards: cardInventory,
             daily: _daily, bestScore: _best,
             lastSeen: new Date().toISOString()
         }, {merge:true}).catch(function(){});
@@ -3616,6 +3770,8 @@ async function loadCloudProfile() {
             if(d.stats) localStorage.setItem('ts_stats', JSON.stringify(d.stats));
             if(d.runeInv)  { runeInventory = d.runeInv;  localStorage.setItem('ts_runes', JSON.stringify(runeInventory)); }
             if(d.runeGrid) { runeGrid = d.runeGrid;       localStorage.setItem('ts_rune_grid', JSON.stringify(runeGrid)); }
+            if(d.akten !== undefined) { playerAkten = d.akten; localStorage.setItem('ts_akten', playerAkten); }
+            if(d.cards) { cardInventory = d.cards; localStorage.setItem('ts_cards', JSON.stringify(cardInventory)); }
             localStorage.setItem('ts_completed_jobs', JSON.stringify(completedJobs));
             localStorage.setItem('ts_rebirth_skills', JSON.stringify(rebirthSkills));
             var el2 = document.getElementById('startKBAmount');
@@ -5487,7 +5643,7 @@ class Item{
         
         // --- FIX: Stärkere Kontur für Emojis ---
         ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
-        const icons = {chicken:'🍗',vodka:'🍺',crate:'📦',bug:'💾',hammer:'🔨',vacation:'💤',bike:'🚲',shield:'🛡️',briefcase:'💼',suppe:'🥣'};
+        const icons = {chicken:'🍗',vodka:'🍺',crate:'📦',bug:'💾',hammer:'🔨',vacation:'💤',bike:'🚲',shield:'🛡️',briefcase:'💼',suppe:'🥣',akte:'📁'};
         let icon = icons[this.type] || '?';
         ctx.strokeText(icon, 0, 0);
         ctx.fillText(icon, 0, 0);
@@ -6785,6 +6941,14 @@ function loop(){
                 }
 
                 if(e.hp===-1000){enemies.splice(i,1);continue;}
+                // --- AKTEN DROP SYSTEM ---
+                if(e.type === 99 && (e.label === "PETER BAYER" || e.label === "MEISTER HAND")) {
+                    items.push(new Item('akte', e.x, e.y)); // MVP 100%
+                } else if(e.type === 99) {
+                    if(Math.random() < 0.10) items.push(new Item('akte', e.x, e.y)); // Boss 10%
+                } else {
+                    if(Math.random() < 0.001) items.push(new Item('akte', e.x, e.y)); // Normal 0.1%
+                }
 
                 // NEU V20: Combo-System bei jedem Kill
                 updateCombo(true);
@@ -6871,6 +7035,13 @@ function loop(){
                         if(player.runSuppen === 50) unlockTrophy('soup_king');
                         playSound('powerup'); showToast("SUPPE! 🥣", "#ff9f43", "Zahlungsmittel für Kloska"); 
                         floatingTexts.push(new FloatingText(player.x,player.y,"+1 SUPPE","#ff9f43"));
+                        break; 
+                    case 'akte': 
+                        playerAkten++;
+                        saveCardData();
+                        playSound('delivery');
+                        showToast("AKTE GEFUNDEN! 📁", "#9b59b6", "Öffne sie im Karten-Menü"); 
+                        floatingTexts.push(new FloatingText(player.x,player.y,"+1 AKTE","#9b59b6"));
                         break;  
                     case 'chicken': 
                         if(currentDiffLabel === "SURVIVAL" || isWegflexenMode) { showToast("VERDORBEN! 🍗", "#555", "Keine Heilung im Survival!"); }
