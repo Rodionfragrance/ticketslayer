@@ -1265,7 +1265,7 @@ function renderHsMenu(tab) {
     if(at) { at.style.background = tab==='alltime'?'#fff':'#222'; at.style.color = tab==='alltime'?'#000':'#aaa'; }
     if(wt) { wt.style.background = tab==='weekly'?'#fff':'#222'; wt.style.color = tab==='weekly'?'#000':'#aaa'; }
     let cont = document.getElementById('hsMenuContent');
-    if(!db) { cont.innerHTML = '<div style="text-align:center;color:#f00;padding:20px;">Firebase nicht verbunden</div>'; return; }
+    if(!db) { cont.innerHTML = '<div style="text-align:center;color:#f00;padding:20px;">Firebase blockiert. Bitte Adblocker oder Tracking-Schutz deaktivieren!</div>'; return; }
     cont.innerHTML = '<div style="text-align:center;padding:20px;color:#555;">Lade Daten...</div>';
     db.collection("highscores").orderBy("score","desc").limit(500).get().then(snap => {
         let all = []; snap.forEach(doc => all.push(doc.data()));
@@ -1780,6 +1780,14 @@ let baseExp       = parseInt(lsGet('ts_baseexp', '0'));
 let jobExp        = parseInt(lsGet('ts_jobexp', '0'));
 let baseLevel     = parseInt(lsGet('ts_baselv', '1'));
 let jobLevel      = parseInt(lsGet('ts_joblv', '1')); // Job startet jetzt bei 1
+const JOB_ID_MIGRATION = {
+    'gabelstapler':          'staplerfahrer',
+    'supporter':             'sachbearbeiter',
+    'burnout_spezialist':    'sachbearbeiter',
+    'hacker':                'techniker',
+    // Falls jemand alte extended hatte
+    'super_novice':          'werkstudent',
+};
 let currentJob    = lsGet('ts_job', null);
 // Lokale Job-ID migrieren falls veraltet
 if(currentJob && typeof JOB_ID_MIGRATION !== 'undefined' && JOB_ID_MIGRATION[currentJob]) {
@@ -4179,14 +4187,6 @@ function saveProgress() {
 // ============================================================
 // JOB ID MIGRATION — mappt alte Cloud-Daten auf neue IDs
 // ============================================================
-const JOB_ID_MIGRATION = {
-    'gabelstapler':          'staplerfahrer',
-    'supporter':             'sachbearbeiter',
-    'burnout_spezialist':    'sachbearbeiter',
-    'hacker':                'techniker',
-    // Falls jemand alte extended hatte
-    'super_novice':          'werkstudent',
-};
 
 function migrateJobData(data) {
     // currentJob migrieren
@@ -4223,7 +4223,7 @@ async function loadCloudProfile() {
     var name = el ? el.value.toUpperCase().trim() : '';
     if(!name){ showToast('NAME EINGEBEN','#f00'); return; }
     try {
-        if(!db){ showToast('KEIN FIREBASE','#f00'); return; }
+        if(!db){ showToast('BLOCKIERT','#f00', 'Adblocker/Firewall ausschalten!'); return; }
         var doc = await db.collection('playerProfiles').doc(name).get();
         if(doc.exists){
             var d = doc.data();
@@ -4297,7 +4297,7 @@ async function loadCloudProfile() {
                 lsSet('ts_statpts', statPoints);
             }
         } else { showToast('NEUES PROFIL','#2ecc71',name+' — Viel Erfolg!'); }
-    } catch(e){ showToast('LADEFEHLER','#f00','Firebase nicht erreichbar'); }
+    } catch(e){ showToast('LADEFEHLER','#f00','Datenbank blockiert (Adblocker?)'); }
 }
 
 // ============================================================
