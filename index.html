@@ -6004,16 +6004,10 @@ class Player{
                 if(frame%2===0) spawnParticles(this.x,this.y,'#0f0',8);
                 enemies.forEach(e=>{if(Math.hypot(this.x-e.x,this.y-e.y)<120){e.hp-=3;spawnParticles(e.x,e.y,'#0f0',1);}});
             }
-            if(frame%4===0){this.x+=(Math.random()-.5)*10;this.y+=(Math.random()-.5)*10;}
+            // Das alte, weiche Zuckeln ist raus. Hier gibt es jetzt echte Lags.
         }
 
         let dx=0,dy=0;
-        // VODKA-STOTTERN: Nur alle 4 Frames (15 FPS) Bewegungs-Input annehmen
-        let canMove = true;
-        if(this.vodkaTimer > 0 && frame % 4 !== 0) {
-            canMove = false;
-        }
-   
         if(input.keys['KeyW'])dy=-1; if(input.keys['KeyS'])dy=1;
         if(input.keys['KeyA'])dx=-1; if(input.keys['KeyD'])dx=1;
         if(this.bugTimer>0){dx=-dx;dy=-dy;}
@@ -6024,12 +6018,28 @@ class Player{
         if(this.speedBoostTimer>0) spd+=3;
         if(this.sapDebuffTimer>0)  spd=Math.max(1, spd-3); 
 
+        // --- VODKA RUBBER-BANDING (ECHTER LAG) ---
+        let steps = 1;
+        if(this.vodkaTimer > 0) {
+            this._lagTimer = (this._lagTimer || 0) + 1;
+            if(this._lagTimer < 15) {
+                steps = 0; // Spieler friert komplett ein (Kamera bleibt stehen)
+            } else {
+                steps = 15; // Alle 15 Frames: Teleportiere die aufgestaute Distanz auf einmal!
+                this._lagTimer = 0;
+            }
+        }
+
         if(dx!==0||dy!==0){
             let len=Math.sqrt(dx*dx+dy*dy); dx/=len; dy/=len;
-            let nx=this.x+dx*spd, ny=this.y+dy*spd;
-            let isStuck = checkWallCollision(this.x, this.y, this.radius);
-            if(isStuck || !checkWallCollision(nx,this.y,this.radius)) this.x=Math.max(this.radius,Math.min(WORLD_WIDTH-this.radius,nx));
-            if(isStuck || !checkWallCollision(this.x,ny,this.radius)) this.y=Math.max(this.radius,Math.min(WORLD_HEIGHT-this.radius,ny));
+            
+            // Schleife führt die Bewegung schrittweise aus, um nicht durch Wände zu glitchen
+            for(let s = 0; s < steps; s++) {
+                let nx=this.x+dx*spd, ny=this.y+dy*spd;
+                let isStuck = checkWallCollision(this.x, this.y, this.radius);
+                if(isStuck || !checkWallCollision(nx,this.y,this.radius)) this.x=Math.max(this.radius,Math.min(WORLD_WIDTH-this.radius,nx));
+                if(isStuck || !checkWallCollision(this.x,ny,this.radius)) this.y=Math.max(this.radius,Math.min(WORLD_HEIGHT-this.radius,ny));
+            }
         }
 
         let canShoot=(this.vodkaTimer<=0)||this.isMartin;
