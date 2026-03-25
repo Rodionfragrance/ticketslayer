@@ -6008,6 +6008,12 @@ class Player{
         }
 
         let dx=0,dy=0;
+        // VODKA-STOTTERN: Nur alle 4 Frames (15 FPS) Bewegungs-Input annehmen
+        let canMove = true;
+        if(this.vodkaTimer > 0 && frame % 4 !== 0) {
+            canMove = false;
+        }
+   
         if(input.keys['KeyW'])dy=-1; if(input.keys['KeyS'])dy=1;
         if(input.keys['KeyA'])dx=-1; if(input.keys['KeyD'])dx=1;
         if(this.bugTimer>0){dx=-dx;dy=-dy;}
