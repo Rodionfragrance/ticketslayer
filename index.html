@@ -4312,70 +4312,6 @@ async function loadCloudProfile() {
     } catch(e){ showToast('LADEFEHLER','#f00','Datenbank blockiert (Adblocker?)'); }
 }
 
-// ============================================================
-// BOSS ROOM — PETER BAYER BÜRO
-// ============================================================
-const BR_W = 900, BR_H = 620; 
-const BR_PHASE_THRESHOLDS = [0.60, 0.30]; 
-
-function enterBossRoom() {
-    if(gamePhase !== 'normal') return;
-    gamePhase = 'transitioning_in';
-    fadeAlpha = 0; fadeDir = 1;
-    input.mouseDown = false; input.rightClick = false; input.keys = {};
-    playSound('boss');
-    
-    const diffHpScale  = { 1:0.6,  3:1.0,  6:1.5,  9:2.2 };
-    const diffSpdScale = { 1:0.7,  3:1.0,  6:1.3,  9:1.6 };
-    let diffHp  = diffHpScale[lastChosenDifficulty]  || 1.0;
-    let diffSpd = diffSpdScale[lastChosenDifficulty] || 1.0;
-    if(isWegflexenMode) { diffHp = 2.8; diffSpd = 1.8; }
-    
-    let hpMult  = diffHp  * (player && player._bossHpRed  ? Math.max(0.3, 1.0 - player._bossHpRed)  : 1.0);
-    let spdMult = diffSpd * (player && player._bayerNerf   ? Math.max(0.5, 1.0 - player._bayerNerf)  : 1.0);
-    if(prestigeLevel > 0) { hpMult *= (1 + prestigeLevel * 0.15); spdMult *= (1 + prestigeLevel * 0.08); }
-    let powerScore = unlockedSkills.length * 0.5 + Object.values(upgradeProgress||{}).reduce((s,v)=>s+(v||0),0) * 1.2 + unlockedTrophies.length * 2;
-    let powerBonus = Math.min(2.0, 1.0 + powerScore * 0.006); 
-    hpMult  *= powerBonus;
-    spdMult *= Math.min(1.5, 1.0 + powerScore * 0.003);
-    
-    bossRoomState = {
-        bayer: {
-            element: 'schatten',
-            x: BR_W/2, y: 120,
-            hp: Math.round(BAYER_STATS.hp * hpMult),
-            maxHp: Math.round(BAYER_STATS.hp * hpMult),
-            speed: BAYER_STATS.speed * spdMult,
-            radius: BAYER_STATS.radius,
-            phase: 1,
-            dx: 2, dy: 1,
-            attackTimer: 0, stampTimer: 0, stampCharge: 0, stampX: 0, stampY: 0,
-            laserAngle: 0, laserActive: false, laserTimer: 0, spawnTimer: 0,
-            miniEnemies: [], speechTimer: 0, speech: '', flashTimer: 0, enrageTimer: 0,
-        },
-        player: { x: BR_W/2, y: BR_H - 80 },
-        _rollCD: 0, _rollTimer: 0, _rollDx: 0, _rollDy: 0,
-        bullets: [], particles: [], phase: 1, phaseChangeFlash: 0, result: null, frame: 0, floorCracks: [],
-        speeches: [
-            ["SIE SIND GEFEUERT!", "TICKET FOKUSSIERT!", "WAS IST DAS?!", "ICH WILL ERGEBNISSE!"],
-            ["MEHR TEMPO!", "INAKZEPTABEL!", "HABEN SIE KEINEN RESPEKT?!"],
-            ["DAS WAR EIN FEHLER!", "ALLE FEUERN!", "ICH BIN UNSTERBLICH!", "SYSTEM IST IHR FREUND!"]
-        ],
-        startTime: Date.now()
-    };
-    
-    // WAFFEN BLEIBEN NORMAL AKTIV (Laufen in Sekunden weiter ab, außer Favorit)
-    let _wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫'};
-    let _carried = [];
-    if(player) {
-        let wk = Object.keys(player.activeWeapons||{});
-        if(player.mouseTimer > 0) wk.push('mouse');
-        if(wk.length > 0) _carried.push(wk.map(w => _wepIcons[w]||w.toUpperCase()).join(' '));
-    }
-    let _sub = _carried.length > 0 ? ('ARSENAL: ' + _carried.join(' ')) : 'Standard-Bewaffnung';
-    setTimeout(() => showToast('⚠ BAYERS BÜRO BETRETEN', '#c0392b', _sub), 900);
-}
-
 function updateBossRoom() {
     if(!bossRoomState) return;
     let br = bossRoomState;
@@ -4416,7 +4352,6 @@ function updateBossRoom() {
         if(player.vodkaTimer > 0) player.vodkaTimer--;
         if(phantomCooldown > 0) phantomCooldown--;
     }
-    // -------------------------------------------------------
 
     let scale_br = Math.min(canvas.width / BR_W, canvas.height / BR_H, 1.0);
     let ox_br = (canvas.width - Math.floor(BR_W * scale_br)) / 2;
@@ -4462,6 +4397,7 @@ function updateBossRoom() {
             }
         }
 
+        // --- WAFFEN ABFEUERN (MIT RECOIL & ECHTER ANIMATION) ---
         if(input.mouseDown && player) {
             let wepKeys = Object.keys(player.activeWeapons||{});
             let baseDmg = 10 + (player.dmgBonus||0);
@@ -4473,6 +4409,8 @@ function updateBossRoom() {
                 br.bullets.push({ x: p.x, y: p.y, dx: Math.cos(aimAngle)*16, dy: Math.sin(aimAngle)*16, dmg: baseDmg, life: 90, type:'standard', color:'#ffeb3b', size:4, element: 'neutral' });
                 player.shotsFired = (player.shotsFired||0) + 1;
                 player.lastShot['standard'] = br.frame;
+                p.x -= Math.cos(aimAngle) * 1;
+                p.y -= Math.sin(aimAngle) * 1;
             }
             
             for(let w of wepKeys) {
@@ -4480,14 +4418,18 @@ function updateBossRoom() {
                 let fr = Math.max(2, frBase - Math.ceil(frBase * 0.15 * getUpgradeLevel('fire_rate')));
                 if(br.frame - (player.lastShot[w]||0) > fr) {
                     let a = aimAngle;
-                    if(w==='shotgun')    { for(let i=-2;i<=2;i++) br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+i*0.15)*14,dy:Math.sin(a+i*0.15)*14,dmg:baseDmg*1.2,life:60,type:'standard',color:'#ff8800',size:5,element:'neutral'}); playSound('shoot'); }
+                    let recoil = 0;
+                    if(w==='shotgun')    { for(let i=-2;i<=2;i++) br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+i*0.15)*14,dy:Math.sin(a+i*0.15)*14,dmg:baseDmg*1.2,life:60,type:'standard',color:'#ff8800',size:5,element:'neutral'}); playSound('shoot'); recoil=3; }
                     else if(w==='minigun'){ br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.4)*18,dy:Math.sin(a+(Math.random()-.5)*0.4)*18,dmg:baseDmg*0.8,life:75,type:'standard',color:'#ff00ff',size:3,element:'neutral'}); playSound('shoot'); }
-                    else if(w==='rocket') { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a)*13,dy:Math.sin(a)*13,dmg:baseDmg*4,life:80,type:'rocket',color:'#ff4444',size:9,element:'feuer'}); playSound('shoot'); }
-                    else if(w==='railgun'){ br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a)*35,dy:Math.sin(a)*35,dmg:baseDmg*5,life:60,type:'railgun',color:'#00ffff',size:4,element:'wind'}); playSound('boss'); }
+                    else if(w==='rocket') { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a)*13,dy:Math.sin(a)*13,dmg:baseDmg*4,life:80,type:'rocket',color:'#ff4444',size:8,element:'feuer'}); playSound('shoot'); recoil=5; }
+                    else if(w==='railgun'){ br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a)*35,dy:Math.sin(a)*35,dmg:baseDmg*5,life:60,type:'railgun',color:'#00ffff',size:4,element:'wind', angle: a}); playSound('boss'); recoil=8; screenShake=8; }
                     else if(w==='flamer') { for(let i=0;i<3;i++) br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.3)*11,dy:Math.sin(a+(Math.random()-.5)*0.3)*11,dmg:baseDmg*0.4,life:45,type:'flame',color:'#ff6600',size:6,element:'feuer'}); if(br.frame%5===0) playSound('shoot'); }
                     else if(w==='uzi')    { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.1)*17,dy:Math.sin(a+(Math.random()-.5)*0.1)*17,dmg:baseDmg*0.7,life:70,type:'standard',color:'#aaffaa',size:3,element:'neutral'}); playSound('shoot'); }
-                    else if(w==='ak47')   { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.05)*18,dy:Math.sin(a+(Math.random()-.5)*0.05)*18,dmg:baseDmg*0.9,life:75,type:'standard',color:'#ffdd44',size:4,element:'neutral'}); playSound('shoot'); }
+                    else if(w==='ak47')   { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.05)*18,dy:Math.sin(a+(Math.random()-.5)*0.05)*18,dmg:baseDmg*0.9,life:75,type:'standard',color:'#ffdd44',size:4,element:'neutral'}); playSound('shoot'); recoil=1; }
+                    
                     player.lastShot[w] = br.frame;
+                    p.x -= Math.cos(a) * recoil;
+                    p.y -= Math.sin(a) * recoil;
                 }
             }
         }
@@ -4511,27 +4453,42 @@ function updateBossRoom() {
         }
     }
 
+    // --- BULLET LOGIK & KOLLISION ---
     for(let i=br.bullets.length-1; i>=0; i--) {
         let bl = br.bullets[i];
         bl.x += bl.dx; bl.y += bl.dy; bl.life--;
-        if(bl.type === 'flame') { bl.dx *= 0.95; bl.dy *= 0.95; }
+        // Flammenwerfer-Größe wächst!
+        if(bl.type === 'flame') { bl.size += 1.8; bl.dx *= 0.96; bl.dy *= 0.96; }
+        
         if(bl.life <= 0 || bl.x < -50 || bl.x > BR_W+50 || bl.y < -50 || bl.y > BR_H+50) { 
             br.bullets.splice(i,1); continue; 
         }
         let hitRadius = bl.type === 'rocket' ? b.radius + 20 : b.radius;
         if(Math.hypot(bl.x-b.x, bl.y-b.y) < hitRadius) {
-            let dmg = bl.dmg;
-            applyElementalDamage(b, dmg, bl.element, bl.x, bl.y);
-            if(bl.type === 'rocket') { spawnBRParticles(bl.x, bl.y, '#ff4400', 12); screenShake = 8; }
-            else if(bl.type === 'railgun') { spawnBRParticles(bl.x, bl.y, '#00ffff', 6); }
-            else { spawnBRParticles(bl.x, bl.y, '#e74c3c', 3); }
-            br.bullets.splice(i,1);
-            if(b.hp <= 0) { br.result = 'win'; exitBossRoom(true); return; }
-            continue;
+            if(bl.type === 'railgun') {
+                bl.hitEnemies = bl.hitEnemies || [];
+                if(!bl.hitEnemies.includes(b)) {
+                    bl.hitEnemies.push(b);
+                    applyElementalDamage(b, bl.dmg, bl.element, bl.x, bl.y);
+                    spawnBRParticles(bl.x, bl.y, '#00ffff', 6);
+                }
+            } else {
+                applyElementalDamage(b, bl.dmg, bl.element, bl.x, bl.y);
+                if(bl.type === 'rocket') { spawnBRParticles(bl.x, bl.y, '#ff4400', 12); screenShake = 8; }
+                else { spawnBRParticles(bl.x, bl.y, '#e74c3c', 3); }
+                br.bullets.splice(i,1);
+                if(b.hp <= 0) { br.result = 'win'; exitBossRoom(true); return; }
+                continue;
+            }
         }
         for(let mi=b.miniEnemies.length-1; mi>=0; mi--) {
             let m = b.miniEnemies[mi];
             if(Math.hypot(bl.x-m.x, bl.y-m.y) < m.radius + (bl.size||4)) {
+                if(bl.type === 'railgun') {
+                    bl.hitEnemies = bl.hitEnemies || [];
+                    if(bl.hitEnemies.includes(m)) continue;
+                    bl.hitEnemies.push(m);
+                }
                 applyElementalDamage(m, bl.dmg, bl.element, bl.x, bl.y);
                 spawnBRParticles(bl.x, bl.y, m.color, 3);
                 if(bl.type !== 'railgun') { br.bullets.splice(i,1); }
@@ -4693,46 +4650,6 @@ function updateBossRoom() {
 
     if(activeBoss) { activeBoss.hp = b.hp; activeBoss.maxHp = b.maxHp; }
 }
-function spawnBRParticles(x, y, color, count) {
-    if(!bossRoomState) return;
-    for(let i=0; i<count; i++) {
-        let a = Math.random()*Math.PI*2, s = Math.random()*4+1;
-        bossRoomState.particles.push({ x, y, dx:Math.cos(a)*s, dy:Math.sin(a)*s, color, life:30+Math.floor(Math.random()*20) });
-    }
-}
-
-function exitBossRoom(won) {
-    gamePhase = 'transitioning_out';
-    fadeAlpha = 0; fadeDir = 1;
-    setTimeout(() => {
-        if(won) {
-            runBossKilled = true;
-            if(bossRoomState && bossRoomState.startTime) {
-                let elapsed = (Date.now() - bossRoomState.startTime) / 1000;
-                if(elapsed < 5) unlockTrophy('speedster');
-            }
-            systemCollapse = true;
-            collapseTimer = 0;
-            bueroDoor = null;
-            bossRoomState = null;
-            enemies = []; obstacles = []; stations = []; servers = [];
-            serverFarms = []; turrets = []; items = [];
-            idocEvent = null; kloskaEvent = null;
-            flashScreen = 100; playSound('alarm');
-            if(currentDiffLabel === 'BURNOUT' || currentDiffLabel === 'SURVIVAL') unlockTrophy('boss_killer');
-            if(isWegflexenMode) unlockTrophy('god_of_leitstand');
-            showToast('PETER BAYER BESIEGT!', '#f1c40f', 'SYSTEM-KOLLAPS BEGINNT! ÜBERLEBE!');
-            if(player) { score += 5000; } 
-            if(player && hasSkill('bo3b')) { player._bossKillBuff = 1800; }
-        } else {
-            player.hp = 0;
-        }
-        gamePhase = won ? 'normal' : 'normal';
-        fadeDir = -1;
-        { let _bhc=document.getElementById('bossHpContainer'); if(_bhc) _bhc.style.display='none'; }
-        activeBoss = null;
-    }, 800);
-}
 
 function drawBossRoom() {
     if(!bossRoomState) return;
@@ -4817,22 +4734,26 @@ function drawBossRoom() {
     }
     ctx.shadowBlur = 0;
 
+    // --- BULLETS ZEICHNEN ---
     for(let bl of br.bullets) {
         let bc = bl.color || '#f1c40f';
-        let bs = (bl.size || 4) * scale;
+        let bs = bl.size || 4; // FIX: Kein * scale mehr! Kontext ist bereits skaliert.
+        
         if(bl.type === 'rocket') {
             ctx.fillStyle = '#ff4444'; ctx.shadowColor='#ff4444'; ctx.shadowBlur=10;
             ctx.beginPath(); ctx.arc(bl.x, bl.y, bs, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle='rgba(255,170,0,0.4)'; ctx.beginPath(); ctx.arc(bl.x-bl.dx*0.5, bl.y-bl.dy*0.5, bs*0.7, 0, Math.PI*2); ctx.fill();
+            spawnBRParticles(bl.x, bl.y, '#ffaa00', 1); // Raketenschweif!
             ctx.shadowBlur=0;
         } else if(bl.type === 'railgun') {
+            ctx.save(); ctx.translate(bl.x, bl.y); ctx.rotate(bl.angle || 0); // FIX: Rotation!
             ctx.fillStyle='#00ffff'; ctx.shadowColor='#00ffff'; ctx.shadowBlur=15;
-            ctx.fillRect(bl.x-bs*2, bl.y-bs*0.4, bs*4, bs*0.8);
-            ctx.shadowBlur=0;
+            ctx.fillRect(-20, -3, 40, 6);
+            ctx.fillStyle='#ffffff'; ctx.fillRect(-20, -1, 40, 2);
+            ctx.restore();
         } else if(bl.type === 'flame') {
             ctx.globalAlpha = bl.life/45;
             ctx.fillStyle = `rgba(255,${Math.floor(Math.random()*150)},0,0.8)`;
-            ctx.beginPath(); ctx.arc(bl.x, bl.y, bs*(1 + (1-bl.life/45)*1.5), 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(bl.x, bl.y, bs, 0, Math.PI*2); ctx.fill();
             ctx.globalAlpha = 1;
         } else {
             ctx.fillStyle = bc; ctx.shadowColor = bc; ctx.shadowBlur = 6;
