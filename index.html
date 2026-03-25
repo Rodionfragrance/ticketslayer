@@ -765,6 +765,7 @@ input[type="text"] {
             <button id="btn-survival"  onclick="startGame(9)" style="background:#111;color:#9b59b6;border:2px solid #9b59b6;padding:12px 18px;font-size:16px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;min-width:130px;transition:0.2s;">Survival</button>
             <button class="btn-flex"   onclick="isWegflexenMode=true; startGame(9)">WEGFLEXEN</button>
             <button class="btn-felix"  onclick="isWegflexenMode=true; startGame(15)">WEIL WEGEN FELIX</button>
+            <button id="btn-rift" onclick="startGame(3,'rift')" style="background:#111;color:#c89b3c;border:2px solid #c89b3c;padding:12px 18px;font-size:16px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;min-width:130px;transition:0.2s;text-shadow:0 0 8px rgba(200,155,60,0.5);box-shadow:0 0 12px rgba(200,155,60,0.2);" onmouseover="this.style.background='#c89b3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#c89b3c'">⚔️ RIFT MODE</button>
         </div>
 
         <!-- MENÜ-GRID 3x2 -->
@@ -1460,6 +1461,12 @@ let completedQuests = JSON.parse(lsGet('ts_completed_quests', '[]'));
 function openQuestBoard() {
     let cont = document.getElementById('questContent');
     let html = '';
+
+    // BUG FIX: Wenn activeQuest auf einen bereits erledigten Quest zeigt → zurücksetzen
+    if(activeQuest && completedQuests.includes(activeQuest)) {
+        activeQuest = null;
+        lsSet('ts_active_quest', '');
+    }
     
     QUESTS.forEach(q => {
         let isDone = completedQuests.includes(q.id);
@@ -1473,8 +1480,9 @@ function openQuestBoard() {
         } else if (isActive) {
             btnHtml = `<button onclick="toggleQuest('${q.id}')" style="background:#c0392b;color:#fff;border:none;padding:6px 12px;font-weight:bold;cursor:pointer;">ABBRECHEN</button>`;
         } else {
-            let disabled = activeQuest !== null ? 'opacity:0.5;pointer-events:none;' : '';
-            btnHtml = `<button onclick="toggleQuest('${q.id}')" style="background:#2ecc71;color:#000;border:none;padding:6px 12px;font-weight:bold;cursor:pointer;${disabled}">ANNEHMEN</button>`;
+            // BUG FIX: Kein pointer-events:none mehr — alle nicht-erledigten Quests annehmbar
+            let canTake = activeQuest === null;
+            btnHtml = `<button onclick="${canTake?`toggleQuest('${q.id}')`:'void(0)'}" style="background:${canTake?'#2ecc71':'#333'};color:${canTake?'#000':'#666'};border:none;padding:6px 12px;font-weight:bold;cursor:${canTake?'pointer':'not-allowed'};" title="${canTake?'Auftrag annehmen':'Erst aktiven Auftrag abschließen oder abbrechen'}">ANNEHMEN</button>`;
         }
 
         html += `<div style="background:${bgCol};border:2px solid ${borderCol};padding:14px;border-radius:4px;display:flex;justify-content:space-between;align-items:center;">
@@ -2091,12 +2099,11 @@ function checkLevelUp() {
         }
     } else {
         // Job Level — mit aktiver Klasse
-        let maxJob = 50; // Standard: 1st und normale 2nd Class
-        if (j.isAlt || j.isDoram)               maxJob = 70; // Alternativ-Pfade: cap 70
-        else if (isTrans && j.classLevel === 2)  maxJob = 70; // Trans 2nd: cap 70
-        else if (j.classLevel >= 3)              maxJob = 70; // 3rd/4th: cap 70
-        else if (j.isExtended && j.classLevel === 1) maxJob = 99; // Super Novice: cap 99
-        else if (j.isExtended && j.classLevel >= 2)  maxJob = 70; // Extended 2nd+: cap 70
+        // BUG FIX: maxJob unified — classLevel 2 bekommt jetzt auch 70 (konsistent mit UI und "Nächste Klasse")
+        let maxJob = 70; // Standard für alle Jobs classLevel 2+
+        if (!currentJob)                                             maxJob = 10; // Azubi/Novice
+        else if (j.classLevel === 1 && !j.isAlt && !j.isDoram)      maxJob = 50; // 1st Class normal
+        else if (j.isExtended && j.classLevel === 1)                 maxJob = 99; // Super Novice
 
         while(jobLevel < maxJob && jobExp >= jobExpNeeded(jobLevel + 1)) {
             jobExp -= jobExpNeeded(jobLevel + 1);
@@ -2279,7 +2286,8 @@ function renderJobOverlay() {
     let jexpNext = (typeof jobExpNeeded  === 'function') ? jobExpNeeded((jobLevel || 1) + 1) : 100;
     let bPct = bexpNext > 0 ? Math.min(100, Math.round((baseExp||0) / bexpNext * 100)) : 0;
     let jPct = jexpNext > 0 ? Math.min(100, Math.round((jobExp||0)  / jexpNext * 100)) : 0;
-    let jobCap = !currentJob ? 10 : (j.isExtended && j.classLevel===1 ? 99 : (j.isAlt||j.isDoram||(isTrans&&j.classLevel===2)||j.classLevel>=3 ? 70 : 50));
+    // BUG FIX: jobCap unified — classLevel 2+ zeigt immer /70 (konsistent mit "Nächste Klasse" Anzeige)
+    let jobCap = !currentJob ? 10 : (j.isExtended && j.classLevel===1 ? 99 : (j.classLevel >= 2 || j.isAlt || j.isDoram ? 70 : 50));
 
     // ── Level-Bars ──
     let html = `
@@ -2420,6 +2428,7 @@ function renderJobOverlay() {
             <span style="color:#444;font-size:11px;">Noch ${remaining} Level — töte Tickets um Job-EXP zu verdienen!</span>
         </div>`;
     } else if (currentJob) {
+        // BUG FIX: nextReqJ einheitlich — immer 70 für classLevel >= 2 (konsistent mit jobCap)
         let nextReqJ = j.classLevel === 1 ? (j.isAlt||j.isDoram ? 70 : 50) : 70;
         let nextReqB = j.classLevel >= 2 ? (j.classLevel === 2 && !isTrans ? 99 : (j.classLevel >= 3 ? 200 : 1)) : 1;
         if(j.classLevel < 4 && !(j.isExtended && j.classLevel >= 3)) {
@@ -2435,6 +2444,7 @@ function renderJobOverlay() {
     }
 
     // ── Rebirth Button ──
+    // BUG FIX: Rebirth auch bei job >= 50 erlaubt (Cap war 50, ist jetzt 70, Rebirth-Trigger bleibt bei 50)
     if(j && j.classLevel === 2 && baseLevel >= 99 && jobLevel >= 50 && !isTrans && !j.isExtended && !j.isAlt && !j.isDoram) {
         html += `<div style="margin-top:16px;background:linear-gradient(135deg,rgba(241,196,15,0.1),rgba(231,76,60,0.1));border:3px solid #f1c40f;padding:18px;border-radius:6px;text-align:center;">
             <div style="font-size:28px;">🔄</div>
@@ -3691,7 +3701,8 @@ function setFavorite(id) {
 // ============================================================
 const REFINE_CHANCES = { 1:100, 2:100, 3:100, 4:100, 5:60, 6:50, 7:40, 8:30, 9:20, 10:15, 11:10, 12:8 };
 const REFINE_MAX = 12;
-const REFINE_COSTS = { 1:[100,0], 2:[100,0], 3:[100,0], 4:[100,0], 5:[200,1], 6:[300,1], 7:[400,2], 8:[500,2], 9:[800,3], 10:[1000,4], 11:[1500,5], 12:[2000,6] };
+// BUG FIX: Suppen-Kosten aus Waffen-Upgrade entfernt — nur noch Wurmcoins
+const REFINE_COSTS = { 1:[100,0], 2:[100,0], 3:[100,0], 4:[100,0], 5:[200,0], 6:[300,0], 7:[400,0], 8:[500,0], 9:[800,0], 10:[1000,0], 11:[1500,0], 12:[2000,0] };
 
 let refineData = JSON.parse(lsGet('ts_refine', '{}'));
 let refinePity = JSON.parse(lsGet('ts_refine_pity', '{}'));
@@ -6018,6 +6029,10 @@ class Player{
         let canShoot=(this.vodkaTimer<=0)||this.isMartin;
         let isShooting = input.mouseDown || (this.activeWeapons['uzi'] && this.bikeTimer > 0);
         
+        // ── RIFT MODE: kein Maus-Schießen — stattdessen Auto-Attack ──
+        if(riftMode) { riftAutoAttack(this); return; }
+        // ─────────────────────────────────────────────────────────────
+        
         if(isShooting && canShoot) {
             let wepKeys = Object.keys(this.activeWeapons);
             if(wepKeys.length === 0) {
@@ -6324,6 +6339,9 @@ class Enemy{
     }
 
     update(){
+        // ── RIFT MODE: Lane-Creep Pathfinding ──
+        if(this._riftCreep && this._path) { riftCreepMove(this); return; }
+        // ───────────────────────────────────────
         if(this.freezeTimer>0){this.freezeTimer--;return;}
         if (this.burnTimer > 0) { this.burnTimer--; this.hp -= 0.5; if (frame % 5 === 0) spawnParticles(this.x, this.y, '#ff6600', 1); }
         if (this.mouseCooldown > 0) this.mouseCooldown--;
@@ -6684,6 +6702,9 @@ function generateWorld(){
 // SECTION 13 — SPAWN & EVENT LOGIC
 // ============================================================
 function spawnLogic(){
+    // ── RIFT MODE: eigene Spawn-Logik ──
+    if(riftMode) { riftSpawnLogic(); return; }
+    // ───────────────────────────────────
     if(ritualGlobalCooldown > 0) ritualGlobalCooldown--;
 
     if(systemCollapse) {
@@ -8472,6 +8493,9 @@ function loop(){
         for(let i=bullets.length-1;i>=0;i--){
             let b=bullets[i]; b.update();
             let hit=false;
+            // ── RIFT MODE: Objective Treffer prüfen ──
+            if(riftMode && checkBulletHitsObjective(b)) { bullets.splice(i,1); continue; }
+            // ─────────────────────────────────────────
             for(let k=servers.length-1;k>=0;k--){
                 let sv=servers[k];
                 if(b.x>sv.x&&b.x<sv.x+sv.w&&b.y>sv.y&&b.y<sv.y+sv.h){
@@ -8566,6 +8590,10 @@ function loop(){
                 }
 
                 if(e.hp===-1000){enemies.splice(i,1);continue;}
+                // ── RIFT MODE: Jungle Camp Kill & Creep Score ──
+                if(riftMode && e._jungleCamp) onJungleCampKill(e);
+                if(riftMode && e._riftCreep)  riftScore.blue++;
+                // ───────────────────────────────────────────────
                 // --- AKTEN DROP SYSTEM ---
                 if(e.type === 99 && (e.label === "PETER BAYER" || e.label === "MEISTER HAND")) {
                     items.push(new Item('akte', e.x, e.y)); // MVP 100%
@@ -8741,6 +8769,9 @@ function loop(){
         ctx.save();
         if(screenShake>0){ ctx.translate((Math.random()-.5)*screenShake,(Math.random()-.5)*screenShake); screenShake*=.9; if(screenShake<.5)screenShake=0; }
         ctx.translate(-camera.x,-camera.y);
+        // ── RIFT MODE: Karten-Hintergrund (vor allem anderen) ──
+        if(riftMode) drawRiftBackground();
+        // ───────────────────────────────────────────────────────
         drawWorld();
         items.forEach(it=>it.draw());
 
@@ -8808,6 +8839,9 @@ function loop(){
         enemies.forEach(e=>e.draw());
         turrets.forEach(t=>t.draw());
         floatingTexts.forEach(ft=>ft.draw());
+        // ── RIFT MODE: Jungle Camps & Objectives ──
+        if(riftMode) { drawRiftJungleCamps(); drawRiftObjectives(); checkPlayerJungleInteraction(); drawRiftAARange(); }
+        // ──────────────────────────────────────────
         player.draw();
 
         if(currentShift===2){
@@ -8841,6 +8875,9 @@ function loop(){
         }
         // ------------------------------------------
         ctx.restore();
+        // ── RIFT MODE: HUD (Screen-Space, nach restore) ──
+        if(riftMode) { drawRiftHUD(); drawRiftAbilityHUD(); }
+        // ─────────────────────────────────────────────────
 
         requestAnimationFrame(loop);
     } catch(err){ console.error("GAME ERROR:", err); alert("ERROR: "+err.message); gameRunning=false; }
@@ -8849,7 +8886,7 @@ function loop(){
 // ============================================================
 // SECTION 17 — GAME START
 // ============================================================
-function startGame(diff=1){
+function startGame(diff=1, gameMode='normal'){
     let mm=document.getElementById('menuMusic');
     if(mm){mm.pause();mm.currentTime=0;}
     initAudio(); playNextSong();
@@ -8892,7 +8929,26 @@ function startGame(diff=1){
         wegflexenTimer = 300; 
         showToast("MODUS: WEGFLEXEN", "#f00", "1 HP | 5S KILL-TIMER | 10X PUNKTE");
     }
-    generateWorld();
+
+    // ── RIFT MODE WEICHE ──────────────────────────────────────────────────
+    if(gameMode === 'rift') {
+        riftMode = true;
+        currentDiffLabel = 'RIFT MODE';
+        generateRiftMap();
+        // Reset Ability CDs
+        riftAbilityCDs = { q: 0, w: 0, e: 0, r: 0 };
+        riftAutoAttackCD = 0;
+        // Spieler in der Mitte der blauen Basis spawnen
+        player.x = RIFT_BLUE_BASE.x + 100;
+        player.y = RIFT_BLUE_BASE.y - 100;
+        showToast('⚔️ RIFT MODE', '#c89b3c', 'ZERSTÖRE DAS FEIND-DIREKTORAT!', true);
+        setTimeout(()=>showToast('🗺️ LANES: TOP=Logistik · MID=IT · BOT=Lebensmittel','#aaa','Jungle-Camps geben Buffs!'),3000);
+    } else {
+        riftMode = false;
+        generateWorld();
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     // Maddin/Abteilungsleiter Optik Trigger
     if(currentJob === 'maddin' || currentJob === 'abteilungsleiter') { 
         player.promoTriggered = true; 
@@ -8954,6 +9010,1119 @@ function buyKloskaItem(item, cost) {
         playSound('hit');
     }
 }
+// ============================================================
+// ★★★ RIFT MODE — VOLLSTÄNDIGE IMPLEMENTIERUNG ★★★
+// Ticket Slayer V20 — Lane-Karte, Jungle, Objectives, Buffs
+// Alle Themen (IT, Logistik, Lebensmittel) bleiben erhalten!
+// ============================================================
+
+// ── STATE VARIABLEN ──────────────────────────────────────────
+let riftMode           = false;
+let riftObjectives     = null;
+let riftJungleCamps    = [];
+let riftLaneSpawnTimer = { top: 0, mid: 0, bot: 0 };
+let riftLaneWave       = { top: 0, mid: 0, bot: 0 };
+let riftBaronBuff      = 0;
+let riftDragonBuff     = null;
+let riftSuperCreeps    = { top: false, mid: false, bot: false };
+let riftScoreCount     = { blue: 0, red: 0 };
+let riftWinner         = null;
+
+// ── KARTEN-ANKERPUNKTE ────────────────────────────────────────
+const RIFT_W = 3200;
+const RIFT_H = 3200;
+const RIFT_BLUE_BASE = { x: 280,  y: 2920 };
+const RIFT_RED_BASE  = { x: 2920, y: 280  };
+
+// ── LANE PFADE ────────────────────────────────────────────────
+const RIFT_LANES = {
+    top: {
+        label:'TOP', theme:'logistik', color:'#e67e22',
+        bluePath:[
+            {x:280, y:2600},{x:280, y:400},{x:600, y:280},{x:2920, y:280}
+        ],
+    },
+    mid: {
+        label:'MID', theme:'office', color:'#f1c40f',
+        bluePath:[
+            {x:500, y:2700},{x:1600,y:1600},{x:2700,y:500},{x:2920,y:280}
+        ],
+    },
+    bot: {
+        label:'BOT', theme:'food', color:'#e74c3c',
+        bluePath:[
+            {x:600, y:2920},{x:2600,y:2920},{x:2920,y:2600},{x:2920,y:280}
+        ],
+    },
+};
+
+// ── JUNGLE CAMPS ─────────────────────────────────────────────
+const RIFT_JUNGLE_CAMP_DEFS = [
+    {id:'blue_kaffee', x:700,  y:1700, label:'☕ KAFFEEMASCHINE', color:'#3498db', buffType:'blau',   icon:'☕', desc:'Cooldown −50% (45s)',       respawnTime:1800},
+    {id:'blue_gromp',  x:400,  y:2100, label:'🖥️ SAP-SERVER',     color:'#1abc9c', buffType:'gromp',  icon:'🖥️', desc:'+20 Max HP',               respawnTime:1800},
+    {id:'blue_wolves', x:900,  y:2200, label:'👷 AZUBI-TRUPP',    color:'#9b59b6', buffType:'wolves', icon:'👷', desc:'+3 🥣 Suppe',               respawnTime:1200},
+    {id:'blue_raptors',x:700,  y:2500, label:'📋 PRIO-2 STAPEL',  color:'#e74c3c', buffType:'raptors',icon:'📋', desc:'+3 Urlaubstage',            respawnTime:1200},
+    {id:'baron',       x:1200, y:1200, label:'📞 PETER BAYER',    color:'#c0392b', buffType:'baron',  icon:'📞', desc:'+25% Gegner-DMG (120s)',    respawnTime:3600, minScore:15000},
+    {id:'red_hardware',x:2500, y:1500, label:'🔧 HARDWARELAGER',  color:'#e67e22', buffType:'rot',    icon:'🔧', desc:'Feuerschaden +3/s (30s)',    respawnTime:1800},
+    {id:'red_wolves',  x:2300, y:800,  label:'👷 AZUBI-TRUPP',    color:'#9b59b6', buffType:'wolves', icon:'👷', desc:'+3 🥣 Suppe',               respawnTime:1200},
+    {id:'red_raptors', x:2500, y:600,  label:'📋 PRIO-2 STAPEL',  color:'#e74c3c', buffType:'raptors',icon:'📋', desc:'+3 Urlaubstage',            respawnTime:1200},
+    {id:'dragon',      x:1900, y:1900, label:'🍗 WITWE BOLTE',    color:'#d35400', buffType:'dragon', icon:'🍗', desc:'Feuer/Eis/Blitz permanent', respawnTime:2400},
+];
+
+// ── OBJECTIVES BUILDER ────────────────────────────────────────
+function buildRiftObjectives(){
+    return {
+        blueNexus:       {x:RIFT_BLUE_BASE.x, y:RIFT_BLUE_BASE.y, hp:2000, maxHp:2000, type:'nexus', side:'blue', label:'🏢 DIREKTORAT',       color:'#3498db', radius:80},
+        redNexus:        {x:RIFT_RED_BASE.x,  y:RIFT_RED_BASE.y,  hp:2000, maxHp:2000, type:'nexus', side:'red',  label:'☠ FEIND-DIREKTORAT', color:'#c0392b', radius:80},
+
+        blueInhibTop:    {x:280,  y:1100, hp:800,  maxHp:800,  type:'inhib', side:'blue', label:'📦 SCHICHTLEITER-BÜRO',   color:'#e67e22', radius:35, lane:'top'},
+        blueInhibMid:    {x:700,  y:2400, hp:800,  maxHp:800,  type:'inhib', side:'blue', label:'🖥️ SERVER-ROOM',           color:'#1abc9c', radius:35, lane:'mid'},
+        blueInhibBot:    {x:1100, y:2920, hp:800,  maxHp:800,  type:'inhib', side:'blue', label:'🍗 WITWE-BOLTE-KÜCHE',    color:'#d35400', radius:35, lane:'bot'},
+        redInhibTop:     {x:2920, y:1900, hp:800,  maxHp:800,  type:'inhib', side:'red',  label:'☠ FEIND-SCHICHTLEITER',  color:'#c0392b', radius:35, lane:'top'},
+        redInhibMid:     {x:2500, y:600,  hp:800,  maxHp:800,  type:'inhib', side:'red',  label:'☠ FEIND-SERVER',         color:'#c0392b', radius:35, lane:'mid'},
+        redInhibBot:     {x:2100, y:280,  hp:800,  maxHp:800,  type:'inhib', side:'red',  label:'☠ FEIND-LIEFERRAUM',     color:'#c0392b', radius:35, lane:'bot'},
+
+        blueTowerTopOuter:{x:280,  y:1800, hp:500,  maxHp:500,  type:'tower', side:'blue', label:'📷 ÜBERWACHUNGSCAM',    color:'#3498db', radius:25, lane:'top', dmg:20, range:350, cooldown:60, _cd:0},
+        blueTowerMidOuter:{x:1000, y:2200, hp:500,  maxHp:500,  type:'tower', side:'blue', label:'🔒 FIREWALL-NODE',      color:'#1abc9c', radius:25, lane:'mid', dmg:20, range:350, cooldown:60, _cd:0},
+        blueTowerBotOuter:{x:1800, y:2920, hp:500,  maxHp:500,  type:'tower', side:'blue', label:'📷 ÜBERWACHUNGSCAM',    color:'#3498db', radius:25, lane:'bot', dmg:20, range:350, cooldown:60, _cd:0},
+        blueTowerTopInner:{x:280,  y:1400, hp:600,  maxHp:600,  type:'tower', side:'blue', label:'📷 INNENCAM',           color:'#3498db', radius:25, lane:'top', dmg:25, range:380, cooldown:50, _cd:0},
+        blueTowerMidInner:{x:500,  y:2600, hp:600,  maxHp:600,  type:'tower', side:'blue', label:'🔒 INNERE FIREWALL',    color:'#1abc9c', radius:25, lane:'mid', dmg:25, range:380, cooldown:50, _cd:0},
+        blueTowerBotInner:{x:1400, y:2920, hp:600,  maxHp:600,  type:'tower', side:'blue', label:'📷 INNENCAM',           color:'#3498db', radius:25, lane:'bot', dmg:25, range:380, cooldown:50, _cd:0},
+
+        redTowerTopOuter: {x:2920, y:1400, hp:500,  maxHp:500,  type:'tower', side:'red',  label:'⚠️ FEIND-CAM',          color:'#c0392b', radius:25, lane:'top', dmg:20, range:350, cooldown:60, _cd:0},
+        redTowerMidOuter: {x:2200, y:1000, hp:500,  maxHp:500,  type:'tower', side:'red',  label:'⚠️ FEIND-WALL',         color:'#e74c3c', radius:25, lane:'mid', dmg:20, range:350, cooldown:60, _cd:0},
+        redTowerBotOuter: {x:1400, y:280,  hp:500,  maxHp:500,  type:'tower', side:'red',  label:'⚠️ FEIND-CAM',          color:'#c0392b', radius:25, lane:'bot', dmg:20, range:350, cooldown:60, _cd:0},
+        redTowerTopInner: {x:2920, y:1000, hp:600,  maxHp:600,  type:'tower', side:'red',  label:'⚠️ INNENCAM',           color:'#c0392b', radius:25, lane:'top', dmg:25, range:380, cooldown:50, _cd:0},
+        redTowerMidInner: {x:2600, y:700,  hp:600,  maxHp:600,  type:'tower', side:'red',  label:'⚠️ INNERE WALL',        color:'#e74c3c', radius:25, lane:'mid', dmg:25, range:380, cooldown:50, _cd:0},
+        redTowerBotInner: {x:1800, y:280,  hp:600,  maxHp:600,  type:'tower', side:'red',  label:'⚠️ INNENCAM',           color:'#c0392b', radius:25, lane:'bot', dmg:25, range:380, cooldown:50, _cd:0},
+    };
+}
+
+// ── generateRiftMap ───────────────────────────────────────────
+function generateRiftMap(){
+    obstacles=[];stations=[];servers=[];serverFarms=[];
+
+    // WORLD_WIDTH/HEIGHT auf Rift-Größe setzen
+    try { WORLD_WIDTH=RIFT_W; WORLD_HEIGHT=RIFT_H; } catch(e){}
+
+    // BLAUE BASIS — IT/OFFICE (unten links)
+    for(let i=0;i<20;i++) obstacles.push({x:150+Math.random()*700, y:2400+Math.random()*700, w:90, h:50, color:'#546e7a', type:'desk'});
+    stations.push({type:'coffee_machine', x:400, y:2700, w:100, h:100, label:'KAFFEE', color:'#6f4e37', img:(typeof coffeeImg!=='undefined'?coffeeImg:null)});
+    stations.push({type:'hardware_store', x:150, y:2500, w:180, h:180, label:'HARDWARELAGER', color:'#9b59b6', img:(typeof hardwareImg!=='undefined'?hardwareImg:null)});
+    for(let i=0;i<3;i++) servers.push({x:800+i*120, y:2700, w:40, h:80, color:'#3498db', isFarm:false});
+
+    // ROTE BASIS — LOGISTIK (oben rechts)
+    for(let i=0;i<8;i++){
+        let tx=2400+Math.random()*600, ty=150+Math.random()*500;
+        obstacles.push({x:tx,     y:ty,   w:160, h:70, color:'#bdc3c7', type:'truck'});
+        obstacles.push({x:tx+160, y:ty+5, w:50,  h:60, color:'#c0392b', type:'cab'  });
+    }
+    stations.push({type:'chicken_truck', x:RIFT_W-400, y:RIFT_H-300, w:200, h:120, label:'WITWE BOLTE', color:'#d35400', img:(typeof chickenImg!=='undefined'?chickenImg:null)});
+
+    // TOP LANE — Logistik (Regale + Gabelstapler)
+    for(let i=0;i<20;i++) obstacles.push({x:400+i*140, y:100+Math.random()*120, w:200, h:40, color:'#3e2723', type:'shelf'});
+    for(let i=0;i<5;i++)  obstacles.push({x:600+i*400, y:250+Math.random()*80,  w:80,  h:50, color:'#e67e22', type:'truck'});
+
+    // MID LANE — IT/Office (Schreibtische diagonal)
+    for(let t=0;t<16;t++){
+        let frac=t/16, mx=600+frac*2000, my=2600-frac*2000;
+        obstacles.push({x:mx-220, y:my-80, w:90, h:50, color:'#546e7a', type:'desk'});
+        obstacles.push({x:mx+140, y:my+30, w:90, h:50, color:'#546e7a', type:'desk'});
+    }
+    for(let i=0;i<6;i++) servers.push({x:1400+i*80, y:1500, w:40, h:80, color:'#c0392b', isFarm:false});
+
+    // BOT LANE — Lebensmittel (LKWs)
+    for(let i=0;i<12;i++) obstacles.push({x:600+i*200, y:2900+Math.random()*100, w:160, h:70, color:'#bdc3c7', type:'truck'});
+
+    // JUNGLE BLAU — Lager-Regale
+    for(let i=0;i<15;i++) obstacles.push({x:150+Math.random()*800, y:900+Math.random()*1400, w:180, h:40, color:'#3e2723', type:'shelf'});
+
+    // JUNGLE ROT — LKW-Stellplätze
+    for(let i=0;i<10;i++) obstacles.push({x:2200+Math.random()*700, y:700+Math.random()*1400, w:130, h:60, color:'#7f8c8d', type:'truck'});
+
+    // GEHEIMWAND
+    secretWall={x:1580, y:1580, w:30, h:120, found:false};
+    obstacles.push({x:secretWall.x, y:secretWall.y, w:secretWall.w, h:secretWall.h, color:'#050505', type:'secretwall'});
+
+    // OBJECTIVES & JUNGLE CAMPS
+    riftObjectives = buildRiftObjectives();
+    riftJungleCamps = RIFT_JUNGLE_CAMP_DEFS.map(c=>({...c, alive:true, respawnCD:0, hp:getJungleCampHp(c.buffType), maxHp:getJungleCampHp(c.buffType)}));
+
+    // RESET
+    riftLaneSpawnTimer={top:0,mid:0,bot:0};
+    riftLaneWave={top:0,mid:0,bot:0};
+    riftBaronBuff=0; riftDragonBuff=null;
+    riftSuperCreeps={top:false,mid:false,bot:false};
+    riftScoreCount={blue:0,red:0}; riftWinner=null;
+    console.log('[RIFT] Karte fertig. Objectives:',Object.keys(riftObjectives).length,'Camps:',riftJungleCamps.length);
+}
+
+function getJungleCampHp(type){
+    return {blau:150,rot:150,gromp:200,wolves:300,raptors:250,baron:2000,dragon:800}[type]||150;
+}
+
+// ── RIFT SPAWN LOGIC (ersetzt normale spawnLogic) ─────────────
+function riftSpawnLogic(){
+    if(!riftMode||!player) return;
+    if(riftBaronBuff>0) riftBaronBuff--;
+
+    // Globaler Schwierigkeits-Anstieg (langsamner als normal)
+    if(frame%900===0) difficulty+=0.05;
+
+    // Lane-Wellen
+    const WAVE_INT = Math.max(480, 1800 - frame*0.04);
+    ['top','mid','bot'].forEach(lane=>{
+        riftLaneSpawnTimer[lane]++;
+        if(riftLaneSpawnTimer[lane]>=WAVE_INT){
+            riftLaneSpawnTimer[lane]=0;
+            riftLaneWave[lane]++;
+            spawnLaneWave(lane);
+        }
+    });
+
+    // Jungle Camps — Respawn
+    riftJungleCamps.forEach(camp=>{
+        if(!camp.alive){
+            camp.respawnCD--;
+            if(camp.respawnCD<=0){
+                if(camp.minScore && score<camp.minScore){camp.respawnCD=300;return;}
+                camp.alive=true; camp.hp=camp.maxHp; camp._spawned=false;
+                showToast('🌲 RESPAWN','#2ecc71',camp.label+' wieder aktiv!');
+            }
+        }
+    });
+
+    // Rote Türme schießen auf Spieler
+    if(riftObjectives){
+        Object.values(riftObjectives).forEach(obj=>{
+            if(obj.type!=='tower'||obj.side!=='red'||obj.hp<=0) return;
+            obj._cd=(obj._cd||0)-1;
+            if(obj._cd>0) return;
+            let dist=Math.hypot(player.x-obj.x, player.y-obj.y);
+            if(dist<obj.range){
+                let angle=Math.atan2(player.y-obj.y, player.x-obj.x);
+                bullets.push(new Bullet(obj.x,obj.y,angle,'standard',obj.dmg*(1+difficulty*0.1)));
+                obj._cd=obj.cooldown;
+                playSound('shoot');
+            }
+        });
+    }
+
+    // Sieg prüfen
+    if(riftObjectives&&riftObjectives.redNexus.hp<=0&&!riftWinner){riftWinner='blue';endRiftGame();}
+    if(riftObjectives&&riftObjectives.blueNexus.hp<=0&&!riftWinner){riftWinner='red';endRiftGame();}
+
+    // Eigene Türme schießen auf Gegner
+    if(riftObjectives){
+        Object.values(riftObjectives).forEach(obj=>{
+            if(obj.type!=='tower'||obj.side!=='blue'||obj.hp<=0) return;
+            obj._cd=(obj._cd||0)-1;
+            if(obj._cd>0) return;
+            for(let e of enemies){
+                if(Math.hypot(e.x-obj.x,e.y-obj.y)<obj.range){
+                    let angle=Math.atan2(e.y-obj.y,e.x-obj.x);
+                    // Eigene Türme schießen auf Gegner (Freund-Kugeln)
+                    let fb=new Bullet(obj.x,obj.y,angle,'standard',obj.dmg);
+                    fb._friendlyFire=true; fb._targetEnemy=e;
+                    bullets.push(fb);
+                    obj._cd=obj.cooldown;
+                    break;
+                }
+            }
+        });
+    }
+}
+
+function spawnLaneWave(lane){
+    let laneConf=RIFT_LANES[lane];
+    let path=laneConf.bluePath;
+    let waveNum=riftLaneWave[lane];
+    let isSuper=riftSuperCreeps[lane];
+    let count=isSuper?3:Math.min(3+Math.floor(waveNum/3),6);
+
+    for(let i=0;i<count;i++){
+        let creep=new Enemy();
+        creep.x=path[0].x+(Math.random()-0.5)*80;
+        creep.y=path[0].y+(Math.random()-0.5)*80;
+
+        if(lane==='top'){
+            creep.type=4; creep.color='#e67e22'; creep.radius=isSuper?45:30;
+            creep.hp=creep.maxHp=isSuper?Math.round(300*(1+waveNum*0.1)):Math.round(120*(1+waveNum*0.08));
+            creep.speed=isSuper?0.9:1.0; creep.symbol=isSuper?'🚜':'📦';
+            creep.label=isSuper?'SUPER-LAGERIST':'LAGERIST'; creep.score=isSuper?80:25;
+        } else if(lane==='mid'){
+            creep.type=2; creep.color='#f1c40f'; creep.radius=isSuper?40:22;
+            creep.hp=creep.maxHp=isSuper?Math.round(250*(1+waveNum*0.1)):Math.round(80*(1+waveNum*0.08));
+            creep.speed=isSuper?1.6:1.5; creep.symbol=isSuper?'☠':'⚠';
+            creep.label=isSuper?'SUPER-PRIO-1':'PRIO-2 TICKET'; creep.score=isSuper?100:30;
+        } else {
+            creep.type=5; creep.color='#e74c3c'; creep.radius=isSuper?35:18;
+            creep.hp=creep.maxHp=isSuper?Math.round(200*(1+waveNum*0.1)):Math.round(50*(1+waveNum*0.07));
+            creep.speed=isSuper?1.8:1.8; creep.symbol=isSuper?'🍖':'🍗';
+            creep.label=isSuper?'SUPER-LIEFERANT':'LIEFERANT'; creep.score=isSuper?60:15;
+        }
+
+        // Baron-Buff: Creeps sind geschwächt
+        if(riftBaronBuff>0){creep.hp=Math.floor(creep.hp*0.75);creep.maxHp=creep.hp;}
+
+        creep._riftCreep=true; creep._riftLane=lane;
+        creep._pathIndex=1; creep._path=path; creep._isSuper=isSuper;
+        enemies.push(creep);
+    }
+
+    if(waveNum%5===0){
+        showToast('🌊 WELLE '+waveNum+' — '+laneConf.label, laneConf.color, isSuper?'SUPER CREEPS!':count+' Einheiten');
+    }
+}
+
+function riftCreepMove(enemy){
+    if(!enemy._path||enemy._pathIndex>=enemy._path.length){
+        let nexus=riftObjectives?riftObjectives.blueNexus:null;
+        if(nexus&&nexus.hp>0){
+            let dist=Math.hypot(enemy.x-nexus.x,enemy.y-nexus.y);
+            if(dist<nexus.radius+enemy.radius){
+                nexus.hp=Math.max(0,nexus.hp-5);
+                enemy.hp=-9999;
+            } else {
+                let angle=Math.atan2(nexus.y-enemy.y,nexus.x-enemy.x);
+                enemy.x+=Math.cos(angle)*enemy.speed;
+                enemy.y+=Math.sin(angle)*enemy.speed;
+            }
+        }
+        return;
+    }
+    let target=enemy._path[enemy._pathIndex];
+    let dist=Math.hypot(enemy.x-target.x,enemy.y-target.y);
+    if(dist<20){enemy._pathIndex++;}
+    else{
+        let angle=Math.atan2(target.y-enemy.y,target.x-enemy.x);
+        enemy.x+=Math.cos(angle)*enemy.speed;
+        enemy.y+=Math.sin(angle)*enemy.speed;
+    }
+}
+
+// ── JUNGLE CAMP INTERACTION ────────────────────────────────────
+function checkPlayerJungleInteraction(){
+    if(!riftMode||!player) return;
+    riftJungleCamps.forEach(camp=>{
+        if(!camp.alive) return;
+        let dist=Math.hypot(player.x-camp.x,player.y-camp.y);
+        if(dist>120||camp._spawned) return;
+        camp._spawned=true;
+        spawnJungleCampEnemies(camp);
+    });
+}
+
+function spawnJungleCampEnemies(camp){
+    if(camp.buffType==='wolves'){
+        for(let i=0;i<3;i++){
+            let e=new Enemy(); e.type=5; e.color='#9b59b6'; e.radius=20;
+            e.hp=e.maxHp=100; e.speed=1.6; e.symbol='👷'; e.label='AZUBI'; e.score=20;
+            e.x=camp.x+(Math.random()-0.5)*100; e.y=camp.y+(Math.random()-0.5)*100;
+            e._jungleCamp=camp; enemies.push(e);
+        }
+    } else if(camp.buffType==='raptors'){
+        for(let i=0;i<4;i++){
+            let e=new Enemy(); e.type=4; e.color='#e74c3c'; e.radius=22;
+            e.hp=e.maxHp=80; e.speed=1.4; e.symbol='📋'; e.label='PRIO-2'; e.score=15;
+            e.x=camp.x+(Math.random()-0.5)*80; e.y=camp.y+(Math.random()-0.5)*80;
+            e._jungleCamp=camp; enemies.push(e);
+        }
+    } else if(camp.buffType==='gromp'){
+        let e=new Enemy(); e.type=3; e.color='#1abc9c'; e.radius=40;
+        e.hp=e.maxHp=200; e.speed=0.7; e.symbol='🖥️'; e.label='SAP-SERVER'; e.score=80;
+        e.x=camp.x; e.y=camp.y; e._jungleCamp=camp; enemies.push(e);
+    } else if(camp.buffType==='baron'){
+        let bd=bosses&&bosses.find(b=>b.name&&b.name.includes('Bayer'));
+        if(bd){
+            let bossEnemy=new Enemy(bd);
+            bossEnemy.x=camp.x; bossEnemy.y=camp.y;
+            bossEnemy._jungleCamp=camp; bossEnemy._isBaron=true;
+            enemies.push(bossEnemy); activeBoss=bossEnemy;
+            document.getElementById('bossHpContainer').style.display='block';
+            playSound('boss'); screenShake=30;
+            showToast('📞 PETER BAYER IM JUNGLE!','#c0392b','Bezwinge ihn für den Baron-Buff!');
+        } else {
+            let e=new Enemy(); e.type=99; e.color='#c0392b'; e.radius=55;
+            e.hp=e.maxHp=2000; e.speed=0.9; e.symbol='☠'; e.label='DIREKTOR'; e.score=2000;
+            e.x=camp.x; e.y=camp.y; e._jungleCamp=camp; e._isBaron=true;
+            enemies.push(e); activeBoss=e;
+            document.getElementById('bossHpContainer').style.display='block';
+            showToast('📞 DIREKTOR IM JUNGLE!','#c0392b','Baron-Buff bei Kill!');
+        }
+    } else if(camp.buffType==='dragon'){
+        let e=new Enemy(); e.type=3; e.color='#d35400'; e.radius=55;
+        e.hp=e.maxHp=800; e.speed=0.8; e.symbol='🍗'; e.label='WITWE BOLTE'; e.score=500;
+        e.x=camp.x; e.y=camp.y; e._jungleCamp=camp; enemies.push(e);
+        showToast('🍗 WITWE BOLTE!','#d35400','Drachen-Buff bei Kill!');
+    } else {
+        let e=new Enemy(); e.type=3; e.color=camp.color; e.radius=35;
+        e.hp=e.maxHp=camp.maxHp; e.speed=0.8; e.symbol=camp.icon;
+        e.label=camp.label.replace(/^[^\s]+ /,'').substring(0,12); e.score=100;
+        e.x=camp.x; e.y=camp.y; e._jungleCamp=camp; enemies.push(e);
+    }
+}
+
+function onJungleCampKill(enemy){
+    if(!enemy._jungleCamp) return;
+    let camp=enemy._jungleCamp;
+    let remaining=enemies.filter(e=>e._jungleCamp===camp&&e.hp>0);
+    if(remaining.length>0) return;
+    camp.alive=false; camp._spawned=false; camp.respawnCD=camp.respawnTime;
+    applyJungleBuff(camp.buffType);
+    showToast('✅ CAMP BESIEGT!',camp.color,camp.label+' — '+camp.desc);
+    playSound('powerup');
+}
+
+function applyJungleBuff(type){
+    if(!player) return;
+    if(type==='blau'){
+        player.mouseTimer=2700;
+        showToast('☕ BLAUER BUFF!','#3498db','Cooldown −50% für 45s');
+    } else if(type==='rot'){
+        player.hasFireMod=true; player._fireBuff=1800; player.dmgBonus+=5;
+        showToast('🔥 ROTER BUFF!','#e67e22','Feuerschaden 30s + +5 Schaden');
+    } else if(type==='gromp'){
+        player.maxHp+=20; player.hp+=20;
+        showToast('🖥️ SAP-BUFF!','#1abc9c','+20 Max HP');
+    } else if(type==='wolves'){
+        player.suppe=(player.suppe||0)+3;
+        showToast('👷 AZUBI-BEUTE!','#9b59b6','+3 🥣 Suppe');
+    } else if(type==='raptors'){
+        player.yellowSlips=(player.yellowSlips||0)+3;
+        showToast('📋 PRIO-2 ERLEDIGT!','#e74c3c','+3 Urlaubstage');
+    } else if(type==='baron'){
+        riftBaronBuff=7200; player.dmgBonus+=10;
+        showToast('📞 BARON-BUFF!','#c0392b','Gegner nehmen +25% Schaden · +10 DMG');
+        screenShake=40;
+    } else if(type==='dragon'){
+        let types=['fire','ice','lightning'];
+        riftDragonBuff=types[Math.floor(Math.random()*3)];
+        let names={fire:'🔥 FEUER',ice:'❄️ EIS',lightning:'⚡ BLITZ'};
+        if(riftDragonBuff==='fire')     {player.hasFireMod=true;}
+        if(riftDragonBuff==='ice')      {player._iceBuff=true;}
+        if(riftDragonBuff==='lightning'){player.dmgBonus+=15;}
+        showToast('🍗 DRACHEN-BUFF!','#d35400',names[riftDragonBuff]+' — permanent!');
+    }
+}
+
+// ── OBJECTIVES TREFFER ────────────────────────────────────────
+function checkBulletHitsObjective(bullet){
+    if(!riftMode||!riftObjectives) return false;
+    if(bullet._friendlyFire) return false; // eigene Türme nicht self-damage
+    for(let [key,obj] of Object.entries(riftObjectives)){
+        if(obj.side!=='red'||obj.hp<=0) continue;
+        // Vor dem äußeren Turm braucht Spieler nichts — rote Türme schützen sich gegenseitig
+        // (vereinfacht: alle roten Objectives direkt beschussbar)
+        let dist=Math.hypot(bullet.x-obj.x,bullet.y-obj.y);
+        if(dist<obj.radius+(bullet.size||6)){
+            obj.hp=Math.max(0,obj.hp-bullet.dmg);
+            spawnParticles(obj.x,obj.y,obj.color,3);
+            if(obj.hp<=0) onRiftObjectiveDestroyed(key,obj);
+            return true;
+        }
+    }
+    return false;
+}
+
+function onRiftObjectiveDestroyed(key,obj){
+    playSound('boss'); screenShake=25;
+    spawnParticles(obj.x,obj.y,obj.color,30);
+    if(obj.type==='tower'){
+        score+=500;
+        floatingTexts.push(new FloatingText(obj.x,obj.y,'+500 TURM!',obj.color));
+        showToast('🔫 TURM ZERSTÖRT!',obj.color,obj.label+' — +500');
+    }
+    if(obj.type==='inhib'){
+        score+=1500;
+        floatingTexts.push(new FloatingText(obj.x,obj.y,'+1500 INHIB!',obj.color));
+        if(obj.side==='red'&&obj.lane){
+            riftSuperCreeps[obj.lane]=true;
+            showToast('☠ INHIB DOWN!','#c0392b',obj.label+' — SUPER CREEPS!');
+        }
+        setTimeout(()=>{
+            if(riftObjectives&&riftObjectives[key]){
+                riftObjectives[key].hp=Math.floor(riftObjectives[key].maxHp*0.5);
+                if(obj.lane&&obj.side==='red'){riftSuperCreeps[obj.lane]=false;showToast('♻️ INHIB RESPAWN','#aaa',obj.label);}
+            }
+        },60000);
+    }
+    if(obj.type==='nexus'){
+        score+=10000;
+        riftWinner=(obj.side==='red')?'blue':'red';
+        endRiftGame();
+    }
+}
+
+// ── DRAW FUNKTIONEN ───────────────────────────────────────────
+function drawRiftBackground(){
+    ctx.save();
+    ctx.fillStyle='#0a0c10';
+    ctx.fillRect(0,0,RIFT_W,RIFT_H);
+
+    // Blau-Seite Glow (unten links)
+    let bg=ctx.createRadialGradient(RIFT_BLUE_BASE.x,RIFT_BLUE_BASE.y,100,RIFT_BLUE_BASE.x,RIFT_BLUE_BASE.y,1200);
+    bg.addColorStop(0,'rgba(26,111,255,0.12)'); bg.addColorStop(1,'rgba(26,111,255,0)');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,RIFT_W,RIFT_H);
+
+    // Rot-Seite Glow (oben rechts)
+    let rg=ctx.createRadialGradient(RIFT_RED_BASE.x,RIFT_RED_BASE.y,100,RIFT_RED_BASE.x,RIFT_RED_BASE.y,1200);
+    rg.addColorStop(0,'rgba(232,0,42,0.12)'); rg.addColorStop(1,'rgba(232,0,42,0)');
+    ctx.fillStyle=rg; ctx.fillRect(0,0,RIFT_W,RIFT_H);
+
+    // Lane-Boden (breite goldfarbene Streifen)
+    ctx.strokeStyle='rgba(200,155,60,0.25)'; ctx.lineWidth=100; ctx.lineCap='round'; ctx.lineJoin='round';
+    ['top','mid','bot'].forEach(lane=>{
+        let p=RIFT_LANES[lane].bluePath;
+        ctx.beginPath(); ctx.moveTo(p[0].x,p[0].y);
+        p.forEach((pt,i)=>{if(i>0) ctx.lineTo(pt.x,pt.y);}); ctx.stroke();
+    });
+
+    // Lane-Mittellinie gestrichelt
+    ctx.strokeStyle='rgba(200,155,60,0.5)'; ctx.lineWidth=3; ctx.setLineDash([20,15]);
+    ['top','mid','bot'].forEach(lane=>{
+        let p=RIFT_LANES[lane].bluePath;
+        ctx.beginPath(); ctx.moveTo(p[0].x,p[0].y);
+        p.forEach((pt,i)=>{if(i>0) ctx.lineTo(pt.x,pt.y);}); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+
+    // Lane-Labels auf der Karte
+    ctx.font='bold 22px Courier New'; ctx.textAlign='center';
+    [
+        {lane:'top',x:280, y:1200, color:'#e67e22'},
+        {lane:'mid',x:1600,y:1400, color:'#f1c40f'},
+        {lane:'bot',x:1600,y:2920, color:'#e74c3c'},
+    ].forEach(l=>{
+        ctx.fillStyle=l.color; ctx.globalAlpha=0.5;
+        ctx.fillText(l.lane.toUpperCase()+' LANE',l.x,l.y);
+        ctx.globalAlpha=1.0;
+    });
+
+    ctx.restore();
+}
+
+function drawRiftObjectives(){
+    if(!riftMode||!riftObjectives) return;
+    ctx.save();
+    Object.values(riftObjectives).forEach(obj=>{
+        if(obj.hp<=0) return;
+        let pulse=0.7+Math.sin(frame*0.06)*0.3;
+        ctx.shadowColor=obj.color; ctx.shadowBlur=obj.type==='nexus'?30:15;
+        ctx.beginPath(); ctx.arc(obj.x,obj.y,obj.radius,0,Math.PI*2);
+        ctx.fillStyle=obj.side==='blue'?`rgba(26,111,255,${0.2*pulse})`:`rgba(232,0,42,${0.2*pulse})`;
+        ctx.fill();
+        ctx.strokeStyle=obj.color; ctx.lineWidth=obj.type==='nexus'?4:2; ctx.stroke();
+        ctx.shadowBlur=0;
+        let iconSz=obj.type==='nexus'?28:(obj.type==='inhib'?18:14);
+        ctx.font=iconSz+'px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        let icons={nexus:{blue:'🏢',red:'☠'},inhib:{blue:'🏛',red:'☠'},tower:{blue:'📷',red:'⚠️'}};
+        ctx.fillText((icons[obj.type]||{})[obj.side]||'?',obj.x,obj.y);
+        // HP-Bar
+        let bw=obj.radius*2, barY=obj.y-obj.radius-14;
+        let pct=Math.max(0,obj.hp/obj.maxHp);
+        ctx.fillStyle='#111'; ctx.fillRect(obj.x-bw/2,barY,bw,6);
+        ctx.fillStyle=pct>0.5?'#2ecc71':(pct>0.25?'#f1c40f':'#e74c3c');
+        ctx.fillRect(obj.x-bw/2,barY,bw*pct,6);
+        ctx.strokeStyle='#333'; ctx.lineWidth=1; ctx.strokeRect(obj.x-bw/2,barY,bw,6);
+        ctx.font='bold 10px Courier New'; ctx.fillStyle='#fff'; ctx.textBaseline='top';
+        ctx.fillText(obj.label.substring(0,18),obj.x,barY-14);
+    });
+    ctx.restore();
+}
+
+function drawRiftJungleCamps(){
+    if(!riftMode) return;
+    ctx.save();
+    riftJungleCamps.forEach(camp=>{
+        if(!camp.alive){
+            if(player&&Math.hypot(player.x-camp.x,player.y-camp.y)<400){
+                ctx.font='bold 12px Courier New'; ctx.fillStyle='#555'; ctx.textAlign='center';
+                ctx.fillText('⏳ '+Math.ceil(camp.respawnCD/60)+'s',camp.x,camp.y-20);
+            }
+            return;
+        }
+        if(player&&Math.hypot(player.x-camp.x,player.y-camp.y)>700) return;
+        let pulse=0.6+Math.sin(frame*0.05+camp.x)*0.4;
+        ctx.shadowColor=camp.color; ctx.shadowBlur=20*pulse;
+        ctx.beginPath(); ctx.arc(camp.x,camp.y,50,0,Math.PI*2);
+        ctx.fillStyle=camp.color+'22'; ctx.fill();
+        ctx.strokeStyle=camp.color; ctx.lineWidth=2; ctx.stroke();
+        ctx.shadowBlur=0;
+        ctx.font='28px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(camp.icon,camp.x,camp.y);
+        ctx.font='bold 11px Courier New'; ctx.fillStyle=camp.color; ctx.textBaseline='top';
+        ctx.fillText(camp.label,camp.x,camp.y+55);
+        if(player&&Math.hypot(player.x-camp.x,player.y-camp.y)<150){
+            ctx.font='bold 15px Courier New'; ctx.fillStyle='#f1c40f';
+            ctx.fillText('[NÄHERN] KÄMPFEN',camp.x,camp.y-70);
+        }
+    });
+    ctx.restore();
+}
+
+function drawRiftHUD(){
+    if(!riftMode||!riftObjectives) return;
+    // Screen-Space HUD (nach ctx.restore(), also direkt auf canvas ohne Kamera-Transform)
+    let cx=canvas.width-200, cy=130, lh=18;
+    ctx.save();
+    ctx.font='bold 11px Courier New'; ctx.textAlign='left';
+    // Blauer Nexus
+    let bn=riftObjectives.blueNexus, pct=bn.hp/bn.maxHp;
+    ctx.fillStyle='#3498db';
+    ctx.fillText('🏢 NEXUS: '+Math.ceil(pct*100)+'%',cx,cy); cy+=lh;
+    // Red Nexus
+    let rn=riftObjectives.redNexus, rpct=rn.hp/rn.maxHp;
+    ctx.fillStyle='#c0392b';
+    ctx.fillText('☠ ZIEL: '+Math.ceil(rpct*100)+'%',cx,cy); cy+=lh;
+    // Buffs
+    if(riftBaronBuff>0){ctx.fillStyle='#c0392b';ctx.fillText('📞 BARON: '+(riftBaronBuff/60).toFixed(0)+'s',cx,cy);cy+=lh;}
+    if(riftDragonBuff){let dn={fire:'🔥',ice:'❄️',lightning:'⚡'};ctx.fillStyle='#d35400';ctx.fillText(dn[riftDragonBuff]+' AKTIV',cx,cy);cy+=lh;}
+    ['top','mid','bot'].forEach(lane=>{if(riftSuperCreeps[lane]){ctx.fillStyle='#f00';ctx.fillText('⚠ '+lane.toUpperCase()+' SUPER',cx,cy);cy+=lh;}});
+    ctx.restore();
+}
+
+// ── GAME OVER ─────────────────────────────────────────────────
+function endRiftGame(){
+    if(!gameRunning) return;
+    gameRunning=false;
+    let won=riftWinner==='blue';
+    playSound('boss'); screenShake=60; flashScreen=80;
+    setTimeout(()=>{
+        document.getElementById('goTitle').innerText=won?'🏆 NEXUS ZERSTÖRT!':'☠ DIREKTORAT GEFALLEN!';
+        document.getElementById('finalScore').innerText=score;
+        if(won){kaffeebons+=500;saveProgress();document.getElementById('goEarnedKB').innerText='+500 KB (Nexus Kill Bonus)';}
+        document.getElementById('gameOverScreen').style.display='block';
+        showToast(won?'🏆 SIEG!':'☠ NIEDERLAGE',won?'#f1c40f':'#c0392b',won?'Rift Mode gewonnen! +500 KB':'Nächstes Mal!');
+    },1500);
+}
+// ============================================================
+// ★ RIFT MODE — LOL KAMPFSYSTEM ★
+// Auto-Attack + Q/W/E/R Abilities je nach Job
+// ============================================================
+
+// ── ABILITY COOLDOWN TRACKER ──────────────────────────────────
+let riftAbilityCDs = { q: 0, w: 0, e: 0, r: 0 };
+let riftAutoAttackCD = 0;
+const RIFT_AA_RANGE = 220; // Auto-Attack Reichweite in px
+
+// ── ABILITY DEFINITIONEN JE JOB-ZWEIG ────────────────────────
+// branch: 'logistik' | 'support' | 'entwicklung' | 'alt'
+// Jede Ability: { name, icon, cooldown(frames), cast(fn) }
+
+function getRiftJobBranch() {
+    if (!currentJob) return 'novice';
+    if (['lagermitarbeiter','staplerfahrer','high_lagermitarbeiter','schichtleiter','supply_chain_manager','coo'].includes(currentJob)) return 'logistik';
+    if (['sachbearbeiter','maddin','high_sachbearbeiter','abteilungsleiter','it_director','cio'].includes(currentJob)) return 'support';
+    if (['techniker','entwickler','high_techniker','senior_entwickler','lead_architect','cto'].includes(currentJob)) return 'entwicklung';
+    return 'alt';
+}
+
+// Job-Tier bestimmt Stärke der Abilities (0=Novice, 1=1st, 2=2nd, 3=3rd, 4=4th)
+function getRiftJobTier() {
+    if (!currentJob) return 0;
+    let j = JOBS[currentJob];
+    return j ? (j.classLevel || 1) : 0;
+}
+
+function getRiftAbilities() {
+    let branch = getRiftJobBranch();
+    let tier   = getRiftJobTier();
+    let dmgMod = 1 + tier * 0.4; // höhere Klasse = stärkere Abilities
+    let cdMod  = Math.max(0.5, 1 - tier * 0.1); // höhere Klasse = kürzere CDs
+
+    const cd = (base) => Math.floor(base * cdMod * 60); // Sekunden → Frames
+
+    if (branch === 'logistik') return {
+        q: {
+            name: 'Schwinger', icon: '🪃', key: 'Q',
+            cooldown: cd(5),
+            desc: 'Melee-Wirbel — trifft alle Gegner im Nahbereich',
+            cast: () => {
+                let hit = 0;
+                enemies.forEach(e => {
+                    if (Math.hypot(player.x - e.x, player.y - e.y) < 200) {
+                        let dmg = (30 + player.dmgBonus) * dmgMod;
+                        e.hp -= dmg; hit++;
+                        spawnParticles(e.x, e.y, '#e67e22', 5);
+                        floatingTexts.push(new FloatingText(e.x, e.y - 20, Math.floor(dmg) + '', '#e67e22'));
+                    }
+                });
+                if (hit > 0) { playSound('hit'); screenShake = 8; }
+                floatingTexts.push(new FloatingText(player.x, player.y - 40, 'SCHWINGER!', '#e67e22'));
+            }
+        },
+        w: {
+            name: 'Panzer-Stance', icon: '🛡️', key: 'W',
+            cooldown: cd(8),
+            desc: '3s Schadensreduktion −60% + kurze Immun-Frames',
+            cast: () => {
+                player.shieldTimer = 180;
+                floatingTexts.push(new FloatingText(player.x, player.y - 40, 'SCHILDWALL!', '#3498db'));
+                spawnParticles(player.x, player.y, '#3498db', 15);
+                playSound('powerup');
+            }
+        },
+        e: {
+            name: tier >= 2 ? 'Gabelstapler-Rush' : 'Sprint', icon: tier >= 2 ? '🚜' : '👟', key: 'E',
+            cooldown: cd(6),
+            desc: tier >= 2 ? 'Charge — Dash + Gegner überfahren (Schaden)' : 'Kurzer Speed-Burst',
+            cast: () => {
+                if (tier >= 2) {
+                    // Dash Richtung Maus + Schaden an allem auf dem Weg
+                    let angle = Math.atan2(input.worldY - player.y, input.worldX - player.x);
+                    let dashDist = 350;
+                    let steps = 10;
+                    for (let s = 1; s <= steps; s++) {
+                        let tx = player.x + Math.cos(angle) * (dashDist / steps) * s;
+                        let ty = player.y + Math.sin(angle) * (dashDist / steps) * s;
+                        enemies.forEach(e => {
+                            if (Math.hypot(tx - e.x, ty - e.y) < 60) {
+                                let dmg = (50 + player.dmgBonus) * dmgMod;
+                                e.hp -= dmg; spawnParticles(e.x, e.y, '#e67e22', 4);
+                            }
+                        });
+                    }
+                    player.x = Math.max(30, Math.min(WORLD_WIDTH - 30, player.x + Math.cos(angle) * dashDist));
+                    player.y = Math.max(30, Math.min(WORLD_HEIGHT - 30, player.y + Math.sin(angle) * dashDist));
+                    playSound('hammer'); screenShake = 12;
+                    floatingTexts.push(new FloatingText(player.x, player.y - 40, 'RAMMBOCK!', '#e67e22'));
+                } else {
+                    player.speedBoostTimer = 180;
+                    floatingTexts.push(new FloatingText(player.x, player.y - 40, 'SPRINT!', '#2ecc71'));
+                    playSound('powerup');
+                }
+            }
+        },
+        r: {
+            name: tier >= 3 ? 'Lieferketten-Kollaps' : 'Schicht-Stempel', icon: tier >= 3 ? '🚄' : '🏭', key: 'R',
+            cooldown: cd(tier >= 3 ? 25 : 18),
+            desc: tier >= 3 ? 'ULTRA: Alle Gegner auf der Karte −50% HP + Knockback' : 'Riesiger Stampfer — Massive AOE + Stun',
+            cast: () => {
+                screenShake = 40; playSound('boss'); flashScreen = 30;
+                if (tier >= 3) {
+                    enemies.forEach(e => {
+                        if (e.type !== 99) {
+                            e.hp -= e.hp * 0.5;
+                            let a = Math.atan2(e.y - player.y, e.x - player.x);
+                            e.x += Math.cos(a) * 120; e.y += Math.sin(a) * 120;
+                            spawnParticles(e.x, e.y, '#ff6b35', 6);
+                        }
+                    });
+                    showToast('🚄 LIEFERKETTEN-KOLLAPS!', '#ff6b35', 'Alle Gegner −50% HP!');
+                } else {
+                    enemies.forEach(e => {
+                        let dist = Math.hypot(player.x - e.x, player.y - e.y);
+                        if (dist < 350) {
+                            let dmg = (80 + player.dmgBonus) * dmgMod;
+                            e.hp -= dmg; e.freezeTimer = 90;
+                            let a = Math.atan2(e.y - player.y, e.x - player.x);
+                            e.x += Math.cos(a) * 80; e.y += Math.sin(a) * 80;
+                            spawnParticles(e.x, e.y, '#c0392b', 8);
+                        }
+                    });
+                    floatingTexts.push(new FloatingText(player.x, player.y - 60, 'SCHICHT-STEMPEL!', '#c0392b'));
+                }
+            }
+        }
+    };
+
+    if (branch === 'support') return {
+        q: {
+            name: tier >= 2 ? 'Stampfer' : 'Ticket-Flut', icon: tier >= 2 ? '👔' : '📋', key: 'Q',
+            cooldown: cd(tier >= 2 ? 4 : 6),
+            desc: tier >= 2 ? 'MADDIN: Stampfer — AOE Schaden + Knockback um Spieler' : 'Wirft 5 Tickets auf nächste Gegner',
+            cast: () => {
+                if (tier >= 2) {
+                    enemies.forEach(e => {
+                        if (Math.hypot(player.x - e.x, player.y - e.y) < 250) {
+                            let dmg = (60 + player.dmgBonus) * dmgMod;
+                            e.hp -= dmg; e.stunned = 60;
+                            let a = Math.atan2(e.y - player.y, e.x - player.x);
+                            e.x += Math.cos(a) * 100; e.y += Math.sin(a) * 100;
+                            spawnParticles(e.x, e.y, '#f1c40f', 6);
+                            floatingTexts.push(new FloatingText(e.x, e.y - 20, Math.floor(dmg) + '', '#f1c40f'));
+                        }
+                    });
+                    screenShake = 20; playSound('hammer');
+                    floatingTexts.push(new FloatingText(player.x, player.y - 50, 'STAMPFER!', '#f1c40f'));
+                } else {
+                    // Ticket-Wurf: 5 schnelle Bullets auf nächste Gegner
+                    let targets = [...enemies].sort((a, b) =>
+                        Math.hypot(player.x - a.x, player.y - a.y) - Math.hypot(player.x - b.x, player.y - b.y)
+                    ).slice(0, 5);
+                    targets.forEach(t => {
+                        let angle = Math.atan2(t.y - player.y, t.x - player.x);
+                        let b = new Bullet(player.x, player.y, angle, 'standard', (20 + player.dmgBonus) * dmgMod);
+                        b.speed = 12; bullets.push(b);
+                    });
+                    playSound('shoot');
+                    floatingTexts.push(new FloatingText(player.x, player.y - 40, 'TICKET-FLUT!', '#f1c40f'));
+                }
+            }
+        },
+        w: {
+            name: 'Pflichtmeeting', icon: '📅', key: 'W',
+            cooldown: cd(10),
+            desc: 'Friert alle Gegner in 400px für 2s ein — MEETING gerufen!',
+            cast: () => {
+                let frozen = 0;
+                enemies.forEach(e => {
+                    if (Math.hypot(player.x - e.x, player.y - e.y) < 400 + tier * 50) {
+                        e.freezeTimer = 120 + tier * 30; frozen++;
+                        spawnParticles(e.x, e.y, '#3498db', 5);
+                    }
+                });
+                playSound('delivery'); screenShake = 10;
+                floatingTexts.push(new FloatingText(player.x, player.y - 50, 'MEETING! ' + frozen + 'x', '#3498db'));
+                if (frozen >= 10) unlockTrophy && unlockTrophy('boss_killer');
+            }
+        },
+        e: {
+            name: 'Kaffeepause', icon: '☕', key: 'E',
+            cooldown: cd(12),
+            desc: tier >= 2 ? 'VODKA-SCHUTZ: 5s Unverwundbarkeit + Speed' : 'Heilt 40 HP + Speed-Boost',
+            cast: () => {
+                if (tier >= 2) {
+                    player.vodkaTimer = 300; player.speedBoostTimer = 300;
+                    spawnParticles(player.x, player.y, '#0984e3', 20);
+                    floatingTexts.push(new FloatingText(player.x, player.y - 40, 'VODKA-SCHUTZ!', '#0984e3'));
+                    playSound && playSound('vodka');
+                } else {
+                    let heal = Math.min(player.maxHp - player.hp, 40 + tier * 10);
+                    player.hp += heal; player.speedBoostTimer = 180;
+                    floatingTexts.push(new FloatingText(player.x, player.y - 40, '+' + Math.floor(heal) + ' HP ☕', '#6f4e37'));
+                    spawnParticles(player.x, player.y, '#6f4e37', 10);
+                    playSound('powerup');
+                }
+            }
+        },
+        r: {
+            name: tier >= 3 ? 'IT-ÜBERNAHME' : 'PIKO BELLO', icon: tier >= 3 ? '👁️' : '🌟', key: 'R',
+            cooldown: cd(tier >= 3 ? 30 : 20),
+            desc: tier >= 3 ? 'ULTRA: Alle Systeme: Heilt voll + 5 Azubis + alle Cooldowns reset' : 'PIKO BELLO: Volle Heilung + 3 Azubis + Stampfer-AOE',
+            cast: () => {
+                // Heilung
+                player.hp = player.maxHp;
+                spawnParticles(player.x, player.y, '#f1c40f', 30);
+                screenShake = 30; flashScreen = 20; playSound('evolve');
+                // Azubis spawnen
+                let azubiCount = tier >= 3 ? 5 : 3;
+                for (let i = 0; i < azubiCount; i++) {
+                    let angle = (i / azubiCount) * Math.PI * 2;
+                    turrets.push(new Turret(player.x + Math.cos(angle) * 80, player.y + Math.sin(angle) * 80));
+                }
+                // AOE um Spieler
+                enemies.forEach(e => {
+                    if (Math.hypot(player.x - e.x, player.y - e.y) < 300) {
+                        e.hp -= (80 + player.dmgBonus) * dmgMod;
+                        spawnParticles(e.x, e.y, '#f1c40f', 5);
+                    }
+                });
+                if (tier >= 3) {
+                    // Cooldowns resetten
+                    riftAbilityCDs.q = 0; riftAbilityCDs.w = 0; riftAbilityCDs.e = 0;
+                    showToast('👁️ IT-ÜBERNAHME!', '#8e44ad', 'Volle Kontrolle — alle Systeme aktiv!');
+                } else {
+                    showToast('🌟 PIKO BELLO!', '#f1c40f', 'Maddin ist AUSGERASTET!');
+                }
+                floatingTexts.push(new FloatingText(player.x, player.y - 60, tier >= 3 ? 'IT-ÜBERNAHME!' : 'PIKO BELLO!', '#f1c40f'));
+            }
+        }
+    };
+
+    if (branch === 'entwicklung') return {
+        q: {
+            name: 'EMP-Granate', icon: '💥', key: 'Q',
+            cooldown: cd(5),
+            desc: 'Wirft eine EMP-Granate auf Cursor-Position — betäubt + Schaden',
+            cast: () => {
+                let tx = input.worldX, ty = input.worldY;
+                let radius = 150 + tier * 30;
+                enemies.forEach(e => {
+                    if (Math.hypot(tx - e.x, ty - e.y) < radius) {
+                        let dmg = (40 + player.dmgBonus) * dmgMod;
+                        e.hp -= dmg; e.freezeTimer = 90;
+                        spawnParticles(e.x, e.y, '#1abc9c', 6);
+                        floatingTexts.push(new FloatingText(e.x, e.y - 20, '⚡' + Math.floor(dmg), '#1abc9c'));
+                    }
+                });
+                spawnParticles(tx, ty, '#00ffff', 20);
+                screenShake = 10; playSound('hammer');
+                floatingTexts.push(new FloatingText(tx, ty - 30, 'EMP!', '#1abc9c'));
+            }
+        },
+        w: {
+            name: tier >= 2 ? 'Doppel-Turret' : 'Turret setzen', icon: '🔫', key: 'W',
+            cooldown: cd(tier >= 2 ? 8 : 12),
+            desc: tier >= 2 ? 'Setzt 2 Turrets auf einmal bei Cursor-Position' : 'Setzt 1 Turret bei Cursor-Position',
+            cast: () => {
+                let tx = input.worldX, ty = input.worldY;
+                let count = tier >= 2 ? 2 : 1;
+                for (let i = 0; i < count; i++) {
+                    let off = i === 0 ? -40 : 40;
+                    turrets.push(new Turret(tx + off, ty));
+                }
+                spawnParticles(tx, ty, '#2ecc71', 10);
+                playSound('powerup');
+                floatingTexts.push(new FloatingText(tx, ty - 30, count + 'x TURRET!', '#2ecc71'));
+            }
+        },
+        e: {
+            name: 'System-Hack', icon: '💻', key: 'E',
+            cooldown: cd(9),
+            desc: 'Hackt alle Gegner in 350px: friert ein + −30% HP',
+            cast: () => {
+                let count = 0;
+                enemies.forEach(e => {
+                    if (Math.hypot(player.x - e.x, player.y - e.y) < 350 + tier * 50) {
+                        e.freezeTimer = 120;
+                        e.hp -= e.hp * 0.3;
+                        e.color = '#00ff00'; // grün = gehackt
+                        spawnParticles(e.x, e.y, '#00ff00', 5);
+                        count++;
+                    }
+                });
+                playSound('delivery'); screenShake = 8;
+                showToast('💻 SYSTEM-HACK!', '#1abc9c', count + ' Gegner gehackt!');
+            }
+        },
+        r: {
+            name: tier >= 3 ? 'VOLLAUTOMATISIERUNG' : 'STRG+ALT+ENTF', icon: tier >= 3 ? '🦾' : '🖥️', key: 'R',
+            cooldown: cd(tier >= 3 ? 25 : 20),
+            desc: tier >= 3 ? 'ULTRA: Alle Turrets schießen 10x schneller + neue Farm + Alle Gegner −70% HP' : 'System-Reboot: Alle normalen Gegner −80% HP + Freeze',
+            cast: () => {
+                screenShake = 40; playSound('boss'); flashScreen = 40;
+                if (tier >= 3) {
+                    // Alle Turrets boosten
+                    turrets.forEach(t => { t.range = (t.range || 300) * 1.5; t.fireRate = Math.max(2, (t.fireRate || 30) * 0.3); });
+                    setTimeout(() => turrets.forEach(t => { if(t) { t.range = 300; t.fireRate = 30; } }), 8000);
+                    // Server Farm
+                    tryActivateFarm && tryActivateFarm();
+                    enemies.forEach(e => { if (e.type !== 99) { e.hp -= e.hp * 0.7; spawnParticles(e.x, e.y, '#00ff00', 5); } });
+                    showToast('🦾 VOLLAUTOMATISIERUNG!', '#00ff00', 'Turrets AKTIV · Gegner −70% HP!');
+                } else {
+                    enemies.forEach(e => {
+                        if (e.type !== 99) {
+                            e.hp -= e.hp * 0.8;
+                            e.freezeTimer = 180;
+                            spawnParticles(e.x, e.y, '#1abc9c', 4);
+                        }
+                    });
+                    showToast('🖥️ STRG+ALT+ENTF!', '#1abc9c', 'SYSTEM NEUGESTARTET');
+                    floatingTexts.push(new FloatingText(player.x, player.y - 60, 'SYSTEM RESET!', '#1abc9c'));
+                }
+            }
+        }
+    };
+
+    // Novice / Alt-Jobs — Basis-Abilities
+    return {
+        q: {
+            name: 'Aktenschlag', icon: '📁', key: 'Q',
+            cooldown: 360,
+            desc: 'Schlägt mit einer Akte — Nahkampf + leichter Stun',
+            cast: () => {
+                enemies.forEach(e => {
+                    if (Math.hypot(player.x - e.x, player.y - e.y) < 160) {
+                        e.hp -= 25 + player.dmgBonus; e.freezeTimer = 45;
+                        spawnParticles(e.x, e.y, '#bdc3c7', 4);
+                    }
+                });
+                playSound('hit');
+                floatingTexts.push(new FloatingText(player.x, player.y - 40, 'AKTENSCHLAG!', '#bdc3c7'));
+            }
+        },
+        w: {
+            name: 'Kaffeepause', icon: '☕', key: 'W',
+            cooldown: 720,
+            desc: 'Heilt 30 HP',
+            cast: () => {
+                let h = Math.min(player.maxHp - player.hp, 30);
+                player.hp += h; playSound('powerup');
+                floatingTexts.push(new FloatingText(player.x, player.y - 40, '+' + Math.floor(h) + ' HP', '#6f4e37'));
+            }
+        },
+        e: {
+            name: 'Notlauf', icon: '🏃', key: 'E',
+            cooldown: 480,
+            desc: 'Speed-Boost für 3s',
+            cast: () => {
+                player.speedBoostTimer = 180; playSound('powerup');
+                floatingTexts.push(new FloatingText(player.x, player.y - 40, 'NOTLAUF!', '#2ecc71'));
+            }
+        },
+        r: {
+            name: 'Hilferuf', icon: '📞', key: 'R',
+            cooldown: 1800,
+            desc: 'Ruft einen Azubi zu Hilfe',
+            cast: () => {
+                turrets.push(new Turret(player.x + 60, player.y));
+                playSound('powerup');
+                showToast('📞 HILFERUF!', '#bdc3c7', 'Azubi eingetroffen!');
+            }
+        }
+    };
+}
+
+// ── AUTO-ATTACK (ersetzt Maus-Schießen in Rift Mode) ─────────
+function riftAutoAttack(p) {
+    if (!riftMode || !p) return;
+
+    // Cooldown
+    if (riftAutoAttackCD > 0) { riftAutoAttackCD--; }
+
+    let aaRate = Math.max(8, (p.fireRate || 20) * 0.6); // schneller als normal
+
+    if (riftAutoAttackCD <= 0) {
+        // Nächsten Gegner in Range suchen
+        let target = null;
+        let minDist = RIFT_AA_RANGE + (player.dmgBonus > 0 ? player.dmgBonus * 0.5 : 0);
+
+        enemies.forEach(e => {
+            let d = Math.hypot(p.x - e.x, p.y - e.y);
+            if (d < minDist) { minDist = d; target = e; }
+        });
+
+        if (target) {
+            // Auto-Attack: direkt Schaden + kleines Particle
+            let dmg = 10 + (p.dmgBonus || 0);
+            // Kritischer Treffer (DEX-basiert)
+            let isCrit = Math.random() < (p._critChance || 0.05);
+            if (isCrit) { dmg *= 2; }
+
+            target.hp -= dmg;
+            spawnParticles(target.x, target.y, isCrit ? '#f1c40f' : '#fff', isCrit ? 6 : 2);
+            if (isCrit) floatingTexts.push(new FloatingText(target.x, target.y - 20, 'KRIT! ' + Math.floor(dmg), '#f1c40f'));
+
+            // Feuerschaden wenn aktiv
+            if (p.hasFireMod) target.burnTimer = 90;
+
+            playSound('hit');
+            riftAutoAttackCD = Math.floor(aaRate);
+        }
+    }
+
+    // Q/W/E/R Ability Input
+    let abilities = getRiftAbilities();
+    ['q','w','e','r'].forEach((key, i) => {
+        let code = ['KeyQ','KeyW','KeyE','KeyR'][i];
+        let ab = abilities[key];
+        if (!ab) return;
+
+        // Cooldown zählen
+        if (riftAbilityCDs[key] > 0) riftAbilityCDs[key]--;
+
+        // Taste gedrückt + CD abgelaufen?
+        if (input.keys[code] && riftAbilityCDs[key] <= 0) {
+            // E ist normales Interagieren — im Rift Mode nur Ability wenn kein Objective/Station in Range
+            if (code === 'KeyE') {
+                let nearStation = stations.some(s => Math.hypot(p.x - s.x - s.w/2, p.y - s.y - s.h/2) < 120);
+                let nearObjective = riftObjectives && Object.values(riftObjectives).some(o => o.hp > 0 && Math.hypot(p.x - o.x, p.y - o.y) < 100);
+                if (nearStation || nearObjective) return; // normales [E] interagieren
+            }
+
+            try {
+                ab.cast();
+                riftAbilityCDs[key] = ab.cooldown;
+            } catch(err) {
+                console.warn('[RIFT ABILITY] Fehler bei', key, ':', err);
+            }
+            input.keys[code] = false; // einmalig auslösen
+        }
+    });
+}
+
+// ── ABILITY HUD ZEICHNEN (LoL-Style) ─────────────────────────
+function drawRiftAbilityHUD() {
+    if (!riftMode) return;
+    let abilities = getRiftAbilities();
+    let boxSize = 64;
+    let gap = 8;
+    let totalW = 4 * boxSize + 3 * gap;
+    let startX = canvas.width / 2 - totalW / 2;
+    let startY = canvas.height - 110; // über dem HUD
+
+    ctx.save();
+
+    ['q','w','e','r'].forEach((key, i) => {
+        let ab = abilities[key];
+        if (!ab) return;
+        let x = startX + i * (boxSize + gap);
+        let y = startY;
+        let cd = riftAbilityCDs[key];
+        let onCD = cd > 0;
+        let pct = onCD ? (cd / ab.cooldown) : 0;
+
+        // Hintergrund
+        ctx.fillStyle = '#0a0c12';
+        ctx.strokeStyle = onCD ? '#333' : '#c89b3c';
+        ctx.lineWidth = onCD ? 1 : 2;
+        if (!onCD) { ctx.shadowColor = '#c89b3c'; ctx.shadowBlur = 8; }
+        ctx.beginPath(); ctx.roundRect(x, y, boxSize, boxSize, 4); ctx.fill(); ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Icon
+        ctx.font = '28px Arial';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.globalAlpha = onCD ? 0.4 : 1.0;
+        ctx.fillText(ab.icon, x + boxSize / 2, y + boxSize / 2 - 4);
+        ctx.globalAlpha = 1.0;
+
+        // CD-Overlay (dunkel)
+        if (onCD) {
+            ctx.fillStyle = `rgba(0,0,0,${0.5 + pct * 0.3})`;
+            ctx.beginPath(); ctx.roundRect(x, y, boxSize, boxSize * pct, 4); ctx.fill();
+
+            // CD Sekunden
+            let secLeft = Math.ceil(cd / 60);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 16px Courier New';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(secLeft + 's', x + boxSize / 2, y + boxSize / 2);
+        }
+
+        // Key Label
+        ctx.fillStyle = onCD ? '#555' : '#f1c40f';
+        ctx.font = 'bold 11px Courier New';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(ab.key, x + boxSize / 2, y + boxSize - 16);
+
+        // Ability Name (unten drunter)
+        ctx.fillStyle = '#888';
+        ctx.font = '9px Courier New';
+        ctx.fillText(ab.name.substring(0, 10), x + boxSize / 2, y + boxSize + 4);
+    });
+
+    // Auto-Attack Range Kreis (transparent, nur als Hinweis)
+    if (player) {
+        let aaRange = RIFT_AA_RANGE + (player.dmgBonus > 0 ? player.dmgBonus * 0.5 : 0);
+        // im Welt-Koordinaten-System zeichnen — muss im game-loop gemacht werden
+        // hier Screen-Hinweis: kleines Symbol
+        ctx.fillStyle = '#ffffff22';
+        ctx.font = '10px Courier New'; ctx.textAlign = 'right';
+        ctx.fillText('⚔ AA: ' + Math.floor(aaRange) + 'px', canvas.width / 2 - totalW / 2 - 10, startY + boxSize / 2);
+    }
+
+    ctx.restore();
+}
+
+// ── AA RANGE KREIS in der WELT ────────────────────────────────
+function drawRiftAARange() {
+    if (!riftMode || !player) return;
+    let aaRange = RIFT_AA_RANGE + (player.dmgBonus > 0 ? player.dmgBonus * 0.5 : 0);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, aaRange, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(200,155,60,${0.15 + Math.sin(frame * 0.05) * 0.05})`;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 8]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+}
+// ── LOL KAMPFSYSTEM ENDE ──────────────────────────────────────
+
 </script>
 <script>
 // Fallback: Wenn Preloader nach 5s noch läuft → forcierter Start
