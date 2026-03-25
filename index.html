@@ -4387,14 +4387,14 @@ function enterBossRoom() {
         startTime: Date.now()
     };
     // WAFFEN EINFRIEREN: Alle aktiven Waffen/Buffs bleiben für den gesamten Boss-Kampf
-    if(player) {
-        for(let w in player.activeWeapons) {
-            if(player.activeWeapons[w] > 0 && w !== 'railgun') {
-                player.activeWeapons[w] = Infinity;
-            }
-        }
-        if(player.mouseTimer > 0) player.mouseTimer = Infinity;
-    }
+    //if(player) {
+    //    for(let w in player.activeWeapons) {
+    //        if(player.activeWeapons[w] > 0 && w !== 'railgun') {
+    //            player.activeWeapons[w] = Infinity;
+    //        }
+    //    }
+    //    if(player.mouseTimer > 0) player.mouseTimer = Infinity;
+    //}
     let _wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫'};
     let _carried = [];
     if(player) {
@@ -4428,9 +4428,25 @@ function updateBossRoom() {
     }
     if(br.phaseChangeFlash > 0) br.phaseChangeFlash--;
 
-    let spd = player ? player.speed : 5;
+let spd = player ? player.speed : 5;
     if(player && player.speedBoostTimer > 0) spd += 3;
     if(player && player.sapDebuffTimer > 0)  spd = Math.max(1, spd - 3);
+
+    // --- NEU: WAFFEN- UND BUFF-TIMER UPDATE IM BOSSRAUM ---
+    if(player) {
+        if(player.stunned > 0) player.stunned--;
+        
+        for(let w in player.activeWeapons) {
+            if(player.activeWeapons[w] === Infinity) continue; // Favorit läuft weiter!
+            player.activeWeapons[w]--;
+            if(player.activeWeapons[w] <= 0) delete player.activeWeapons[w];
+        }
+        if(player.mouseTimer > 0 && player.mouseTimer !== Infinity) player.mouseTimer--;
+        if(player.shieldTimer > 0) player.shieldTimer--;
+        if(player.vodkaTimer > 0) player.vodkaTimer--;
+        if(phantomCooldown > 0) phantomCooldown--;
+    }
+    // -------------------------------------------------------
 
     // Maus-Position für die Richtung der Schüsse UND der Hechtrolle berechnen
     let scale_br = Math.min(canvas.width / BR_W, canvas.height / BR_H, 1.0);
@@ -4440,43 +4456,47 @@ function updateBossRoom() {
     let mouseArenaY = (input.y - oy_br) / scale_br;
     let aimAngle = Math.atan2(mouseArenaY - p.y, mouseArenaX - p.x);
 
-    // FIX: Hechtrolle nutzt jetzt wieder die Maus-Richtung wie im Hauptspiel
-    if(br._rollTimer > 0) {
-        br._rollTimer--;
-        p.x = Math.max(20, Math.min(BR_W-20, p.x + br._rollDx));
-        p.y = Math.max(20, Math.min(BR_H-20, p.y + br._rollDy));
-        if(player) player.rollTimer = br._rollTimer;
+    // EINGABEN SPERREN, WENN GESTUNNT (Z.B. DURCH STAMPFER)
+    if(player && player.stunned > 0) {
+        // Gestunnt - keine Bewegung, keine Rolle, keine Schüsse möglich
     } else {
-        if(br._rollCD > 0) br._rollCD--;
-        // Pet füttern auch im Boss-Raum
-        if(input.keys['KeyC']) {
-            if(typeof feedPet === 'function' && activePet && petData.active) feedPet();
-            input.keys['KeyC'] = false;
-        }
-        if((input.keys['ShiftLeft']||input.rightClick) && br._rollCD <= 0) {
-            br._rollDx = Math.cos(aimAngle) * 16; 
-            br._rollDy = Math.sin(aimAngle) * 16;
-            br._rollTimer = 15; 
-            br._rollCD = hasTrophy('perfect_dodge') ? 90 : 120;
-            if(player) player.rollTimer = 15;
-            input.rightClick = false;
-            playSound('delivery');
+        // FIX: Hechtrolle nutzt jetzt wieder die Maus-Richtung wie im Hauptspiel
+        if(br._rollTimer > 0) {
+            br._rollTimer--;
+            p.x = Math.max(20, Math.min(BR_W-20, p.x + br._rollDx));
+            p.y = Math.max(20, Math.min(BR_H-20, p.y + br._rollDy));
+            if(player) player.rollTimer = br._rollTimer;
         } else {
-            let bdx = 0, bdy = 0;
-            if(input.keys['KeyW']||input.keys['ArrowUp'])    bdy -= spd;
-            if(input.keys['KeyS']||input.keys['ArrowDown'])  bdy += spd;
-            if(input.keys['KeyA']||input.keys['ArrowLeft'])  bdx -= spd;
-            if(input.keys['KeyD']||input.keys['ArrowRight']) bdx += spd;
-            
-            if(bdx !== 0 || bdy !== 0) {
-                let len = Math.hypot(bdx, bdy);
-                p.x = Math.max(20, Math.min(BR_W-20, p.x + (bdx/len)*spd));
-                p.y = Math.max(20, Math.min(BR_H-20, p.y + (bdy/len)*spd));
+            if(br._rollCD > 0) br._rollCD--;
+            // Pet füttern auch im Boss-Raum
+            if(input.keys['KeyC']) {
+                if(typeof feedPet === 'function' && activePet && petData.active) feedPet();
+                input.keys['KeyC'] = false;
+            }
+            if((input.keys['ShiftLeft']||input.rightClick) && br._rollCD <= 0 && player.sapDebuffTimer <= 0) {
+                br._rollDx = Math.cos(aimAngle) * 16; 
+                br._rollDy = Math.sin(aimAngle) * 16;
+                br._rollTimer = 15; 
+                br._rollCD = hasTrophy('perfect_dodge') ? 90 : 120;
+                if(player) player.rollTimer = 15;
+                input.rightClick = false;
+                playSound('delivery');
+            } else {
+                let bdx = 0, bdy = 0;
+                if(input.keys['KeyW']||input.keys['ArrowUp'])    bdy -= spd;
+                if(input.keys['KeyS']||input.keys['ArrowDown'])  bdy += spd;
+                if(input.keys['KeyA']||input.keys['ArrowLeft'])  bdx -= spd;
+                if(input.keys['KeyD']||input.keys['ArrowRight']) bdx += spd;
+                
+                if(bdx !== 0 || bdy !== 0) {
+                    let len = Math.hypot(bdx, bdy);
+                    p.x = Math.max(20, Math.min(BR_W-20, p.x + (bdx/len)*spd));
+                    p.y = Math.max(20, Math.min(BR_H-20, p.y + (bdy/len)*spd));
+                }
             }
         }
-    }
 
-    if(input.mouseDown && player) {
+        if(input.mouseDown && player) {
         let wepKeys = Object.keys(player.activeWeapons||{});
         let baseDmg = 10 + (player.dmgBonus||0);
         let baseFireRate = player.fireRate || 20;
@@ -8484,17 +8504,20 @@ function loop(){
                         v.hitPlayed = true;
                         if(isWegflexenMode) { player.hp = 0; }
                         else {
-                            let dmg = v.type === 'truck' ? 30 : 20;
+                            // Brutaler Prozent-Schaden + Stun
+                            let dmg = v.type === 'truck' ? (player.maxHp * 0.90) : (player.maxHp * 0.50);
                             player.hp -= dmg;
-                            player.orangeHp += dmg; player.orangeTimer = 120;
-                            // 1-Sekunde Speed-Buff als Adrenalin
-                            player.speedBoostTimer = 60;
+                            player.orangeHp += dmg; 
+                            player.orangeTimer = 120;
+                            // 3 Sekunden Stun (180 Frames)
+                            player.stunned = 180;
+                            player.speedBoostTimer = 0; // Kein Adrenalin, du liegst am Boden!
                         }
-                        screenShake = v.type === 'truck' ? 25 : 15;
-                        spawnParticles(player.x, player.y, '#e67e22', 20);
+                        screenShake = v.type === 'truck' ? 40 : 25;
+                        spawnParticles(player.x, player.y, '#e67e22', 30);
                         playSound('hammer');
                         showToast(v.type === 'truck' ? "🚚 ÜBERFAHREN!" : "🚜 ANGEFAHREN!", "#e67e22",
-                                  "Schaden! +1s Speed-Boost");
+                                  v.type === 'truck' ? "-90% HP & 3s STUN!" : "-50% HP & 3s STUN!");
                     }
                 } else { v.hitPlayed = false; }
             }
