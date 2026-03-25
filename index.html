@@ -4315,70 +4315,47 @@ async function loadCloudProfile() {
 // ============================================================
 // BOSS ROOM — PETER BAYER BÜRO
 // ============================================================
-const BR_W = 900, BR_H = 620; // Arena-Größe
-const BR_PHASE_THRESHOLDS = [0.60, 0.30]; // Phase 2 bei 60%, Phase 3 bei 30%
+const BR_W = 900, BR_H = 620; 
+const BR_PHASE_THRESHOLDS = [0.60, 0.30]; 
 
 function enterBossRoom() {
     if(gamePhase !== 'normal') return;
     gamePhase = 'transitioning_in';
     fadeAlpha = 0; fadeDir = 1;
-    // Eingabe-Reset damit Spieler nicht gleich schießt
     input.mouseDown = false; input.rightClick = false; input.keys = {};
     playSound('boss');
-    // Schwierigkeit: Basis von lastChosenDifficulty
+    
     const diffHpScale  = { 1:0.6,  3:1.0,  6:1.5,  9:2.2 };
     const diffSpdScale = { 1:0.7,  3:1.0,  6:1.3,  9:1.6 };
     let diffHp  = diffHpScale[lastChosenDifficulty]  || 1.0;
     let diffSpd = diffSpdScale[lastChosenDifficulty] || 1.0;
     if(isWegflexenMode) { diffHp = 2.8; diffSpd = 1.8; }
-    // Trophäen-Boni für Spieler (Skilltree-Nerf für Bayer)
+    
     let hpMult  = diffHp  * (player && player._bossHpRed  ? Math.max(0.3, 1.0 - player._bossHpRed)  : 1.0);
     let spdMult = diffSpd * (player && player._bayerNerf   ? Math.max(0.5, 1.0 - player._bayerNerf)  : 1.0);
-    // Prestige macht Bayer stärker
     if(prestigeLevel > 0) { hpMult *= (1 + prestigeLevel * 0.15); spdMult *= (1 + prestigeLevel * 0.08); }
-    // Spieler-Power skaliert Bayer (je stärker der Spieler, desto stärker Bayer)
-    let powerScore = unlockedSkills.length * 0.5
-        + Object.values(upgradeProgress||{}).reduce((s,v)=>s+(v||0),0) * 1.2
-        + unlockedTrophies.length * 2;
-    let powerBonus = Math.min(2.0, 1.0 + powerScore * 0.006); // max +100% durch Power
+    let powerScore = unlockedSkills.length * 0.5 + Object.values(upgradeProgress||{}).reduce((s,v)=>s+(v||0),0) * 1.2 + unlockedTrophies.length * 2;
+    let powerBonus = Math.min(2.0, 1.0 + powerScore * 0.006); 
     hpMult  *= powerBonus;
     spdMult *= Math.min(1.5, 1.0 + powerScore * 0.003);
+    
     bossRoomState = {
         bayer: {
-            element: 'schatten', // <--- DAS HIER EINFÜGEN
+            element: 'schatten',
             x: BR_W/2, y: 120,
             hp: Math.round(BAYER_STATS.hp * hpMult),
             maxHp: Math.round(BAYER_STATS.hp * hpMult),
             speed: BAYER_STATS.speed * spdMult,
             radius: BAYER_STATS.radius,
-            phase: 1,         // 1, 2, 3
-            dx: 2, dy: 1,     // Bewegungsrichtung
-            attackTimer: 0,
-            stampTimer: 0,
-            stampCharge: 0,   // Stampf-Vorwarnung
-            stampX: 0, stampY: 0,
-            laserAngle: 0,
-            laserActive: false,
-            laserTimer: 0,
-            spawnTimer: 0,
-            miniEnemies: [],
-            speechTimer: 0,
-            speech: '',
-            flashTimer: 0,
-            enrageTimer: 0,
+            phase: 1,
+            dx: 2, dy: 1,
+            attackTimer: 0, stampTimer: 0, stampCharge: 0, stampX: 0, stampY: 0,
+            laserAngle: 0, laserActive: false, laserTimer: 0, spawnTimer: 0,
+            miniEnemies: [], speechTimer: 0, speech: '', flashTimer: 0, enrageTimer: 0,
         },
         player: { x: BR_W/2, y: BR_H - 80 },
-        _rollCD: 0,         // <--- HIER EINFÜGEN
-        _rollTimer: 0,      // <--- HIER EINFÜGEN
-        _rollDx: 0,         // <--- HIER EINFÜGEN
-        _rollDy: 0,         // <--- HIER EINFÜGEN
-        bullets: [],
-        particles: [],
-        phase: 1,
-        phaseChangeFlash: 0,
-        result: null, // 'win' | 'lose'
-        frame: 0,
-        floorCracks: [],
+        _rollCD: 0, _rollTimer: 0, _rollDx: 0, _rollDy: 0,
+        bullets: [], particles: [], phase: 1, phaseChangeFlash: 0, result: null, frame: 0, floorCracks: [],
         speeches: [
             ["SIE SIND GEFEUERT!", "TICKET FOKUSSIERT!", "WAS IST DAS?!", "ICH WILL ERGEBNISSE!"],
             ["MEHR TEMPO!", "INAKZEPTABEL!", "HABEN SIE KEINEN RESPEKT?!"],
@@ -4386,20 +4363,13 @@ function enterBossRoom() {
         ],
         startTime: Date.now()
     };
-    // WAFFEN EINFRIEREN: Alle aktiven Waffen/Buffs bleiben für den gesamten Boss-Kampf
-    //if(player) {
-    //    for(let w in player.activeWeapons) {
-    //        if(player.activeWeapons[w] > 0 && w !== 'railgun') {
-    //            player.activeWeapons[w] = Infinity;
-    //        }
-    //    }
-    //    if(player.mouseTimer > 0) player.mouseTimer = Infinity;
-    //}
+    
+    // WAFFEN BLEIBEN NORMAL AKTIV (Laufen in Sekunden weiter ab, außer Favorit)
     let _wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫'};
     let _carried = [];
     if(player) {
         let wk = Object.keys(player.activeWeapons||{});
-        for(let w of (unlockedWeapons||[])) { if(!wk.includes(w)) wk.push(w); }
+        if(player.mouseTimer > 0) wk.push('mouse');
         if(wk.length > 0) _carried.push(wk.map(w => _wepIcons[w]||w.toUpperCase()).join(' '));
     }
     let _sub = _carried.length > 0 ? ('ARSENAL: ' + _carried.join(' ')) : 'Standard-Bewaffnung';
@@ -4422,7 +4392,7 @@ function updateBossRoom() {
         br.phaseChangeFlash = 60;
         b.speech = ['', 'JETZT WIRD ES ERNST!', 'IHR HABT MICH WÜTEND GEMACHT!!!'][newPhase-1];
         b.speechTimer = 180;
-        b.speed *= 1.4; // Noch schneller in neuen Phasen
+        b.speed *= 1.4; 
         screenShake = 60;
         playSound('alarm');
     }
@@ -4448,7 +4418,6 @@ function updateBossRoom() {
     }
     // -------------------------------------------------------
 
-    // Maus-Position für die Richtung der Schüsse UND der Hechtrolle berechnen
     let scale_br = Math.min(canvas.width / BR_W, canvas.height / BR_H, 1.0);
     let ox_br = (canvas.width - Math.floor(BR_W * scale_br)) / 2;
     let oy_br = (canvas.height - Math.floor(BR_H * scale_br)) / 2;
@@ -4456,11 +4425,9 @@ function updateBossRoom() {
     let mouseArenaY = (input.y - oy_br) / scale_br;
     let aimAngle = Math.atan2(mouseArenaY - p.y, mouseArenaX - p.x);
 
-    // EINGABEN SPERREN, WENN GESTUNNT (Z.B. DURCH STAMPFER)
     if(player && player.stunned > 0) {
-        // Gestunnt - keine Bewegung, keine Rolle, keine Schüsse möglich
+        // Gestunnt - keine Bewegung möglich
     } else {
-        // FIX: Hechtrolle nutzt jetzt wieder die Maus-Richtung wie im Hauptspiel
         if(br._rollTimer > 0) {
             br._rollTimer--;
             p.x = Math.max(20, Math.min(BR_W-20, p.x + br._rollDx));
@@ -4468,7 +4435,6 @@ function updateBossRoom() {
             if(player) player.rollTimer = br._rollTimer;
         } else {
             if(br._rollCD > 0) br._rollCD--;
-            // Pet füttern auch im Boss-Raum
             if(input.keys['KeyC']) {
                 if(typeof feedPet === 'function' && activePet && petData.active) feedPet();
                 input.keys['KeyC'] = false;
@@ -4501,7 +4467,6 @@ function updateBossRoom() {
             let baseDmg = 10 + (player.dmgBonus||0);
             let baseFireRate = player.fireRate || 20;
             
-            // Standard Waffe
             let stdFR = Math.max(2, baseFireRate - Math.ceil(baseFireRate * 0.15 * getUpgradeLevel('fire_rate')));
             if(br.frame - (player.lastShot['standard']||0) > stdFR) {
                 playSound('shoot'); 
@@ -4510,7 +4475,6 @@ function updateBossRoom() {
                 player.lastShot['standard'] = br.frame;
             }
             
-            // Extra Waffen (Arsenal)
             for(let w of wepKeys) {
                 let frBase = {minigun:4,uzi:7,ak47:6,shotgun:40,rocket:60,railgun:50,flamer:3}[w]||20;
                 let fr = Math.max(2, frBase - Math.ceil(frBase * 0.15 * getUpgradeLevel('fire_rate')));
@@ -4523,12 +4487,11 @@ function updateBossRoom() {
                     else if(w==='flamer') { for(let i=0;i<3;i++) br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.3)*11,dy:Math.sin(a+(Math.random()-.5)*0.3)*11,dmg:baseDmg*0.4,life:45,type:'flame',color:'#ff6600',size:6,element:'feuer'}); if(br.frame%5===0) playSound('shoot'); }
                     else if(w==='uzi')    { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.1)*17,dy:Math.sin(a+(Math.random()-.5)*0.1)*17,dmg:baseDmg*0.7,life:70,type:'standard',color:'#aaffaa',size:3,element:'neutral'}); playSound('shoot'); }
                     else if(w==='ak47')   { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.05)*18,dy:Math.sin(a+(Math.random()-.5)*0.05)*18,dmg:baseDmg*0.9,life:75,type:'standard',color:'#ffdd44',size:4,element:'neutral'}); playSound('shoot'); }
-                    
                     player.lastShot[w] = br.frame;
                 }
             }
         }
-    } // <--- HIER IST DIE SCHLIESSENDE KLAMMER, DIE VORHER GEFEHLT HAT!
+    }
 
     if(player && player.mouseTimer > 0) {
         let orbitR_br = 120;
@@ -4597,22 +4560,21 @@ function updateBossRoom() {
     if(b.y < margin)       { b.y = margin;        b.dy = Math.abs(b.dy); }
     if(b.y > BR_H*0.65)    { b.y = BR_H*0.65;    b.dy = -Math.abs(b.dy); }
 
-    // BOSS BUFF: Stampfer ist viel tödlicher und warnt viel kürzer vor
     b.stampTimer++;
     let stampInterval = b.phase === 3 ? 90 : (b.phase === 2 ? 140 : 200); 
     if(b.stampTimer >= stampInterval) {
         b.stampTimer = 0; 
-        b.stampCharge = Math.max(25, 60 - lastChosenDifficulty * 4); // Vorwarnzeit sinkt drastisch auf Burnout/Survival
+        b.stampCharge = Math.max(25, 60 - lastChosenDifficulty * 4); 
         b.stampX = p.x; 
         b.stampY = p.y;
     }
     if(b.stampCharge > 0) {
         b.stampCharge--;
         if(b.stampCharge === 0) {
-            let dmg = (b.phase === 3 ? 60 : (b.phase === 2 ? 40 : 25)) * diffMult; // Brutaler Basis-Schaden
+            let dmg = (b.phase === 3 ? 60 : (b.phase === 2 ? 40 : 25)) * diffMult; 
             if(isWegflexenMode) dmg = 1000;
             if(player && player._bossDmgRed) dmg *= (1 - player._bossDmgRed);
-            let r = b.phase === 3 ? 240 : (b.phase === 2 ? 180 : 140); // Massive Reichweite
+            let r = b.phase === 3 ? 240 : (b.phase === 2 ? 180 : 140); 
             if(Math.hypot(p.x - b.stampX, p.y - b.stampY) < r) {
                 if(br._rollTimer > 0) {
                     unlockTrophy('perfect_dodge');
@@ -4627,13 +4589,14 @@ function updateBossRoom() {
                     player.orangeHp = (player.orangeHp||0) + dmg;
                     player.orangeTimer = 120;
                     screenShake = 30;
+                    player.stunned = 45;
                     floatingTexts.push(new FloatingText(p.x, p.y - 30, '-' + Math.ceil(dmg) + ' HP', '#ff4444'));
                     playSound('hit');
                 }
             }
             spawnBRParticles(b.stampX, b.stampY, '#c0392b', 30);
             br.floorCracks.push({ x: b.stampX, y: b.stampY, r: r, alpha: 1.0, life: 180 });
-            playSound('hammer'); // Knall beim Einschlag
+            playSound('hammer'); 
         }
     }
 
@@ -4660,14 +4623,12 @@ function updateBossRoom() {
         }
     }
 
-    // --- ECHTE PRIO 1 TICKETS IN PHASE 3 ---
     if(b.phase === 3) {
         b.spawnTimer++;
         if(b.spawnTimer >= 160) {
             b.spawnTimer = 0;
             let angle = Math.random()*Math.PI*2;
             
-            // Berechnung der korrekten Prio 1 Stats basierend auf aktuellem Fortschritt
             const diffScaling = { 1: { hp: 1.0, spd: 1.0 }, 3: { hp: 1.5, spd: 1.1 }, 6: { hp: 2.5, spd: 1.3 }, 9: { hp: 4.0, spd: 1.5 } };
             let sc = diffScaling[lastChosenDifficulty] || diffScaling[1];
             if(isWegflexenMode) sc = { hp: 5.0, spd: 1.7 };
@@ -4680,7 +4641,7 @@ function updateBossRoom() {
                 element: 'schatten',
                 x: b.x+Math.cos(angle)*100, y: b.y+Math.sin(angle)*100, 
                 hp: p1hp, maxHp: p1hp, 
-                speed: sc.spd * 1.2, // Prio 1 ist im Büro etwas aggressiver
+                speed: sc.spd * 1.2, 
                 radius: 50, 
                 color: '#c0392b',
                 symbol: '☠', 
@@ -4699,12 +4660,11 @@ function updateBossRoom() {
         m.x = Math.max(m.radius, Math.min(BR_W-m.radius, m.x));
         m.y = Math.max(m.radius, Math.min(BR_H-m.radius, m.y));
         
-        // Exakte Hitbox & Schaden von Prio 1
         if(Math.hypot(m.x-p.x, m.y-p.y) < m.radius + player.radius && br._rollTimer <= 0 && player) { 
             let dmg = 2.5 * diffMult;
             if(isWegflexenMode) player.hp = 0; else player.hp -= dmg; 
             playSound('hit'); 
-            m.x -= Math.cos(ma)*20; m.y -= Math.sin(ma)*20; // Knockback nach Treffer
+            m.x -= Math.cos(ma)*20; m.y -= Math.sin(ma)*20; 
         }
     }
 
@@ -4727,7 +4687,6 @@ function updateBossRoom() {
         if(br.floorCracks[i].life <= 0) br.floorCracks.splice(i,1);
     }
 
-    // --- FIX: Rettungs-Check auch im Boss-Room! ---
     if(player && player.hp <= 0) { 
         if(!player.checkUnkuendbar()) { br.result = 'lose'; exitBossRoom(false); }
     }
@@ -4748,12 +4707,10 @@ function exitBossRoom(won) {
     setTimeout(() => {
         if(won) {
             runBossKilled = true;
-            // Speedster Trophäe: Bayer in unter 5 Sekunden besiegt
             if(bossRoomState && bossRoomState.startTime) {
                 let elapsed = (Date.now() - bossRoomState.startTime) / 1000;
                 if(elapsed < 5) unlockTrophy('speedster');
             }
-            // Sieg — Kollaps starten
             systemCollapse = true;
             collapseTimer = 0;
             bueroDoor = null;
@@ -4765,19 +4722,7 @@ function exitBossRoom(won) {
             if(currentDiffLabel === 'BURNOUT' || currentDiffLabel === 'SURVIVAL') unlockTrophy('boss_killer');
             if(isWegflexenMode) unlockTrophy('god_of_leitstand');
             showToast('PETER BAYER BESIEGT!', '#f1c40f', 'SYSTEM-KOLLAPS BEGINNT! ÜBERLEBE!');
-            if(player) { score += 5000; } // Bonus-Score
-            // if(player) { 
-             //   score += 5000; 
-            //    // FIX: Götter-Modus beenden! Alle eingefrorenen Timer auf 5 Sekunden (300 Frames) Puffer setzen.
-            //    if(player.shieldTimer === Infinity) player.shieldTimer = 300;
-            //    if(player.vodkaTimer === Infinity) player.vodkaTimer = 300;
-            //    for(let w in player.activeWeapons) {
-            //        if(player.activeWeapons[w] === Infinity && w !== favoriteWeapon) {
-            //            player.activeWeapons[w] = 300;
-            //        }
-            //    }
-            // } // Bonus-Score
-            // Skill-Buff nach Boss-Kill
+            if(player) { score += 5000; } 
             if(player && hasSkill('bo3b')) { player._bossKillBuff = 1800; }
         } else {
             player.hp = 0;
@@ -4896,7 +4841,6 @@ function drawBossRoom() {
         }
     }
 
-    // Prio-1 Darstellung im Büro (Exakt wie im Hauptspiel)
     for(let m of b.miniEnemies) {
         let drawY = m.y;
         let bw = m.radius*2;
@@ -4918,7 +4862,6 @@ function drawBossRoom() {
     }
     ctx.globalAlpha = 1;
 
-    // PETER BAYER Rendering (Doppelt so groß, ungestaucht)
     ctx.shadowColor = phaseColor; ctx.shadowBlur = 25 + Math.sin(br.frame * 0.1) * 8;
     ctx.strokeStyle = phaseColor; ctx.lineWidth = b.phase === 3 ? 5 : 3;
     ctx.beginPath(); ctx.arc(b.x, b.y, b.radius + 4, 0, Math.PI * 2); ctx.stroke();
@@ -5034,14 +4977,18 @@ function drawBossRoom() {
         ctx.fillRect(-6,-10,12,20); ctx.fillStyle='#f00'; ctx.fillRect(-2,-8,4,4); ctx.restore();
     }
 
+    // --- DRAW ACTIVE WEAPONS BOTTOM LEFT ---
     if(player) {
         let wk = Object.keys(player.activeWeapons||{});
-        for(let w of (unlockedWeapons||[])) { if(!wk.includes(w)) wk.push(w); }
+        if(player.mouseTimer > 0) wk.push('mouse');
         if(wk.length > 0) {
             let wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫'};
-            let txt = wk.map(w => wepIcons[w]||w).join(' ');
-            ctx.font='16px Arial'; ctx.textAlign='left'; ctx.fillStyle='rgba(255,255,255,0.8)';
-            ctx.fillText('🔫 '+txt, 12, BR_H-36);
+            let txt = wk.map(w => wepIcons[w]||w.toUpperCase()).join(' ');
+            ctx.font='bold 16px Courier New'; ctx.textAlign='left'; 
+            ctx.fillStyle='#f1c40f';
+            ctx.shadowColor='#000'; ctx.shadowBlur=4;
+            ctx.fillText('🔫 AKTIV: '+txt, 15, BR_H - 40); 
+            ctx.shadowBlur=0;
         }
     }
 
