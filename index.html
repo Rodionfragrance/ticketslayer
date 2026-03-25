@@ -8783,19 +8783,7 @@ function loop(){
         ctx.setTransform(1,0,0,1,0,0);
         ctx.clearRect(0,0,canvas.width,canvas.height);
         ctx.save();
-        
         if(screenShake>0){ ctx.translate((Math.random()-.5)*screenShake,(Math.random()-.5)*screenShake); screenShake*=.9; if(screenShake<.5)screenShake=0; }
-        
-        // --- VODKA VOLLRAUSCH EFFEKT ---
-        if(player && player.vodkaTimer > 0) {
-            let blurAmount = Math.abs(Math.sin(frame * 0.04)) * 3.5; // Pulsierende Unschärfe (0 bis 3.5px)
-            let swayX = Math.sin(frame * 0.015) * 20; // Schwindel links/rechts
-            let swayY = Math.cos(frame * 0.01) * 15;  // Schwindel hoch/runter
-            ctx.filter = `blur(${blurAmount}px) saturate(1.4)`; // Unschärfe + knalligere Farben
-            ctx.translate(swayX, swayY); // Bild schwankt
-        }
-        // -------------------------------
-
         ctx.translate(-camera.x,-camera.y);
         // ── RIFT MODE: Karten-Hintergrund (vor allem anderen) ──
         if(riftMode) drawRiftBackground();
