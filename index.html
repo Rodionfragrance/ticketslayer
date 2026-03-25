@@ -4428,11 +4428,11 @@ function updateBossRoom() {
     }
     if(br.phaseChangeFlash > 0) br.phaseChangeFlash--;
 
-let spd = player ? player.speed : 5;
+    let spd = player ? player.speed : 5;
     if(player && player.speedBoostTimer > 0) spd += 3;
     if(player && player.sapDebuffTimer > 0)  spd = Math.max(1, spd - 3);
 
-    // --- NEU: WAFFEN- UND BUFF-TIMER UPDATE IM BOSSRAUM ---
+    // --- WAFFEN- UND BUFF-TIMER UPDATE IM BOSSRAUM ---
     if(player) {
         if(player.stunned > 0) player.stunned--;
         
@@ -4497,37 +4497,39 @@ let spd = player ? player.speed : 5;
         }
 
         if(input.mouseDown && player) {
-        let wepKeys = Object.keys(player.activeWeapons||{});
-        let baseDmg = 10 + (player.dmgBonus||0);
-        let baseFireRate = player.fireRate || 20;
-        
-        // Standard Waffe
-        let stdFR = Math.max(2, baseFireRate - Math.ceil(baseFireRate * 0.15 * getUpgradeLevel('fire_rate')));
-        if(br.frame - (player.lastShot['standard']||0) > stdFR) {
-            playSound('shoot'); 
-            br.bullets.push({ x: p.x, y: p.y, dx: Math.cos(aimAngle)*16, dy: Math.sin(aimAngle)*16, dmg: baseDmg, life: 90, type:'standard', color:'#ffeb3b', size:4, element: 'neutral' });
-            player.shotsFired = (player.shotsFired||0) + 1;
-            player.lastShot['standard'] = br.frame;
-        }
-        
-        // Extra Waffen (Arsenal)
-        for(let w of wepKeys) {
-            let frBase = {minigun:4,uzi:7,ak47:6,shotgun:40,rocket:60,railgun:50,flamer:3}[w]||20;
-            let fr = Math.max(2, frBase - Math.ceil(frBase * 0.15 * getUpgradeLevel('fire_rate')));
-            if(br.frame - (player.lastShot[w]||0) > fr) {
-                let a = aimAngle;
-                if(w==='shotgun')    { for(let i=-2;i<=2;i++) br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+i*0.15)*14,dy:Math.sin(a+i*0.15)*14,dmg:baseDmg*1.2,life:60,type:'standard',color:'#ff8800',size:5,element:'neutral'}); playSound('shoot'); }
-                else if(w==='minigun'){ br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.4)*18,dy:Math.sin(a+(Math.random()-.5)*0.4)*18,dmg:baseDmg*0.8,life:75,type:'standard',color:'#ff00ff',size:3,element:'neutral'}); playSound('shoot'); }
-                else if(w==='rocket') { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a)*13,dy:Math.sin(a)*13,dmg:baseDmg*4,life:80,type:'rocket',color:'#ff4444',size:9,element:'feuer'}); playSound('shoot'); }
-                else if(w==='railgun'){ br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a)*35,dy:Math.sin(a)*35,dmg:baseDmg*5,life:60,type:'railgun',color:'#00ffff',size:4,element:'wind'}); playSound('boss'); }
-                else if(w==='flamer') { for(let i=0;i<3;i++) br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.3)*11,dy:Math.sin(a+(Math.random()-.5)*0.3)*11,dmg:baseDmg*0.4,life:45,type:'flame',color:'#ff6600',size:6,element:'feuer'}); if(br.frame%5===0) playSound('shoot'); }
-                else if(w==='uzi')    { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.1)*17,dy:Math.sin(a+(Math.random()-.5)*0.1)*17,dmg:baseDmg*0.7,life:70,type:'standard',color:'#aaffaa',size:3,element:'neutral'}); playSound('shoot'); }
-                else if(w==='ak47')   { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.05)*18,dy:Math.sin(a+(Math.random()-.5)*0.05)*18,dmg:baseDmg*0.9,life:75,type:'standard',color:'#ffdd44',size:4,element:'neutral'}); playSound('shoot'); }
-                
-                player.lastShot[w] = br.frame;
+            let wepKeys = Object.keys(player.activeWeapons||{});
+            let baseDmg = 10 + (player.dmgBonus||0);
+            let baseFireRate = player.fireRate || 20;
+            
+            // Standard Waffe
+            let stdFR = Math.max(2, baseFireRate - Math.ceil(baseFireRate * 0.15 * getUpgradeLevel('fire_rate')));
+            if(br.frame - (player.lastShot['standard']||0) > stdFR) {
+                playSound('shoot'); 
+                br.bullets.push({ x: p.x, y: p.y, dx: Math.cos(aimAngle)*16, dy: Math.sin(aimAngle)*16, dmg: baseDmg, life: 90, type:'standard', color:'#ffeb3b', size:4, element: 'neutral' });
+                player.shotsFired = (player.shotsFired||0) + 1;
+                player.lastShot['standard'] = br.frame;
+            }
+            
+            // Extra Waffen (Arsenal)
+            for(let w of wepKeys) {
+                let frBase = {minigun:4,uzi:7,ak47:6,shotgun:40,rocket:60,railgun:50,flamer:3}[w]||20;
+                let fr = Math.max(2, frBase - Math.ceil(frBase * 0.15 * getUpgradeLevel('fire_rate')));
+                if(br.frame - (player.lastShot[w]||0) > fr) {
+                    let a = aimAngle;
+                    if(w==='shotgun')    { for(let i=-2;i<=2;i++) br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+i*0.15)*14,dy:Math.sin(a+i*0.15)*14,dmg:baseDmg*1.2,life:60,type:'standard',color:'#ff8800',size:5,element:'neutral'}); playSound('shoot'); }
+                    else if(w==='minigun'){ br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.4)*18,dy:Math.sin(a+(Math.random()-.5)*0.4)*18,dmg:baseDmg*0.8,life:75,type:'standard',color:'#ff00ff',size:3,element:'neutral'}); playSound('shoot'); }
+                    else if(w==='rocket') { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a)*13,dy:Math.sin(a)*13,dmg:baseDmg*4,life:80,type:'rocket',color:'#ff4444',size:9,element:'feuer'}); playSound('shoot'); }
+                    else if(w==='railgun'){ br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a)*35,dy:Math.sin(a)*35,dmg:baseDmg*5,life:60,type:'railgun',color:'#00ffff',size:4,element:'wind'}); playSound('boss'); }
+                    else if(w==='flamer') { for(let i=0;i<3;i++) br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.3)*11,dy:Math.sin(a+(Math.random()-.5)*0.3)*11,dmg:baseDmg*0.4,life:45,type:'flame',color:'#ff6600',size:6,element:'feuer'}); if(br.frame%5===0) playSound('shoot'); }
+                    else if(w==='uzi')    { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.1)*17,dy:Math.sin(a+(Math.random()-.5)*0.1)*17,dmg:baseDmg*0.7,life:70,type:'standard',color:'#aaffaa',size:3,element:'neutral'}); playSound('shoot'); }
+                    else if(w==='ak47')   { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.05)*18,dy:Math.sin(a+(Math.random()-.5)*0.05)*18,dmg:baseDmg*0.9,life:75,type:'standard',color:'#ffdd44',size:4,element:'neutral'}); playSound('shoot'); }
+                    
+                    player.lastShot[w] = br.frame;
+                }
             }
         }
-    }
+    } // <--- HIER IST DIE SCHLIESSENDE KLAMMER, DIE VORHER GEFEHLT HAT!
+
     if(player && player.mouseTimer > 0) {
         let orbitR_br = 120;
         let mx = p.x + Math.cos(br.frame*0.12)*orbitR_br;
