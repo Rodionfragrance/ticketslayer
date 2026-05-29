@@ -765,7 +765,7 @@ input[type="text"] {
             <button id="btn-survival"  onclick="startGame(9)" style="background:#111;color:#9b59b6;border:2px solid #9b59b6;padding:12px 18px;font-size:16px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;min-width:130px;transition:0.2s;">Survival</button>
             <button class="btn-flex"   onclick="isWegflexenMode=true; startGame(9)">WEGFLEXEN</button>
             <button class="btn-felix"  onclick="isWegflexenMode=true; startGame(15)">WEIL WEGEN FELIX</button>
-            <button id="btn-rift" onclick="startGame(3,'rift')" style="background:#111;color:#c89b3c;border:2px solid #c89b3c;padding:12px 18px;font-size:16px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;min-width:130px;transition:0.2s;text-shadow:0 0 8px rgba(200,155,60,0.5);box-shadow:0 0 12px rgba(200,155,60,0.2);" onmouseover="this.style.background='#c89b3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#c89b3c'">⚔️ RIFT MODE</button>
+            
         </div>
 
         <!-- MENÜ-GRID 3x2 -->
@@ -773,13 +773,13 @@ input[type="text"] {
             <button onclick="openShop()" style="background:#111;color:#00e5ff;border:2px solid #00e5ff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#00e5ff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#00e5ff'">☕ UPGRADES</button>
             <button onclick="openTrophies()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🏆 TROPHÄEN</button>
             <button onclick="openWaffenkammer()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#e74c3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#e74c3c'">🔫 WAFFEN</button>
-            <button onclick="openCardOverlay()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#e74c3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#e74c3c'">🎴 KARTEN</button>
+            <!-- Karten-Button entfernt -->
             <button onclick="openPvPLobby()" style="background:#111;color:#9b59b6;border:2px solid #9b59b6;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#9b59b6';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#9b59b6'">⚔️ PVP DUELL</button>
            <button onclick="openDailyOverlay()" id="daily-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;">☕ TAGES-BONUS</button>
             <button onclick="openQuestBoard()" style="background:#111;color:#2ecc71;border:2px solid #2ecc71;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#2ecc71';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#2ecc71'">📋 AUFTRÄGE</button>
             <button onclick="openJobOverlay()" id="job-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">⚔️ JOB</button>
-            <button onclick="openPetOverlay()" id="pet-menu-btn" style="background:#111;color:#9b59b6;border:2px solid #9b59b6;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#9b59b6';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#9b59b6'">🐾 PET</button>
-            <button onclick="openRuneOverlay()" style="background:#111;color:#00e5ff;border:2px solid #00e5ff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#00e5ff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#00e5ff'">🔮 RUNEN</button>
+            <!-- Pet-Button entfernt -->
+            <!-- Runen-Button entfernt -->
             <button onclick="showEmail()" style="background:#111;color:#3498db;border:2px solid #3498db;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#3498db';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#3498db'">[I] ANLEITUNG</button>
             <button onclick="openSkillTree()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🌳 SKILLTREE</button>
             <button onclick="openHighscoreMenu()" style="background:#111;color:#fff;border:2px solid #fff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#fff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#fff'">🏆 RANGLISTE</button>
@@ -2174,19 +2174,22 @@ function applyJobEffects(p) {
     if (!currentJob) return;
     let j = JOBS[currentJob];
 
+    // Alle abgeschlossenen + aktueller Job → Perks kumulieren
+    let allJobs = [...(completedJobs||[]), currentJob];
+
     // ── LOGISTIK-LINIE (Swordsman) ──
-    if(['lagermitarbeiter','high_lagermitarbeiter'].includes(currentJob)) {
+    if(allJobs.some(jj=>['lagermitarbeiter','high_lagermitarbeiter'].includes(jj))) {
         p.maxHp = Math.floor(p.maxHp * 1.25);
         p._rollDmg = true;         // Hechtrolle trifft Gegner (10 DMG)
         p._vehicleImmune = true;   // Alle Logistiker: Fahrzeug-Immunität
     }
-    if(['staplerfahrer','schichtleiter'].includes(currentJob)) {
+    if(allJobs.some(jj=>['staplerfahrer','schichtleiter'].includes(jj))) {
         p._vehicleImmune = true;
         p.maxHp = Math.floor(p.maxHp * 1.30);
         p._rollDmg = true; p._rollDmgMult = 1.5; // 15 DMG bei Hechtrolle
         p.dmgBonus += 8;
     }
-    if(['supply_chain_manager','coo'].includes(currentJob)) {
+    if(allJobs.some(jj=>['supply_chain_manager','coo'].includes(jj))) {
         p._vehicleImmune = true;
         p.maxHp = Math.floor(p.maxHp * 1.50);
         p._rollDmg = true; p._rollDmgMult = 2.5; // 25 DMG bei Hechtrolle
@@ -2194,15 +2197,15 @@ function applyJobEffects(p) {
     }
 
     // ── SUPPORT-LINIE (Acolyte) ──
-    if(['sachbearbeiter','high_sachbearbeiter'].includes(currentJob)) {
+    if(allJobs.some(jj=>['sachbearbeiter','high_sachbearbeiter'].includes(jj))) {
         p._suppeHealBonus = (p._suppeHealBonus || 0) + 15;
     }
-    if(['maddin','abteilungsleiter'].includes(currentJob)) {
+    if(allJobs.some(jj=>['maddin','abteilungsleiter'].includes(jj))) {
         p.isMartin = true; p.radius = 28; p.azubiCost = 0; p._maddingMode = true;
         p._suppeHealBonus = (p._suppeHealBonus || 0) + 20;
         p._azubiDmgBonus = 0.05;   // Azubis +5% Schaden
     }
-    if(['it_director','cio'].includes(currentJob)) {
+    if(allJobs.some(jj=>['it_director','cio'].includes(jj))) {
         p.isMartin = true; p.radius = 28; p.azubiCost = 0; p._maddingMode = true;
         p._suppeHealBonus = (p._suppeHealBonus || 0) + 30;
         p._azubiDmgBonus = 0.10;
@@ -2210,16 +2213,16 @@ function applyJobEffects(p) {
     }
 
     // ── TECHNIK-LINIE (Merchant) ──
-    if(['techniker','high_techniker'].includes(currentJob)) {
+    if(allJobs.some(jj=>['techniker','high_techniker'].includes(jj))) {
         p._farmIntervalMult = 0.8;
         p._turretDmgBonus = 0.10; // Turrets +10% DMG
     }
-    if(['entwickler','senior_entwickler'].includes(currentJob)) {
+    if(allJobs.some(jj=>['entwickler','senior_entwickler'].includes(jj))) {
         p._farmIntervalMult = 0.65;
         p._turretDmgBonus = 0.20; // Turrets +20% DMG
         p._turretSpawnDouble = true;
     }
-    if(['lead_architect','cto'].includes(currentJob)) {
+    if(allJobs.some(jj=>['lead_architect','cto'].includes(jj))) {
         p._farmIntervalMult = 0.5;
         p._turretDmgBonus = 0.40; // Turrets +40% DMG
         p._turretSpawnDouble = true;
@@ -2227,37 +2230,37 @@ function applyJobEffects(p) {
     }
 
     // ── EXTENDED (Werkstudent / Super Novice) ──
-    if(['werkstudent','dauerstudent','bachelor'].includes(currentJob)) {
+    if(allJobs.some(jj=>['werkstudent','dauerstudent','bachelor'].includes(jj))) {
         p.speed += 1.0;
         // Alle Stats +5/10/20%
-        let mult = currentJob === 'bachelor' ? 0.20 : (currentJob === 'dauerstudent' ? 0.10 : 0.05);
+        let mult = allJobs.includes('bachelor') ? 0.20 : (allJobs.includes('dauerstudent') ? 0.10 : 0.05);
         p.dmgBonus += (p.dmgBonus + 10) * mult;
         p.maxHp = Math.floor(p.maxHp * (1 + mult));
-        if(currentJob === 'bachelor') { p.speed += 0.5; p.maxHp += 200; }
+        if(allJobs.includes('bachelor')) { p.speed += 0.5; p.maxHp += 200; }
     }
 
     // ── FREELANCER (Ninja) ──
-    if(['freelancer','consultant','senior_consultant'].includes(currentJob)) {
+    if(allJobs.some(jj=>['freelancer','consultant','senior_consultant'].includes(jj))) {
         p._dashCooldownMult = (p._dashCooldownMult || 1) * 0.5;
         p._critChance = (p._critChance || 0) + 0.10;
         p._rollDmg = true; p._rollDmgMult = 2.0; // Hechtrolle = Angriff
-        if(currentJob === 'consultant') p._rollInvisible = true; // 2s unsichtbar nach Roll
-        if(currentJob === 'senior_consultant') { p.dmgBonus += p.dmgBonus * 0.5; p._critChance += 0.10; }
+        if(allJobs.includes('consultant')) p._rollInvisible = true; // 2s unsichtbar nach Roll
+        if(allJobs.includes('senior_consultant')) { p.dmgBonus += p.dmgBonus * 0.5; p._critChance += 0.10; }
     }
 
     // ── NETZWERKTECHNIKER (Gunslinger) ──
-    if(['netzwerktechniker','noc_spezialist','network_architect'].includes(currentJob)) {
+    if(allJobs.some(jj=>['netzwerktechniker','noc_spezialist','network_architect'].includes(jj))) {
         p.dmgBonus = (p.dmgBonus || 0) + 15;
         p._bulletSpeedMult = (p._bulletSpeedMult || 1) + 0.5;
-        if(currentJob === 'noc_spezialist') { p._splashChance = 0.15; }
-        if(currentJob === 'network_architect') { p.hasPierceMod = true; p.dmgBonus += 20; }
+        if(allJobs.includes('noc_spezialist')) { p._splashChance = 0.15; }
+        if(allJobs.includes('network_architect')) { p.hasPierceMod = true; p.dmgBonus += 20; }
     }
 
     // ── DUALER STUDENT (Doram) ──
-    if(['dualer_student','absolvent'].includes(currentJob)) {
+    if(allJobs.some(jj=>['dualer_student','absolvent'].includes(jj))) {
         p._expMult = (p._expMult || 1) * 1.2;
-        if(currentJob === 'dualer_student') { p.azubiCost = Math.max(1000, p.azubiCost - 2000); }
-        if(currentJob === 'absolvent') { p._expMult = (p._expMult || 1) * 1.4; p._luckMult = (p._luckMult||1) * 2; }
+        if(allJobs.includes('dualer_student')) { p.azubiCost = Math.max(1000, p.azubiCost - 2000); }
+        if(allJobs.includes('absolvent')) { p._expMult = (p._expMult || 1) * 1.4; p._luckMult = (p._luckMult||1) * 2; }
     }
 }
 
@@ -3699,10 +3702,10 @@ function setFavorite(id) {
 // ============================================================
 // REFINEMENT SYSTEM — WAFFEN-SCHMIEDE (RO-STYLE)
 // ============================================================
-const REFINE_CHANCES = { 1:100, 2:100, 3:100, 4:100, 5:60, 6:50, 7:40, 8:30, 9:20, 10:15, 11:10, 12:8 };
+const REFINE_CHANCES = { 1:100, 2:100, 3:100, 4:100, 5:100, 6:100, 7:100, 8:100, 9:100, 10:100, 11:100, 12:100 }; // Kein Fehlschlag
 const REFINE_MAX = 12;
 // BUG FIX: Suppen-Kosten aus Waffen-Upgrade entfernt — nur noch Wurmcoins
-const REFINE_COSTS = { 1:[100,0], 2:[100,0], 3:[100,0], 4:[100,0], 5:[200,0], 6:[300,0], 7:[400,0], 8:[500,0], 9:[800,0], 10:[1000,0], 11:[1500,0], 12:[2000,0] };
+const REFINE_COSTS = { 1:[100,0], 2:[100,0], 3:[150,0], 4:[200,0], 5:[220,0], 6:[242,0], 7:[266,0], 8:[293,0], 9:[322,0], 10:[354,0], 11:[389,0], 12:[428,0] };
 
 let refineData = JSON.parse(lsGet('ts_refine', '{}'));
 let refinePity = JSON.parse(lsGet('ts_refine_pity', '{}'));
@@ -3762,7 +3765,7 @@ function renderSchmiede() {
         let currentSuppeVal = gameRunning && player ? player.suppe : parseInt(lsGet('ts_suppen_persistent', '0'));
         let canAffordSupp = currentSuppeVal >= suppCost;
         
-        let probColor = chance >= 70 ? '#2ecc71' : (chance >= 40 ? '#f39c12' : '#c0392b');
+        let probColor = '#2ecc71'; // Immer 100%
         let refBadge = curRef > 0 ? '<span class="refine-level-badge">+' + curRef + '</span>' : '–';
 
         html2 += `<div class="refine-weapon-card ${favoriteWeapon === wid ? 'selected' : ''}">
@@ -3772,8 +3775,8 @@ function renderSchmiede() {
             </div>`;
         
         if(!atMax) {
-            html2 += `<div style="font-size:11px;color:#888;">Ziel: +${targetRef} | Chance: <span style="color:${probColor}">${Math.floor(chance)}%</span> | Kosten: ${wcCost} 🪙 ${suppCost>0?'+ '+suppCost+' 🥣':''}</div>
-                <div class="refine-prob-bar-outer"><div class="refine-prob-bar-inner" style="width:${chance}%;background:${probColor};"></div></div>
+            html2 += `
+                </div>
                 <button class="refine-anvil-btn" onclick="doRefine('${wid}')" ${(!canAffordWC || !canAffordSupp)?'disabled':''}>🔨 AUFWERTEN</button>`;
         } else {
             html2 += '<div style="color:#f1c40f;text-align:center;font-weight:bold;">MAXIMALSTUFE ERREICHT</div>';
@@ -3786,53 +3789,27 @@ function renderSchmiede() {
 function doRefine(weaponId) {
     let curRef = getRefineLevel(weaponId); if(curRef >= REFINE_MAX) return;
     let targetRef = curRef + 1;
-    let [wcCost, suppCost] = REFINE_COSTS[targetRef] || [99,9];
+    let [wcCost] = REFINE_COSTS[targetRef] || [99,0];
+    // Trophäen-Rabatt
     if(hasTrophy('refine_max')) wcCost = Math.max(1, Math.floor(wcCost * 0.8));
-    
-    if(wurmcoins < wcCost) { showToast('ZU WENIG WURMCOINS!', '#e74c3c'); return; }
-    
+    // Ab +5: +10% Kosten pro Stufe bereits in REFINE_COSTS eingebaut
+    if(wurmcoins < wcCost) { showToast('ZU WENIG WURMCOINS!', '#e74c3c', wcCost + ' WC benötigt'); return; }
+
     wurmcoins -= wcCost;
     lsSet('ts_wurmcoins', wurmcoins);
-    // Suppen-Logik bleibt gleich
-    if(suppCost > 0) { 
-        if(gameRunning && player) player.suppe -= suppCost; 
-        else { let s = parseInt(lsGet('ts_suppen_persistent', '0')); lsSet('ts_suppen_persistent', Math.max(0, s-suppCost)); }
-    }
-    
-    let roll = Math.random() * 100;
-    let chance = getRefineChance(weaponId, targetRef);
-    
-    if(roll < chance) {
-        refineData[weaponId] = targetRef;
-        delete refinePity[weaponId + '_' + targetRef];
-        showToast('🔨 ERFOLG! +' + targetRef, '#2ecc71');
-        playSound('evolve');
-    } else {
-        refineData[weaponId] = 0; // Zurück auf 0 bei Fail
-        refinePity[weaponId + '_' + targetRef] = (refinePity[weaponId + '_' + targetRef] || 0) + 1;
-        showToast('💥 FEHLSCHLAG! +0', '#c0392b');
-        playSound('hit');
-    }
-    
+
+    // Immer Erfolg — kein Fehlschlag mehr
+    refineData[weaponId] = targetRef;
+    delete refinePity[weaponId + '_' + targetRef];
     saveRefineData();
     saveProgress();
+    let wpn = WEAPON_SHOP.find(w => w.id === weaponId);
+    let badge = ['+1','⚡+2','✨+3','💫+4','🔥+5','🔥+6','💥+7','💥+8','⚡⚡+9','🌟+10','🌟+11','👑+12'][targetRef-1] || '+'+targetRef;
+    showToast('✅ UPGRADE ERFOLGREICH!', '#2ecc71', (wpn?wpn.name:'Waffe') + ' → ' + badge);
     renderSchmiede();
+    if(gameRunning && player) applyJobEffects(player);
 }
 
-
-// ============================================================
-// PET SYSTEM — AZUBI-HAMSTER (RO-Style)
-// ============================================================
-const PET_STAGES = [
-    { name:'Fremd',      minIntimacy:0,   color:'#e74c3c', emoji:'😶', buff:null },
-    { name:'Schüchtern', minIntimacy:100, color:'#e67e22', emoji:'😳', buff:null },
-    { name:'Neutral',    minIntimacy:250, color:'#f1c40f', emoji:'😐', buff:null },
-    { name:'Vertraut',   minIntimacy:500, color:'#2ecc71', emoji:'😊', buff:'speed+5%' },
-    { name:'Loyal',      minIntimacy:750, color:'#9b59b6', emoji:'🥰', buff:'speed+5%+attack' }
-];
-const PET_MAX_INTIMACY = 1000;
-
-let petData = JSON.parse(lsGet('ts_pet', null) || JSON.stringify({ active:false, name:'Hamster', intimacy:250, hunger:0, lastFed:Date.now() }));
 function savePetData() { lsSet('ts_pet', JSON.stringify(petData)); }
 function getPetStage() { let stage = PET_STAGES[0]; for(let s of PET_STAGES) { if(petData.intimacy >= s.minIntimacy) stage = s; } return stage; }
 let activePet = null;
