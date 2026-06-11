@@ -1455,7 +1455,7 @@ const QUESTS = [
     { id: 'q5', name: 'Boss-Slayer', desc: 'Besiege Peter Bayer.', target: 1, type: 'boss', exp: 5000, kb: 1000 }
 ];
 
-let activeQuest = lsGet('ts_active_quest', null);
+let activeQuest = lsGet('ts_active_quest', null) || null; // Fix: '' aus localStorage → null
 let completedQuests = JSON.parse(lsGet('ts_completed_quests', '[]'));
 
 function openQuestBoard() {
@@ -1481,7 +1481,7 @@ function openQuestBoard() {
             btnHtml = `<button onclick="toggleQuest('${q.id}')" style="background:#c0392b;color:#fff;border:none;padding:6px 12px;font-weight:bold;cursor:pointer;">ABBRECHEN</button>`;
         } else {
             // BUG FIX: Kein pointer-events:none mehr — alle nicht-erledigten Quests annehmbar
-            let canTake = activeQuest === null;
+            let canTake = !activeQuest; // Fix: null, '' und undefined erlauben Annahme
             btnHtml = `<button onclick="${canTake?`toggleQuest('${q.id}')`:'void(0)'}" style="background:${canTake?'#2ecc71':'#333'};color:${canTake?'#000':'#666'};border:none;padding:6px 12px;font-weight:bold;cursor:${canTake?'pointer':'not-allowed'};" title="${canTake?'Auftrag annehmen':'Erst aktiven Auftrag abschließen oder abbrechen'}">ANNEHMEN</button>`;
         }
 
@@ -1508,7 +1508,7 @@ function toggleQuest(id) {
         activeQuest = id; // Annehmen
         showToast("AUFTRAG ANGENOMMEN!", "#f1c40f", QUESTS.find(q=>q.id===id).name);
     }
-    lsSet('ts_active_quest', activeQuest || '');
+    if(activeQuest) { lsSet('ts_active_quest', activeQuest); } else { lsRemove('ts_active_quest'); }
     openQuestBoard(); // Reload UI
 }   
 
@@ -1550,6 +1550,20 @@ function getTodayStr() {
     let d = new Date();
     return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
 }
+// Robust: Tag als Zahl (Tage seit Epoch, lokale Zeitzone)
+function getDayNumber(dateStrOrNow) {
+    let d;
+    if (dateStrOrNow) {
+        // Beide Formate parsen: "2026-3-18" und "2026-03-18"
+        let parts = String(dateStrOrNow).split('-').map(Number);
+        if (parts.length === 3 && !parts.some(isNaN)) {
+            d = new Date(parts[0], parts[1]-1, parts[2]);
+        } else { return -999; } // Unbekanntes Format → als "nie" behandeln
+    } else {
+        d = new Date();
+    }
+    return Math.floor((d.getTime() - d.getTimezoneOffset()*60000) / 86400000);
+}
 
 function getTodayChallenge() {
     // Deterministisch: gleicher Tag = gleiche Challenge für alle
@@ -1572,10 +1586,11 @@ function openDailyOverlay() {
     let lastDay = state.lastLogin || '';
     let alreadyClaimed = state.lastLogin === today;
 
-    // Streak berechnen
-    let yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-    let yStr = yesterday.getFullYear() + '-' + (yesterday.getMonth()+1) + '-' + yesterday.getDate();
-    if(lastDay !== today && lastDay !== yStr) streak = 0; // Streak gerissen
+    // Streak berechnen — robust über Tageszahlen (Format-unabhängig)
+    let todayNum = getDayNumber();
+    let lastNum = lastDay ? getDayNumber(lastDay) : -999;
+    let dayDiff = todayNum - lastNum;
+    if(dayDiff > 1) streak = 0; // Mehr als 1 Tag Lücke → Streak gerissen
 
     let newStreak = alreadyClaimed ? streak : Math.min(streak + 1, 7);
 
@@ -1646,10 +1661,11 @@ function claimDailyReward() {
     let today = getTodayStr();
     if(state.lastLogin === today) return;
 
-    let yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-    let yStr = yesterday.getFullYear() + '-' + (yesterday.getMonth()+1) + '-' + yesterday.getDate();
+    let todayNum = getDayNumber();
+    let lastNum = state.lastLogin ? getDayNumber(state.lastLogin) : -999;
+    let dayDiff = todayNum - lastNum;
     let streak = state.streak || 0;
-    if(state.lastLogin !== yStr) streak = 0;
+    if(dayDiff > 1) streak = 0; // Lücke → reset; dayDiff===1 → Streak läuft weiter
     streak = Math.min(streak + 1, 7);
 
     let baseReward = 50;
@@ -3754,32 +3770,33 @@ function renderSchmiede() {
         let curRef = getRefineLevel(wid);
         let targetRef = curRef + 1;
         let atMax = curRef >= REFINE_MAX;
-        let chance = atMax ? 0 : getRefineChance(wid, targetRef);
-        let costs = atMax ? [0,0] : (REFINE_COSTS[targetRef] || [99,9]);
-        let wcCost = costs[0], suppCost = costs[1];
-        
+        let costs = atMax ? [0,0] : (REFINE_COSTS[targetRef] || [99,0]);
+        let wcCost = costs[0];
+
         // Trophäen-Rabatt
         if(!atMax && hasTrophy('refine_max')) wcCost = Math.max(1, Math.floor(wcCost * 0.8));
-        
-        let canAffordWC = wurmcoins >= wcCost;
-        let currentSuppeVal = gameRunning && player ? player.suppe : parseInt(lsGet('ts_suppen_persistent', '0'));
-        let canAffordSupp = currentSuppeVal >= suppCost;
-        
-        let probColor = '#2ecc71'; // Immer 100%
-        let refBadge = curRef > 0 ? '<span class="refine-level-badge">+' + curRef + '</span>' : '–';
 
-        html2 += `<div class="refine-weapon-card ${favoriteWeapon === wid ? 'selected' : ''}">
-            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                <span style="font-weight:bold;color:#fff;">${w.icon} ${w.name}</span>
-                <span>${refBadge} <span style="color:#f1c40f;">+${curRef*10}% DMG</span></span>
+        let canAffordWC = wurmcoins >= wcCost;
+        let refBadge = curRef > 0 ? '<span class="refine-level-badge">+' + curRef + '</span>' : '<span style="color:#555;">+0</span>';
+
+        // Alles in EINER Karte: Name, Stufe, Kosten, Button
+        html2 += `<div class="refine-weapon-card ${favoriteWeapon === wid ? 'selected' : ''}" style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <span style="font-weight:bold;color:#fff;font-size:15px;">${w.icon} ${w.name}</span>
+                <span>${refBadge} <span style="color:#f1c40f;font-size:13px;">+${curRef*10}% DMG</span></span>
             </div>`;
-        
+
         if(!atMax) {
             html2 += `
-                </div>
-                <button class="refine-anvil-btn" onclick="doRefine('${wid}')" ${(!canAffordWC || !canAffordSupp)?'disabled':''}>🔨 AUFWERTEN</button>`;
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px 10px;background:rgba(230,126,34,0.07);border:1px solid #3a2a1a;border-radius:3px;">
+                <span style="color:#888;font-size:12px;">Nächste Stufe: <strong style="color:#e67e22;">+${targetRef}</strong> (+${targetRef*10}% DMG)</span>
+                <span style="font-weight:bold;font-size:14px;color:${canAffordWC?'#f1c40f':'#c0392b'};">🪙 ${wcCost} WC</span>
+            </div>
+            <button class="refine-anvil-btn" onclick="doRefine('${wid}')" ${!canAffordWC?'disabled':''}>
+                🔨 AUFWERTEN ${!canAffordWC?'(zu wenig WC)':'→ +'+targetRef}
+            </button>`;
         } else {
-            html2 += '<div style="color:#f1c40f;text-align:center;font-weight:bold;">MAXIMALSTUFE ERREICHT</div>';
+            html2 += '<div style="color:#f1c40f;text-align:center;font-weight:bold;padding:8px;">👑 MAXIMALSTUFE +12 ERREICHT</div>';
         }
         html2 += '</div>';
     });
