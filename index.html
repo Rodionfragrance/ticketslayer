@@ -773,7 +773,7 @@ input[type="text"] {
             <button onclick="openShop()" style="background:#111;color:#00e5ff;border:2px solid #00e5ff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#00e5ff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#00e5ff'">☕ UPGRADES</button>
             <button onclick="openTrophies()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🏆 TROPHÄEN</button>
             <button onclick="openWaffenkammer()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#e74c3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#e74c3c'">🔫 WAFFEN</button>
-            <!-- Karten-Button entfernt -->
+            <button onclick="openCardOverlay()" style="background:#111;color:#9b59b6;border:2px solid #9b59b6;padding:11px 6px;font-size:13px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">🃏 KARTEN (PvP)</button>
             <button onclick="openPvPLobby()" style="background:#111;color:#9b59b6;border:2px solid #9b59b6;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#9b59b6';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#9b59b6'">⚔️ PVP DUELL</button>
            <button onclick="openDailyOverlay()" id="daily-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;">☕ TAGES-BONUS</button>
             <button onclick="openQuestBoard()" style="background:#111;color:#2ecc71;border:2px solid #2ecc71;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#2ecc71';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#2ecc71'">📋 AUFTRÄGE</button>
@@ -2190,97 +2190,119 @@ function applyJobEffects(p) {
     if (!currentJob) return;
     let j = JOBS[currentJob];
 
-    // Alle abgeschlossenen + aktueller Job → Perks kumulieren
+    // Perks kumulieren über Klassen — aber pro Linie zählt nur die HÖCHSTE Stufe
     let allJobs = [...(completedJobs||[]), currentJob];
-
-    // ── LOGISTIK-LINIE (Swordsman) ──
-    if(allJobs.some(jj=>['lagermitarbeiter','high_lagermitarbeiter'].includes(jj))) {
-        p.maxHp = Math.floor(p.maxHp * 1.25);
-        p._rollDmg = true;         // Hechtrolle trifft Gegner (10 DMG)
-        p._vehicleImmune = true;   // Alle Logistiker: Fahrzeug-Immunität
+    function highestTier(tiers) {
+        // tiers: Array von Job-Gruppen, sortiert von niedrig zu hoch
+        for (let i = tiers.length - 1; i >= 0; i--) {
+            if (tiers[i].some(jj => allJobs.includes(jj))) return i;
+        }
+        return -1;
     }
-    if(allJobs.some(jj=>['staplerfahrer','schichtleiter'].includes(jj))) {
+
+    // ── LOGISTIK-LINIE (Swordsman) — nur höchste Stufe ──
+    let logTier = highestTier([
+        ['lagermitarbeiter','high_lagermitarbeiter'],
+        ['staplerfahrer','schichtleiter'],
+        ['supply_chain_manager','coo']
+    ]);
+    if(logTier === 0) {
+        p.maxHp = Math.floor(p.maxHp * 1.25);
+        p._rollDmg = true;
+        p._vehicleImmune = true;
+    } else if(logTier === 1) {
         p._vehicleImmune = true;
         p.maxHp = Math.floor(p.maxHp * 1.30);
-        p._rollDmg = true; p._rollDmgMult = 1.5; // 15 DMG bei Hechtrolle
+        p._rollDmg = true; p._rollDmgMult = 1.5;
         p.dmgBonus += 8;
-    }
-    if(allJobs.some(jj=>['supply_chain_manager','coo'].includes(jj))) {
+    } else if(logTier === 2) {
         p._vehicleImmune = true;
         p.maxHp = Math.floor(p.maxHp * 1.50);
-        p._rollDmg = true; p._rollDmgMult = 2.5; // 25 DMG bei Hechtrolle
+        p._rollDmg = true; p._rollDmgMult = 2.5;
         p.dmgBonus += 20;
     }
 
-    // ── SUPPORT-LINIE (Acolyte) ──
-    if(allJobs.some(jj=>['sachbearbeiter','high_sachbearbeiter'].includes(jj))) {
+    // ── SUPPORT-LINIE (Acolyte) — nur höchste Stufe ──
+    let supTier = highestTier([
+        ['sachbearbeiter','high_sachbearbeiter'],
+        ['maddin','abteilungsleiter'],
+        ['it_director','cio']
+    ]);
+    if(supTier === 0) {
         p._suppeHealBonus = (p._suppeHealBonus || 0) + 15;
-    }
-    if(allJobs.some(jj=>['maddin','abteilungsleiter'].includes(jj))) {
+    } else if(supTier === 1) {
         p.isMartin = true; p.radius = 28; p.azubiCost = 0; p._maddingMode = true;
         p._suppeHealBonus = (p._suppeHealBonus || 0) + 20;
-        p._azubiDmgBonus = 0.05;   // Azubis +5% Schaden
-    }
-    if(allJobs.some(jj=>['it_director','cio'].includes(jj))) {
+        p._azubiDmgBonus = 0.05;
+    } else if(supTier === 2) {
         p.isMartin = true; p.radius = 28; p.azubiCost = 0; p._maddingMode = true;
         p._suppeHealBonus = (p._suppeHealBonus || 0) + 30;
         p._azubiDmgBonus = 0.10;
-        p._dashCooldownMult = (p._dashCooldownMult || 1) * 0.5; // Cooldowns -50%
+        p._dashCooldownMult = (p._dashCooldownMult || 1) * 0.5;
+    }
+    // WICHTIG: Azubis bleiben kostenlos sobald maddin je gespielt wurde
+    if(allJobs.includes('maddin') || allJobs.includes('abteilungsleiter') ||
+       allJobs.includes('it_director') || allJobs.includes('cio')) {
+        p.azubiCost = 0;
     }
 
-    // ── TECHNIK-LINIE (Merchant) ──
-    if(allJobs.some(jj=>['techniker','high_techniker'].includes(jj))) {
+    // ── TECHNIK-LINIE (Merchant) — nur höchste Stufe ──
+    let techTier = highestTier([
+        ['techniker','high_techniker'],
+        ['entwickler','senior_entwickler'],
+        ['lead_architect','cto']
+    ]);
+    if(techTier === 0) {
         p._farmIntervalMult = 0.8;
-        p._turretDmgBonus = 0.10; // Turrets +10% DMG
-    }
-    if(allJobs.some(jj=>['entwickler','senior_entwickler'].includes(jj))) {
+        p._turretDmgBonus = 0.10;
+    } else if(techTier === 1) {
         p._farmIntervalMult = 0.65;
-        p._turretDmgBonus = 0.20; // Turrets +20% DMG
+        p._turretDmgBonus = 0.20;
         p._turretSpawnDouble = true;
-    }
-    if(allJobs.some(jj=>['lead_architect','cto'].includes(jj))) {
+    } else if(techTier === 2) {
         p._farmIntervalMult = 0.5;
-        p._turretDmgBonus = 0.40; // Turrets +40% DMG
+        p._turretDmgBonus = 0.40;
         p._turretSpawnDouble = true;
         p._farmWeaponDrop = true;
     }
 
-    // ── EXTENDED (Werkstudent / Super Novice) ──
-    if(allJobs.some(jj=>['werkstudent','dauerstudent','bachelor'].includes(jj))) {
+    // ── EXTENDED (Werkstudent / Super Novice) — nur höchste Stufe ──
+    let extTier = highestTier([['werkstudent'],['dauerstudent'],['bachelor']]);
+    if(extTier >= 0) {
         p.speed += 1.0;
-        // Alle Stats +5/10/20%
-        let mult = allJobs.includes('bachelor') ? 0.20 : (allJobs.includes('dauerstudent') ? 0.10 : 0.05);
+        let mult = extTier === 2 ? 0.20 : (extTier === 1 ? 0.10 : 0.05);
         p.dmgBonus += (p.dmgBonus + 10) * mult;
         p.maxHp = Math.floor(p.maxHp * (1 + mult));
-        if(allJobs.includes('bachelor')) { p.speed += 0.5; p.maxHp += 200; }
+        if(extTier === 2) { p.speed += 0.5; p.maxHp += 200; }
     }
 
-    // ── FREELANCER (Ninja) ──
-    if(allJobs.some(jj=>['freelancer','consultant','senior_consultant'].includes(jj))) {
+    // ── FREELANCER (Ninja) — nur höchste Stufe ──
+    let freeTier = highestTier([['freelancer'],['consultant'],['senior_consultant']]);
+    if(freeTier >= 0) {
         p._dashCooldownMult = (p._dashCooldownMult || 1) * 0.5;
         p._critChance = (p._critChance || 0) + 0.10;
-        p._rollDmg = true; p._rollDmgMult = 2.0; // Hechtrolle = Angriff
-        if(allJobs.includes('consultant')) p._rollInvisible = true; // 2s unsichtbar nach Roll
-        if(allJobs.includes('senior_consultant')) { p.dmgBonus += p.dmgBonus * 0.5; p._critChance += 0.10; }
+        p._rollDmg = true; p._rollDmgMult = Math.max(p._rollDmgMult||1, 2.0);
+        if(freeTier >= 1) p._rollInvisible = true;
+        if(freeTier >= 2) { p.dmgBonus += p.dmgBonus * 0.5; p._critChance += 0.10; }
     }
 
-    // ── NETZWERKTECHNIKER (Gunslinger) ──
-    if(allJobs.some(jj=>['netzwerktechniker','noc_spezialist','network_architect'].includes(jj))) {
-        p.dmgBonus = (p.dmgBonus || 0) + 15;
-        p._bulletSpeedMult = (p._bulletSpeedMult || 1) + 0.5;
-        if(allJobs.includes('noc_spezialist')) { p._splashChance = 0.15; }
-        if(allJobs.includes('network_architect')) { p.hasPierceMod = true; p.dmgBonus += 20; }
+    // ── NETZWERKTECHNIKER (Gunslinger) — nur höchste Stufe ──
+    let netTier = highestTier([['netzwerktechniker'],['noc_spezialist'],['network_architect']]);
+    if(netTier >= 0) {
+        p._fireRateBonus = (p._fireRateBonus || 0) + 0.15;
+        if(netTier >= 1) p._splashChance = 0.15;
+        if(netTier >= 2) { p.hasPierceMod = true; p.dmgBonus += 20; }
     }
 
-    // ── DUALER STUDENT (Doram) ──
-    if(allJobs.some(jj=>['dualer_student','absolvent'].includes(jj))) {
-        p._expMult = (p._expMult || 1) * 1.2;
-        if(allJobs.includes('dualer_student')) { p.azubiCost = Math.max(1000, p.azubiCost - 2000); }
-        if(allJobs.includes('absolvent')) { p._expMult = (p._expMult || 1) * 1.4; p._luckMult = (p._luckMult||1) * 2; }
+    // ── DUALER STUDENT (Doram) — nur höchste Stufe ──
+    let doramTier = highestTier([['dualer_student'],['absolvent']]);
+    if(doramTier >= 0) {
+        p._luckMult = (p._luckMult || 1) * 1.5;
+        if(allJobs.includes('dualer_student')) p.azubiCost = Math.max(0, (p.azubiCost||5000) - 2000);
+        if(doramTier >= 1) { p._expMult = (p._expMult || 1) * 1.4; p._luckMult = (p._luckMult||1) * 2; }
     }
 }
 
-// ── JOB OVERLAY UI ───────────────────────────────────────────
 function openJobOverlay() {
     renderJobOverlay();
     document.getElementById('jobOverlay').style.display = 'flex';
