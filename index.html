@@ -3751,6 +3751,51 @@ let refinePity = JSON.parse(lsGet('ts_refine_pity', '{}'));
 function getRefineLevel(weaponId) { return refineData[weaponId] || 0; }
 function saveRefineData() { lsSet('ts_refine', JSON.stringify(refineData)); lsSet('ts_refine_pity', JSON.stringify(refinePity)); }
 
+// ============================================================
+// WAFFENTEILE-SYSTEM
+// Teile droppen aus Callskis (📞), Einbau in der Schmiede,
+// wirken NUR auf die Favoriten-Waffe.
+// ============================================================
+const WEAPON_PARTS = [
+    { id:'lauf',    icon:'🔭', name:'Präzisions-Lauf',  desc:'+25% Reichweite der Projektile' },
+    { id:'griff',   icon:'🤝', name:'Ergo-Griff',       desc:'+10% Schaden' },
+    { id:'magazin', icon:'📎', name:'Stabil-Magazin',   desc:'-40% Streuung' },
+    { id:'visier',  icon:'🎯', name:'Laser-Visier',     desc:'Ziellinie zeigt Schussrichtung' },
+    { id:'abzug',   icon:'⚙️', name:'Feder-Abzug',      desc:'+12% Feuerrate' },
+];
+
+// parts-Inventar: { partId: anzahl } — ungebundene Teile
+let partInventory = JSON.parse(lsGet('ts_parts_inv', '{}'));
+// installierte Teile pro Waffe: { weaponId: [partId, ...] }
+let installedParts = JSON.parse(lsGet('ts_parts_installed', '{}'));
+
+function savePartsData() {
+    lsSet('ts_parts_inv', JSON.stringify(partInventory));
+    lsSet('ts_parts_installed', JSON.stringify(installedParts));
+}
+function getInstalledParts(weaponId) { return installedParts[weaponId] || []; }
+function hasPart(weaponId, partId) { return getInstalledParts(weaponId).includes(partId); }
+
+function installPart(weaponId, partId) {
+    if((partInventory[partId]||0) <= 0) { showToast('KEIN TEIL VORHANDEN', '#e74c3c'); return; }
+    if(hasPart(weaponId, partId)) { showToast('BEREITS EINGEBAUT', '#e74c3c'); return; }
+    partInventory[partId]--;
+    if(!installedParts[weaponId]) installedParts[weaponId] = [];
+    installedParts[weaponId].push(partId);
+    savePartsData();
+    saveProgress();
+    let part = WEAPON_PARTS.find(p=>p.id===partId);
+    let wpn = WEAPON_SHOP.find(w=>w.id===weaponId);
+    showToast('🔧 TEIL EINGEBAUT!', '#2ecc71', (part?part.name:'Teil') + ' → ' + (wpn?wpn.name:'Waffe'));
+    playSound('powerup');
+    renderSchmiede();
+}
+
+// Aktive Part-Boni — nur wenn Waffe der Favorit ist
+function getPartBonus(weaponId, partId) {
+    return weaponId === favoriteWeapon && hasPart(weaponId, partId);
+}
+
 function getRefineChance(weaponId, targetLevel) {
     let base = REFINE_CHANCES[targetLevel] || 0;
     if(base >= 100) return 100;
@@ -3822,6 +3867,51 @@ function renderSchmiede() {
         }
         html2 += '</div>';
     });
+
+    // ════════════════════════════════════════════
+    // WAFFENTEILE-SEKTION (nur für Favoriten-Waffe)
+    // ════════════════════════════════════════════
+    html2 += '<div style="border-top:2px solid #00e5ff;margin-top:24px;padding-top:18px;">';
+    html2 += '<div style="color:#00e5ff;font-size:16px;font-weight:bold;letter-spacing:3px;margin-bottom:4px;">📞 WAFFENTEILE</div>';
+    html2 += '<div style="color:#888;font-size:11px;margin-bottom:14px;">Teile findest du in <strong style="color:#00e5ff;">Callskis (📞)</strong> während des Runs — Bosse droppen sie häufiger. Wirken NUR auf deine ⭐ Favoriten-Waffe!</div>';
+
+    if(!favoriteWeapon) {
+        html2 += '<div style="background:#1a1a00;border:1px dashed #f1c40f;padding:14px;border-radius:4px;color:#f1c40f;font-size:12px;text-align:center;">⚠️ Wähle zuerst eine FAVORITEN-WAFFE in der Waffenkammer!</div>';
+    } else {
+        let favW = WEAPON_SHOP.find(w=>w.id===favoriteWeapon);
+        html2 += `<div style="color:#f1c40f;font-size:13px;margin-bottom:12px;">⭐ Favorit: <strong>${favW?favW.icon+' '+favW.name:favoriteWeapon}</strong></div>`;
+
+        WEAPON_PARTS.forEach(part => {
+            let installed = hasPart(favoriteWeapon, part.id);
+            let inStock = partInventory[part.id] || 0;
+            let canInstall = !installed && inStock > 0;
+
+            let borderCol = installed ? '#2ecc71' : (canInstall ? '#00e5ff' : '#333');
+            let bg = installed ? 'rgba(46,204,113,0.06)' : '#0d0d12';
+
+            html2 += `<div style="background:${bg};border:2px solid ${borderCol};border-radius:4px;padding:12px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <div style="color:#fff;font-size:14px;font-weight:bold;">${part.icon} ${part.name} ${installed?'<span style="color:#2ecc71;font-size:11px;">✓ EINGEBAUT</span>':''}</div>
+                    <div style="color:#888;font-size:11px;margin-top:3px;">${part.desc}</div>
+                    <div style="color:${inStock>0?'#00e5ff':'#555'};font-size:11px;margin-top:3px;">📦 Im Lager: ${inStock}</div>
+                </div>
+                <div>
+                    ${installed
+                        ? '<span style="color:#2ecc71;font-size:18px;">✅</span>'
+                        : (canInstall
+                            ? `<button onclick="installPart('${favoriteWeapon}','${part.id}')" style="background:#00e5ff;color:#000;border:none;padding:8px 16px;font-weight:bold;cursor:pointer;font-family:'Courier New',monospace;font-size:12px;border-radius:3px;">🔧 EINBAUEN</button>`
+                            : '<span style="color:#555;font-size:11px;">Kein Teil 📞</span>')}
+                </div>
+            </div>`;
+        });
+
+        // Fortschritts-Anzeige
+        let installedCount = getInstalledParts(favoriteWeapon).length;
+        html2 += `<div style="text-align:center;color:${installedCount===5?'#f1c40f':'#888'};font-size:12px;margin-top:8px;font-weight:bold;">
+            ${installedCount} / 5 Teile eingebaut ${installedCount===5?'— 👑 VOLLAUSGESTATTET!':''}</div>`;
+    }
+    html2 += '</div>';
+
     cont.innerHTML = html2;
 }
 
@@ -4205,6 +4295,7 @@ function saveProgress() {
             runeInv: typeof runeInventory !== 'undefined' ? runeInventory : [],
             runeGrid: typeof runeGrid !== 'undefined' ? runeGrid : [],
             akten: playerAkten, cards: cardInventory,
+            partsInv: partInventory, partsInst: installedParts,
             daily: _daily, bestScore: _best,
             lastSeen: new Date().toISOString()        
         }, {merge:true}).catch(function(){});
@@ -4264,6 +4355,8 @@ async function loadCloudProfile() {
             unlockedSkills   = d.skills    || [];
             // Daily + BestScore aus Firebase wiederherstellen
             if(d.daily)     { lsSet('ts_daily', JSON.stringify(d.daily)); }
+            if(d.partsInv)  { partInventory = d.partsInv; lsSet('ts_parts_inv', JSON.stringify(partInventory)); }
+            if(d.partsInst) { installedParts = d.partsInst; lsSet('ts_parts_installed', JSON.stringify(installedParts)); }
             if(d.bestScore) { lsSet('ts_best_score', d.bestScore); }
             lsSet('ts_skills', JSON.stringify(unlockedSkills));
             lsSet('ts_trophies', JSON.stringify(unlockedTrophies));
@@ -6070,6 +6163,8 @@ class Player{
                 for(let w of wepKeys) {
                     let frBase = {minigun:4,uzi:7,ak47:6,shotgun:40,rocket:60,railgun:50,flamer:3}[w]||20;
                     let fr = Math.max(2, frBase - Math.ceil(frBase * 0.15 * getUpgradeLevel('fire_rate')));
+                    // WAFFENTEIL Abzug: +12% Feuerrate (nur Favorit)
+                    if(w === favoriteWeapon && getPartBonus(w,'abzug')) fr = Math.max(2, Math.floor(fr * 0.88));
                     if(frame - (this.lastShot[w]||0) > fr) { this.shootWeapon(w); this.lastShot[w] = frame; }
                 }
             }
@@ -6104,15 +6199,21 @@ class Player{
         let angle=Math.atan2(input.y-(this.y+offset-camera.y), input.x-(this.x-camera.x));
         if(w==='uzi'&&this.bikeTimer>0&&!input.mouseDown) angle=Math.random()*Math.PI*2;
         let dmg=10+this.dmgBonus;
+        // ── WAFFENTEILE: Griff (+10% DMG) & Magazin (-40% Streuung) nur auf Favorit ──
+        let isFavWeapon = (w === favoriteWeapon);
+        if(isFavWeapon && getPartBonus(w,'griff')) dmg = Math.floor(dmg * 1.10);
+        let spreadMult = (isFavWeapon && getPartBonus(w,'magazin')) ? 0.6 : 1.0;
+        let rangeBoost = (isFavWeapon && getPartBonus(w,'lauf')) ? 1.25 : 1.0;
+        function pushB(x,y,a,t,d){ let b=new Bullet(x,y,a,t,d); if(rangeBoost>1) b.life=Math.floor(b.life*rangeBoost); bullets.push(b); }
         let recoil = 0;
-        if(w==='shotgun')    {for(let i=-2;i<=2;i++) bullets.push(new Bullet(this.x,this.y+offset,angle+i*0.15,'standard',dmg)); playSound('shoot'); recoil=3;}
-        else if(w==='minigun'){bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.4,'standard',dmg)); playSound('shoot');}
-        else if(w==='uzi')   {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.1,'standard',dmg)); playSound('shoot');}
-        else if(w==='ak47')  {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.05,'standard',dmg)); playSound('shoot'); recoil=1;}
-        else if(w==='rocket'){bullets.push(new Bullet(this.x,this.y+offset,angle,'rocket',dmg)); playSound('shoot'); recoil=5;}
-        else if(w==='railgun'){bullets.push(new Bullet(this.x,this.y+offset,angle,'railgun',dmg*5)); playSound('boss'); recoil = 8; screenShake = 8;}
-        else if(w==='flamer'){for(let i=0; i<3; i++) bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.3,'flame',dmg*0.3)); if(frame%5===0) playSound('shoot');}
-        else {bullets.push(new Bullet(this.x,this.y+offset,angle,'standard',dmg)); playSound('shoot');}
+        if(w==='shotgun')    {for(let i=-2;i<=2;i++) pushB(this.x,this.y+offset,angle+i*0.15*spreadMult,'standard',dmg); playSound('shoot'); recoil=3;}
+        else if(w==='minigun'){pushB(this.x,this.y+offset,angle+(Math.random()-.5)*0.4*spreadMult,'standard',dmg); playSound('shoot');}
+        else if(w==='uzi')   {pushB(this.x,this.y+offset,angle+(Math.random()-.5)*0.1*spreadMult,'standard',dmg); playSound('shoot');}
+        else if(w==='ak47')  {pushB(this.x,this.y+offset,angle+(Math.random()-.5)*0.05*spreadMult,'standard',dmg); playSound('shoot'); recoil=1;}
+        else if(w==='rocket'){pushB(this.x,this.y+offset,angle,'rocket',dmg); playSound('shoot'); recoil=5;}
+        else if(w==='railgun'){pushB(this.x,this.y+offset,angle,'railgun',dmg*5); playSound('boss'); recoil = 8; screenShake = 8;}
+        else if(w==='flamer'){for(let i=0; i<3; i++) pushB(this.x,this.y+offset,angle+(Math.random()-.5)*0.3*spreadMult,'flame',dmg*0.3); if(frame%5===0) playSound('shoot');}
+        else {pushB(this.x,this.y+offset,angle,'standard',dmg); playSound('shoot');}
         let oldX = this.x, oldY = this.y;
         this.x -= Math.cos(angle) * recoil;
         this.y -= Math.sin(angle) * recoil;
@@ -6126,6 +6227,29 @@ class Player{
     draw(){
         let facingRight=input.worldX>this.x;
         let rolling = this.rollTimer > 0;
+
+        // ── WAFFENTEIL Laser-Visier: Ziellinie zur Maus (nur Favorit aktiv) ──
+        if(favoriteWeapon && this.activeWeapons[favoriteWeapon] !== undefined && getPartBonus(favoriteWeapon,'visier')) {
+            let offset = this.isMartin ? -20 : -10;
+            let aimAngle = Math.atan2(input.y-(this.y+offset-camera.y), input.x-(this.x-camera.x));
+            let laserLen = 320;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(231,76,60,0.55)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([6,5]);
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y + offset);
+            ctx.lineTo(this.x + Math.cos(aimAngle)*laserLen, this.y + offset + Math.sin(aimAngle)*laserLen);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            // Zielpunkt
+            ctx.fillStyle = 'rgba(231,76,60,0.8)';
+            ctx.beginPath();
+            ctx.arc(this.x + Math.cos(aimAngle)*laserLen, this.y + offset + Math.sin(aimAngle)*laserLen, 3, 0, Math.PI*2);
+            ctx.fill();
+            ctx.restore();
+        }
+
         ctx.save(); ctx.translate(this.x,this.y);
         if(this.bikeTimer>0) ctx.translate(0,Math.sin(frame*.5)*3);
         if(this.bugTimer>0){ ctx.translate((Math.random()-.5)*5,(Math.random()-.5)*5); ctx.filter="hue-rotate("+Math.random()*360+"deg)"; }
@@ -6209,7 +6333,7 @@ class Item{
         
         // --- FIX: Stärkere Kontur für Emojis ---
         ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
-        const icons = {chicken:'🍗',vodka:'🍺',crate:'📦',bug:'💾',hammer:'🔨',vacation:'💤',bike:'🚲',shield:'🛡️',briefcase:'💼',suppe:'🥣',akte:'📁'};
+        const icons = {chicken:'🍗',vodka:'🍺',crate:'📦',bug:'💾',hammer:'🔨',vacation:'💤',bike:'🚲',shield:'🛡️',briefcase:'💼',suppe:'🥣',akte:'📁',callski:'📞'};
         let icon = icons[this.type] || '?';
         ctx.strokeText(icon, 0, 0);
         ctx.fillText(icon, 0, 0);
@@ -8625,10 +8749,13 @@ function loop(){
                 // --- AKTEN DROP SYSTEM ---
                 if(e.type === 99 && (e.label === "PETER BAYER" || e.label === "MEISTER HAND")) {
                     items.push(new Item('akte', e.x, e.y)); // MVP 100%
+                    if(Math.random() < 0.50) items.push(new Item('callski', e.x + 30, e.y)); // MVP: 50% Callski
                 } else if(e.type === 99) {
                     if(Math.random() < 0.10) items.push(new Item('akte', e.x, e.y)); // Boss 10%
+                    if(Math.random() < 0.15) items.push(new Item('callski', e.x + 30, e.y)); // Boss: 15% Callski
                 } else {
                     if(Math.random() < 0.001) items.push(new Item('akte', e.x, e.y)); // Normal 0.1%
+                    if(Math.random() < 0.003) items.push(new Item('callski', e.x, e.y)); // Normal: 0.3% Callski
                 }
 
                 // NEU V20: Combo-System bei jedem Kill
@@ -8723,7 +8850,17 @@ function loop(){
                         playSound('delivery');
                         showToast("AKTE GEFUNDEN! 📁", "#9b59b6", "Öffne sie im Karten-Menü"); 
                         floatingTexts.push(new FloatingText(player.x,player.y,"+1 AKTE","#9b59b6"));
-                        break;  
+                        break;
+                    case 'callski': {
+                        // Zufälliges Waffenteil
+                        let randomPart = WEAPON_PARTS[Math.floor(Math.random() * WEAPON_PARTS.length)];
+                        partInventory[randomPart.id] = (partInventory[randomPart.id] || 0) + 1;
+                        savePartsData();
+                        playSound('delivery');
+                        showToast("CALLSKI! 📞", "#00e5ff", randomPart.icon + " " + randomPart.name + " gefunden!");
+                        floatingTexts.push(new FloatingText(player.x, player.y, "+" + randomPart.icon + " TEIL", "#00e5ff"));
+                        break;
+                    }  
                     case 'chicken': 
                         if(currentDiffLabel === "SURVIVAL" || isWegflexenMode) { showToast("VERDORBEN! 🍗", "#555", "Keine Heilung im Survival!"); }
                         else { player.hp = Math.min(player.maxHp, player.hp + 30); showToast("STÄRKUNG! 🍗","#d35400","+30 Gesundheit"); }
