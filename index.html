@@ -6,6 +6,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <link rel="icon" type="image/png" href="wurml.png">
 <style>
 /* ============================================================
@@ -546,6 +547,8 @@ input[type="text"] {
 
 <!-- CANVAS -->
 <canvas id="game"></canvas>
+<!-- 3D DOOM Canvas — pointer-events:none damit Game-Input durchgeht -->
+<canvas id="game3d" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:6;pointer-events:none;"></canvas>
 
 <!-- EMAIL OVERLAY -->
 <div id="emailOverlay">
@@ -757,6 +760,20 @@ input[type="text"] {
         <!-- KB ANZEIGE -->
         <div style="color:#00e5ff; font-size:14px; margin-bottom:14px;">☕ Kaffeebons: <span id="startKBAmount">0</span></div>
 
+        <!-- 3D DOOM MODE TOGGLE -->
+        <div id="doom3d-toggle-row" style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px;background:rgba(255,80,0,0.07);padding:12px 20px;border:2px solid #333;border-radius:4px;">
+            <div id="doom3d-btn" onclick="toggle3DMode()" style="
+                background:#111;color:#555;border:2px solid #333;
+                padding:10px 24px;font-size:15px;cursor:pointer;font-weight:bold;
+                text-transform:uppercase;font-family:'Courier New',monospace;
+                letter-spacing:2px;transition:0.2s;border-radius:3px;user-select:none;">
+                🎮 3D DOOM-MODUS: AUS
+            </div>
+            <div style="color:#555;font-size:11px;max-width:220px;line-height:1.5;">
+                First-Person Perspektive.<br>Gegner in 3D, du schaust aus Spieler-Sicht.
+            </div>
+        </div>
+
         <!-- SCHWIERIGKEITSGRAD BUTTONS -->
         <div class="btn-group" style="flex-wrap:wrap;">
             <button class="btn-easy"   onclick="startGame(1)">Praktikant</button>
@@ -773,7 +790,7 @@ input[type="text"] {
             <button onclick="openShop()" style="background:#111;color:#00e5ff;border:2px solid #00e5ff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#00e5ff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#00e5ff'">☕ UPGRADES</button>
             <button onclick="openTrophies()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🏆 TROPHÄEN</button>
             <button onclick="openWaffenkammer()" style="background:#111;color:#e74c3c;border:2px solid #e74c3c;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#e74c3c';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#e74c3c'">🔫 WAFFEN</button>
-            <button onclick="openCardOverlay()" style="background:#111;color:#9b59b6;border:2px solid #9b59b6;padding:11px 6px;font-size:13px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">🃏 KARTEN (PvP)</button>
+            <!-- Karten-Button entfernt -->
             <button onclick="openPvPLobby()" style="background:#111;color:#9b59b6;border:2px solid #9b59b6;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#9b59b6';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#9b59b6'">⚔️ PVP DUELL</button>
            <button onclick="openDailyOverlay()" id="daily-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;">☕ TAGES-BONUS</button>
             <button onclick="openQuestBoard()" style="background:#111;color:#2ecc71;border:2px solid #2ecc71;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#2ecc71';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#2ecc71'">📋 AUFTRÄGE</button>
@@ -1455,7 +1472,7 @@ const QUESTS = [
     { id: 'q5', name: 'Boss-Slayer', desc: 'Besiege Peter Bayer.', target: 1, type: 'boss', exp: 5000, kb: 1000 }
 ];
 
-let activeQuest = lsGet('ts_active_quest', null) || null; // Fix: '' aus localStorage → null
+let activeQuest = lsGet('ts_active_quest', null);
 let completedQuests = JSON.parse(lsGet('ts_completed_quests', '[]'));
 
 function openQuestBoard() {
@@ -1481,7 +1498,7 @@ function openQuestBoard() {
             btnHtml = `<button onclick="toggleQuest('${q.id}')" style="background:#c0392b;color:#fff;border:none;padding:6px 12px;font-weight:bold;cursor:pointer;">ABBRECHEN</button>`;
         } else {
             // BUG FIX: Kein pointer-events:none mehr — alle nicht-erledigten Quests annehmbar
-            let canTake = !activeQuest; // Fix: null, '' und undefined erlauben Annahme
+            let canTake = activeQuest === null;
             btnHtml = `<button onclick="${canTake?`toggleQuest('${q.id}')`:'void(0)'}" style="background:${canTake?'#2ecc71':'#333'};color:${canTake?'#000':'#666'};border:none;padding:6px 12px;font-weight:bold;cursor:${canTake?'pointer':'not-allowed'};" title="${canTake?'Auftrag annehmen':'Erst aktiven Auftrag abschließen oder abbrechen'}">ANNEHMEN</button>`;
         }
 
@@ -1508,7 +1525,7 @@ function toggleQuest(id) {
         activeQuest = id; // Annehmen
         showToast("AUFTRAG ANGENOMMEN!", "#f1c40f", QUESTS.find(q=>q.id===id).name);
     }
-    if(activeQuest) { lsSet('ts_active_quest', activeQuest); } else { lsRemove('ts_active_quest'); }
+    lsSet('ts_active_quest', activeQuest || '');
     openQuestBoard(); // Reload UI
 }   
 
@@ -1550,20 +1567,6 @@ function getTodayStr() {
     let d = new Date();
     return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
 }
-// Robust: Tag als Zahl (Tage seit Epoch, lokale Zeitzone)
-function getDayNumber(dateStrOrNow) {
-    let d;
-    if (dateStrOrNow) {
-        // Beide Formate parsen: "2026-3-18" und "2026-03-18"
-        let parts = String(dateStrOrNow).split('-').map(Number);
-        if (parts.length === 3 && !parts.some(isNaN)) {
-            d = new Date(parts[0], parts[1]-1, parts[2]);
-        } else { return -999; } // Unbekanntes Format → als "nie" behandeln
-    } else {
-        d = new Date();
-    }
-    return Math.floor((d.getTime() - d.getTimezoneOffset()*60000) / 86400000);
-}
 
 function getTodayChallenge() {
     // Deterministisch: gleicher Tag = gleiche Challenge für alle
@@ -1586,11 +1589,10 @@ function openDailyOverlay() {
     let lastDay = state.lastLogin || '';
     let alreadyClaimed = state.lastLogin === today;
 
-    // Streak berechnen — robust über Tageszahlen (Format-unabhängig)
-    let todayNum = getDayNumber();
-    let lastNum = lastDay ? getDayNumber(lastDay) : -999;
-    let dayDiff = todayNum - lastNum;
-    if(dayDiff > 1) streak = 0; // Mehr als 1 Tag Lücke → Streak gerissen
+    // Streak berechnen
+    let yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+    let yStr = yesterday.getFullYear() + '-' + (yesterday.getMonth()+1) + '-' + yesterday.getDate();
+    if(lastDay !== today && lastDay !== yStr) streak = 0; // Streak gerissen
 
     let newStreak = alreadyClaimed ? streak : Math.min(streak + 1, 7);
 
@@ -1661,11 +1663,10 @@ function claimDailyReward() {
     let today = getTodayStr();
     if(state.lastLogin === today) return;
 
-    let todayNum = getDayNumber();
-    let lastNum = state.lastLogin ? getDayNumber(state.lastLogin) : -999;
-    let dayDiff = todayNum - lastNum;
+    let yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+    let yStr = yesterday.getFullYear() + '-' + (yesterday.getMonth()+1) + '-' + yesterday.getDate();
     let streak = state.streak || 0;
-    if(dayDiff > 1) streak = 0; // Lücke → reset; dayDiff===1 → Streak läuft weiter
+    if(state.lastLogin !== yStr) streak = 0;
     streak = Math.min(streak + 1, 7);
 
     let baseReward = 50;
@@ -2190,119 +2191,97 @@ function applyJobEffects(p) {
     if (!currentJob) return;
     let j = JOBS[currentJob];
 
-    // Perks kumulieren über Klassen — aber pro Linie zählt nur die HÖCHSTE Stufe
+    // Alle abgeschlossenen + aktueller Job → Perks kumulieren
     let allJobs = [...(completedJobs||[]), currentJob];
-    function highestTier(tiers) {
-        // tiers: Array von Job-Gruppen, sortiert von niedrig zu hoch
-        for (let i = tiers.length - 1; i >= 0; i--) {
-            if (tiers[i].some(jj => allJobs.includes(jj))) return i;
-        }
-        return -1;
-    }
 
-    // ── LOGISTIK-LINIE (Swordsman) — nur höchste Stufe ──
-    let logTier = highestTier([
-        ['lagermitarbeiter','high_lagermitarbeiter'],
-        ['staplerfahrer','schichtleiter'],
-        ['supply_chain_manager','coo']
-    ]);
-    if(logTier === 0) {
+    // ── LOGISTIK-LINIE (Swordsman) ──
+    if(allJobs.some(jj=>['lagermitarbeiter','high_lagermitarbeiter'].includes(jj))) {
         p.maxHp = Math.floor(p.maxHp * 1.25);
-        p._rollDmg = true;
-        p._vehicleImmune = true;
-    } else if(logTier === 1) {
+        p._rollDmg = true;         // Hechtrolle trifft Gegner (10 DMG)
+        p._vehicleImmune = true;   // Alle Logistiker: Fahrzeug-Immunität
+    }
+    if(allJobs.some(jj=>['staplerfahrer','schichtleiter'].includes(jj))) {
         p._vehicleImmune = true;
         p.maxHp = Math.floor(p.maxHp * 1.30);
-        p._rollDmg = true; p._rollDmgMult = 1.5;
+        p._rollDmg = true; p._rollDmgMult = 1.5; // 15 DMG bei Hechtrolle
         p.dmgBonus += 8;
-    } else if(logTier === 2) {
+    }
+    if(allJobs.some(jj=>['supply_chain_manager','coo'].includes(jj))) {
         p._vehicleImmune = true;
         p.maxHp = Math.floor(p.maxHp * 1.50);
-        p._rollDmg = true; p._rollDmgMult = 2.5;
+        p._rollDmg = true; p._rollDmgMult = 2.5; // 25 DMG bei Hechtrolle
         p.dmgBonus += 20;
     }
 
-    // ── SUPPORT-LINIE (Acolyte) — nur höchste Stufe ──
-    let supTier = highestTier([
-        ['sachbearbeiter','high_sachbearbeiter'],
-        ['maddin','abteilungsleiter'],
-        ['it_director','cio']
-    ]);
-    if(supTier === 0) {
+    // ── SUPPORT-LINIE (Acolyte) ──
+    if(allJobs.some(jj=>['sachbearbeiter','high_sachbearbeiter'].includes(jj))) {
         p._suppeHealBonus = (p._suppeHealBonus || 0) + 15;
-    } else if(supTier === 1) {
+    }
+    if(allJobs.some(jj=>['maddin','abteilungsleiter'].includes(jj))) {
         p.isMartin = true; p.radius = 28; p.azubiCost = 0; p._maddingMode = true;
         p._suppeHealBonus = (p._suppeHealBonus || 0) + 20;
-        p._azubiDmgBonus = 0.05;
-    } else if(supTier === 2) {
+        p._azubiDmgBonus = 0.05;   // Azubis +5% Schaden
+    }
+    if(allJobs.some(jj=>['it_director','cio'].includes(jj))) {
         p.isMartin = true; p.radius = 28; p.azubiCost = 0; p._maddingMode = true;
         p._suppeHealBonus = (p._suppeHealBonus || 0) + 30;
         p._azubiDmgBonus = 0.10;
-        p._dashCooldownMult = (p._dashCooldownMult || 1) * 0.5;
-    }
-    // WICHTIG: Azubis bleiben kostenlos sobald maddin je gespielt wurde
-    if(allJobs.includes('maddin') || allJobs.includes('abteilungsleiter') ||
-       allJobs.includes('it_director') || allJobs.includes('cio')) {
-        p.azubiCost = 0;
+        p._dashCooldownMult = (p._dashCooldownMult || 1) * 0.5; // Cooldowns -50%
     }
 
-    // ── TECHNIK-LINIE (Merchant) — nur höchste Stufe ──
-    let techTier = highestTier([
-        ['techniker','high_techniker'],
-        ['entwickler','senior_entwickler'],
-        ['lead_architect','cto']
-    ]);
-    if(techTier === 0) {
+    // ── TECHNIK-LINIE (Merchant) ──
+    if(allJobs.some(jj=>['techniker','high_techniker'].includes(jj))) {
         p._farmIntervalMult = 0.8;
-        p._turretDmgBonus = 0.10;
-    } else if(techTier === 1) {
+        p._turretDmgBonus = 0.10; // Turrets +10% DMG
+    }
+    if(allJobs.some(jj=>['entwickler','senior_entwickler'].includes(jj))) {
         p._farmIntervalMult = 0.65;
-        p._turretDmgBonus = 0.20;
+        p._turretDmgBonus = 0.20; // Turrets +20% DMG
         p._turretSpawnDouble = true;
-    } else if(techTier === 2) {
+    }
+    if(allJobs.some(jj=>['lead_architect','cto'].includes(jj))) {
         p._farmIntervalMult = 0.5;
-        p._turretDmgBonus = 0.40;
+        p._turretDmgBonus = 0.40; // Turrets +40% DMG
         p._turretSpawnDouble = true;
         p._farmWeaponDrop = true;
     }
 
-    // ── EXTENDED (Werkstudent / Super Novice) — nur höchste Stufe ──
-    let extTier = highestTier([['werkstudent'],['dauerstudent'],['bachelor']]);
-    if(extTier >= 0) {
+    // ── EXTENDED (Werkstudent / Super Novice) ──
+    if(allJobs.some(jj=>['werkstudent','dauerstudent','bachelor'].includes(jj))) {
         p.speed += 1.0;
-        let mult = extTier === 2 ? 0.20 : (extTier === 1 ? 0.10 : 0.05);
+        // Alle Stats +5/10/20%
+        let mult = allJobs.includes('bachelor') ? 0.20 : (allJobs.includes('dauerstudent') ? 0.10 : 0.05);
         p.dmgBonus += (p.dmgBonus + 10) * mult;
         p.maxHp = Math.floor(p.maxHp * (1 + mult));
-        if(extTier === 2) { p.speed += 0.5; p.maxHp += 200; }
+        if(allJobs.includes('bachelor')) { p.speed += 0.5; p.maxHp += 200; }
     }
 
-    // ── FREELANCER (Ninja) — nur höchste Stufe ──
-    let freeTier = highestTier([['freelancer'],['consultant'],['senior_consultant']]);
-    if(freeTier >= 0) {
+    // ── FREELANCER (Ninja) ──
+    if(allJobs.some(jj=>['freelancer','consultant','senior_consultant'].includes(jj))) {
         p._dashCooldownMult = (p._dashCooldownMult || 1) * 0.5;
         p._critChance = (p._critChance || 0) + 0.10;
-        p._rollDmg = true; p._rollDmgMult = Math.max(p._rollDmgMult||1, 2.0);
-        if(freeTier >= 1) p._rollInvisible = true;
-        if(freeTier >= 2) { p.dmgBonus += p.dmgBonus * 0.5; p._critChance += 0.10; }
+        p._rollDmg = true; p._rollDmgMult = 2.0; // Hechtrolle = Angriff
+        if(allJobs.includes('consultant')) p._rollInvisible = true; // 2s unsichtbar nach Roll
+        if(allJobs.includes('senior_consultant')) { p.dmgBonus += p.dmgBonus * 0.5; p._critChance += 0.10; }
     }
 
-    // ── NETZWERKTECHNIKER (Gunslinger) — nur höchste Stufe ──
-    let netTier = highestTier([['netzwerktechniker'],['noc_spezialist'],['network_architect']]);
-    if(netTier >= 0) {
-        p._fireRateBonus = (p._fireRateBonus || 0) + 0.15;
-        if(netTier >= 1) p._splashChance = 0.15;
-        if(netTier >= 2) { p.hasPierceMod = true; p.dmgBonus += 20; }
+    // ── NETZWERKTECHNIKER (Gunslinger) ──
+    if(allJobs.some(jj=>['netzwerktechniker','noc_spezialist','network_architect'].includes(jj))) {
+        p.dmgBonus = (p.dmgBonus || 0) + 15;
+        p._bulletSpeedMult = (p._bulletSpeedMult || 1) + 0.5;
+        if(allJobs.includes('noc_spezialist')) { p._splashChance = 0.15; }
+        if(allJobs.includes('network_architect')) { p.hasPierceMod = true; p.dmgBonus += 20; }
     }
 
-    // ── DUALER STUDENT (Doram) — nur höchste Stufe ──
-    let doramTier = highestTier([['dualer_student'],['absolvent']]);
-    if(doramTier >= 0) {
-        p._luckMult = (p._luckMult || 1) * 1.5;
-        if(allJobs.includes('dualer_student')) p.azubiCost = Math.max(0, (p.azubiCost||5000) - 2000);
-        if(doramTier >= 1) { p._expMult = (p._expMult || 1) * 1.4; p._luckMult = (p._luckMult||1) * 2; }
+    // ── DUALER STUDENT (Doram) ──
+    if(allJobs.some(jj=>['dualer_student','absolvent'].includes(jj))) {
+        p._expMult = (p._expMult || 1) * 1.2;
+        if(allJobs.includes('dualer_student')) { p.azubiCost = Math.max(1000, p.azubiCost - 2000); }
+        if(allJobs.includes('absolvent')) { p._expMult = (p._expMult || 1) * 1.4; p._luckMult = (p._luckMult||1) * 2; }
     }
 }
 
+// ── JOB OVERLAY UI ───────────────────────────────────────────
 function openJobOverlay() {
     renderJobOverlay();
     document.getElementById('jobOverlay').style.display = 'flex';
@@ -3751,51 +3730,6 @@ let refinePity = JSON.parse(lsGet('ts_refine_pity', '{}'));
 function getRefineLevel(weaponId) { return refineData[weaponId] || 0; }
 function saveRefineData() { lsSet('ts_refine', JSON.stringify(refineData)); lsSet('ts_refine_pity', JSON.stringify(refinePity)); }
 
-// ============================================================
-// WAFFENTEILE-SYSTEM
-// Teile droppen aus Callskis (📞), Einbau in der Schmiede,
-// wirken NUR auf die Favoriten-Waffe.
-// ============================================================
-const WEAPON_PARTS = [
-    { id:'lauf',    icon:'🔭', name:'Präzisions-Lauf',  desc:'+25% Reichweite der Projektile' },
-    { id:'griff',   icon:'🤝', name:'Ergo-Griff',       desc:'+10% Schaden' },
-    { id:'magazin', icon:'📎', name:'Stabil-Magazin',   desc:'-40% Streuung' },
-    { id:'visier',  icon:'🎯', name:'Laser-Visier',     desc:'Ziellinie zeigt Schussrichtung' },
-    { id:'abzug',   icon:'⚙️', name:'Feder-Abzug',      desc:'+12% Feuerrate' },
-];
-
-// parts-Inventar: { partId: anzahl } — ungebundene Teile
-let partInventory = JSON.parse(lsGet('ts_parts_inv', '{}'));
-// installierte Teile pro Waffe: { weaponId: [partId, ...] }
-let installedParts = JSON.parse(lsGet('ts_parts_installed', '{}'));
-
-function savePartsData() {
-    lsSet('ts_parts_inv', JSON.stringify(partInventory));
-    lsSet('ts_parts_installed', JSON.stringify(installedParts));
-}
-function getInstalledParts(weaponId) { return installedParts[weaponId] || []; }
-function hasPart(weaponId, partId) { return getInstalledParts(weaponId).includes(partId); }
-
-function installPart(weaponId, partId) {
-    if((partInventory[partId]||0) <= 0) { showToast('KEIN TEIL VORHANDEN', '#e74c3c'); return; }
-    if(hasPart(weaponId, partId)) { showToast('BEREITS EINGEBAUT', '#e74c3c'); return; }
-    partInventory[partId]--;
-    if(!installedParts[weaponId]) installedParts[weaponId] = [];
-    installedParts[weaponId].push(partId);
-    savePartsData();
-    saveProgress();
-    let part = WEAPON_PARTS.find(p=>p.id===partId);
-    let wpn = WEAPON_SHOP.find(w=>w.id===weaponId);
-    showToast('🔧 TEIL EINGEBAUT!', '#2ecc71', (part?part.name:'Teil') + ' → ' + (wpn?wpn.name:'Waffe'));
-    playSound('powerup');
-    renderSchmiede();
-}
-
-// Aktive Part-Boni — nur wenn Waffe der Favorit ist
-function getPartBonus(weaponId, partId) {
-    return weaponId === favoriteWeapon && hasPart(weaponId, partId);
-}
-
 function getRefineChance(weaponId, targetLevel) {
     let base = REFINE_CHANCES[targetLevel] || 0;
     if(base >= 100) return 100;
@@ -3837,81 +3771,35 @@ function renderSchmiede() {
         let curRef = getRefineLevel(wid);
         let targetRef = curRef + 1;
         let atMax = curRef >= REFINE_MAX;
-        let costs = atMax ? [0,0] : (REFINE_COSTS[targetRef] || [99,0]);
-        let wcCost = costs[0];
-
+        let chance = atMax ? 0 : getRefineChance(wid, targetRef);
+        let costs = atMax ? [0,0] : (REFINE_COSTS[targetRef] || [99,9]);
+        let wcCost = costs[0], suppCost = costs[1];
+        
         // Trophäen-Rabatt
         if(!atMax && hasTrophy('refine_max')) wcCost = Math.max(1, Math.floor(wcCost * 0.8));
-
+        
         let canAffordWC = wurmcoins >= wcCost;
-        let refBadge = curRef > 0 ? '<span class="refine-level-badge">+' + curRef + '</span>' : '<span style="color:#555;">+0</span>';
+        let currentSuppeVal = gameRunning && player ? player.suppe : parseInt(lsGet('ts_suppen_persistent', '0'));
+        let canAffordSupp = currentSuppeVal >= suppCost;
+        
+        let probColor = '#2ecc71'; // Immer 100%
+        let refBadge = curRef > 0 ? '<span class="refine-level-badge">+' + curRef + '</span>' : '–';
 
-        // Alles in EINER Karte: Name, Stufe, Kosten, Button
-        html2 += `<div class="refine-weapon-card ${favoriteWeapon === wid ? 'selected' : ''}" style="margin-bottom:14px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                <span style="font-weight:bold;color:#fff;font-size:15px;">${w.icon} ${w.name}</span>
-                <span>${refBadge} <span style="color:#f1c40f;font-size:13px;">+${curRef*10}% DMG</span></span>
+        html2 += `<div class="refine-weapon-card ${favoriteWeapon === wid ? 'selected' : ''}">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-weight:bold;color:#fff;">${w.icon} ${w.name}</span>
+                <span>${refBadge} <span style="color:#f1c40f;">+${curRef*10}% DMG</span></span>
             </div>`;
-
+        
         if(!atMax) {
             html2 += `
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px 10px;background:rgba(230,126,34,0.07);border:1px solid #3a2a1a;border-radius:3px;">
-                <span style="color:#888;font-size:12px;">Nächste Stufe: <strong style="color:#e67e22;">+${targetRef}</strong> (+${targetRef*10}% DMG)</span>
-                <span style="font-weight:bold;font-size:14px;color:${canAffordWC?'#f1c40f':'#c0392b'};">🪙 ${wcCost} WC</span>
-            </div>
-            <button class="refine-anvil-btn" onclick="doRefine('${wid}')" ${!canAffordWC?'disabled':''}>
-                🔨 AUFWERTEN ${!canAffordWC?'(zu wenig WC)':'→ +'+targetRef}
-            </button>`;
+                </div>
+                <button class="refine-anvil-btn" onclick="doRefine('${wid}')" ${(!canAffordWC || !canAffordSupp)?'disabled':''}>🔨 AUFWERTEN</button>`;
         } else {
-            html2 += '<div style="color:#f1c40f;text-align:center;font-weight:bold;padding:8px;">👑 MAXIMALSTUFE +12 ERREICHT</div>';
+            html2 += '<div style="color:#f1c40f;text-align:center;font-weight:bold;">MAXIMALSTUFE ERREICHT</div>';
         }
         html2 += '</div>';
     });
-
-    // ════════════════════════════════════════════
-    // WAFFENTEILE-SEKTION (nur für Favoriten-Waffe)
-    // ════════════════════════════════════════════
-    html2 += '<div style="border-top:2px solid #00e5ff;margin-top:24px;padding-top:18px;">';
-    html2 += '<div style="color:#00e5ff;font-size:16px;font-weight:bold;letter-spacing:3px;margin-bottom:4px;">📞 WAFFENTEILE</div>';
-    html2 += '<div style="color:#888;font-size:11px;margin-bottom:14px;">Teile findest du in <strong style="color:#00e5ff;">Callskis (📞)</strong> während des Runs — Bosse droppen sie häufiger. Wirken NUR auf deine ⭐ Favoriten-Waffe!</div>';
-
-    if(!favoriteWeapon) {
-        html2 += '<div style="background:#1a1a00;border:1px dashed #f1c40f;padding:14px;border-radius:4px;color:#f1c40f;font-size:12px;text-align:center;">⚠️ Wähle zuerst eine FAVORITEN-WAFFE in der Waffenkammer!</div>';
-    } else {
-        let favW = WEAPON_SHOP.find(w=>w.id===favoriteWeapon);
-        html2 += `<div style="color:#f1c40f;font-size:13px;margin-bottom:12px;">⭐ Favorit: <strong>${favW?favW.icon+' '+favW.name:favoriteWeapon}</strong></div>`;
-
-        WEAPON_PARTS.forEach(part => {
-            let installed = hasPart(favoriteWeapon, part.id);
-            let inStock = partInventory[part.id] || 0;
-            let canInstall = !installed && inStock > 0;
-
-            let borderCol = installed ? '#2ecc71' : (canInstall ? '#00e5ff' : '#333');
-            let bg = installed ? 'rgba(46,204,113,0.06)' : '#0d0d12';
-
-            html2 += `<div style="background:${bg};border:2px solid ${borderCol};border-radius:4px;padding:12px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
-                <div>
-                    <div style="color:#fff;font-size:14px;font-weight:bold;">${part.icon} ${part.name} ${installed?'<span style="color:#2ecc71;font-size:11px;">✓ EINGEBAUT</span>':''}</div>
-                    <div style="color:#888;font-size:11px;margin-top:3px;">${part.desc}</div>
-                    <div style="color:${inStock>0?'#00e5ff':'#555'};font-size:11px;margin-top:3px;">📦 Im Lager: ${inStock}</div>
-                </div>
-                <div>
-                    ${installed
-                        ? '<span style="color:#2ecc71;font-size:18px;">✅</span>'
-                        : (canInstall
-                            ? `<button onclick="installPart('${favoriteWeapon}','${part.id}')" style="background:#00e5ff;color:#000;border:none;padding:8px 16px;font-weight:bold;cursor:pointer;font-family:'Courier New',monospace;font-size:12px;border-radius:3px;">🔧 EINBAUEN</button>`
-                            : '<span style="color:#555;font-size:11px;">Kein Teil 📞</span>')}
-                </div>
-            </div>`;
-        });
-
-        // Fortschritts-Anzeige
-        let installedCount = getInstalledParts(favoriteWeapon).length;
-        html2 += `<div style="text-align:center;color:${installedCount===5?'#f1c40f':'#888'};font-size:12px;margin-top:8px;font-weight:bold;">
-            ${installedCount} / 5 Teile eingebaut ${installedCount===5?'— 👑 VOLLAUSGESTATTET!':''}</div>`;
-    }
-    html2 += '</div>';
-
     cont.innerHTML = html2;
 }
 
@@ -4295,7 +4183,6 @@ function saveProgress() {
             runeInv: typeof runeInventory !== 'undefined' ? runeInventory : [],
             runeGrid: typeof runeGrid !== 'undefined' ? runeGrid : [],
             akten: playerAkten, cards: cardInventory,
-            partsInv: partInventory, partsInst: installedParts,
             daily: _daily, bestScore: _best,
             lastSeen: new Date().toISOString()        
         }, {merge:true}).catch(function(){});
@@ -4355,8 +4242,6 @@ async function loadCloudProfile() {
             unlockedSkills   = d.skills    || [];
             // Daily + BestScore aus Firebase wiederherstellen
             if(d.daily)     { lsSet('ts_daily', JSON.stringify(d.daily)); }
-            if(d.partsInv)  { partInventory = d.partsInv; lsSet('ts_parts_inv', JSON.stringify(partInventory)); }
-            if(d.partsInst) { installedParts = d.partsInst; lsSet('ts_parts_installed', JSON.stringify(installedParts)); }
             if(d.bestScore) { lsSet('ts_best_score', d.bestScore); }
             lsSet('ts_skills', JSON.stringify(unlockedSkills));
             lsSet('ts_trophies', JSON.stringify(unlockedTrophies));
@@ -5437,6 +5322,715 @@ function playSound(type) {
 // ============================================================
 // SECTION 6 — CANVAS & GAME VARS
 // ============================================================
+
+// ============================================================
+//  ████████╗██╗ ██████╗██╗  ██╗███████╗████████╗    ███████╗
+//     ██║   ██║██╔════╝██║ ██╔╝██╔════╝╚══██╔══╝    ╚════██║
+//     ██║   ██║██║     █████╔╝ █████╗     ██║            ██╔╝
+//     ██║   ██║██║     ██╔═██╗ ██╔══╝     ██║           ██╔╝
+//     ██║   ██║╚██████╗██║  ██╗███████╗   ██║           ██║
+//     ╚═╝   ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝   ╚═╝           ╚═╝
+//  DOOM / SERIOUS SAM STYLE 3D — Inline Engine
+//  - First-Person PerspectiveCamera FOV 75°
+//  - Dual-Canvas (kein DOM-Replace → funktioniert lokal)
+//  - pointer-events:none auf 3D-Canvas → alle Inputs gehen durch
+//  - Aktivierung: 3D-Button im Startmenü → window._use3d = true
+// ============================================================
+
+window._use3d = false;      // Flag: 3D aktiv?
+window._3d = null;          // 3D Renderer Instanz
+
+// ── Toggle-Funktion für Menü-Button ──────────────────────────
+function toggle3DMode() {
+    window._use3d = !window._use3d;
+    let btn = document.getElementById('doom3d-btn');
+    if (btn) {
+        if (window._use3d) {
+            btn.style.background    = 'linear-gradient(45deg,#c0392b,#e74c3c)';
+            btn.style.color         = '#fff';
+            btn.style.borderColor   = '#ff4400';
+            btn.style.boxShadow     = '0 0 20px rgba(255,68,0,0.6)';
+            btn.innerHTML           = '🔥 3D DOOM-MODUS: AN';
+        } else {
+            btn.style.background    = '#111';
+            btn.style.color         = '#555';
+            btn.style.borderColor   = '#333';
+            btn.style.boxShadow     = 'none';
+            btn.innerHTML           = '🎮 3D DOOM-MODUS: AUS';
+        }
+    }
+}
+
+// ── DOOM3DEngine ──────────────────────────────────────────────
+class DOOM3DEngine {
+    constructor() {
+        this.renderer   = null;
+        this.scene      = null;
+        this.camera     = null;
+        this.canvas3d   = null;
+        this.canvas2d   = null;
+        this._meshPool  = new Map();   // id → THREE.Object3D
+        this._worldMesh = null;
+        this._worldBuilt = false;
+        this._dummy     = null;
+        this._bullets   = null;   // InstancedMesh
+        this._frame     = 0;
+        this._yaw       = 0;      // Kamera-Drehung zur Maus
+        // Licht-Refs
+        this._flashlight = null;
+        this._flashTarget = null;
+        this._alarmLight  = null;
+    }
+
+    // ── Init ─────────────────────────────────────────────────
+    init() {
+        if (typeof THREE === 'undefined') {
+            console.error('[DOOM3D] THREE.js nicht geladen!');
+            return false;
+        }
+        this.canvas2d = document.getElementById('game');
+        this.canvas3d = document.getElementById('game3d');
+        if (!this.canvas3d) { console.error('[DOOM3D] #game3d fehlt!'); return false; }
+
+        this.canvas3d.width  = window.innerWidth;
+        this.canvas3d.height = window.innerHeight;
+
+        // WebGL Renderer
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas3d, antialias: true, alpha: false
+        });
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setClearColor(0x000000, 1);
+        this.renderer.shadowMap.enabled = false; // Performance
+
+        // Scene
+        this.scene = new THREE.Scene();
+        this.scene.fog = new THREE.Fog(0x000000, 200, 1600);
+
+        // PerspectiveCamera — DOOM FOV 75°
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 3000);
+        this.camera.position.set(2000, 35, 2000);
+
+        // Dummy für InstancedMesh
+        this._dummy = new THREE.Object3D();
+
+        this._buildLights();
+        this._buildFloor();
+        this._buildBulletInstances();
+
+        window.addEventListener('resize', () => this._onResize());
+        console.log('[DOOM3D] Engine bereit. FOV 75° First-Person.');
+        return true;
+    }
+
+    _buildLights() {
+        // Schwaches Ambient — DOOM ist dunkel
+        this.scene.add(new THREE.AmbientLight(0x111122, 1.5));
+
+        // Taschenlampe folgt Kamera
+        const fl = new THREE.SpotLight(0xffffff, 5.0, 1400, Math.PI / 5.5, 0.25);
+        this.scene.add(fl);
+        this.scene.add(fl.target);
+        this._flashlight      = fl;
+        this._flashlightTarget = fl.target;
+
+        // Rotes Alarm-Licht pulsiert
+        const al = new THREE.PointLight(0xff2200, 3.0, 700);
+        al.position.set(2000, 80, 2000);
+        this.scene.add(al);
+        this._alarmLight = al;
+
+        // Neonröhren auf der Decke
+        const neons = [
+            [600,  1600], [600,  3200], [1200, 800],  [1200, 2400],
+            [2000, 1600], [2000, 3200], [2800, 800],  [2800, 2400],
+            [3400, 1600], [3400, 3200]
+        ];
+        const neonColors = [0xff1111, 0x1144ff, 0xff6600, 0x00ffcc];
+        neons.forEach(([x, z], i) => {
+            const nl = new THREE.PointLight(neonColors[i % 4], 1.2, 600);
+            nl.position.set(x, 155, z);
+            this.scene.add(nl);
+        });
+    }
+
+    _buildFloor() {
+        // Boden
+        const floor = new THREE.Mesh(
+            new THREE.PlaneGeometry(4200, 4200),
+            new THREE.MeshStandardMaterial({ color: 0x080810, roughness: 1.0 })
+        );
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.set(2000, 0, 2000);
+        this.scene.add(floor);
+
+        // Decke
+        const ceil = new THREE.Mesh(
+            new THREE.PlaneGeometry(4200, 4200),
+            new THREE.MeshStandardMaterial({ color: 0x050508, roughness: 1.0, side: THREE.BackSide })
+        );
+        ceil.rotation.x = -Math.PI / 2;
+        ceil.position.set(2000, 160, 2000);
+        this.scene.add(ceil);
+
+        // Gitter (nur im näheren Bereich sichtbar durch Fog)
+        const grid = new THREE.GridHelper(4200, 42, 0x0d0d1a, 0x0a0a14);
+        grid.position.set(2000, 0.5, 2000);
+        this.scene.add(grid);
+
+        // Zonenlinien (rote Linien zwischen Bereichen)
+        [1185, 2585].forEach(z => {
+            const line = new THREE.Mesh(
+                new THREE.BoxGeometry(4200, 4, 8),
+                new THREE.MeshBasicMaterial({ color: 0xff1100 })
+            );
+            line.position.set(2000, 2, z);
+            this.scene.add(line);
+        });
+    }
+
+    _buildBulletInstances() {
+        // Standard Bullets — InstancedMesh für Performance
+        this._bullets = new THREE.InstancedMesh(
+            new THREE.SphereGeometry(3.5, 5, 4),
+            new THREE.MeshBasicMaterial({ color: 0xffeb3b }),
+            800
+        );
+        this._bullets.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        this._bullets.count = 0;
+        this.scene.add(this._bullets);
+
+        // Flammen
+        this._flames = new THREE.InstancedMesh(
+            new THREE.SphereGeometry(1, 4, 3),
+            new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.85 }),
+            300
+        );
+        this._flames.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        this._flames.count = 0;
+        this.scene.add(this._flames);
+    }
+
+    // ── Welt aufbauen aus obstacles/stations/servers ──────────
+    buildWorld(gs) {
+        if (this._worldBuilt) return;
+        const s = this.scene;
+
+        // Obstacles → Wände / Möbel
+        (gs.obstacles || []).forEach(o => {
+            if (!o || !o.w) return;
+            const cx = o.x + o.w / 2, cz = o.y + o.h / 2;
+            let h = 130, col = 0x12121e;
+            if (o.type === 'desk')        { h = 55;  col = 0x1e2a30; }
+            if (o.type === 'shelf')       { h = 160; col = 0x0d0d16; }
+            if (o.type === 'wall')        { h = 180; col = 0x080810; }
+            if (o.type === 'server')      { h = 140; col = 0x081424; }
+            if (o.type === 'pillar')      { h = 200; col = 0x0f0f18; }
+            if (o.type === 'zonewall')    { h = 90;  col = 0x1a0505; }
+            if (o.type === 'secretwall')  { h = 160; col = 0x040404; }
+            if (o.type === 'truck')       { h = 70;  col = 0x1a1a1a; }
+            if (o.type === 'cab')         { h = 80;  col = 0x2a0505; }
+            if (o.type === 'blockade')    { h = 60;  col = 0x1a1000; }
+
+            const mat = new THREE.MeshStandardMaterial({
+                color: col,
+                emissive: col,
+                emissiveIntensity: 0.06,
+                roughness: 0.9
+            });
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(o.w, h, o.h), mat);
+            mesh.position.set(cx, h / 2, cz);
+            s.add(mesh);
+        });
+
+        // Stationen mit Farbakzent
+        const stationColors = {
+            coffee_machine: 0x6f3e20,
+            hardware_store: 0x4a1a6a,
+            chicken_truck:  0x7a2a00
+        };
+        (gs.stations || []).forEach(st => {
+            const col = stationColors[st.type] || 0x1a2030;
+            const h = 90;
+            const mesh = new THREE.Mesh(
+                new THREE.BoxGeometry(st.w || 80, h, st.h || 80),
+                new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.3 })
+            );
+            mesh.position.set((st.x + (st.w || 80) / 2), h / 2, (st.y + (st.h || 80) / 2));
+            s.add(mesh);
+            const pl = new THREE.PointLight(col, 2.0, 250);
+            pl.position.set(mesh.position.x, h + 30, mesh.position.z);
+            s.add(pl);
+        });
+
+        // Server
+        (gs.servers || []).forEach(sv => {
+            const col = sv.isFarm ? 0x004422 : 0x220000;
+            const h = 120;
+            const mesh = new THREE.Mesh(
+                new THREE.BoxGeometry(sv.w || 40, h, sv.h || 80),
+                new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.4 })
+            );
+            mesh.position.set(sv.x + (sv.w || 40) / 2, h / 2, sv.y + (sv.h || 80) / 2);
+            s.add(mesh);
+        });
+
+        this._worldBuilt = true;
+        console.log('[DOOM3D] Welt: ' + (gs.obstacles||[]).length + ' Obstacles, ' + (gs.stations||[]).length + ' Stationen');
+    }
+
+    // ── Haupt-Render ─────────────────────────────────────────
+    render(gs) {
+        if (!this.renderer || !this.scene || !this.camera) return;
+        this._frame++;
+        const f = this._frame;
+
+        // Welt einmalig aufbauen
+        if (!this._worldBuilt) this.buildWorld(gs);
+
+        // ── KAMERA: First-Person auf Spieler-Position ─────────
+        if (gs.player) {
+            const p = gs.player;
+            const eyeY = 35;
+
+            // Shake
+            const shX = gs.screenShake > 0 ? (Math.random() - 0.5) * gs.screenShake * 0.06 : 0;
+            const shY = gs.screenShake > 0 ? (Math.random() - 0.5) * gs.screenShake * 0.04 : 0;
+
+            this.camera.position.set(p.x + shX, eyeY + shY, p.y);
+
+            // Blickrichtung: Maus-X relativ zur Bildschirmmitte dreht den Yaw
+            // (echtes FPS-Gefühl — Maus links/rechts = umschauen)
+            if (typeof input !== 'undefined' && input) {
+                const cw = this.canvas3d.width || window.innerWidth;
+                // Maus-Offset von der Mitte, normiert auf -1..+1
+                const offX = (input.x - cw / 2) / (cw / 2);
+                // Ziel-Yaw: glatt nachführen
+                const targetYaw = offX * Math.PI * 0.85; // max ~153° Drehbereich
+                // Smoothing
+                if (this._yaw === undefined) this._yaw = 0;
+                this._yaw += (targetYaw - this._yaw) * 0.18;
+            }
+
+            const lookDist = 600;
+            this.camera.lookAt(
+                p.x + Math.sin(this._yaw) * lookDist,
+                eyeY - 6,   // leicht nach unten — natürlicher FPS-Look
+                p.y + Math.cos(this._yaw) * lookDist
+            );
+
+            // Taschenlampe auf Kamera
+            if (this._flashlight) {
+                this._flashlight.position.copy(this.camera.position);
+                this._flashlightTarget.position.set(
+                    p.x + Math.sin(this._yaw) * 900,
+                    eyeY - 15,
+                    p.y + Math.cos(this._yaw) * 900
+                );
+                this._flashlightTarget.updateMatrixWorld();
+            }
+
+            // Alarm-Licht folgt Spieler & pulsiert
+            if (this._alarmLight) {
+                this._alarmLight.position.set(p.x, 80, p.y);
+                this._alarmLight.intensity = 2.0 + Math.sin(f * 0.08) * 1.0;
+            }
+        }
+
+        // ── ENTITIES ─────────────────────────────────────────
+        this._syncPlayer(gs.player);
+
+        const liveEnemies = new Set();
+        (gs.enemies || []).forEach(e => {
+            liveEnemies.add('e' + e._id);
+            this._syncEnemy(e, f);
+        });
+        this._gc('e', liveEnemies);
+
+        const liveItems = new Set();
+        (gs.items || []).forEach(it => {
+            liveItems.add('i' + it._id);
+            this._syncItem(it, f);
+        });
+        this._gc('i', liveItems);
+
+        const liveTurrets = new Set();
+        (gs.turrets || []).forEach((t, i) => {
+            liveTurrets.add('t' + i);
+            this._syncTurret(t, i, f);
+        });
+        this._gc('t', liveTurrets);
+
+        // ── BULLETS ──────────────────────────────────────────
+        this._syncBullets(gs.bullets || [], f);
+
+        // ── RENDER ───────────────────────────────────────────
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    // ── Spieler-Mesh (FPS: unsichtbar = du bist die Kamera) ──
+    _syncPlayer(player) {
+        // In First-Person sehen wir uns selbst nicht
+        // Optional: Waffe in Screen-Space (kommt später)
+    }
+
+    // ── Gegner ───────────────────────────────────────────────
+    _syncEnemy(e, f) {
+        const id = 'e' + e._id;
+        let g = this._meshPool.get(id);
+        if (!g) {
+            g = this._buildEnemy(e);
+            this.scene.add(g);
+            this._meshPool.set(id, g);
+        }
+        // Position (y = halbe Körperhöhe)
+        const bodyH = g.userData.bodyH || 80;
+        g.position.set(e.x, bodyH / 2, e.y);
+
+        // Immer zur Kamera drehen (Billboard-Y)
+        if (this.camera) {
+            g.rotation.y = Math.atan2(
+                this.camera.position.x - e.x,
+                this.camera.position.z - e.y
+            );
+        }
+
+        // Freeze = blau, Burn = orange
+        if (g.userData.body) {
+            const origCol = g.userData.origColor;
+            if (e.freezeTimer > 0)      g.userData.body.material.color.setHex(0x44aaff);
+            else if (e.burnTimer > 0)   g.userData.body.material.color.setHex(0xff4400);
+            else                        g.userData.body.material.color.setHex(origCol);
+        }
+
+        // Aura bei Boss
+        if (g.userData.aura) {
+            g.userData.aura.rotation.y += 0.04;
+            g.userData.aura.rotation.x  = Math.sin(f * 0.02) * 0.3;
+        }
+
+        // HP-Bar zur Kamera ausrichten
+        if (g.userData.hpBar && this.camera) {
+            g.userData.hpBar.lookAt(this.camera.position);
+        }
+        this._updateHpBar(g, e);
+    }
+
+    _buildEnemy(e) {
+        const g = new THREE.Group();
+        const r = Math.max(e.radius || 20, 16);
+        const col = parseInt((e.color || '#c0392b').replace('#', ''), 16);
+        g.userData.origColor = col;
+
+        // Körper-Höhe: mindestens 80, damit auf Augenhöhe sichtbar
+        const bodyH = Math.max(80, r * 3.2);
+        g.userData.bodyH = bodyH;
+
+        const mat = new THREE.MeshStandardMaterial({
+            color: col, emissive: col, emissiveIntensity: 0.55,
+            roughness: 0.4
+        });
+
+        let body;
+        if (e.type === 5) {
+            // PRIO5 — kleiner Wurm, kriecht
+            body = new THREE.Mesh(new THREE.SphereGeometry(r * 1.1, 8, 6), mat);
+            body.scale.y = 0.5;
+            body.position.y = r * 0.5;
+        } else if (e.type === 8) {
+            // SAP-Update — Oktaeder, dreht sich
+            body = new THREE.Mesh(new THREE.OctahedronGeometry(r * 1.4), mat);
+            body.position.y = bodyH * 0.5;
+        } else if (e.type === 6) {
+            // Teichmann — breite Box
+            body = new THREE.Mesh(new THREE.BoxGeometry(r * 2, bodyH, r * 1.4), mat);
+            body.position.y = bodyH * 0.5;
+        } else if (e.type === 7) {
+            // Der Anwender — Zylinder mit lila Ring
+            body = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.8, r, bodyH, 8), mat);
+            body.position.y = bodyH * 0.5;
+            const ring = new THREE.Mesh(
+                new THREE.TorusGeometry(r * 1.6, 3, 5, 16),
+                new THREE.MeshBasicMaterial({ color: 0x9b59b6 })
+            );
+            ring.rotation.x = Math.PI / 2;
+            ring.position.y = bodyH * 0.5;
+            g.add(ring);
+        } else if (e.type === 1 || e.type === 99) {
+            // PRIO1 / Boss — Oktaeder + Krone + Aura
+            const bR = r * 1.6;
+            body = new THREE.Mesh(new THREE.OctahedronGeometry(bR), mat);
+            body.position.y = bodyH * 0.6;
+            const aura = new THREE.Mesh(
+                new THREE.IcosahedronGeometry(bR * 1.5, 1),
+                new THREE.MeshBasicMaterial({ color: col, wireframe: true, transparent: true, opacity: 0.25 })
+            );
+            aura.position.y = bodyH * 0.6;
+            g.add(aura);
+            g.userData.aura = aura;
+            const bl = new THREE.PointLight(new THREE.Color(e.color || '#c0392b'), 3.5, r * 7);
+            bl.position.y = bodyH * 0.6;
+            g.add(bl);
+        } else {
+            // PRIO2/3/4 — Standard Zylinder
+            body = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.75, r, bodyH, 7), mat);
+            body.position.y = bodyH * 0.5;
+        }
+
+        if (body) { g.add(body); g.userData.body = body; }
+
+        // ── Augen auf 75% der Körperhöhe ──────────────────────
+        const eyeY = bodyH * 0.78;
+        [-r * 0.32, r * 0.32].forEach(ex => {
+            const eye = new THREE.Mesh(
+                new THREE.SphereGeometry(r * 0.2, 6, 5),
+                new THREE.MeshBasicMaterial({ color: 0xffffff })
+            );
+            eye.position.set(ex, eyeY, -r * 0.88);
+            g.add(eye);
+            const pupil = new THREE.Mesh(
+                new THREE.SphereGeometry(r * 0.12, 5, 4),
+                new THREE.MeshBasicMaterial({ color: 0x000000 })
+            );
+            pupil.position.set(ex, eyeY, -r * 1.03);
+            g.add(pupil);
+        });
+
+        // ── HP-Bar über Kopf ───────────────────────────────────
+        const bgBar = new THREE.Mesh(
+            new THREE.PlaneGeometry(r * 2.4, 7),
+            new THREE.MeshBasicMaterial({ color: 0x220000, depthTest: false, side: THREE.DoubleSide })
+        );
+        bgBar.position.set(0, bodyH + 22, 0);
+        g.add(bgBar);
+
+        const fgBar = new THREE.Mesh(
+            new THREE.PlaneGeometry(r * 2.4, 7),
+            new THREE.MeshBasicMaterial({ color: 0x00dd44, depthTest: false, side: THREE.DoubleSide })
+        );
+        fgBar.position.set(0, bodyH + 22.5, 0);
+        g.add(fgBar);
+        g.userData.hpFg  = fgBar;
+        g.userData.hpBg  = bgBar;
+        g.userData.hpR   = r;
+        g.userData.hpBar = bgBar; // für lookAt
+
+        return g;
+    }
+
+    _updateHpBar(g, e) {
+        if (!g.userData.hpFg) return;
+        const pct = Math.max(0, Math.min(1, e.hp / e.maxHp));
+        const r   = g.userData.hpR || 20;
+        g.userData.hpFg.scale.x = pct;
+        g.userData.hpFg.position.x = (pct - 1) * r;
+        const col = pct > 0.5 ? 0x00dd44 : (pct > 0.25 ? 0xffaa00 : 0xff2200);
+        g.userData.hpFg.material.color.setHex(col);
+    }
+
+    // ── Items ─────────────────────────────────────────────────
+    _syncItem(it, f) {
+        const id = 'i' + it._id;
+        let g = this._meshPool.get(id);
+        if (!g) {
+            g = this._buildItem(it);
+            this.scene.add(g);
+            this._meshPool.set(id, g);
+        }
+        // Float + Spin
+        g.position.set(it.x, 14 + Math.sin(f * 0.07 + it.x * 0.01) * 5, it.y);
+        g.rotation.y += 0.03;
+    }
+
+    _buildItem(it) {
+        const colMap = {
+            suppe: '#ff9f43', shield: '#3498db', vodka: '#8e44ad',
+            chicken: '#d35400', vacation: '#27ae60', akte: '#f1c40f',
+            hammer: '#e74c3c', bug: '#00e5ff', briefcase: '#ffd700',
+            bike: '#2ecc71', crate: '#e67e22', callski: '#00bbff'
+        };
+        const col = parseInt((colMap[it.type] || '#ffffff').replace('#', ''), 16);
+        const mat = new THREE.MeshStandardMaterial({
+            color: col, emissive: col, emissiveIntensity: 0.5, metalness: 0.5
+        });
+        const geo = it.type === 'akte'
+            ? new THREE.BoxGeometry(14, 2, 18)
+            : it.type === 'shield'
+            ? new THREE.IcosahedronGeometry(10, 0)
+            : new THREE.SphereGeometry(9, 8, 6);
+
+        const g = new THREE.Group();
+        g.add(new THREE.Mesh(geo, mat));
+        const light = new THREE.PointLight(col, 1.2, 100);
+        light.position.y = -5;
+        g.add(light);
+        return g;
+    }
+
+    // ── Turrets ───────────────────────────────────────────────
+    _syncTurret(t, idx, f) {
+        const id = 't' + idx;
+        let g = this._meshPool.get(id);
+        if (!g) {
+            g = new THREE.Group();
+            const col = t.level === 2 ? 0xf1c40f : (t.level === 1 ? 0x00e5ff : 0xaaaaaa);
+            const base = new THREE.Mesh(
+                new THREE.CylinderGeometry(12, 14, 10, 8),
+                new THREE.MeshStandardMaterial({ color: col })
+            );
+            g.add(base);
+            const barrel = new THREE.Mesh(
+                new THREE.CylinderGeometry(3, 3, 22, 6),
+                new THREE.MeshStandardMaterial({ color: 0x2ecc71 })
+            );
+            barrel.rotation.z = Math.PI / 2;
+            barrel.position.set(13, 5, 0);
+            g.add(barrel);
+            const tl = new THREE.PointLight(col, 0.8, 120);
+            tl.position.y = 20;
+            g.add(tl);
+            this.scene.add(g);
+            this._meshPool.set(id, g);
+        }
+        g.position.set(t.x, 10, t.y);
+        if (t.angle !== undefined) g.rotation.y = -t.angle;
+    }
+
+    // ── Bullets ───────────────────────────────────────────────
+    _syncBullets(bullets, f) {
+        let stdCount = 0, flameCount = 0;
+        const liveRail = new Set();
+
+        for (const b of bullets) {
+            if (!b._id) b._id = Math.random().toString(36).substr(2, 6);
+
+            if (b.type === 'railgun') {
+                const rid = 'rail_' + b._id;
+                liveRail.add(rid);
+                let rm = this._meshPool.get(rid);
+                if (!rm) {
+                    const rg = new THREE.Group();
+                    const rb = new THREE.Mesh(
+                        new THREE.BoxGeometry(50, 4, 5),
+                        new THREE.MeshBasicMaterial({ color: 0x00ffff })
+                    );
+                    rg.add(rb);
+                    const rl = new THREE.PointLight(0x00ffff, 4.0, 150);
+                    rg.add(rl);
+                    this.scene.add(rg);
+                    this._meshPool.set(rid, rg);
+                    rm = rg;
+                }
+                rm.position.set(b.x, 35, b.y);
+                rm.rotation.y = -(b.angle || 0);
+
+            } else if (b.type === 'flame') {
+                if (flameCount < 300) {
+                    this._dummy.position.set(b.x, 35 + Math.random() * 8, b.y);
+                    this._dummy.scale.setScalar(b.size || 6);
+                    this._dummy.updateMatrix();
+                    this._flames.setMatrixAt(flameCount, this._dummy.matrix);
+                    flameCount++;
+                }
+            } else {
+                if (stdCount < 800) {
+                    this._dummy.position.set(b.x, 35, b.y);
+                    this._dummy.scale.setScalar(b.type === 'rocket' ? 3 : 1.5);
+                    this._dummy.updateMatrix();
+                    this._bullets.setMatrixAt(stdCount, this._dummy.matrix);
+                    stdCount++;
+                }
+            }
+        }
+
+        this._bullets.count = stdCount;
+        this._bullets.instanceMatrix.needsUpdate = true;
+        this._flames.count = flameCount;
+        this._flames.instanceMatrix.needsUpdate = true;
+        this._gc('rail_', liveRail);
+    }
+
+    // ── Garbage Collection ────────────────────────────────────
+    _gc(prefix, liveIds) {
+        for (const [id, obj] of this._meshPool.entries()) {
+            if (id.startsWith(prefix) && !liveIds.has(id)) {
+                this.scene.remove(obj);
+                this._meshPool.delete(id);
+            }
+        }
+    }
+
+    // ── Snapshot aus Game-Variablen (direkter Closure-Zugriff!) ──
+    snapshot() {
+        // WICHTIG: player/enemies/etc sind let/const im selben Script-Scope
+        // — NICHT auf window verfügbar. Direkt referenzieren:
+        const snap = {
+            player:      (typeof player      !== 'undefined') ? player      : null,
+            enemies:     (typeof enemies     !== 'undefined') ? enemies     : [],
+            bullets:     (typeof bullets     !== 'undefined') ? bullets     : [],
+            items:       (typeof items       !== 'undefined') ? items       : [],
+            turrets:     (typeof turrets     !== 'undefined') ? turrets     : [],
+            obstacles:   (typeof obstacles   !== 'undefined') ? obstacles   : [],
+            stations:    (typeof stations    !== 'undefined') ? stations    : [],
+            servers:     (typeof servers     !== 'undefined') ? servers     : [],
+            screenShake: (typeof screenShake !== 'undefined') ? screenShake : 0,
+        };
+        // Entity-IDs vergeben (persistent pro Enemy-Instanz)
+        snap.enemies.forEach((e, i) => { if (!e._id) e._id = 'e' + i + '_' + e.type + '_' + Math.random().toString(36).substr(2,4); });
+        snap.items.forEach((it, i)   => { if (!it._id) it._id = 'i' + i + '_' + (it.type || 'x') + '_' + Math.random().toString(36).substr(2,4); });
+        return snap;
+    }
+
+    _onResize() {
+        if (!this.renderer || !this.camera) return;
+        this.canvas3d.width  = window.innerWidth;
+        this.canvas3d.height = window.innerHeight;
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+    }
+
+    dispose() {
+        for (const [, obj] of this._meshPool) { if (this.scene) this.scene.remove(obj); }
+        this._meshPool.clear();
+        if (this.renderer) { this.renderer.dispose(); this.renderer.forceContextLoss(); }
+        this.renderer = null; this.scene = null; this.camera = null;
+        this._worldBuilt = false;
+        console.log('[DOOM3D] dispose()');
+    }
+}
+
+// ── Globale Engine-Instanz (lazy-init beim ersten Spielstart) ─
+function _doom3dEnsureInit() {
+    if (!window._3d) {
+        window._3d = new DOOM3DEngine();
+        if (!window._3d.init()) {
+            window._3d = null;
+            window._use3d = false;
+            console.error('[DOOM3D] Init fehlgeschlagen.');
+        }
+    }
+}
+
+// ── 3D-Canvas ein-/ausblenden ─────────────────────────────────
+function _doom3dActivate() {
+    const c = document.getElementById('game3d');
+    if (c) { c.style.display = 'block'; }
+    const c2d = document.getElementById('game');
+    if (c2d) { c2d.style.opacity = '0'; } // 2D unsichtbar, Events bleiben aktiv
+}
+
+function _doom3dDeactivate() {
+    const c = document.getElementById('game3d');
+    if (c) { c.style.display = 'none'; }
+    const c2d = document.getElementById('game');
+    if (c2d) { c2d.style.opacity = '1'; }
+}
+
+// ============================================================
+// SECTION 6 — CANVAS & GAME VARS (ORIGINAL)
+// ============================================================
 const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
 const WORLD_WIDTH=4000, WORLD_HEIGHT=4000;
 const camera={x:0,y:0};
@@ -6163,8 +6757,6 @@ class Player{
                 for(let w of wepKeys) {
                     let frBase = {minigun:4,uzi:7,ak47:6,shotgun:40,rocket:60,railgun:50,flamer:3}[w]||20;
                     let fr = Math.max(2, frBase - Math.ceil(frBase * 0.15 * getUpgradeLevel('fire_rate')));
-                    // WAFFENTEIL Abzug: +12% Feuerrate (nur Favorit)
-                    if(w === favoriteWeapon && getPartBonus(w,'abzug')) fr = Math.max(2, Math.floor(fr * 0.88));
                     if(frame - (this.lastShot[w]||0) > fr) { this.shootWeapon(w); this.lastShot[w] = frame; }
                 }
             }
@@ -6199,21 +6791,15 @@ class Player{
         let angle=Math.atan2(input.y-(this.y+offset-camera.y), input.x-(this.x-camera.x));
         if(w==='uzi'&&this.bikeTimer>0&&!input.mouseDown) angle=Math.random()*Math.PI*2;
         let dmg=10+this.dmgBonus;
-        // ── WAFFENTEILE: Griff (+10% DMG) & Magazin (-40% Streuung) nur auf Favorit ──
-        let isFavWeapon = (w === favoriteWeapon);
-        if(isFavWeapon && getPartBonus(w,'griff')) dmg = Math.floor(dmg * 1.10);
-        let spreadMult = (isFavWeapon && getPartBonus(w,'magazin')) ? 0.6 : 1.0;
-        let rangeBoost = (isFavWeapon && getPartBonus(w,'lauf')) ? 1.25 : 1.0;
-        function pushB(x,y,a,t,d){ let b=new Bullet(x,y,a,t,d); if(rangeBoost>1) b.life=Math.floor(b.life*rangeBoost); bullets.push(b); }
         let recoil = 0;
-        if(w==='shotgun')    {for(let i=-2;i<=2;i++) pushB(this.x,this.y+offset,angle+i*0.15*spreadMult,'standard',dmg); playSound('shoot'); recoil=3;}
-        else if(w==='minigun'){pushB(this.x,this.y+offset,angle+(Math.random()-.5)*0.4*spreadMult,'standard',dmg); playSound('shoot');}
-        else if(w==='uzi')   {pushB(this.x,this.y+offset,angle+(Math.random()-.5)*0.1*spreadMult,'standard',dmg); playSound('shoot');}
-        else if(w==='ak47')  {pushB(this.x,this.y+offset,angle+(Math.random()-.5)*0.05*spreadMult,'standard',dmg); playSound('shoot'); recoil=1;}
-        else if(w==='rocket'){pushB(this.x,this.y+offset,angle,'rocket',dmg); playSound('shoot'); recoil=5;}
-        else if(w==='railgun'){pushB(this.x,this.y+offset,angle,'railgun',dmg*5); playSound('boss'); recoil = 8; screenShake = 8;}
-        else if(w==='flamer'){for(let i=0; i<3; i++) pushB(this.x,this.y+offset,angle+(Math.random()-.5)*0.3*spreadMult,'flame',dmg*0.3); if(frame%5===0) playSound('shoot');}
-        else {pushB(this.x,this.y+offset,angle,'standard',dmg); playSound('shoot');}
+        if(w==='shotgun')    {for(let i=-2;i<=2;i++) bullets.push(new Bullet(this.x,this.y+offset,angle+i*0.15,'standard',dmg)); playSound('shoot'); recoil=3;}
+        else if(w==='minigun'){bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.4,'standard',dmg)); playSound('shoot');}
+        else if(w==='uzi')   {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.1,'standard',dmg)); playSound('shoot');}
+        else if(w==='ak47')  {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.05,'standard',dmg)); playSound('shoot'); recoil=1;}
+        else if(w==='rocket'){bullets.push(new Bullet(this.x,this.y+offset,angle,'rocket',dmg)); playSound('shoot'); recoil=5;}
+        else if(w==='railgun'){bullets.push(new Bullet(this.x,this.y+offset,angle,'railgun',dmg*5)); playSound('boss'); recoil = 8; screenShake = 8;}
+        else if(w==='flamer'){for(let i=0; i<3; i++) bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.3,'flame',dmg*0.3)); if(frame%5===0) playSound('shoot');}
+        else {bullets.push(new Bullet(this.x,this.y+offset,angle,'standard',dmg)); playSound('shoot');}
         let oldX = this.x, oldY = this.y;
         this.x -= Math.cos(angle) * recoil;
         this.y -= Math.sin(angle) * recoil;
@@ -6227,29 +6813,6 @@ class Player{
     draw(){
         let facingRight=input.worldX>this.x;
         let rolling = this.rollTimer > 0;
-
-        // ── WAFFENTEIL Laser-Visier: Ziellinie zur Maus (nur Favorit aktiv) ──
-        if(favoriteWeapon && this.activeWeapons[favoriteWeapon] !== undefined && getPartBonus(favoriteWeapon,'visier')) {
-            let offset = this.isMartin ? -20 : -10;
-            let aimAngle = Math.atan2(input.y-(this.y+offset-camera.y), input.x-(this.x-camera.x));
-            let laserLen = 320;
-            ctx.save();
-            ctx.strokeStyle = 'rgba(231,76,60,0.55)';
-            ctx.lineWidth = 1.5;
-            ctx.setLineDash([6,5]);
-            ctx.beginPath();
-            ctx.moveTo(this.x, this.y + offset);
-            ctx.lineTo(this.x + Math.cos(aimAngle)*laserLen, this.y + offset + Math.sin(aimAngle)*laserLen);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            // Zielpunkt
-            ctx.fillStyle = 'rgba(231,76,60,0.8)';
-            ctx.beginPath();
-            ctx.arc(this.x + Math.cos(aimAngle)*laserLen, this.y + offset + Math.sin(aimAngle)*laserLen, 3, 0, Math.PI*2);
-            ctx.fill();
-            ctx.restore();
-        }
-
         ctx.save(); ctx.translate(this.x,this.y);
         if(this.bikeTimer>0) ctx.translate(0,Math.sin(frame*.5)*3);
         if(this.bugTimer>0){ ctx.translate((Math.random()-.5)*5,(Math.random()-.5)*5); ctx.filter="hue-rotate("+Math.random()*360+"deg)"; }
@@ -6333,7 +6896,7 @@ class Item{
         
         // --- FIX: Stärkere Kontur für Emojis ---
         ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
-        const icons = {chicken:'🍗',vodka:'🍺',crate:'📦',bug:'💾',hammer:'🔨',vacation:'💤',bike:'🚲',shield:'🛡️',briefcase:'💼',suppe:'🥣',akte:'📁',callski:'📞'};
+        const icons = {chicken:'🍗',vodka:'🍺',crate:'📦',bug:'💾',hammer:'🔨',vacation:'💤',bike:'🚲',shield:'🛡️',briefcase:'💼',suppe:'🥣',akte:'📁'};
         let icon = icons[this.type] || '?';
         ctx.strokeText(icon, 0, 0);
         ctx.fillText(icon, 0, 0);
@@ -8538,6 +9101,16 @@ function loop(){
         }
 
         frame++; shiftTimer++;
+
+        // ── 3D DOOM: Schussrichtung = Blickrichtung (vor player.update!) ──
+        if (window._use3d && window._3d && player) {
+            const yaw = window._3d._yaw || 0;
+            const reach = 500;
+            input.worldX = player.x + Math.sin(yaw) * reach;
+            input.worldY = player.y + Math.cos(yaw) * reach;
+        }
+        // ─────────────────────────────────────────────────────────────────
+
         spawnLogic();
         player.update();
 
@@ -8640,7 +9213,7 @@ function loop(){
 
         camera.x=Math.max(0,Math.min(player.x-canvas.width/2, WORLD_WIDTH-canvas.width));
         camera.y=Math.max(0,Math.min(player.y-canvas.height/2,WORLD_HEIGHT-canvas.height));
-        input.worldX=input.x+camera.x; input.worldY=input.y+camera.y;
+        if (!window._use3d) { input.worldX=input.x+camera.x; input.worldY=input.y+camera.y; }
        
         for(let i=bullets.length-1;i>=0;i--){
             let b=bullets[i]; b.update();
@@ -8749,13 +9322,10 @@ function loop(){
                 // --- AKTEN DROP SYSTEM ---
                 if(e.type === 99 && (e.label === "PETER BAYER" || e.label === "MEISTER HAND")) {
                     items.push(new Item('akte', e.x, e.y)); // MVP 100%
-                    if(Math.random() < 0.50) items.push(new Item('callski', e.x + 30, e.y)); // MVP: 50% Callski
                 } else if(e.type === 99) {
                     if(Math.random() < 0.10) items.push(new Item('akte', e.x, e.y)); // Boss 10%
-                    if(Math.random() < 0.15) items.push(new Item('callski', e.x + 30, e.y)); // Boss: 15% Callski
                 } else {
                     if(Math.random() < 0.001) items.push(new Item('akte', e.x, e.y)); // Normal 0.1%
-                    if(Math.random() < 0.003) items.push(new Item('callski', e.x, e.y)); // Normal: 0.3% Callski
                 }
 
                 // NEU V20: Combo-System bei jedem Kill
@@ -8850,17 +9420,7 @@ function loop(){
                         playSound('delivery');
                         showToast("AKTE GEFUNDEN! 📁", "#9b59b6", "Öffne sie im Karten-Menü"); 
                         floatingTexts.push(new FloatingText(player.x,player.y,"+1 AKTE","#9b59b6"));
-                        break;
-                    case 'callski': {
-                        // Zufälliges Waffenteil
-                        let randomPart = WEAPON_PARTS[Math.floor(Math.random() * WEAPON_PARTS.length)];
-                        partInventory[randomPart.id] = (partInventory[randomPart.id] || 0) + 1;
-                        savePartsData();
-                        playSound('delivery');
-                        showToast("CALLSKI! 📞", "#00e5ff", randomPart.icon + " " + randomPart.name + " gefunden!");
-                        floatingTexts.push(new FloatingText(player.x, player.y, "+" + randomPart.icon + " TEIL", "#00e5ff"));
-                        break;
-                    }  
+                        break;  
                     case 'chicken': 
                         if(currentDiffLabel === "SURVIVAL" || isWegflexenMode) { showToast("VERDORBEN! 🍗", "#555", "Keine Heilung im Survival!"); }
                         else { player.hp = Math.min(player.maxHp, player.hp + 30); showToast("STÄRKUNG! 🍗","#d35400","+30 Gesundheit"); }
@@ -8929,6 +9489,16 @@ function loop(){
         if(currentDiffLabel === "SURVIVAL" && score >= 250000) unlockTrophy('survival_master');
 
         // Render
+        // ── 3D DOOM MODUS: Renderer übernimmt wenn aktiv ─────
+        if (window._use3d && window._3d) {
+            // 2D-Canvas leer halten (opacity:0 aber trotzdem clearen)
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // 3D Frame rendern
+            window._3d.render(window._3d.snapshot());
+            requestAnimationFrame(loop);
+            return;
+        }
+        // ─────────────────────────────────────────────────────
         ctx.setTransform(1,0,0,1,0,0);
         ctx.clearRect(0,0,canvas.width,canvas.height);
         ctx.save();
@@ -9125,6 +9695,23 @@ function startGame(diff=1, gameMode='normal'){
         showToast('⭐ FAVORIT AKTIV', '#f1c40f', (w?w.name:'Waffe') + ' — permanent für diesen Run');
     }
     gameRunning=true;
+
+    // ── 3D DOOM MODUS ────────────────────────────────────────
+    if (window._use3d) {
+        _doom3dEnsureInit();
+        if (window._3d) {
+            // Welt-Rebuild bei jedem Spielstart
+            window._3d._worldBuilt = false;
+            window._3d._meshPool.forEach((obj) => { if(window._3d.scene) window._3d.scene.remove(obj); });
+            window._3d._meshPool.clear();
+            _doom3dActivate();
+            showToast('🔥 3D DOOM-MODUS', '#ff4400', 'First-Person aktiv — Maus = Blickrichtung');
+        }
+    } else {
+        _doom3dDeactivate();
+    }
+    // ─────────────────────────────────────────────────────────
+
     loop();
 }
 
