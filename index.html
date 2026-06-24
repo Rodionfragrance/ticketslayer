@@ -549,6 +549,14 @@ input[type="text"] {
 <canvas id="game"></canvas>
 <!-- 3D DOOM Canvas — pointer-events:none damit Game-Input durchgeht -->
 <canvas id="game3d" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:6;pointer-events:none;"></canvas>
+<!-- 3D Fadenkreuz (Crosshair) — fest in der Bildschirmmitte -->
+<div id="doom3d-crosshair" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:8;pointer-events:none;width:40px;height:40px;">
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:6px;height:6px;border-radius:50%;background:#ff3333;box-shadow:0 0 6px #ff0000;"></div>
+    <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:2px;height:13px;background:#ff3333;box-shadow:0 0 4px #ff0000;"></div>
+    <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:2px;height:13px;background:#ff3333;box-shadow:0 0 4px #ff0000;"></div>
+    <div style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:13px;height:2px;background:#ff3333;box-shadow:0 0 4px #ff0000;"></div>
+    <div style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:13px;height:2px;background:#ff3333;box-shadow:0 0 4px #ff0000;"></div>
+</div>
 
 <!-- EMAIL OVERLAY -->
 <div id="emailOverlay">
@@ -5518,59 +5526,80 @@ class DOOM3DEngine {
         const s = this.scene;
 
         // Obstacles → Wände / Möbel
+        // WICHTIG: Jedes Objekt das in checkWallCollision() blockiert, muss
+        // hier auch sichtbar als Wand erscheinen (deckungsgleich mit o.x/y/w/h).
         (gs.obstacles || []).forEach(o => {
             if (!o || !o.w) return;
+            if (o.type === 'secretwall') return; // Geheimwand: keine Kollision, nicht rendern
             const cx = o.x + o.w / 2, cz = o.y + o.h / 2;
-            let h = 130, col = 0x12121e;
-            if (o.type === 'desk')        { h = 55;  col = 0x1e2a30; }
-            if (o.type === 'shelf')       { h = 160; col = 0x0d0d16; }
-            if (o.type === 'wall')        { h = 180; col = 0x080810; }
-            if (o.type === 'server')      { h = 140; col = 0x081424; }
-            if (o.type === 'pillar')      { h = 200; col = 0x0f0f18; }
-            if (o.type === 'zonewall')    { h = 90;  col = 0x1a0505; }
-            if (o.type === 'secretwall')  { h = 160; col = 0x040404; }
-            if (o.type === 'truck')       { h = 70;  col = 0x1a1a1a; }
-            if (o.type === 'cab')         { h = 80;  col = 0x2a0505; }
-            if (o.type === 'blockade')    { h = 60;  col = 0x1a1000; }
+            let h = 130, col = 0x2a2a3e, edge = 0x4a4a6e;
+            if (o.type === 'desk')        { h = 100; col = 0x2e4250; edge = 0x4e7290; }
+            if (o.type === 'shelf')       { h = 170; col = 0x3a2418; edge = 0x6a4428; }
+            if (o.type === 'wall')        { h = 190; col = 0x222230; edge = 0x44445a; }
+            if (o.type === 'server')      { h = 150; col = 0x182438; edge = 0x2a4a78; }
+            if (o.type === 'pillar')      { h = 210; col = 0x2a2a38; edge = 0x4a4a5a; }
+            if (o.type === 'zonewall')    { h = 110; col = 0x3a1010; edge = 0xaa2020; }
+            if (o.type === 'truck')       { h = 130; col = 0x3a3a3a; edge = 0x6a6a6a; }
+            if (o.type === 'cab')         { h = 140; col = 0x4a1010; edge = 0x8a2020; }
+            if (o.type === 'blockade')    { h = 110; col = 0x3a2800; edge = 0xf1c40f; }
 
             const mat = new THREE.MeshStandardMaterial({
                 color: col,
                 emissive: col,
-                emissiveIntensity: 0.06,
-                roughness: 0.9
+                emissiveIntensity: 0.18,
+                roughness: 0.85
             });
             const mesh = new THREE.Mesh(new THREE.BoxGeometry(o.w, h, o.h), mat);
             mesh.position.set(cx, h / 2, cz);
             s.add(mesh);
+
+            // Leuchtender Rand oben drauf — macht klar: das ist eine solide Wand
+            const cap = new THREE.Mesh(
+                new THREE.BoxGeometry(o.w + 2, 6, o.h + 2),
+                new THREE.MeshBasicMaterial({ color: edge })
+            );
+            cap.position.set(cx, h, cz);
+            s.add(cap);
         });
 
-        // Stationen mit Farbakzent
+        // Stationen mit Farbakzent + Emoji-Schild (wie 2D-Label)
         const stationColors = {
             coffee_machine: 0x6f3e20,
             hardware_store: 0x4a1a6a,
             chicken_truck:  0x7a2a00
         };
+        const stationIcons = {
+            coffee_machine: ['☕', 'KAFFEE'],
+            hardware_store: ['🔧', 'HARDWARELAGER'],
+            chicken_truck:  ['🍗', 'WITWE BOLTE']
+        };
         (gs.stations || []).forEach(st => {
             const col = stationColors[st.type] || 0x1a2030;
-            const h = 90;
+            const h = 120;
             const mesh = new THREE.Mesh(
                 new THREE.BoxGeometry(st.w || 80, h, st.h || 80),
-                new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.3 })
+                new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.35 })
             );
-            mesh.position.set((st.x + (st.w || 80) / 2), h / 2, (st.y + (st.h || 80) / 2));
+            const mx = st.x + (st.w || 80) / 2, mz = st.y + (st.h || 80) / 2;
+            mesh.position.set(mx, h / 2, mz);
             s.add(mesh);
-            const pl = new THREE.PointLight(col, 2.0, 250);
-            pl.position.set(mesh.position.x, h + 30, mesh.position.z);
+            const pl = new THREE.PointLight(col, 2.2, 280);
+            pl.position.set(mx, h + 40, mz);
             s.add(pl);
+            // Emoji-Schild darüber
+            const ic = stationIcons[st.type] || ['🏢', 'STATION'];
+            const lbl = this._makeMarkerSprite(ic[0], ic[1], '#ffcc66');
+            lbl.position.set(mx, h + 70, mz);
+            s.add(lbl);
         });
 
-        // Server
+        // Server + Schild
         (gs.servers || []).forEach(sv => {
             const col = sv.isFarm ? 0x004422 : 0x220000;
             const h = 120;
             const mesh = new THREE.Mesh(
                 new THREE.BoxGeometry(sv.w || 40, h, sv.h || 80),
-                new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.4 })
+                new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.5 })
             );
             mesh.position.set(sv.x + (sv.w || 40) / 2, h / 2, sv.y + (sv.h || 80) / 2);
             s.add(mesh);
@@ -5600,23 +5629,16 @@ class DOOM3DEngine {
 
             this.camera.position.set(p.x + shX, eyeY + shY, p.y);
 
-            // Blickrichtung: Maus-X relativ zur Bildschirmmitte dreht den Yaw
-            // (echtes FPS-Gefühl — Maus links/rechts = umschauen)
-            if (typeof input !== 'undefined' && input) {
-                const cw = this.canvas3d.width || window.innerWidth;
-                // Maus-Offset von der Mitte, normiert auf -1..+1
-                const offX = (input.x - cw / 2) / (cw / 2);
-                // Ziel-Yaw: glatt nachführen
-                const targetYaw = offX * Math.PI * 0.85; // max ~153° Drehbereich
-                // Smoothing
-                if (this._yaw === undefined) this._yaw = 0;
-                this._yaw += (targetYaw - this._yaw) * 0.18;
-            }
+            // Blickrichtung: Yaw (drehen) + Pitch (hoch/runter) aus Pointer-Lock.
+            if (this._yaw === undefined) this._yaw = 0;
+            if (this._pitch === undefined) this._pitch = 0;
 
             const lookDist = 600;
+            // Pitch verschiebt den Blickpunkt vertikal (tan-basiert für natürliches Gefühl)
+            const pitchY = Math.tan(this._pitch) * lookDist;
             this.camera.lookAt(
                 p.x + Math.sin(this._yaw) * lookDist,
-                eyeY - 6,   // leicht nach unten — natürlicher FPS-Look
+                eyeY + pitchY,
                 p.y + Math.cos(this._yaw) * lookDist
             );
 
@@ -5625,7 +5647,7 @@ class DOOM3DEngine {
                 this._flashlight.position.copy(this.camera.position);
                 this._flashlightTarget.position.set(
                     p.x + Math.sin(this._yaw) * 900,
-                    eyeY - 15,
+                    eyeY + Math.tan(this._pitch) * 900,
                     p.y + Math.cos(this._yaw) * 900
                 );
                 this._flashlightTarget.updateMatrixWorld();
@@ -5639,7 +5661,7 @@ class DOOM3DEngine {
         }
 
         // ── ENTITIES ─────────────────────────────────────────
-        this._syncPlayer(gs.player);
+        // (Spieler selbst wird in First-Person nicht gerendert — wir SIND die Kamera)
 
         const liveEnemies = new Set();
         (gs.enemies || []).forEach(e => {
@@ -5662,6 +5684,18 @@ class DOOM3DEngine {
         });
         this._gc('t', liveTurrets);
 
+        // ── VEHICLES (Gabelstapler / LKW) ────────────────────
+        const liveVeh = new Set();
+        (gs.vehicles || []).forEach((v, i) => {
+            if (!v._id) v._id = 'v' + i + '_' + (v.type || 'x') + '_' + Math.random().toString(36).substr(2,4);
+            liveVeh.add('veh' + v._id);
+            this._syncVehicle(v, f);
+        });
+        this._gc('veh', liveVeh);
+
+        // ── EVENT-MARKER (IDOC, Kloska, Meeting, Bürotür) ────
+        this._syncEvents(gs, f);
+
         // ── BULLETS ──────────────────────────────────────────
         this._syncBullets(gs.bullets || [], f);
 
@@ -5669,13 +5703,124 @@ class DOOM3DEngine {
         this.renderer.render(this.scene, this.camera);
     }
 
-    // ── Spieler-Mesh (FPS: unsichtbar = du bist die Kamera) ──
-    _syncPlayer(player) {
-        // In First-Person sehen wir uns selbst nicht
-        // Optional: Waffe in Screen-Space (kommt später)
+    // ── Vehicles als Sprite-Billboard (🚜 / 🚚) ──────────────
+    _syncVehicle(v, f) {
+        const id = 'veh' + v._id;
+        let g = this._meshPool.get(id);
+        if (!g) {
+            const cv = document.createElement('canvas');
+            cv.width = 256; cv.height = 256;
+            const tex = new THREE.CanvasTexture(cv);
+            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+            const sz = Math.max(v.w || 120, 120) * 1.6;
+            sprite.scale.set(sz, sz * 0.7, 1);
+            g = new THREE.Group();
+            g.add(sprite);
+            g.userData.spriteH = sz * 0.7;
+            // Zeichnen
+            const ctx = cv.getContext('2d');
+            ctx.clearRect(0,0,256,256);
+            ctx.font = '150px Arial';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.shadowColor = '#000'; ctx.shadowBlur = 10;
+            ctx.fillText(v.type === 'truck' ? '🚚' : '🚜', 128, 110);
+            ctx.font = 'bold 26px Courier New';
+            ctx.fillStyle = '#fff';
+            ctx.fillText(v.type === 'truck' ? '⚠ LKW' : '⚠ STAPLER', 128, 215);
+            tex.needsUpdate = true;
+            this.scene.add(g);
+            this._meshPool.set(id, g);
+        }
+        g.position.set(v.x, (g.userData.spriteH || 80) * 0.5 + 10, v.y);
     }
 
-    // ── Gegner ───────────────────────────────────────────────
+    // ── Event-Marker (IDOC-Alarm, Kloska, Meeting-Zone, Bürotür) ──
+    _syncEvents(gs, f) {
+        const live = new Set();
+
+        // IDOC-Alarm — roter pulsierender Marker mit !
+        if (gs.idocEvent) {
+            live.add('ev_idoc');
+            let g = this._meshPool.get('ev_idoc');
+            if (!g) { g = this._makeMarkerSprite('🚨', 'ALARM', '#ff0000'); this.scene.add(g); this._meshPool.set('ev_idoc', g); }
+            const bob = 90 + Math.sin(f * 0.1) * 20;
+            g.position.set(gs.idocEvent.x + 20, bob, gs.idocEvent.y + 40);
+        }
+
+        // Kloska-Sabotage
+        if (gs.kloskaEvent) {
+            live.add('ev_kloska');
+            let g = this._meshPool.get('ev_kloska');
+            if (!g) { g = this._makeMarkerSprite('🔧', 'SABOTAGE!', '#ff00ff'); this.scene.add(g); this._meshPool.set('ev_kloska', g); }
+            const bob = 70 + Math.abs(Math.sin(f * 0.1)) * 30;
+            g.position.set(gs.kloskaEvent.x, bob, gs.kloskaEvent.y);
+        }
+
+        // Meeting-Zone — blauer Boden-Ring + Marker
+        if (gs.meetingZone && gs.meetingZone.active) {
+            live.add('ev_meeting');
+            let g = this._meshPool.get('ev_meeting');
+            if (!g) {
+                g = new THREE.Group();
+                const ring = new THREE.Mesh(
+                    new THREE.CylinderGeometry(gs.meetingZone.r, gs.meetingZone.r, 4, 32, 1, true),
+                    new THREE.MeshBasicMaterial({ color: 0x2266ff, transparent: true, opacity: 0.4, side: THREE.DoubleSide })
+                );
+                ring.position.y = 40;
+                g.add(ring);
+                const mk = this._makeMarkerSprite('📅', 'MEETING', '#3388ff');
+                mk.position.y = 120;
+                g.add(mk);
+                this.scene.add(g);
+                this._meshPool.set('ev_meeting', g);
+            }
+            g.position.set(gs.meetingZone.x, 0, gs.meetingZone.y);
+        }
+
+        // Bürotür — Peter Bayer Boss-Eingang
+        if (gs.bueroDoor && gs.bueroDoor.active) {
+            live.add('ev_door');
+            let g = this._meshPool.get('ev_door');
+            if (!g) {
+                g = new THREE.Group();
+                const door = new THREE.Mesh(
+                    new THREE.BoxGeometry(gs.bueroDoor.w, 200, 20),
+                    new THREE.MeshStandardMaterial({ color: 0x3d1f1f, emissive: 0xc0392b, emissiveIntensity: 0.4 })
+                );
+                door.position.y = 100;
+                g.add(door);
+                const mk = this._makeMarkerSprite('📞', 'BAYER [E]', '#ff2200');
+                mk.position.y = 250;
+                g.add(mk);
+                this.scene.add(g);
+                this._meshPool.set('ev_door', g);
+            }
+            g.position.set(gs.bueroDoor.x + gs.bueroDoor.w/2, 0, gs.bueroDoor.y + gs.bueroDoor.h/2);
+        }
+
+        this._gc('ev_', live);
+    }
+
+    _makeMarkerSprite(emoji, label, color) {
+        const cv = document.createElement('canvas');
+        cv.width = 256; cv.height = 256;
+        const ctx = cv.getContext('2d');
+        ctx.font = '120px Arial';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.shadowColor = '#000'; ctx.shadowBlur = 10;
+        ctx.fillText(emoji, 128, 110);
+        ctx.font = 'bold 28px Courier New';
+        ctx.fillStyle = color;
+        ctx.fillText(label, 128, 200);
+        const tex = new THREE.CanvasTexture(cv);
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+        sprite.scale.set(90, 90, 1);
+        const g = new THREE.Group();
+        g.add(sprite);
+        return g;
+    }
+
+    // ── Gegner — DOOM-Style Sprite-Billboards (wie 2D-Optik) ──
     _syncEnemy(e, f) {
         const id = 'e' + e._id;
         let g = this._meshPool.get(id);
@@ -5684,149 +5829,93 @@ class DOOM3DEngine {
             this.scene.add(g);
             this._meshPool.set(id, g);
         }
-        // Position (y = halbe Körperhöhe)
-        const bodyH = g.userData.bodyH || 80;
-        g.position.set(e.x, bodyH / 2, e.y);
+        const r = Math.max(e.radius || 20, 16);
+        // Sprite steht auf dem Boden: halbe Höhe nach oben
+        const spriteH = g.userData.spriteH || (r * 4);
+        g.position.set(e.x, spriteH * 0.5, e.y);
 
-        // Immer zur Kamera drehen (Billboard-Y)
-        if (this.camera) {
-            g.rotation.y = Math.atan2(
-                this.camera.position.x - e.x,
-                this.camera.position.z - e.y
-            );
+        // Billboard: Sprite richtet sich automatisch zur Kamera (THREE.Sprite)
+        // HP-Bar-Wert aktualisieren — nur bei Änderung neu zeichnen (Performance)
+        const hpKey = Math.round((e.hp / e.maxHp) * 20)
+                    + '_' + (e.freezeTimer > 0 ? 'f' : '')
+                    + '_' + (e.burnTimer > 0 ? 'b' : '');
+        if (g.userData.lastKey !== hpKey) {
+            g.userData.lastKey = hpKey;
+            this._drawEnemySprite(g, e);
         }
-
-        // Freeze = blau, Burn = orange
-        if (g.userData.body) {
-            const origCol = g.userData.origColor;
-            if (e.freezeTimer > 0)      g.userData.body.material.color.setHex(0x44aaff);
-            else if (e.burnTimer > 0)   g.userData.body.material.color.setHex(0xff4400);
-            else                        g.userData.body.material.color.setHex(origCol);
-        }
-
-        // Aura bei Boss
-        if (g.userData.aura) {
-            g.userData.aura.rotation.y += 0.04;
-            g.userData.aura.rotation.x  = Math.sin(f * 0.02) * 0.3;
-        }
-
-        // HP-Bar zur Kamera ausrichten
-        if (g.userData.hpBar && this.camera) {
-            g.userData.hpBar.lookAt(this.camera.position);
-        }
-        this._updateHpBar(g, e);
     }
 
     _buildEnemy(e) {
-        const g = new THREE.Group();
         const r = Math.max(e.radius || 20, 16);
-        const col = parseInt((e.color || '#c0392b').replace('#', ''), 16);
-        g.userData.origColor = col;
+        // Canvas-Textur — wird wie das 2D-Symbol gezeichnet
+        const cv = document.createElement('canvas');
+        cv.width = 256; cv.height = 256;
+        const tex = new THREE.CanvasTexture(cv);
+        tex.minFilter = THREE.LinearFilter;
+        const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: true });
+        const sprite = new THREE.Sprite(mat);
 
-        // Körper-Höhe: mindestens 80, damit auf Augenhöhe sichtbar
-        const bodyH = Math.max(80, r * 3.2);
-        g.userData.bodyH = bodyH;
+        // Sprite-Größe in Welt-Einheiten (proportional zum 2D-Radius)
+        const worldSize = r * 4;
+        sprite.scale.set(worldSize, worldSize, 1);
 
-        const mat = new THREE.MeshStandardMaterial({
-            color: col, emissive: col, emissiveIntensity: 0.55,
-            roughness: 0.4
-        });
-
-        let body;
-        if (e.type === 5) {
-            // PRIO5 — kleiner Wurm, kriecht
-            body = new THREE.Mesh(new THREE.SphereGeometry(r * 1.1, 8, 6), mat);
-            body.scale.y = 0.5;
-            body.position.y = r * 0.5;
-        } else if (e.type === 8) {
-            // SAP-Update — Oktaeder, dreht sich
-            body = new THREE.Mesh(new THREE.OctahedronGeometry(r * 1.4), mat);
-            body.position.y = bodyH * 0.5;
-        } else if (e.type === 6) {
-            // Teichmann — breite Box
-            body = new THREE.Mesh(new THREE.BoxGeometry(r * 2, bodyH, r * 1.4), mat);
-            body.position.y = bodyH * 0.5;
-        } else if (e.type === 7) {
-            // Der Anwender — Zylinder mit lila Ring
-            body = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.8, r, bodyH, 8), mat);
-            body.position.y = bodyH * 0.5;
-            const ring = new THREE.Mesh(
-                new THREE.TorusGeometry(r * 1.6, 3, 5, 16),
-                new THREE.MeshBasicMaterial({ color: 0x9b59b6 })
-            );
-            ring.rotation.x = Math.PI / 2;
-            ring.position.y = bodyH * 0.5;
-            g.add(ring);
-        } else if (e.type === 1 || e.type === 99) {
-            // PRIO1 / Boss — Oktaeder + Krone + Aura
-            const bR = r * 1.6;
-            body = new THREE.Mesh(new THREE.OctahedronGeometry(bR), mat);
-            body.position.y = bodyH * 0.6;
-            const aura = new THREE.Mesh(
-                new THREE.IcosahedronGeometry(bR * 1.5, 1),
-                new THREE.MeshBasicMaterial({ color: col, wireframe: true, transparent: true, opacity: 0.25 })
-            );
-            aura.position.y = bodyH * 0.6;
-            g.add(aura);
-            g.userData.aura = aura;
-            const bl = new THREE.PointLight(new THREE.Color(e.color || '#c0392b'), 3.5, r * 7);
-            bl.position.y = bodyH * 0.6;
-            g.add(bl);
-        } else {
-            // PRIO2/3/4 — Standard Zylinder
-            body = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.75, r, bodyH, 7), mat);
-            body.position.y = bodyH * 0.5;
-        }
-
-        if (body) { g.add(body); g.userData.body = body; }
-
-        // ── Augen auf 75% der Körperhöhe ──────────────────────
-        const eyeY = bodyH * 0.78;
-        [-r * 0.32, r * 0.32].forEach(ex => {
-            const eye = new THREE.Mesh(
-                new THREE.SphereGeometry(r * 0.2, 6, 5),
-                new THREE.MeshBasicMaterial({ color: 0xffffff })
-            );
-            eye.position.set(ex, eyeY, -r * 0.88);
-            g.add(eye);
-            const pupil = new THREE.Mesh(
-                new THREE.SphereGeometry(r * 0.12, 5, 4),
-                new THREE.MeshBasicMaterial({ color: 0x000000 })
-            );
-            pupil.position.set(ex, eyeY, -r * 1.03);
-            g.add(pupil);
-        });
-
-        // ── HP-Bar über Kopf ───────────────────────────────────
-        const bgBar = new THREE.Mesh(
-            new THREE.PlaneGeometry(r * 2.4, 7),
-            new THREE.MeshBasicMaterial({ color: 0x220000, depthTest: false, side: THREE.DoubleSide })
-        );
-        bgBar.position.set(0, bodyH + 22, 0);
-        g.add(bgBar);
-
-        const fgBar = new THREE.Mesh(
-            new THREE.PlaneGeometry(r * 2.4, 7),
-            new THREE.MeshBasicMaterial({ color: 0x00dd44, depthTest: false, side: THREE.DoubleSide })
-        );
-        fgBar.position.set(0, bodyH + 22.5, 0);
-        g.add(fgBar);
-        g.userData.hpFg  = fgBar;
-        g.userData.hpBg  = bgBar;
-        g.userData.hpR   = r;
-        g.userData.hpBar = bgBar; // für lookAt
-
+        const g = new THREE.Group();
+        g.add(sprite);
+        g.userData.sprite   = sprite;
+        g.userData.cv       = cv;
+        g.userData.tex      = tex;
+        g.userData.spriteH  = worldSize;
+        g.userData.r        = r;
+        this._drawEnemySprite(g, e);
         return g;
     }
 
-    _updateHpBar(g, e) {
-        if (!g.userData.hpFg) return;
+    // Zeichnet das Gegner-Sprite identisch zur 2D-Optik: Symbol + Label + HP-Bar
+    _drawEnemySprite(g, e) {
+        const cv  = g.userData.cv;
+        const ctx = cv.getContext('2d');
+        ctx.clearRect(0, 0, 256, 256);
+
+        // Tint bei Freeze/Burn
+        let tintSym = e.symbol || '?';
+        const cx = 128;
+
+        // ── HP-Bar (oben, wie im 2D) ──
+        const barW = 180, barX = cx - barW / 2, barY = 36;
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(barX, barY, barW, 14);
         const pct = Math.max(0, Math.min(1, e.hp / e.maxHp));
-        const r   = g.userData.hpR || 20;
-        g.userData.hpFg.scale.x = pct;
-        g.userData.hpFg.position.x = (pct - 1) * r;
-        const col = pct > 0.5 ? 0x00dd44 : (pct > 0.25 ? 0xffaa00 : 0xff2200);
-        g.userData.hpFg.material.color.setHex(col);
+        ctx.fillStyle = pct < 0.3 ? '#ff0000' : (pct < 0.6 ? '#f1c40f' : '#00dd44');
+        ctx.fillRect(barX, barY, barW * pct, 14);
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+        ctx.strokeRect(barX, barY, barW, 14);
+
+        // ── Symbol (Emoji, groß und mittig) ──
+        ctx.save();
+        if (e.freezeTimer > 0) ctx.filter = 'hue-rotate(180deg) saturate(2)';
+        else if (e.burnTimer > 0) ctx.filter = 'sepia(1) saturate(4) hue-rotate(-20deg)';
+        ctx.font = '110px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 8;
+        ctx.fillText(tintSym, cx, 132);
+        ctx.restore();
+
+        // ── Label (unten, wie im 2D) ──
+        ctx.font = 'bold 22px Courier New';
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 4;
+        ctx.fillText((e.label || '').substring(0, 14), cx, 215);
+        ctx.shadowBlur = 0;
+
+        g.userData.tex.needsUpdate = true;
+    }
+
+    _updateHpBar(g, e) {
+        // HP-Bar ist Teil des Sprites — wird in _drawEnemySprite gezeichnet
     }
 
     // ── Items ─────────────────────────────────────────────────
@@ -5838,32 +5927,48 @@ class DOOM3DEngine {
             this.scene.add(g);
             this._meshPool.set(id, g);
         }
-        // Float + Spin
-        g.position.set(it.x, 14 + Math.sin(f * 0.07 + it.x * 0.01) * 5, it.y);
-        g.rotation.y += 0.03;
+        // Schweben (Sprite-Billboard dreht sich automatisch zur Kamera)
+        g.position.set(it.x, 30 + Math.sin(f * 0.07 + it.x * 0.01) * 6, it.y);
     }
 
     _buildItem(it) {
-        const colMap = {
-            suppe: '#ff9f43', shield: '#3498db', vodka: '#8e44ad',
-            chicken: '#d35400', vacation: '#27ae60', akte: '#f1c40f',
-            hammer: '#e74c3c', bug: '#00e5ff', briefcase: '#ffd700',
-            bike: '#2ecc71', crate: '#e67e22', callski: '#00bbff'
+        // Emoji-Map — identisch zur 2D-Optik
+        const iconMap = {
+            chicken:'🍗', vodka:'🍺', crate:'📦', bug:'💾', hammer:'🔨',
+            vacation:'💤', bike:'🚲', shield:'🛡️', briefcase:'💼',
+            suppe:'🥣', akte:'📁', callski:'📞'
         };
-        const col = parseInt((colMap[it.type] || '#ffffff').replace('#', ''), 16);
-        const mat = new THREE.MeshStandardMaterial({
-            color: col, emissive: col, emissiveIntensity: 0.5, metalness: 0.5
-        });
-        const geo = it.type === 'akte'
-            ? new THREE.BoxGeometry(14, 2, 18)
-            : it.type === 'shield'
-            ? new THREE.IcosahedronGeometry(10, 0)
-            : new THREE.SphereGeometry(9, 8, 6);
+        const colMap = {
+            suppe:'#ff9f43', shield:'#3498db', vodka:'#8e44ad',
+            chicken:'#d35400', vacation:'#27ae60', akte:'#f1c40f',
+            hammer:'#e74c3c', bug:'#00e5ff', briefcase:'#ffd700',
+            bike:'#2ecc71', crate:'#e67e22', callski:'#00bbff'
+        };
+        const icon = iconMap[it.type] || '❓';
+        const col  = parseInt((colMap[it.type] || '#ffffff').replace('#', ''), 16);
+
+        // Canvas-Sprite mit Emoji
+        const cv = document.createElement('canvas');
+        cv.width = 128; cv.height = 128;
+        const ctx = cv.getContext('2d');
+        // Glow-Hintergrund
+        const grad = ctx.createRadialGradient(64, 64, 5, 64, 64, 60);
+        grad.addColorStop(0, (colMap[it.type] || '#ffffff') + 'aa');
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 128, 128);
+        ctx.font = '70px Arial';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.shadowColor = '#000'; ctx.shadowBlur = 6;
+        ctx.fillText(icon, 64, 68);
+
+        const tex = new THREE.CanvasTexture(cv);
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+        sprite.scale.set(45, 45, 1);
 
         const g = new THREE.Group();
-        g.add(new THREE.Mesh(geo, mat));
-        const light = new THREE.PointLight(col, 1.2, 100);
-        light.position.y = -5;
+        g.add(sprite);
+        const light = new THREE.PointLight(col, 1.0, 110);
         g.add(light);
         return g;
     }
@@ -5974,7 +6079,13 @@ class DOOM3DEngine {
             obstacles:   (typeof obstacles   !== 'undefined') ? obstacles   : [],
             stations:    (typeof stations    !== 'undefined') ? stations    : [],
             servers:     (typeof servers     !== 'undefined') ? servers     : [],
+            vehicles:    (typeof vehicles    !== 'undefined') ? vehicles    : [],
             screenShake: (typeof screenShake !== 'undefined') ? screenShake : 0,
+            // Events / Marker — wie im 2D
+            idocEvent:    (typeof idocEvent    !== 'undefined') ? idocEvent    : null,
+            kloskaEvent:  (typeof kloskaEvent  !== 'undefined') ? kloskaEvent  : null,
+            meetingZone:  (typeof meetingZone  !== 'undefined') ? meetingZone  : null,
+            bueroDoor:    (typeof bueroDoor    !== 'undefined') ? bueroDoor    : null,
         };
         // Entity-IDs vergeben (persistent pro Enemy-Instanz)
         snap.enemies.forEach((e, i) => { if (!e._id) e._id = 'e' + i + '_' + e.type + '_' + Math.random().toString(36).substr(2,4); });
@@ -6016,16 +6127,25 @@ function _doom3dEnsureInit() {
 // ── 3D-Canvas ein-/ausblenden ─────────────────────────────────
 function _doom3dActivate() {
     const c = document.getElementById('game3d');
-    if (c) { c.style.display = 'block'; }
+    if (c) { c.style.display = 'block'; c.style.pointerEvents = 'auto'; }
     const c2d = document.getElementById('game');
-    if (c2d) { c2d.style.opacity = '0'; } // 2D unsichtbar, Events bleiben aktiv
+    if (c2d) { c2d.style.opacity = '0'; }
+    const ch = document.getElementById('doom3d-crosshair');
+    if (ch) { ch.style.display = 'block'; }
+    document.body.style.cursor = 'none';
+    // Look-Werte zurücksetzen
+    if (window._look) { window._look.yaw = 0; window._look.pitch = 0; }
 }
 
 function _doom3dDeactivate() {
     const c = document.getElementById('game3d');
-    if (c) { c.style.display = 'none'; }
+    if (c) { c.style.display = 'none'; c.style.pointerEvents = 'none'; }
     const c2d = document.getElementById('game');
     if (c2d) { c2d.style.opacity = '1'; }
+    const ch = document.getElementById('doom3d-crosshair');
+    if (ch) { ch.style.display = 'none'; }
+    document.body.style.cursor = '';
+    if (document.pointerLockElement) document.exitPointerLock();
 }
 
 // ============================================================
@@ -6140,12 +6260,48 @@ window.addEventListener('keydown',e=>{
 });
 window.addEventListener('keyup',  e=>  input.keys[e.code]=false);
 window.addEventListener('mousedown',e=>{ 
+    // Im 3D-Modus: erster Klick fängt nur die Maus, löst keinen Schuss aus
+    if (window._use3d && gameRunning && !gamePaused && window._look && !window._look.locked) return;
     if(e.button === 0) input.mouseDown=true; 
     if(e.button === 2) input.rightClick=true; 
 });
 window.addEventListener('mouseup',  e=>{ if(e.button === 0) input.mouseDown=false; });
 window.addEventListener('mousemove',e=>{ const r=canvas.getBoundingClientRect(); input.x=e.clientX-r.left; input.y=e.clientY-r.top; });
 window.addEventListener('contextmenu', e => e.preventDefault());
+
+// ============================================================
+//  3D DOOM — POINTER LOCK (echte Egoshooter-Maussteuerung)
+//  Maus wird gefangen → 360° drehen (Yaw) + hoch/runter (Pitch)
+//  ESC gibt frei. Funktioniert auf GitHub/lokal, NICHT in Sandbox.
+// ============================================================
+window._look = { yaw: 0, pitch: 0, locked: false };
+const _MOUSE_SENS = 0.0022;   // Maus-Empfindlichkeit
+const _PITCH_MAX  = 1.3;      // ~75° hoch/runter
+
+// Pointer-Lock relativer Mausbewegungs-Handler
+document.addEventListener('mousemove', e => {
+    if (!window._use3d || !window._look.locked) return;
+    const dx = e.movementX || 0;
+    const dy = e.movementY || 0;
+    window._look.yaw   -= dx * _MOUSE_SENS;          // links/rechts drehen
+    window._look.pitch -= dy * _MOUSE_SENS;          // hoch/runter schauen
+    // Pitch begrenzen, damit man nicht überkippt
+    if (window._look.pitch >  _PITCH_MAX) window._look.pitch =  _PITCH_MAX;
+    if (window._look.pitch < -_PITCH_MAX) window._look.pitch = -_PITCH_MAX;
+});
+
+// Lock-Status verfolgen
+document.addEventListener('pointerlockchange', () => {
+    window._look.locked = !!(document.pointerLockElement);
+});
+
+// Klick ins Spiel fängt die Maus (nur im 3D-Modus, während Spiel läuft)
+window.addEventListener('mousedown', e => {
+    if (window._use3d && gameRunning && !gamePaused && !window._look.locked) {
+        const cv = document.getElementById('game3d');
+        if (cv && cv.requestPointerLock) cv.requestPointerLock();
+    }
+});
 
 // ============================================================
 // PAUSE FUNKTIONEN — NEU in V20
@@ -6709,6 +6865,21 @@ class Player{
         if(input.keys['KeyW'])dy=-1; if(input.keys['KeyS'])dy=1;
         if(input.keys['KeyA'])dx=-1; if(input.keys['KeyD'])dx=1;
         if(this.bugTimer>0){dx=-dx;dy=-dy;}
+
+        // ── 3D DOOM: WASD relativ zur Blickrichtung drehen ──────
+        if(window._use3d && window._3d && (dx!==0 || dy!==0)){
+            const yaw = window._3d._yaw || 0;
+            // Blickrichtung (vorwärts) in Welt-Koords: forward=(sin,cos)
+            // W (dy=-1) → vorwärts, S (dy=1) → rückwärts
+            // D (dx=1) → rechts (90° im Uhrzeigersinn zur Blickrichtung)
+            const fwdX = Math.sin(yaw),  fwdY = Math.cos(yaw);   // vorwärts
+            const rgtX = -Math.cos(yaw), rgtY = Math.sin(yaw);   // rechts (Screen-rechts bei Three.js lookAt)
+            const fwd  = -dy;  // W=-1 → +vorwärts
+            const strafe = dx; // D=+1 → +rechts
+            dx = fwdX * fwd + rgtX * strafe;
+            dy = fwdY * fwd + rgtY * strafe;
+        }
+        // ────────────────────────────────────────────────────────
 
         let spd=this.speed;
         if(idocEvent && hasTrophy('idoc_savior')) spd *= 1.1;
@@ -9102,10 +9273,15 @@ function loop(){
 
         frame++; shiftTimer++;
 
-        // ── 3D DOOM: Schussrichtung = Blickrichtung (vor player.update!) ──
+        // ── 3D DOOM: Blickrichtung aus Pointer-Lock + Schussrichtung ──
+        // Yaw kommt jetzt aus echter Maus-Drehung (window._look.yaw).
+        // Alles in EINEM Frame → Kamera, Crosshair und Schuss 100% synchron.
         if (window._use3d && window._3d && player) {
-            const yaw = window._3d._yaw || 0;
+            const yaw = window._look ? window._look.yaw : 0;
+            window._3d._yaw   = yaw;
+            window._3d._pitch = window._look ? window._look.pitch : 0;
             const reach = 500;
+            // Schuss geht exakt in Blickrichtung = dorthin wo das Crosshair zeigt
             input.worldX = player.x + Math.sin(yaw) * reach;
             input.worldY = player.y + Math.cos(yaw) * reach;
         }
@@ -9705,7 +9881,7 @@ function startGame(diff=1, gameMode='normal'){
             window._3d._meshPool.forEach((obj) => { if(window._3d.scene) window._3d.scene.remove(obj); });
             window._3d._meshPool.clear();
             _doom3dActivate();
-            showToast('🔥 3D DOOM-MODUS', '#ff4400', 'First-Person aktiv — Maus = Blickrichtung');
+            showToast('🔥 3D DOOM-MODUS', '#ff4400', 'KLICK = Maus fangen · WASD = laufen · Maus = umschauen · ESC = frei');
         }
     } else {
         _doom3dDeactivate();
