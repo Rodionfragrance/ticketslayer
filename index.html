@@ -807,6 +807,7 @@ input[type="text"] {
             <!-- Runen-Button entfernt -->
             <button onclick="showEmail()" style="background:#111;color:#3498db;border:2px solid #3498db;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#3498db';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#3498db'">[I] ANLEITUNG</button>
             <button onclick="openSkillTree()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🌳 SKILLTREE</button>
+            <button onclick="openIdleMode()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🪱 IDLE-KLICKER</button>
             <button onclick="openHighscoreMenu()" style="background:#111;color:#fff;border:2px solid #fff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#fff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#fff'">🏆 RANGLISTE</button>
         </div>
     </div>
@@ -1061,6 +1062,27 @@ input[type="text"] {
         <div id="shopBalance">Kaffeebons: <span id="shopKBAmount">0</span> KB</div>
         <div class="shop-grid" id="shopGrid"></div>
         <button id="shopClose" onclick="closeShop()">← ZURÜCK</button>
+    </div>
+</div>
+<!-- IDLE / WURM-KLICKER OVERLAY -->
+<div id="idleOverlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.95);z-index:540;overflow-y:auto;font-family:'Courier New',monospace;">
+    <style>@keyframes idleFloat{from{transform:translateY(0);opacity:1}to{transform:translateY(-60px);opacity:0}}</style>
+    <div style="max-width:680px;margin:30px auto;padding:28px;border:3px solid #f1c40f;background:#0a0a0a;border-radius:4px;box-shadow:0 0 60px rgba(241,196,15,0.2);">
+        <h2 style="color:#f1c40f;font-size:24px;letter-spacing:4px;margin:0 0 4px;text-transform:uppercase;">🪱 WURM-KLICKER</h2>
+        <div style="color:#888;font-size:12px;margin-bottom:6px;">Idle-Modus — verdiente Wurmcoins fließen direkt ins Hauptspiel</div>
+        <div style="color:#f1c40f;font-size:16px;margin-bottom:4px;">🪙 Wurmcoins: <span id="idleWC">0</span></div>
+        <div style="color:#2ecc71;font-size:13px;margin-bottom:18px;">⚡ Produktion: <span id="idleCPS">0</span> /Sekunde</div>
+        <div id="idleFloatContainer" style="position:relative;text-align:center;margin-bottom:20px;">
+            <div onclick="idleClick()" style="font-size:90px;cursor:pointer;user-select:none;display:inline-block;transition:transform 0.05s;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">🪱</div>
+            <div style="color:#aaa;font-size:12px;">Klick = +<span id="idleClickPower">1</span> 🪙</div>
+        </div>
+        <div onclick="buyIdleClickUpgrade()" style="background:#111;border:2px solid #00e5ff;padding:12px;border-radius:4px;cursor:pointer;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">
+            <div><div style="color:#00e5ff;font-weight:bold;">👆 Stärkerer Klick (+1)</div><div style="color:#888;font-size:11px;">Erhöht Coins pro Klick</div></div>
+            <div style="color:#f1c40f;font-weight:bold;">🪙 <span id="idleClickCost">50</span></div>
+        </div>
+        <div style="color:#888;font-size:11px;letter-spacing:2px;margin-bottom:8px;">GENERATOREN (passives Einkommen)</div>
+        <div id="idleGenGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <button onclick="closeIdleMode()" style="display:block;width:100%;margin-top:22px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
     </div>
 </div>
 
@@ -9937,6 +9959,115 @@ function buyKloskaItem(item, cost) {
         showToast("ZU WENIG SUPPE!", "#e74c3c", `Brauchst ${cost} 🥣, hast ${player.suppe}`);
         playSound('hit');
     }
+}
+// ============================================================
+// IDLE MODE — WURM-KLICKER (teilt wurmcoins mit Hauptspiel)
+// ============================================================
+let idleState = JSON.parse(lsGet('ts_idle', 'null')) || {
+    clickPower: 1,
+    generators: { azubi: 0, farm: 0, kloska: 0, bayer: 0 },
+    lastTick: Date.now()
+};
+const IDLE_GENERATORS = [
+    { id:'azubi',  icon:'👷', name:'Azubi',        baseCost:15,    cps:0.2,  desc:'Bearbeitet Tickets nebenbei' },
+    { id:'farm',   icon:'🖥️', name:'Server-Farm',  baseCost:100,   cps:1.5,  desc:'Generiert passiv Coins' },
+    { id:'kloska', icon:'🔧', name:'Kloska',        baseCost:1100,  cps:8,    desc:'Verkauft Hardware im Akkord' },
+    { id:'bayer',  icon:'📞', name:'Peter Bayer',   baseCost:12000, cps:47,   desc:'Der Chef druckt Geld' },
+];
+function idleGenCost(gen) {
+    let owned = idleState.generators[gen.id] || 0;
+    return Math.floor(gen.baseCost * Math.pow(1.15, owned));
+}
+function idleCPS() {
+    let total = 0;
+    IDLE_GENERATORS.forEach(g => { total += (idleState.generators[g.id]||0) * g.cps; });
+    return total;
+}
+function saveIdle() {
+    idleState.lastTick = Date.now();
+    lsSet('ts_idle', JSON.stringify(idleState));
+}
+let idleTickInterval = null;
+function openIdleMode() {
+    let now = Date.now();
+    let elapsed = Math.min((now - (idleState.lastTick||now)) / 1000, 8*3600);
+    let offlineEarn = Math.floor(idleCPS() * elapsed);
+    if(offlineEarn > 0) {
+        wurmcoins += offlineEarn;
+        lsSet('ts_wurmcoins', wurmcoins);
+        saveProgress();
+        showToast('💤 OFFLINE-ERTRAG', '#f1c40f', '+' + offlineEarn + ' 🪙 in ' + Math.floor(elapsed/60) + ' Min');
+    }
+    idleState.lastTick = now;
+    document.getElementById('idleOverlay').style.display = 'block';
+    renderIdle();
+    if(!idleTickInterval) idleTickInterval = setInterval(idleTick, 1000);
+}
+function closeIdleMode() {
+    document.getElementById('idleOverlay').style.display = 'none';
+    if(idleTickInterval) { clearInterval(idleTickInterval); idleTickInterval = null; }
+    saveIdle(); saveProgress();
+    let kb = document.getElementById('startKBAmount'); if(kb) kb.innerText = kaffeebons;
+}
+function idleTick() {
+    let earn = idleCPS();
+    if(earn > 0) { wurmcoins += earn; lsSet('ts_wurmcoins', wurmcoins); }
+    saveIdle();
+    renderIdle();
+}
+function idleClick() {
+    wurmcoins += idleState.clickPower;
+    lsSet('ts_wurmcoins', wurmcoins);
+    let fc = document.getElementById('idleFloatContainer');
+    if(fc) {
+        let f = document.createElement('div');
+        f.innerText = '+' + idleState.clickPower + ' 🪙';
+        f.style.cssText = 'position:absolute;left:'+(40+Math.random()*120)+'px;top:120px;color:#f1c40f;font-weight:bold;font-size:20px;pointer-events:none;animation:idleFloat 1s ease forwards;font-family:Courier New,monospace;';
+        fc.appendChild(f);
+        setTimeout(function(){ f.remove(); }, 1000);
+    }
+    renderIdle();
+}
+function buyIdleClickUpgrade() {
+    let cost = idleState.clickPower * 50;
+    if(wurmcoins < cost) { showToast('ZU WENIG 🪙','#e74c3c', cost+' nötig'); return; }
+    wurmcoins -= cost;
+    idleState.clickPower++;
+    lsSet('ts_wurmcoins', wurmcoins);
+    saveIdle(); saveProgress();
+    renderIdle();
+}
+function buyIdleGen(id) {
+    let gen = IDLE_GENERATORS.find(g => g.id === id);
+    let cost = idleGenCost(gen);
+    if(wurmcoins < cost) { showToast('ZU WENIG 🪙','#e74c3c', cost+' nötig'); return; }
+    wurmcoins -= cost;
+    idleState.generators[id] = (idleState.generators[id]||0) + 1;
+    lsSet('ts_wurmcoins', wurmcoins);
+    saveIdle(); saveProgress();
+    playSound('powerup');
+    renderIdle();
+}
+function renderIdle() {
+    let wcEl = document.getElementById('idleWC'); if(wcEl) wcEl.innerText = wurmcoins;
+    let cpsEl = document.getElementById('idleCPS'); if(cpsEl) cpsEl.innerText = idleCPS().toFixed(1);
+    let cpEl = document.getElementById('idleClickPower'); if(cpEl) cpEl.innerText = idleState.clickPower;
+    let cuCost = document.getElementById('idleClickCost'); if(cuCost) cuCost.innerText = idleState.clickPower * 50;
+    let grid = document.getElementById('idleGenGrid');
+    if(grid) {
+        grid.innerHTML = '';
+        IDLE_GENERATORS.forEach(g => {
+            let owned = idleState.generators[g.id]||0;
+            let cost = idleGenCost(g);
+            let afford = wurmcoins >= cost;
+            grid.innerHTML += '<div onclick="buyIdleGen(\'' + g.id + '\')" style="background:'+(afford?'#111':'#0a0a0a')+';border:2px solid '+(afford?'#f1c40f':'#333')+';padding:14px;border-radius:4px;cursor:'+(afford?'pointer':'default')+';opacity:'+(afford?'1':'0.55')+';display:flex;align-items:center;gap:12px;">'
+                + '<div style="font-size:32px;">'+g.icon+'</div>'
+                + '<div style="flex:1;"><div style="color:#fff;font-weight:bold;font-size:14px;">'+g.name+' <span style="color:#00e5ff;">×'+owned+'</span></div>'
+                + '<div style="color:#888;font-size:11px;">'+g.desc+'</div>'
+                + '<div style="color:#2ecc71;font-size:11px;">+'+g.cps+'/s pro Stück</div></div>'
+                + '<div style="color:#f1c40f;font-weight:bold;font-size:13px;white-space:nowrap;">🪙 '+cost+'</div></div>';
+        });
+    }
 }
 // ============================================================
 // ★★★ RIFT MODE — VOLLSTÄNDIGE IMPLEMENTIERUNG ★★★
