@@ -4817,6 +4817,12 @@ function exitBossRoom(won) {
         fadeDir = -1;
         { let _bhc=document.getElementById('bossHpContainer'); if(_bhc) _bhc.style.display='none'; }
         activeBoss = null;
+        // 3D-Canvas wieder einblenden, falls 3D-Modus aktiv (zurück in normale Welt)
+        if(window._use3d){
+            const _c3=document.getElementById('game3d'); if(_c3){_c3.style.display='block';_c3.style.pointerEvents='auto';}
+            const _ch=document.getElementById('doom3d-crosshair'); if(_ch)_ch.style.display='block';
+            const _c2=document.getElementById('game'); if(_c2)_c2.style.opacity='0';
+        }
     }, 800);
 }
 
@@ -6406,9 +6412,15 @@ document.addEventListener('pointerlockchange', () => {
 
 // Klick ins Spiel fängt die Maus (nur im 3D-Modus, während Spiel läuft)
 window.addEventListener('mousedown', e => {
-    if (window._use3d && gameRunning && !gamePaused && !window._look.locked) {
+    if (window._use3d && gameRunning && !gamePaused && window._look && !window._look.locked && gamePhase === 'normal') {
         const cv = document.getElementById('game3d');
-        if (cv && cv.requestPointerLock) cv.requestPointerLock();
+        if (cv && cv.requestPointerLock) {
+            // Browser blockt Re-Lock direkt nach ESC (~1s) → SecurityError abfangen
+            try {
+                const p = cv.requestPointerLock();
+                if (p && p.catch) p.catch(() => {});
+            } catch (err) { /* ignore */ }
+        }
     }
 });
 
@@ -9345,7 +9357,10 @@ function loop(){
             fadeAlpha = Math.max(0, Math.min(1, fadeAlpha + fadeDir * 0.04));
             if(fadeDir === 1 && fadeAlpha >= 1) {
                 fadeDir = 0;
-                if(gamePhase === 'transitioning_in') { gamePhase = 'bossroom'; fadeAlpha = 0; activeBoss = { hp:1, maxHp:1, label:'PETER BAYER' }; (document.getElementById('bossHpContainer')||{style:{}}).style.display='block'; }
+                if(gamePhase === 'transitioning_in') { gamePhase = 'bossroom'; fadeAlpha = 0; activeBoss = { hp:1, maxHp:1, label:'PETER BAYER' }; (document.getElementById('bossHpContainer')||{style:{}}).style.display='block';
+                    // 3D-Canvas ausblenden — Bossroom ist eine eigene 2D-Arena
+                    if(window._use3d){ const _c3=document.getElementById('game3d'); if(_c3){_c3.style.display='none';_c3.style.pointerEvents='none';} const _ch=document.getElementById('doom3d-crosshair'); if(_ch)_ch.style.display='none'; const _c2=document.getElementById('game'); if(_c2)_c2.style.opacity='1'; if(document.pointerLockElement)document.exitPointerLock(); }
+                }
             }
             if(fadeDir === -1 && fadeAlpha <= 0) { fadeDir = 0; }
         }
