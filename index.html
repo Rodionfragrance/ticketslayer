@@ -1064,26 +1064,66 @@ input[type="text"] {
         <button id="shopClose" onclick="closeShop()">← ZURÜCK</button>
     </div>
 </div>
-<!-- IDLE / WURM-KLICKER OVERLAY -->
-<div id="idleOverlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.95);z-index:540;overflow-y:auto;font-family:'Courier New',monospace;">
-    <style>@keyframes idleFloat{from{transform:translateY(0);opacity:1}to{transform:translateY(-60px);opacity:0}}</style>
-    <div style="max-width:680px;margin:30px auto;padding:28px;border:3px solid #f1c40f;background:#0a0a0a;border-radius:4px;box-shadow:0 0 60px rgba(241,196,15,0.2);">
-        <h2 style="color:#f1c40f;font-size:24px;letter-spacing:4px;margin:0 0 4px;text-transform:uppercase;">🪱 WURM-KLICKER</h2>
-        <div style="color:#888;font-size:12px;margin-bottom:6px;">Idle-Modus — verdiente Wurmcoins fließen direkt ins Hauptspiel</div>
-        <div style="color:#f1c40f;font-size:16px;margin-bottom:4px;">🪙 Wurmcoins: <span id="idleWC">0</span></div>
-        <div style="color:#2ecc71;font-size:13px;margin-bottom:18px;">⚡ Produktion: <span id="idleCPS">0</span> /Sekunde</div>
-        <div id="idleFloatContainer" style="position:relative;text-align:center;margin-bottom:20px;">
-            <div onclick="idleClick()" style="font-size:90px;cursor:pointer;user-select:none;display:inline-block;transition:transform 0.05s;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">🪱</div>
-            <div style="color:#aaa;font-size:12px;">Klick = +<span id="idleClickPower">1</span> 🪙</div>
+<!-- IDLE / WURM-KLICKER (COOKIE-CLICKER-STIL) -->
+<div id="idleOverlay" style="display:none;position:absolute;inset:0;background:linear-gradient(160deg,#0a0a0a,#14110a);z-index:540;overflow-y:auto;font-family:'Courier New',monospace;color:#fff;">
+    <style>
+        @keyframes idleFloat{from{transform:translateY(0) scale(1);opacity:1}to{transform:translateY(-90px) scale(1.4);opacity:0}}
+        @keyframes idlePop{0%{transform:scale(1)}50%{transform:scale(0.88)}100%{transform:scale(1)}}
+        @keyframes idleGoldPulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 8px #f1c40f)}50%{transform:scale(1.18);filter:drop-shadow(0 0 22px #f1c40f)}}
+        #idleBigWorm{transition:transform 0.05s;cursor:pointer;}
+        #idleBigWorm:active{animation:idlePop 0.12s;}
+        .idleBuyRow{transition:background 0.1s,border-color 0.1s;}
+        .idleBuyRow:hover{filter:brightness(1.15);}
+        #idleOverlay::-webkit-scrollbar{width:10px;}
+        #idleOverlay::-webkit-scrollbar-thumb{background:#f1c40f;border-radius:5px;}
+    </style>
+
+    <div style="max-width:1080px;margin:0 auto;padding:22px 18px 60px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+            <h2 style="color:#f1c40f;font-size:26px;letter-spacing:5px;margin:0;text-transform:uppercase;text-shadow:0 0 14px rgba(241,196,15,0.4);">🪱 WURM-KLICKER</h2>
+            <button onclick="closeIdleMode()" style="background:#c0392b;color:#fff;border:none;padding:11px 20px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;border-radius:3px;">← ZURÜCK</button>
         </div>
-        <div onclick="buyIdleClickUpgrade()" style="background:#111;border:2px solid #00e5ff;padding:12px;border-radius:4px;cursor:pointer;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">
-            <div><div style="color:#00e5ff;font-weight:bold;">👆 Stärkerer Klick (+1)</div><div style="color:#888;font-size:11px;">Erhöht Coins pro Klick</div></div>
-            <div style="color:#f1c40f;font-weight:bold;">🪙 <span id="idleClickCost">50</span></div>
+
+        <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;">
+
+            <!-- LINKE SPALTE: Klicker + Upgrades -->
+            <div style="flex:1;min-width:300px;">
+                <div style="text-align:center;background:#000;border:2px solid #f1c40f;border-radius:6px;padding:18px 12px;margin-bottom:16px;">
+                    <div style="font-size:30px;font-weight:bold;color:#f1c40f;line-height:1.1;"><span id="idleTickets">0</span> 🎫</div>
+                    <div style="color:#2ecc71;font-size:14px;margin-top:4px;">⚡ <span id="idlePerSec">0</span> pro Sekunde</div>
+                    <div id="idleFloatContainer" style="position:relative;margin:14px 0 6px;height:130px;">
+                        <div id="idleBigWorm" onclick="idleClick(event)" style="font-size:104px;user-select:none;display:inline-block;">🪱</div>
+                    </div>
+                    <div style="color:#aaa;font-size:12px;">Klick = +<span id="idlePerClick">1</span> 🎫</div>
+                </div>
+
+                <div style="background:#000;border:2px solid #e67e22;border-radius:6px;padding:12px;margin-bottom:16px;">
+                    <div style="color:#f1c40f;font-size:13px;margin-bottom:4px;">💰 AUSZAHLEN → HAUPTSPIEL</div>
+                    <div style="color:#888;font-size:11px;margin-bottom:8px;">Wandelt Tickets in Wurmcoins um (<span id="idleRate">50.000</span> 🎫 = 1 🪙)</div>
+                    <button onclick="idlePayout()" style="width:100%;background:#e67e22;color:#000;border:none;padding:12px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">Auszahlen: <span id="idlePayoutAmount">0</span> 🪙</button>
+                </div>
+
+                <div style="color:#888;font-size:12px;letter-spacing:2px;margin-bottom:8px;">⬆️ UPGRADES</div>
+                <div id="idleUpgradeGrid" style="display:flex;flex-wrap:wrap;gap:8px;min-height:20px;"></div>
+                <div id="idleUpgradeEmpty" style="color:#555;font-size:12px;">Noch keine Upgrades verfügbar – kauf erst ein paar Gebäude.</div>
+            </div>
+
+            <!-- RECHTE SPALTE: Gebäude -->
+            <div style="flex:1;min-width:300px;">
+                <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center;">
+                    <span style="color:#888;font-size:12px;letter-spacing:2px;margin-right:auto;">🏗️ GEBÄUDE</span>
+                    <span style="color:#888;font-size:11px;">kaufen:</span>
+                    <button id="idleBuy1"   onclick="idleSetBuy(1)"   style="background:#f1c40f;color:#000;border:none;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">×1</button>
+                    <button id="idleBuy10"  onclick="idleSetBuy(10)"  style="background:#222;color:#f1c40f;border:none;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">×10</button>
+                    <button id="idleBuy100" onclick="idleSetBuy(100)" style="background:#222;color:#f1c40f;border:none;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">×100</button>
+                </div>
+                <div id="idleBuildGrid" style="display:flex;flex-direction:column;gap:8px;"></div>
+            </div>
         </div>
-        <div style="color:#888;font-size:11px;letter-spacing:2px;margin-bottom:8px;">GENERATOREN (passives Einkommen)</div>
-        <div id="idleGenGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
-        <button onclick="closeIdleMode()" style="display:block;width:100%;margin-top:22px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
     </div>
+
+    <!-- GOLDENES TICKET (Bonus) -->
+    <div id="idleGolden" onclick="idleClickGolden()" style="display:none;position:absolute;font-size:54px;cursor:pointer;z-index:560;animation:idleGoldPulse 1s infinite;user-select:none;">🌟</div>
 </div>
 
 <!-- FARM INDICATOR -->
@@ -9961,113 +10001,347 @@ function buyKloskaItem(item, cost) {
     }
 }
 // ============================================================
-// IDLE MODE — WURM-KLICKER (teilt wurmcoins mit Hauptspiel)
+// IDLE MODE 2.0 — WURM-KLICKER im Cookie-Clicker-Stil
+// Eigene Waehrung: Tickets (idle). Auszahlung -> wurmcoins.
 // ============================================================
-let idleState = JSON.parse(lsGet('ts_idle', 'null')) || {
-    clickPower: 1,
-    generators: { azubi: 0, farm: 0, kloska: 0, bayer: 0 },
-    lastTick: Date.now()
-};
-const IDLE_GENERATORS = [
-    { id:'azubi',  icon:'👷', name:'Azubi',        baseCost:15,    cps:0.2,  desc:'Bearbeitet Tickets nebenbei' },
-    { id:'farm',   icon:'🖥️', name:'Server-Farm',  baseCost:100,   cps:1.5,  desc:'Generiert passiv Coins' },
-    { id:'kloska', icon:'🔧', name:'Kloska',        baseCost:1100,  cps:8,    desc:'Verkauft Hardware im Akkord' },
-    { id:'bayer',  icon:'📞', name:'Peter Bayer',   baseCost:12000, cps:47,   desc:'Der Chef druckt Geld' },
+const IDLE_PAYOUT_RATE = 50000; // Tickets pro 1 Wurmcoin
+const IDLE_BUILDINGS = [
+    { id:'azubi',  icon:'👷', name:'Azubi',           baseCost:15,          baseCps:0.1 },
+    { id:'sachb',  icon:'📋', name:'Sachbearbeiter',  baseCost:100,         baseCps:1 },
+    { id:'farm',   icon:'🖥️', name:'Server-Farm',     baseCost:1100,        baseCps:8 },
+    { id:'kloska', icon:'🔧', name:'Kloska-Lager',    baseCost:12000,       baseCps:47 },
+    { id:'fabrik', icon:'🏭', name:'Ticket-Fabrik',   baseCost:130000,      baseCps:260 },
+    { id:'bank',   icon:'☕', name:'Kaffeekasse-Bank', baseCost:1400000,     baseCps:1400 },
+    { id:'bayer',  icon:'📞', name:'Peter Bayer',     baseCost:20000000,    baseCps:7800 },
+    { id:'sap',    icon:'🧙', name:'SAP-Magier',      baseCost:330000000,   baseCps:44000 },
+    { id:'lkw',    icon:'🚚', name:'Logistik-Flotte', baseCost:5100000000,  baseCps:260000 },
+    { id:'zeit',   icon:'⏱️', name:'Zeiterfassung',   baseCost:75000000000, baseCps:1600000 },
 ];
-function idleGenCost(gen) {
-    let owned = idleState.generators[gen.id] || 0;
-    return Math.floor(gen.baseCost * Math.pow(1.15, owned));
+
+// Upgrades programmatisch erzeugen
+const IDLE_UPGRADES = [];
+IDLE_BUILDINGS.forEach(function(b){
+    const tiers = [
+        { thr:1,  mult:10,     label:'I' },
+        { thr:25, mult:500,    label:'II' },
+        { thr:50, mult:50000,  label:'III' },
+    ];
+    tiers.forEach(function(t){
+        IDLE_UPGRADES.push({
+            id:'b_'+b.id+'_'+t.label,
+            icon:b.icon, name:b.name+' ×2 ('+t.label+')',
+            desc:b.name+' produziert doppelt so viel',
+            cost:Math.ceil(b.baseCost*t.mult),
+            kind:'building', target:b.id, factor:2,
+            req:function(s){ return (s.buildings[b.id]||0) >= t.thr; }
+        });
+    });
+});
+// Klick-Upgrades (verdoppeln Klickkraft)
+[ {c:100,n:'I'},{c:5000,n:'II'},{c:500000,n:'III'},{c:50000000,n:'IV'},{c:5000000000,n:'V'} ].forEach(function(u,i){
+    IDLE_UPGRADES.push({
+        id:'click_'+u.n, icon:'👆', name:'Stärkerer Klick '+u.n,
+        desc:'Doppelte Tickets pro Klick', cost:u.c, kind:'click', factor:2,
+        req:function(s){ return s.totalClicks >= (i*50); }
+    });
+});
+// Klick bekommt Anteil der Produktion
+[ {c:50000,p:0.01,n:'1%'},{c:5000000,p:0.04,n:'5%'},{c:500000000,p:0.05,n:'10%'} ].forEach(function(u){
+    IDLE_UPGRADES.push({
+        id:'cc_'+u.n, icon:'🖱️', name:'Klick-Bonus '+u.n,
+        desc:'Jeder Klick gibt zusätzlich '+u.n+' deiner Produktion', cost:u.c, kind:'clickcps', pct:u.p,
+        req:function(s){ return idleCps() > 0; }
+    });
+});
+// Globale Verdopplung aller Gebäude
+[ {c:1000000,n:'I'},{c:1000000000,n:'II'},{c:1000000000000,n:'III'} ].forEach(function(u){
+    IDLE_UPGRADES.push({
+        id:'all_'+u.n, icon:'🌟', name:'Betriebsausflug '+u.n,
+        desc:'ALLE Gebäude produzieren doppelt', cost:u.c, kind:'all', factor:2,
+        req:function(s){ return s.totalEarned >= u.c/10; }
+    });
+});
+
+// State laden / migrieren
+let idleParsed = null;
+try { idleParsed = JSON.parse(lsGet('ts_idle', 'null')); } catch(e){ idleParsed = null; }
+let idleState;
+if(idleParsed && idleParsed.buildings && typeof idleParsed.buildings === 'object' && Array.isArray(idleParsed.upgrades)){
+    idleState = idleParsed;
+} else {
+    idleState = { tickets:0, buildings:{}, upgrades:[], buyAmount:1, totalClicks:0, totalEarned:0, lastTick:Date.now() };
 }
-function idleCPS() {
+if(typeof idleState.buyAmount !== 'number') idleState.buyAmount = 1;
+
+let idleBuffs = { frenzy:0, clickFrenzy:0 };
+let idleTickInterval = null;
+let idleTickCounter = 0;
+let idleGoldenCountdown = 0;
+let idleGoldenActive = false;
+let idleGoldenHideTimer = null;
+
+function idleHasUpg(id){ return idleState.upgrades.indexOf(id) !== -1; }
+
+function idleFmt(n){
+    if(n < 1000) return (Math.floor(n*10)/10).toString().replace(/\.0$/,'');
+    const suf = ['','K','M','Mrd','Bio','Brd','Trio','Trd','Qa','Qi','Sx','Sp'];
+    let i = 0;
+    while(n >= 1000 && i < suf.length-1){ n /= 1000; i++; }
+    return (Math.floor(n*100)/100).toFixed(2).replace(/\.?0+$/,'') + suf[i];
+}
+
+function idleBuildMult(id){
+    let m = 1;
+    IDLE_UPGRADES.forEach(function(u){
+        if(u.kind==='building' && u.target===id && idleHasUpg(u.id)) m *= u.factor;
+    });
+    return m;
+}
+function idleAllMult(){
+    let m = 1;
+    IDLE_UPGRADES.forEach(function(u){ if(u.kind==='all' && idleHasUpg(u.id)) m *= u.factor; });
+    if(idleBuffs.frenzy > 0) m *= 7;
+    return m;
+}
+function idleBuildCps(b){
+    return b.baseCps * (idleState.buildings[b.id]||0) * idleBuildMult(b.id);
+}
+function idleCps(){
     let total = 0;
-    IDLE_GENERATORS.forEach(g => { total += (idleState.generators[g.id]||0) * g.cps; });
-    return total;
+    IDLE_BUILDINGS.forEach(function(b){ total += b.baseCps * (idleState.buildings[b.id]||0) * idleBuildMult(b.id); });
+    return total * idleAllMult();
 }
-function saveIdle() {
+function idleClickPower(){
+    let mult = 1;
+    let cpsPct = 0;
+    IDLE_UPGRADES.forEach(function(u){
+        if(idleHasUpg(u.id)){
+            if(u.kind==='click') mult *= u.factor;
+            if(u.kind==='clickcps') cpsPct += u.pct;
+        }
+    });
+    let val = 1*mult + idleCps()*cpsPct;
+    if(idleBuffs.clickFrenzy > 0) val *= 777;
+    return val;
+}
+function idleBuildCost(b){
+    return Math.ceil(b.baseCost * Math.pow(1.15, idleState.buildings[b.id]||0));
+}
+function idleBulkCost(b, amt){
+    let owned = idleState.buildings[b.id]||0;
+    // geometrische Summe
+    let total = b.baseCost * Math.pow(1.15, owned) * (Math.pow(1.15, amt)-1) / 0.15;
+    return Math.ceil(total);
+}
+
+function openIdleMode(){
+    let now = Date.now();
+    let elapsed = Math.min((now - (idleState.lastTick||now))/1000, 8*3600);
+    let offline = Math.floor(idleCps() * elapsed * 0.5); // Offline zu halber Rate
+    if(offline > 0){
+        idleState.tickets += offline;
+        idleState.totalEarned += offline;
+        showToast('💤 OFFLINE-PRODUKTION', '#f1c40f', '+' + idleFmt(offline) + ' 🎫 in ' + Math.floor(elapsed/60) + ' Min');
+    }
+    idleState.lastTick = now;
+    idleGoldenCountdown = 60 + Math.random()*120;
+    document.getElementById('idleOverlay').style.display = 'block';
+    let rateEl = document.getElementById('idleRate'); if(rateEl) rateEl.innerText = IDLE_PAYOUT_RATE.toLocaleString('de-DE');
+    idleRenderAll();
+    if(!idleTickInterval) idleTickInterval = setInterval(idleTick, 100);
+}
+function closeIdleMode(){
+    document.getElementById('idleOverlay').style.display = 'none';
+    if(idleTickInterval){ clearInterval(idleTickInterval); idleTickInterval = null; }
+    idleSave(); saveProgress();
+}
+function idleSave(){
     idleState.lastTick = Date.now();
     lsSet('ts_idle', JSON.stringify(idleState));
 }
-let idleTickInterval = null;
-function openIdleMode() {
-    let now = Date.now();
-    let elapsed = Math.min((now - (idleState.lastTick||now)) / 1000, 8*3600);
-    let offlineEarn = Math.floor(idleCPS() * elapsed);
-    if(offlineEarn > 0) {
-        wurmcoins += offlineEarn;
-        lsSet('ts_wurmcoins', wurmcoins);
-        saveProgress();
-        showToast('💤 OFFLINE-ERTRAG', '#f1c40f', '+' + offlineEarn + ' 🪙 in ' + Math.floor(elapsed/60) + ' Min');
+
+function idleTick(){
+    let cps = idleCps();
+    if(cps > 0){
+        let earn = cps * 0.1;
+        idleState.tickets += earn;
+        idleState.totalEarned += earn;
     }
-    idleState.lastTick = now;
-    document.getElementById('idleOverlay').style.display = 'block';
-    renderIdle();
-    if(!idleTickInterval) idleTickInterval = setInterval(idleTick, 1000);
+    if(idleBuffs.frenzy > 0) idleBuffs.frenzy -= 0.1;
+    if(idleBuffs.clickFrenzy > 0) idleBuffs.clickFrenzy -= 0.1;
+    // Goldenes Ticket
+    if(!idleGoldenActive){
+        idleGoldenCountdown -= 0.1;
+        if(idleGoldenCountdown <= 0) idleSpawnGolden();
+    }
+    idleTickCounter++;
+    idleUpdateStats();
+    if(idleTickCounter % 5 === 0){ idleRenderBuildings(); idleRenderUpgrades(); }
+    if(idleTickCounter % 50 === 0){ idleSave(); }
 }
-function closeIdleMode() {
-    document.getElementById('idleOverlay').style.display = 'none';
-    if(idleTickInterval) { clearInterval(idleTickInterval); idleTickInterval = null; }
-    saveIdle(); saveProgress();
-    let kb = document.getElementById('startKBAmount'); if(kb) kb.innerText = kaffeebons;
-}
-function idleTick() {
-    let earn = idleCPS();
-    if(earn > 0) { wurmcoins += earn; lsSet('ts_wurmcoins', wurmcoins); }
-    saveIdle();
-    renderIdle();
-}
-function idleClick() {
-    wurmcoins += idleState.clickPower;
-    lsSet('ts_wurmcoins', wurmcoins);
+
+function idleClick(event){
+    let p = idleClickPower();
+    idleState.tickets += p;
+    idleState.totalEarned += p;
+    idleState.totalClicks++;
     let fc = document.getElementById('idleFloatContainer');
-    if(fc) {
+    if(fc){
         let f = document.createElement('div');
-        f.innerText = '+' + idleState.clickPower + ' 🪙';
-        f.style.cssText = 'position:absolute;left:'+(40+Math.random()*120)+'px;top:120px;color:#f1c40f;font-weight:bold;font-size:20px;pointer-events:none;animation:idleFloat 1s ease forwards;font-family:Courier New,monospace;';
+        f.innerText = '+' + idleFmt(p);
+        let x = 50; let y = 30;
+        if(event){ let r = fc.getBoundingClientRect(); x = event.clientX - r.left; y = event.clientY - r.top; }
+        f.style.cssText = 'position:absolute;left:'+x+'px;top:'+y+'px;color:#f1c40f;font-weight:bold;font-size:22px;pointer-events:none;animation:idleFloat 1s ease forwards;font-family:Courier New,monospace;text-shadow:0 0 6px #000;';
         fc.appendChild(f);
         setTimeout(function(){ f.remove(); }, 1000);
     }
-    renderIdle();
+    idleUpdateStats();
 }
-function buyIdleClickUpgrade() {
-    let cost = idleState.clickPower * 50;
-    if(wurmcoins < cost) { showToast('ZU WENIG 🪙','#e74c3c', cost+' nötig'); return; }
-    wurmcoins -= cost;
-    idleState.clickPower++;
+
+function idleSetBuy(n){
+    idleState.buyAmount = n;
+    ['idleBuy1','idleBuy10','idleBuy100'].forEach(function(bid){
+        let el = document.getElementById(bid);
+        if(el){ el.style.background = '#222'; el.style.color = '#f1c40f'; }
+    });
+    let active = document.getElementById('idleBuy'+n);
+    if(active){ active.style.background = '#f1c40f'; active.style.color = '#000'; }
+    idleRenderBuildings();
+}
+
+function idleBuyBuilding(id){
+    let b = IDLE_BUILDINGS.find(function(x){ return x.id===id; });
+    let amt = idleState.buyAmount;
+    let cost = idleBulkCost(b, amt);
+    if(idleState.tickets < cost){ showToast('ZU WENIG 🎫','#e74c3c', idleFmt(cost)+' nötig'); return; }
+    idleState.tickets -= cost;
+    idleState.buildings[id] = (idleState.buildings[id]||0) + amt;
+    if(typeof playSound==='function') playSound('powerup');
+    idleSave();
+    idleRenderAll();
+}
+
+function idleBuyUpgrade(id){
+    let u = IDLE_UPGRADES.find(function(x){ return x.id===id; });
+    if(!u || idleHasUpg(id)) return;
+    if(idleState.tickets < u.cost){ showToast('ZU WENIG 🎫','#e74c3c', idleFmt(u.cost)+' nötig'); return; }
+    idleState.tickets -= u.cost;
+    idleState.upgrades.push(id);
+    if(typeof playSound==='function') playSound('powerup');
+    idleSave();
+    idleRenderAll();
+}
+
+function idlePayout(){
+    let wc = Math.floor(idleState.tickets / IDLE_PAYOUT_RATE);
+    if(wc <= 0){ showToast('ZU WENIG 🎫','#e74c3c', 'Mind. '+IDLE_PAYOUT_RATE.toLocaleString('de-DE')+' 🎫 nötig'); return; }
+    idleState.tickets -= wc * IDLE_PAYOUT_RATE;
+    wurmcoins += wc;
     lsSet('ts_wurmcoins', wurmcoins);
-    saveIdle(); saveProgress();
-    renderIdle();
+    idleSave(); saveProgress();
+    if(typeof playSound==='function') playSound('powerup');
+    showToast('💰 AUSGEZAHLT', '#2ecc71', '+' + wc + ' 🪙 Wurmcoins');
+    idleRenderAll();
 }
-function buyIdleGen(id) {
-    let gen = IDLE_GENERATORS.find(g => g.id === id);
-    let cost = idleGenCost(gen);
-    if(wurmcoins < cost) { showToast('ZU WENIG 🪙','#e74c3c', cost+' nötig'); return; }
-    wurmcoins -= cost;
-    idleState.generators[id] = (idleState.generators[id]||0) + 1;
-    lsSet('ts_wurmcoins', wurmcoins);
-    saveIdle(); saveProgress();
-    playSound('powerup');
-    renderIdle();
+
+// ---- Goldenes Ticket ----
+function idleSpawnGolden(){
+    idleGoldenActive = true;
+    let g = document.getElementById('idleGolden');
+    if(!g) return;
+    g.style.left = (10 + Math.random()*70) + '%';
+    g.style.top  = (15 + Math.random()*65) + '%';
+    g.style.display = 'block';
+    if(idleGoldenHideTimer) clearTimeout(idleGoldenHideTimer);
+    idleGoldenHideTimer = setTimeout(function(){
+        g.style.display = 'none';
+        idleGoldenActive = false;
+        idleGoldenCountdown = 90 + Math.random()*210;
+    }, 13000);
 }
-function renderIdle() {
-    let wcEl = document.getElementById('idleWC'); if(wcEl) wcEl.innerText = wurmcoins;
-    let cpsEl = document.getElementById('idleCPS'); if(cpsEl) cpsEl.innerText = idleCPS().toFixed(1);
-    let cpEl = document.getElementById('idleClickPower'); if(cpEl) cpEl.innerText = idleState.clickPower;
-    let cuCost = document.getElementById('idleClickCost'); if(cuCost) cuCost.innerText = idleState.clickPower * 50;
-    let grid = document.getElementById('idleGenGrid');
-    if(grid) {
-        grid.innerHTML = '';
-        IDLE_GENERATORS.forEach(g => {
-            let owned = idleState.generators[g.id]||0;
-            let cost = idleGenCost(g);
-            let afford = wurmcoins >= cost;
-            grid.innerHTML += '<div onclick="buyIdleGen(\'' + g.id + '\')" style="background:'+(afford?'#111':'#0a0a0a')+';border:2px solid '+(afford?'#f1c40f':'#333')+';padding:14px;border-radius:4px;cursor:'+(afford?'pointer':'default')+';opacity:'+(afford?'1':'0.55')+';display:flex;align-items:center;gap:12px;">'
-                + '<div style="font-size:32px;">'+g.icon+'</div>'
-                + '<div style="flex:1;"><div style="color:#fff;font-weight:bold;font-size:14px;">'+g.name+' <span style="color:#00e5ff;">×'+owned+'</span></div>'
-                + '<div style="color:#888;font-size:11px;">'+g.desc+'</div>'
-                + '<div style="color:#2ecc71;font-size:11px;">+'+g.cps+'/s pro Stück</div></div>'
-                + '<div style="color:#f1c40f;font-weight:bold;font-size:13px;white-space:nowrap;">🪙 '+cost+'</div></div>';
-        });
+function idleClickGolden(){
+    let g = document.getElementById('idleGolden');
+    if(g) g.style.display = 'none';
+    if(idleGoldenHideTimer) clearTimeout(idleGoldenHideTimer);
+    idleGoldenActive = false;
+    idleGoldenCountdown = 90 + Math.random()*210;
+    let roll = Math.random();
+    if(roll < 0.4){
+        idleBuffs.frenzy = 30;
+        showToast('🌟 KAFFEE-RAUSCH!', '#f1c40f', 'Produktion ×7 für 30s');
+    } else if(roll < 0.8){
+        let bonus = Math.max(Math.floor(idleState.tickets*0.12), Math.floor(idleCps()*60)+13);
+        idleState.tickets += bonus;
+        idleState.totalEarned += bonus;
+        showToast('🌟 GLÜCKSTREFFER!', '#2ecc71', '+' + idleFmt(bonus) + ' 🎫');
+    } else {
+        idleBuffs.clickFrenzy = 13;
+        showToast('🌟 KLICK-RAUSCH!', '#00e5ff', 'Klick ×777 für 13s');
     }
+    if(typeof playSound==='function') playSound('powerup');
+    idleRenderAll();
+}
+
+// ---- Rendering ----
+function idleUpdateStats(){
+    let t = document.getElementById('idleTickets'); if(t) t.innerText = idleFmt(idleState.tickets);
+    let ps = document.getElementById('idlePerSec'); if(ps) ps.innerText = idleFmt(idleCps());
+    let pc = document.getElementById('idlePerClick'); if(pc) pc.innerText = idleFmt(idleClickPower());
+    let pa = document.getElementById('idlePayoutAmount'); if(pa) pa.innerText = Math.floor(idleState.tickets / IDLE_PAYOUT_RATE);
+}
+
+function idleRenderBuildings(){
+    let grid = document.getElementById('idleBuildGrid');
+    if(!grid) return;
+    let html = '';
+    IDLE_BUILDINGS.forEach(function(b, idx){
+        let owned = idleState.buildings[b.id]||0;
+        let prevOwned = idx===0 ? 1 : (idleState.buildings[IDLE_BUILDINGS[idx-1].id]||0);
+        let revealed = owned>0 || idleState.totalEarned >= b.baseCost*0.4 || prevOwned>0;
+        if(!revealed) return;
+        let amt = idleState.buyAmount;
+        let cost = idleBulkCost(b, amt);
+        let afford = idleState.tickets >= cost;
+        let cps = idleBuildCps(b);
+        html += '<div class="idleBuyRow" onclick="idleBuyBuilding(\''+b.id+'\')" style="display:flex;align-items:center;gap:12px;background:'+(afford?'#15140d':'#0c0c0c')+';border:2px solid '+(afford?'#f1c40f':'#333')+';border-radius:5px;padding:11px 13px;cursor:'+(afford?'pointer':'default')+';opacity:'+(afford?'1':'0.6')+';">'
+            + '<div style="font-size:30px;">'+b.icon+'</div>'
+            + '<div style="flex:1;min-width:0;">'
+                + '<div style="color:#fff;font-weight:bold;font-size:14px;">'+b.name+'</div>'
+                + '<div style="color:#2ecc71;font-size:11px;">+'+idleFmt(cps)+' /s'+(owned>0?' gesamt':'')+'</div>'
+            + '</div>'
+            + '<div style="text-align:right;white-space:nowrap;">'
+                + '<div style="color:#f1c40f;font-weight:bold;font-size:13px;">🎫 '+idleFmt(cost)+'</div>'
+                + '<div style="color:#888;font-size:16px;font-weight:bold;">'+owned+'</div>'
+            + '</div></div>';
+    });
+    grid.innerHTML = html;
+}
+
+function idleRenderUpgrades(){
+    let grid = document.getElementById('idleUpgradeGrid');
+    let empty = document.getElementById('idleUpgradeEmpty');
+    if(!grid) return;
+    let avail = IDLE_UPGRADES.filter(function(u){ return !idleHasUpg(u.id) && u.req(idleState); });
+    avail.sort(function(a,b){ return a.cost - b.cost; });
+    avail = avail.slice(0, 12);
+    if(empty) empty.style.display = avail.length ? 'none' : 'block';
+    let html = '';
+    avail.forEach(function(u){
+        let afford = idleState.tickets >= u.cost;
+        html += '<div onclick="idleBuyUpgrade(\''+u.id+'\')" title="'+u.name+' — '+u.desc+' ('+idleFmt(u.cost)+' 🎫)" '
+            + 'style="width:54px;height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:'+(afford?'#15140d':'#0c0c0c')+';border:2px solid '+(afford?'#00e5ff':'#333')+';border-radius:5px;cursor:'+(afford?'pointer':'default')+';opacity:'+(afford?'1':'0.55')+';">'
+            + '<div style="font-size:22px;">'+u.icon+'</div>'
+            + '<div style="font-size:8px;color:#f1c40f;">'+idleFmt(u.cost)+'</div>'
+            + '</div>';
+    });
+    grid.innerHTML = html;
+}
+
+function idleRenderAll(){
+    idleUpdateStats();
+    idleRenderBuildings();
+    idleRenderUpgrades();
+    idleSetBuy(idleState.buyAmount);
 }
 // ============================================================
 // ★★★ RIFT MODE — VOLLSTÄNDIGE IMPLEMENTIERUNG ★★★
