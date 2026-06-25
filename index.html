@@ -5511,15 +5511,13 @@ class DOOM3DEngine {
         this.scene.add(al);
         this._alarmLight = al;
 
-        // Neonröhren auf der Decke
+        // Neonröhren auf der Decke — bewusst wenige (Lichter sind teuer in Three.js)
         const neons = [
-            [600,  1600], [600,  3200], [1200, 800],  [1200, 2400],
-            [2000, 1600], [2000, 3200], [2800, 800],  [2800, 2400],
-            [3400, 1600], [3400, 3200]
+            [1000, 1200], [3000, 1200], [1000, 3000], [3000, 3000]
         ];
         const neonColors = [0xff1111, 0x1144ff, 0xff6600, 0x00ffcc];
         neons.forEach(([x, z], i) => {
-            const nl = new THREE.PointLight(neonColors[i % 4], 1.2, 600);
+            const nl = new THREE.PointLight(neonColors[i % 4], 1.6, 1100);
             nl.position.set(x, 155, z);
             this.scene.add(nl);
         });
@@ -5580,6 +5578,16 @@ class DOOM3DEngine {
         this._flames.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
         this._flames.count = 0;
         this.scene.add(this._flames);
+
+        // Railgun-Strahlen — ebenfalls InstancedMesh (kein Pro-Schuss-Objekt mehr!)
+        this._rails = new THREE.InstancedMesh(
+            new THREE.BoxGeometry(50, 4, 5),
+            new THREE.MeshBasicMaterial({ color: 0x00ffff }),
+            150
+        );
+        this._rails.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        this._rails.count = 0;
+        this.scene.add(this._rails);
     }
 
     // ── Welt aufbauen aus obstacles/stations/servers ──────────
@@ -6030,8 +6038,8 @@ class DOOM3DEngine {
 
         const g = new THREE.Group();
         g.add(sprite);
-        const light = new THREE.PointLight(col, 1.0, 110);
-        g.add(light);
+        // Kein PointLight pro Item — der Glow ist bereits in der Sprite-Textur.
+        // (Viele dynamische Lichter sind der Haupt-Performance-Killer in Three.js)
         return g;
     }
 
@@ -6066,32 +6074,19 @@ class DOOM3DEngine {
 
     // ── Bullets ───────────────────────────────────────────────
     _syncBullets(bullets, f) {
-        let stdCount = 0, flameCount = 0;
-        const liveRail = new Set();
+        let stdCount = 0, flameCount = 0, railCount = 0;
 
         for (const b of bullets) {
-            if (!b._id) b._id = Math.random().toString(36).substr(2, 6);
-
             if (b.type === 'railgun') {
-                const rid = 'rail_' + b._id;
-                liveRail.add(rid);
-                let rm = this._meshPool.get(rid);
-                if (!rm) {
-                    const rg = new THREE.Group();
-                    const rb = new THREE.Mesh(
-                        new THREE.BoxGeometry(50, 4, 5),
-                        new THREE.MeshBasicMaterial({ color: 0x00ffff })
-                    );
-                    rg.add(rb);
-                    const rl = new THREE.PointLight(0x00ffff, 4.0, 150);
-                    rg.add(rl);
-                    this.scene.add(rg);
-                    this._meshPool.set(rid, rg);
-                    rm = rg;
+                if (railCount < 150) {
+                    this._dummy.position.set(b.x, 35, b.y);
+                    this._dummy.rotation.set(0, -(b.angle || 0), 0);
+                    this._dummy.scale.setScalar(1);
+                    this._dummy.updateMatrix();
+                    this._rails.setMatrixAt(railCount, this._dummy.matrix);
+                    railCount++;
+                    this._dummy.rotation.set(0, 0, 0); // zurücksetzen für andere
                 }
-                rm.position.set(b.x, 35, b.y);
-                rm.rotation.y = -(b.angle || 0);
-
             } else if (b.type === 'flame') {
                 if (flameCount < 300) {
                     this._dummy.position.set(b.x, 35 + Math.random() * 8, b.y);
@@ -6115,7 +6110,8 @@ class DOOM3DEngine {
         this._bullets.instanceMatrix.needsUpdate = true;
         this._flames.count = flameCount;
         this._flames.instanceMatrix.needsUpdate = true;
-        this._gc('rail_', liveRail);
+        this._rails.count = railCount;
+        this._rails.instanceMatrix.needsUpdate = true;
     }
 
     // ── Garbage Collection ────────────────────────────────────
@@ -6123,9 +6119,24 @@ class DOOM3DEngine {
         for (const [id, obj] of this._meshPool.entries()) {
             if (id.startsWith(prefix) && !liveIds.has(id)) {
                 this.scene.remove(obj);
+                this._disposeObject(obj);   // GPU-Speicher freigeben — verhindert Stocken!
                 this._meshPool.delete(id);
             }
         }
+    }
+
+    // Gibt Geometrien, Materialien und Texturen eines Objekts (rekursiv) frei
+    _disposeObject(obj) {
+        obj.traverse(child => {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) {
+                const mats = Array.isArray(child.material) ? child.material : [child.material];
+                mats.forEach(m => {
+                    if (m.map) m.map.dispose();
+                    m.dispose();
+                });
+            }
+        });
     }
 
     // ── Snapshot aus Game-Variablen (direkter Closure-Zugriff!) ──
@@ -9342,8 +9353,9 @@ function loop(){
             const yaw = window._look ? window._look.yaw : 0;
             window._3d._yaw   = yaw;
             window._3d._pitch = window._look ? window._look.pitch : 0;
-            const reach = 500;
-            // Schuss geht exakt in Blickrichtung = dorthin wo das Crosshair zeigt
+            // Zielpunkt sehr weit in Blickrichtung → Schusswinkel = exakt Blickrichtung,
+            // unabhängig von der Gegner-Entfernung (kein Versatz bei weiten Zielen).
+            const reach = 6000;
             input.worldX = player.x + Math.sin(yaw) * reach;
             input.worldY = player.y + Math.cos(yaw) * reach;
         }
