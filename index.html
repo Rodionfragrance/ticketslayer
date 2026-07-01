@@ -10204,13 +10204,8 @@ function idleBulkCost(b, amt){
 
 function openIdleMode(){
     let now = Date.now();
-    let elapsed = Math.min((now - (idleState.lastTick||now))/1000, 8*3600);
-    let offline = Math.floor(idleCps() * elapsed * 0.5); // Offline zu halber Rate
-    if(offline > 0){
-        idleState.tickets += offline;
-        idleState.totalEarned += offline;
-        showToast('💤 OFFLINE-PRODUKTION', '#f1c40f', '+' + idleFmt(offline) + ' 🎫 in ' + Math.floor(elapsed/60) + ' Min');
-    }
+    // KEIN Offline-Ertrag: solange die Seite geschlossen ist, laeuft nichts.
+    // Produziert wird nur bei offener Seite (globaler Hintergrund-Ticker, s. unten).
     idleState.lastTick = now;
     idleGoldenCountdown = 60 + Math.random()*120;
     document.getElementById('idleOverlay').style.display = 'block';
@@ -10411,6 +10406,35 @@ function idleRenderAll(){
     idleRenderUpgrades();
     idleSetBuy(idleState.buyAmount);
 }
+
+// ============================================================
+// GLOBALER HINTERGRUND-TICKER
+// Idle-Produktion laeuft weiter, solange die Seite offen ist — egal ob du
+// im Action-Spiel, im Menue oder im Idle-Screen bist. Bei geschlossener
+// Seite laeuft NICHTS (kein Offline-Ertrag).
+// ============================================================
+let idleBgLast = Date.now();
+setInterval(function(){
+    let now = Date.now();
+    let dt = (now - idleBgLast) / 1000;
+    idleBgLast = now;
+    if(dt <= 0) return;
+    // Nur hier produzieren, wenn der Idle-Screen NICHT offen ist — sonst
+    // uebernimmt das idleTick und es wuerde doppelt zaehlen.
+    if(!idleTickInterval){
+        let cps = idleCps();
+        if(cps > 0){
+            idleState.tickets     += cps * dt;
+            idleState.totalEarned += cps * dt;
+        }
+        if(idleBuffs.frenzy > 0)      idleBuffs.frenzy      = Math.max(0, idleBuffs.frenzy - dt);
+        if(idleBuffs.clickFrenzy > 0) idleBuffs.clickFrenzy = Math.max(0, idleBuffs.clickFrenzy - dt);
+    }
+    idleState.lastTick = now;
+}, 1000);
+
+// Gedrosselt speichern (alle 30s), damit Hintergrund-Fortschritt nicht verloren geht
+setInterval(function(){ if(typeof idleSave === 'function') idleSave(); }, 30000);
 // ============================================================
 // ★★★ RIFT MODE — VOLLSTÄNDIGE IMPLEMENTIERUNG ★★★
 // Ticket Slayer V20 — Lane-Karte, Jungle, Objectives, Buffs
