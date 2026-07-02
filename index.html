@@ -1103,16 +1103,22 @@ input[type="text"] {
                     <button onclick="idlePayout()" style="width:100%;background:#e67e22;color:#000;border:none;padding:12px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">Auszahlen: <span id="idlePayoutAmount">0</span> 🪙</button>
                 </div>
 
+                <div style="background:#000;border:2px solid #9b59b6;border-radius:6px;padding:12px;margin-bottom:16px;">
+                    <div style="color:#bb8fce;font-size:13px;margin-bottom:4px;">🎓 KÜNDIGEN & NEU ANFANGEN</div>
+                    <div style="color:#888;font-size:11px;margin-bottom:8px;">Setzt den Idle-Fortschritt zurück — dafür Berufserfahrung (BE): dauerhaft <b style="color:#fff;">+2% Produktion je Punkt</b>.</div>
+                    <div style="color:#bb8fce;font-size:12px;margin-bottom:8px;">Aktuell: <span id="idlePrestigeOwned">0</span> BE (×<span id="idlePrestigeMult">1.00</span>) · bei Reset: <span id="idlePrestigeGain">0</span> BE</div>
+                    <button onclick="idleDoPrestige()" style="width:100%;background:#9b59b6;color:#fff;border:none;padding:12px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">Kündigen für <span id="idlePrestigeGainBtn">0</span> BE</button>
+                </div>
                 <div style="color:#888;font-size:12px;letter-spacing:2px;margin-bottom:8px;">⬆️ UPGRADES</div>
-                <div id="idleUpgradeGrid" style="display:flex;flex-wrap:wrap;gap:8px;min-height:20px;"></div>
+                <div id="idleUpgradeGrid" style="display:flex;flex-direction:column;gap:8px;min-height:20px;"></div>
                 <div id="idleUpgradeEmpty" style="color:#555;font-size:12px;">Noch keine Upgrades verfügbar – kauf erst ein paar Gebäude.</div>
             </div>
 
             <!-- RECHTE SPALTE: Gebäude -->
             <div style="flex:1;min-width:300px;">
-                <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center;">
+                <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center;flex-wrap:wrap;">
                     <span style="color:#888;font-size:12px;letter-spacing:2px;margin-right:auto;">🏗️ GEBÄUDE</span>
-                    <span style="color:#888;font-size:11px;">kaufen:</span>
+                    <button id="idleModeBuy" onclick="idleSetMode(false)" style="background:#2ecc71;color:#000;border:none;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">KAUFEN</button><button id="idleModeSell" onclick="idleSetMode(true)" style="background:#222;color:#e74c3c;border:none;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">VERKAUFEN</button><span style="color:#888;font-size:11px;margin-left:10px;">Menge:</span>
                     <button id="idleBuy1"   onclick="idleSetBuy(1)"   style="background:#f1c40f;color:#000;border:none;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">×1</button>
                     <button id="idleBuy10"  onclick="idleSetBuy(10)"  style="background:#222;color:#f1c40f;border:none;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">×10</button>
                     <button id="idleBuy100" onclick="idleSetBuy(100)" style="background:#222;color:#f1c40f;border:none;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">×100</button>
@@ -10086,6 +10092,19 @@ const IDLE_BUILDINGS = [
     { id:'zeit',   icon:'⏱️', name:'Zeiterfassung',   baseCost:75000000000, baseCps:1600000 },
 ];
 
+const IDLE_BUILD_DESC = {
+    azubi:'Frischer Azubi – arbeitet Tickets im Schneckentempo ab.',
+    sachb:'Sachbearbeiter, der sich stur durch die Warteschlange klickt.',
+    farm:'Server-Farm, die Tickets im Rechenzentrum wegrechnet.',
+    kloska:'Kloskas Lager verschiebt Tickets im Akkord.',
+    fabrik:'Ticket-Fabrik am Fließband, rund um die Uhr.',
+    bank:'Kaffeekasse-Bank – koffeinfinanziert, aber unaufhaltsam.',
+    bayer:'Peter Bayer telefoniert Tickets einfach weg.',
+    sap:'Der SAP-Magier verhext ganze Ticket-Stapel auf einmal.',
+    lkw:'Logistik-Flotte liefert Lösungen frei Haus.',
+    zeit:'Zeiterfassung bucht Tickets weg, bevor sie entstehen.'
+};
+
 // Upgrades programmatisch erzeugen
 const IDLE_UPGRADES = [];
 IDLE_BUILDINGS.forEach(function(b){
@@ -10130,6 +10149,22 @@ IDLE_BUILDINGS.forEach(function(b){
     });
 });
 
+// Synergie-Upgrades: ein Gebaeude verstaerkt ein anderes je nach Stueckzahl
+[
+    { id:'syn_azubi_fabrik', icon:'🔗', tgt:'azubi', src:'fabrik', per:0.01,  cost:500000,       name:'Bot-gestuetzte Azubis',  d:'Azubis +1% je Ticket-Fabrik',         ra:10, rb:1  },
+    { id:'syn_farm_bank',    icon:'🔗', tgt:'farm',  src:'bank',   per:0.02,  cost:10000000,     name:'Koffein-Infusion',       d:'Server-Farm +2% je Kaffeekasse-Bank', ra:10, rb:1  },
+    { id:'syn_bayer_azubi',  icon:'🔗', tgt:'bayer', src:'azubi',  per:0.005, cost:200000000,    name:'Peter kennt alle',       d:'Peter Bayer +0,5% je Azubi',          ra:1,  rb:25 },
+    { id:'syn_sachb_sap',    icon:'🔗', tgt:'sachb', src:'sap',    per:0.01,  cost:1000000000,   name:'SAP-Schulung',           d:'Sachbearbeiter +1% je SAP-Magier',    ra:10, rb:1  },
+    { id:'syn_kloska_lkw',   icon:'🔗', tgt:'kloska',src:'lkw',    per:0.02,  cost:50000000000,  name:'Kloska kennt jemanden',  d:'Kloska-Lager +2% je Logistik-Flotte', ra:10, rb:1  },
+    { id:'syn_zeit_fabrik',  icon:'🔗', tgt:'zeit',  src:'fabrik', per:0.01,  cost:500000000000, name:'Zeit ist Geld',          d:'Zeiterfassung +1% je Ticket-Fabrik',  ra:1,  rb:10 }
+].forEach(function(u){
+    IDLE_UPGRADES.push({
+        id:u.id, icon:u.icon, name:u.name, desc:u.d,
+        cost:u.cost, kind:'synergy', target:u.tgt, source:u.src, per:u.per,
+        req:function(s){ return (s.buildings[u.tgt]||0) >= u.ra && (s.buildings[u.src]||0) >= u.rb; }
+    });
+});
+
 // State laden / migrieren
 let idleParsed = null;
 try { idleParsed = JSON.parse(lsGet('ts_idle', 'null')); } catch(e){ idleParsed = null; }
@@ -10140,6 +10175,8 @@ if(idleParsed && idleParsed.buildings && typeof idleParsed.buildings === 'object
     idleState = { tickets:0, buildings:{}, upgrades:[], buyAmount:1, totalClicks:0, totalEarned:0, lastTick:Date.now() };
 }
 if(typeof idleState.buyAmount !== 'number') idleState.buyAmount = 1;
+if(typeof idleState.prestige !== 'number') idleState.prestige = 0;
+if(typeof idleState.sellMode !== 'boolean') idleState.sellMode = false;
 
 let idleBuffs = { frenzy:0, clickFrenzy:0 };
 let idleTickInterval = null;
@@ -10147,6 +10184,11 @@ let idleTickCounter = 0;
 let idleGoldenCountdown = 0;
 let idleGoldenActive = false;
 let idleGoldenHideTimer = null;
+
+const IDLE_MILESTONES = [25,50,100,150,200,300,400,500];
+function idleMsCount(id){ let o=idleState.buildings[id]||0,c=0; for(let i=0;i<IDLE_MILESTONES.length;i++) if(o>=IDLE_MILESTONES[i]) c++; return c; }
+function idleMilestoneMult(id){ return Math.pow(2, idleMsCount(id)); }
+function idleNextMs(id){ let o=idleState.buildings[id]||0; for(let i=0;i<IDLE_MILESTONES.length;i++) if(o<IDLE_MILESTONES[i]) return IDLE_MILESTONES[i]; return null; }
 
 function idleHasUpg(id){ return idleState.upgrades.indexOf(id) !== -1; }
 
@@ -10162,13 +10204,16 @@ function idleBuildMult(id){
     let m = 1;
     IDLE_UPGRADES.forEach(function(u){
         if(u.kind==='building' && u.target===id && idleHasUpg(u.id)) m *= u.factor;
+        if(u.kind==='synergy'  && u.target===id && idleHasUpg(u.id)) m *= (1 + u.per * (idleState.buildings[u.source]||0));
     });
+    m *= idleMilestoneMult(id);
     return m;
 }
 function idleAllMult(){
     let m = 1;
     IDLE_UPGRADES.forEach(function(u){ if(u.kind==='all' && idleHasUpg(u.id)) m *= u.factor; });
     if(idleBuffs.frenzy > 0) m *= 7;
+    m *= idlePrestigeMult();
     return m;
 }
 function idleBuildCps(b){
@@ -10200,6 +10245,46 @@ function idleBulkCost(b, amt){
     // geometrische Summe
     let total = b.baseCost * Math.pow(1.15, owned) * (Math.pow(1.15, amt)-1) / 0.15;
     return Math.ceil(total);
+}
+function idleSellRefund(b, amt){
+    let owned = idleState.buildings[b.id]||0;
+    amt = Math.min(amt, owned);
+    if(amt<=0) return 0;
+    let start = owned - amt;
+    let total = b.baseCost * Math.pow(1.15, start) * (Math.pow(1.15, amt)-1) / 0.15;
+    return Math.floor(total * 0.25);
+}
+function idleUpdateModeButtons(){
+    let bBuy = document.getElementById('idleModeBuy');
+    let bSell = document.getElementById('idleModeSell');
+    if(bBuy && bSell){
+        let s = idleState.sellMode;
+        bBuy.style.background  = s?'#222':'#2ecc71'; bBuy.style.color  = s?'#2ecc71':'#000';
+        bSell.style.background = s?'#e74c3c':'#222'; bSell.style.color = s?'#fff':'#e74c3c';
+    }
+}
+function idleSetMode(sell){
+    idleState.sellMode = sell;
+    idleUpdateModeButtons();
+    idleRenderBuildings();
+}
+
+function idlePrestigeGain(){ return Math.floor(Math.sqrt((idleState.totalEarned||0) / 1e6)); }
+function idlePrestigeMult(){ return 1 + 0.02 * (idleState.prestige||0); }
+function idleDoPrestige(){
+    let gain = idlePrestigeGain();
+    if(gain <= 0){ showToast('NOCH ZU WENIG','#e74c3c','Sammle mehr Tickets fuer Berufserfahrung'); return; }
+    if(!confirm('Kuendigen & neu anfangen?\n\nDu verlierst Tickets, Gebaeude und Upgrades — bekommst aber '+gain+' Berufserfahrung (dauerhaft +'+(gain*2)+'% Produktion, bleibt fuer immer).')) return;
+    idleState.prestige = (idleState.prestige||0) + gain;
+    idleState.tickets = 0;
+    idleState.totalEarned = 0;
+    idleState.buildings = {};
+    idleState.upgrades = [];
+    idleBuffs = { frenzy:0, clickFrenzy:0 };
+    idleSave(); if(typeof saveProgress==='function') saveProgress();
+    if(typeof playSound==='function') playSound('powerup');
+    showToast('🎓 BEFOERDERT!', '#f1c40f', '+'+gain+' Berufserfahrung');
+    idleRenderAll();
 }
 
 function openIdleMode(){
@@ -10275,6 +10360,18 @@ function idleSetBuy(n){
 function idleBuyBuilding(id){
     let b = IDLE_BUILDINGS.find(function(x){ return x.id===id; });
     let amt = idleState.buyAmount;
+    if(idleState.sellMode){
+        let owned = idleState.buildings[id]||0;
+        let sell = Math.min(amt, owned);
+        if(sell<=0){ showToast('NICHTS DA','#e74c3c','Du besitzt kein '+b.name); return; }
+        let refund = idleSellRefund(b, sell);
+        idleState.buildings[id] = owned - sell;
+        idleState.tickets += refund;
+        if(typeof playSound==='function') playSound('hit');
+        idleSave();
+        idleRenderAll();
+        return;
+    }
     let cost = idleBulkCost(b, amt);
     if(idleState.tickets < cost){ showToast('ZU WENIG 🎫','#e74c3c', idleFmt(cost)+' nötig'); return; }
     idleState.tickets -= cost;
@@ -10351,30 +10448,47 @@ function idleUpdateStats(){
     let ps = document.getElementById('idlePerSec'); if(ps) ps.innerText = idleFmt(idleCps());
     let pc = document.getElementById('idlePerClick'); if(pc) pc.innerText = idleFmt(idleClickPower());
     let pa = document.getElementById('idlePayoutAmount'); if(pa) pa.innerText = Math.floor(idleState.tickets / IDLE_PAYOUT_RATE);
+    let po = document.getElementById('idlePrestigeOwned'); if(po) po.innerText = (idleState.prestige||0);
+    let pm = document.getElementById('idlePrestigeMult'); if(pm) pm.innerText = idlePrestigeMult().toFixed(2);
+    let pgv = idlePrestigeGain();
+    let pg1 = document.getElementById('idlePrestigeGain'); if(pg1) pg1.innerText = pgv;
+    let pg2 = document.getElementById('idlePrestigeGainBtn'); if(pg2) pg2.innerText = pgv;
 }
 
 function idleRenderBuildings(){
     let grid = document.getElementById('idleBuildGrid');
     if(!grid) return;
+    let sell = idleState.sellMode;
+    let amt = idleState.buyAmount;
+    let all = idleAllMult();
     let html = '';
     IDLE_BUILDINGS.forEach(function(b, idx){
         let owned = idleState.buildings[b.id]||0;
         let prevOwned = idx===0 ? 1 : (idleState.buildings[IDLE_BUILDINGS[idx-1].id]||0);
         let revealed = owned>0 || idleState.totalEarned >= b.baseCost*0.4 || prevOwned>0;
         if(!revealed) return;
-        let amt = idleState.buyAmount;
         let cost = idleBulkCost(b, amt);
-        let afford = idleState.tickets >= cost;
-        let cps = idleBuildCps(b);
-        html += '<div class="idleBuyRow" onclick="idleBuyBuilding(\''+b.id+'\')" style="display:flex;align-items:center;gap:12px;background:'+(afford?'#15140d':'#0c0c0c')+';border:2px solid '+(afford?'#f1c40f':'#333')+';border-radius:5px;padding:11px 13px;cursor:'+(afford?'pointer':'default')+';opacity:'+(afford?'1':'0.6')+';">'
-            + '<div style="font-size:30px;">'+b.icon+'</div>'
+        let refund = idleSellRefund(b, amt);
+        let perUnit = b.baseCps * idleBuildMult(b.id) * all;
+        let cps = idleBuildCps(b) * all;
+        let desc = IDLE_BUILD_DESC[b.id] || '';
+        let actionable = sell ? (owned>0) : (idleState.tickets >= cost);
+        let accent = sell ? '#e74c3c' : '#f1c40f';
+        let border = actionable ? accent : '#333';
+        let rightTop = sell
+            ? '<div style="color:#e74c3c;font-weight:bold;font-size:13px;">+🎫 '+idleFmt(refund)+'</div>'
+            : '<div style="color:#f1c40f;font-weight:bold;font-size:13px;">🎫 '+idleFmt(cost)+'</div>';
+        html += '<div class="idleBuyRow" onclick="idleBuyBuilding(\''+b.id+'\')" title="'+b.name+' — '+desc+'" style="display:flex;align-items:center;gap:11px;background:linear-gradient(90deg,#17150d,#0d0c08);border:2px solid '+border+';border-radius:5px;padding:10px 12px;cursor:'+(actionable?'pointer':'default')+';opacity:'+(actionable?'1':'0.55')+';">'
+            + '<div style="width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;font-size:27px;background:#000;border:1px solid #f1c40f44;border-radius:5px;">'+b.icon+'</div>'
             + '<div style="flex:1;min-width:0;">'
                 + '<div style="color:#fff;font-weight:bold;font-size:14px;">'+b.name+'</div>'
-                + '<div style="color:#2ecc71;font-size:11px;">+'+idleFmt(cps)+' /s'+(owned>0?' gesamt':'')+'</div>'
+                + '<div style="color:#9a8c6a;font-size:10px;line-height:1.25;">'+desc+'</div>'
+                + '<div style="color:#2ecc71;font-size:10px;">je Stück +'+idleFmt(perUnit)+'/s'+(owned>0?' · gesamt +'+idleFmt(cps)+'/s':'')+'</div>'
+                + (owned>0 ? '<div style="color:#e67e22;font-size:10px;">'+(idleMsCount(b.id)>0?('×'+idleMilestoneMult(b.id)+' '):'')+(idleNextMs(b.id)?('noch '+(idleNextMs(b.id)-owned)+' bis ×2'):'MAX ★')+'</div>' : '')
             + '</div>'
             + '<div style="text-align:right;white-space:nowrap;">'
-                + '<div style="color:#f1c40f;font-weight:bold;font-size:13px;">🎫 '+idleFmt(cost)+'</div>'
-                + '<div style="color:#888;font-size:16px;font-weight:bold;">'+owned+'</div>'
+                + rightTop
+                + '<div style="color:#666;font-size:22px;font-weight:bold;line-height:1;">'+owned+'</div>'
             + '</div></div>';
     });
     grid.innerHTML = html;
@@ -10391,10 +10505,13 @@ function idleRenderUpgrades(){
     let html = '';
     avail.forEach(function(u){
         let afford = idleState.tickets >= u.cost;
-        html += '<div onclick="idleBuyUpgrade(\''+u.id+'\')" title="'+u.name+' — '+u.desc+' ('+idleFmt(u.cost)+' 🎫)" '
-            + 'style="width:54px;height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:'+(afford?'#15140d':'#0c0c0c')+';border:2px solid '+(afford?'#00e5ff':'#333')+';border-radius:5px;cursor:'+(afford?'pointer':'default')+';opacity:'+(afford?'1':'0.55')+';">'
-            + '<div style="font-size:22px;">'+u.icon+'</div>'
-            + '<div style="font-size:8px;color:#f1c40f;">'+idleFmt(u.cost)+'</div>'
+        html += '<div onclick="idleBuyUpgrade(\''+u.id+'\')" style="display:flex;align-items:center;gap:10px;width:100%;background:linear-gradient(90deg,#0e1518,#0a0c0d);border:2px solid '+(afford?'#00e5ff':'#333')+';border-radius:5px;padding:8px 10px;cursor:'+(afford?'pointer':'default')+';opacity:'+(afford?'1':'0.55')+';">'
+            + '<div style="width:36px;height:36px;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px;background:#000;border:1px solid #00e5ff44;border-radius:5px;">'+u.icon+'</div>'
+            + '<div style="flex:1;min-width:0;">'
+                + '<div style="color:#fff;font-weight:bold;font-size:12px;">'+u.name+'</div>'
+                + '<div style="color:#88aab0;font-size:10px;line-height:1.25;">'+u.desc+'</div>'
+            + '</div>'
+            + '<div style="color:#00e5ff;font-weight:bold;font-size:12px;white-space:nowrap;">🎫 '+idleFmt(u.cost)+'</div>'
             + '</div>';
     });
     grid.innerHTML = html;
@@ -10404,6 +10521,7 @@ function idleRenderAll(){
     idleUpdateStats();
     idleRenderBuildings();
     idleRenderUpgrades();
+    idleUpdateModeButtons();
     idleSetBuy(idleState.buyAmount);
 }
 
