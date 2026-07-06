@@ -1085,6 +1085,9 @@ input[type="text"] {
             <button onclick="closeIdleMode()" style="background:#c0392b;color:#fff;border:none;padding:11px 20px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;border-radius:3px;">← ZURÜCK</button>
         </div>
 
+        <!-- BUFF-UHR (oben rechts): aktive Buffs + Restlaufzeit -->
+        <div id="idleBuffBar" style="position:fixed;top:74px;right:18px;z-index:556;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
+
         <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;">
 
             <!-- LINKE SPALTE: Klicker + Upgrades -->
@@ -1410,6 +1413,10 @@ function processActiveQuest(timeSec) {
         if(q.type === 'hacks' && player.runHacks >= q.target) success = true;
         if(q.type === 'combo' && bestComboThisRun >= q.target) success = true;
         if(q.type === 'boss' && runBossKilled) success = true;
+        if(q.type === 'suppen' && player && (player.runSuppen||0) >= q.target) success = true;
+        if(q.type === 'idocs' && player && (player.runIdocs||0) >= q.target) success = true;
+        if(q.type === 'meetings' && player && (player.runMeetings||0) >= q.target) success = true;
+        if(q.type === 'score' && score >= q.target) success = true;
 
         if(success) {
             baseExp += q.exp;
@@ -1546,7 +1553,15 @@ const QUESTS = [
     { id: 'q2', name: 'Ausdauer', desc: 'Überlebe 3 Minuten (180s) in einem Run.', target: 180, type: 'time', exp: 1200, kb: 250 },
     { id: 'q3', name: 'Server-Wartung', desc: 'Hacke 3 Server in einem Run.', target: 3, type: 'hacks', exp: 1500, kb: 300 },
     { id: 'q4', name: 'Picobello-Anwärter', desc: 'Erreiche eine ×5 Combo.', target: 5, type: 'combo', exp: 2000, kb: 400 },
-    { id: 'q5', name: 'Boss-Slayer', desc: 'Besiege Peter Bayer.', target: 1, type: 'boss', exp: 5000, kb: 1000 }
+    { id: 'q5', name: 'Boss-Slayer', desc: 'Besiege Peter Bayer.', target: 1, type: 'boss', exp: 5000, kb: 1000 },
+    // --- TIER 2 AUFTRÄGE (Update 06.07.) ---
+    { id: 'q6',  name: 'Fließbandarbeit',   desc: 'Erledige 250 Gegner in einem Run.', target: 250, type: 'kills', exp: 2500, kb: 500 },
+    { id: 'q7',  name: 'Marathon-Schicht',  desc: 'Überlebe 5 Minuten (300s) in einem Run.', target: 300, type: 'time', exp: 3000, kb: 600 },
+    { id: 'q8',  name: 'Suppenküche',       desc: 'Sammle 25 Suppen in einem Run.', target: 25, type: 'suppen', exp: 2500, kb: 500 },
+    { id: 'q9',  name: 'Feuerwehrmann',     desc: 'Fixe 3 IDOC-Alarme in einem Run.', target: 3, type: 'idocs', exp: 3000, kb: 600 },
+    { id: 'q10', name: 'Sitzungsmarathon',  desc: 'Überlebe 3 Meetings in einem Run.', target: 3, type: 'meetings', exp: 3500, kb: 700 },
+    { id: 'q11', name: 'Punktejäger',       desc: 'Erreiche 500.000 Punkte in einem Run.', target: 500000, type: 'score', exp: 4000, kb: 800 },
+    { id: 'q12', name: 'Combo-Gott',        desc: 'Erreiche eine ×50 Combo.', target: 50, type: 'combo', exp: 5000, kb: 1000 }
 ];
 
 let activeQuest = lsGet('ts_active_quest', null);
@@ -1846,7 +1861,6 @@ const TROPHIES_DEF = [
     { id:'felix_tier1', icon:'🚀', name:'Das Ticket-Kartell', desc:'Felix-Modus: S-Rang + 1.000.000 Pkt.', perk:'Combo startet bei ×3.' },
     { id:'felix_tier2', icon:'💸', name:'Mehrheitsaktionär', desc:'Felix-Modus: S-Rang + 2.500.000 Pkt.', perk:'Kloska -50% & Start mit +5 Suppen.' },
     { id:'felix_tier3', icon:'👑', name:'Der wahre CEO', desc:'Felix-Modus: S-Rang + 5.000.000 Pkt.', perk:'Azubis spawnen als Junior. +25% Schaden.' },
-    { id:'pet_loyal',   icon:'🐾', name:'Bester Freund',   desc:'Bringe deinen Hamster auf Loyal-Stufe.', perk:'Hamster-Aura: Gegner in 80px Radius verlangsamt' },
     { id:'refine_max',  icon:'🔨', name:'Schmiedemeister', desc:'Werte eine Waffe auf +10 auf.', perk:'Schmiede-Rabatt: Alle Kosten -20%' },
     { id:'rune_master', icon:'🔮', name:'Runen-Meister',   desc:'Lege 10 Runen gleichzeitig ins Grid.', perk:'Runen-Resonanz: Alle Runen-Boni +20%' }
 ];
@@ -3956,6 +3970,8 @@ function closeSchmiede() {
 // Neue Kosten in Wurmcoins (deutlich niedriger, da WC seltener sind)
 
 function renderSchmiede() {
+    // BUGFIX: Schmiedemeister rückwirkend vergeben (Trophäe wurde früher nie freigeschaltet)
+    if(!hasTrophy('refine_max') && Object.values(refineData).some(function(v){ return v >= 10; })) unlockTrophy('refine_max');
     // Update der Anzeige auf Wurmcoins
     let el = document.getElementById('schmiedeWC'); 
     let es = document.getElementById('schmiedeSuppen');
@@ -4028,6 +4044,7 @@ function doRefine(weaponId) {
     delete refinePity[weaponId + '_' + targetRef];
     saveRefineData();
     saveProgress();
+    if(targetRef >= 10) unlockTrophy('refine_max');
     let wpn = WEAPON_SHOP.find(w => w.id === weaponId);
     let badge = ['+1','⚡+2','✨+3','💫+4','🔥+5','🔥+6','💥+7','💥+8','⚡⚡+9','🌟+10','🌟+11','👑+12'][targetRef-1] || '+'+targetRef;
     showToast('✅ UPGRADE ERFOLGREICH!', '#2ecc71', (wpn?wpn.name:'Waffe') + ' → ' + badge);
@@ -4110,7 +4127,7 @@ function feedPet() {
     activePet.feedFlash=15; savePetData(); updatePetHUD(); playSound('powerup');
     let newStage=getPetStage();
     if(newStage.name==='Vertraut'&&petData.intimacy>=500&&petData.intimacy<525) showToast('🐾 PET: VERTRAUT!','#2ecc71','+5% Speed!');
-    if(newStage.name==='Loyal'&&petData.intimacy>=750&&petData.intimacy<775) { showToast('🐾 PET: LOYAL!','#9b59b6','Hamster greift Feinde an!'); unlockTrophy('pet_loyal'); }
+    if(newStage.name==='Loyal'&&petData.intimacy>=750&&petData.intimacy<775) { showToast('🐾 PET: LOYAL!','#9b59b6','Hamster greift Feinde an!'); }
 }
 
 function updatePetHUD() {
@@ -4540,6 +4557,8 @@ function enterBossRoom() {
     let powerBonus = Math.min(2.0, 1.0 + powerScore * 0.006); 
     hpMult  *= powerBonus;
     spdMult *= Math.min(1.5, 1.0 + powerScore * 0.003);
+    // BALANCE 06.07.: Im Felix-Modus Bayer-HP halbieren, damit das Endgame erreichbar ist
+    if(currentDiffLabel === "WEIL WEGEN FELIX") hpMult *= 0.5;
     
     bossRoomState = {
         bayer: {
@@ -11116,7 +11135,7 @@ IDLE_BUILDINGS.forEach(function(b){
     });
 });
 // Klick bekommt Anteil der Produktion
-[ {c:50000,p:0.01,n:'1%'},{c:5000000,p:0.04,n:'5%'},{c:500000000,p:0.05,n:'10%'} ].forEach(function(u){
+[ {c:50000,p:0.01,n:'1%'},{c:5000000,p:0.05,n:'5%'},{c:500000000,p:0.10,n:'10%'} ].forEach(function(u){
     IDLE_UPGRADES.push({
         id:'cc_'+u.n, icon:'🖱️', name:'Klick-Bonus '+u.n,
         desc:'Jeder Klick gibt zusätzlich '+u.n+' deiner Produktion', cost:u.c, kind:'clickcps', pct:u.p,
@@ -11216,7 +11235,9 @@ function idleClickPower(){
             if(u.kind==='clickcps') cpsPct += u.pct;
         }
     });
-    let val = 1*mult + idleCps()*cpsPct;
+    // BUGFIX 06.07.: Klick-Upgrades verdoppeln jetzt den GESAMTEN Klickwert
+    // (vorher nur die Basis von 1 — sobald Klick-Bonus-Upgrades aktiv waren, war der Effekt unsichtbar)
+    let val = (1 + idleCps()*cpsPct) * mult;
     if(idleBuffs.clickFrenzy > 0) val *= 777;
     return val;
 }
@@ -11307,6 +11328,7 @@ function idleTick(){
     }
     idleTickCounter++;
     idleUpdateStats();
+    idleRenderBuffs();
     if(idleTickCounter % 5 === 0){ idleRenderBuildings(); idleRenderUpgrades(); }
     if(idleTickCounter % 50 === 0){ idleSave(); }
 }
@@ -11500,7 +11522,35 @@ function idleRenderUpgrades(){
     grid.innerHTML = html;
 }
 
+// --- BUFF-UHR (Kaffee-Rausch / Klick-Rausch) ---
+function idleRenderBuffs(){
+    let bar = document.getElementById('idleBuffBar');
+    if(!bar) return;
+    const defs = [
+        { key:'frenzy',      max:30, icon:'🌟', label:'PRODUKTION ×7', col:'#f1c40f' },
+        { key:'clickFrenzy', max:13, icon:'👆', label:'KLICK ×777',    col:'#00e5ff' }
+    ];
+    let html = '';
+    defs.forEach(function(d){
+        let t = idleBuffs[d.key];
+        if(t > 0){
+            let deg = Math.round(Math.max(0, Math.min(1, t / d.max)) * 360);
+            html += '<div style="display:flex;align-items:center;gap:9px;background:rgba(0,0,0,0.88);border:2px solid '+d.col+';border-radius:6px;padding:6px 11px;box-shadow:0 0 12px '+d.col+'55;">'
+                + '<div style="width:28px;height:28px;border-radius:50%;background:conic-gradient('+d.col+' '+deg+'deg, #222 '+deg+'deg 360deg);display:flex;align-items:center;justify-content:center;flex:none;">'
+                +   '<div style="width:19px;height:19px;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;font-size:11px;">'+d.icon+'</div>'
+                + '</div>'
+                + '<div>'
+                +   '<div style="color:'+d.col+';font-size:10px;font-weight:bold;letter-spacing:1px;">'+d.label+'</div>'
+                +   '<div style="color:#fff;font-size:13px;font-weight:bold;font-family:Courier New,monospace;">'+Math.ceil(t)+'s</div>'
+                + '</div>'
+                + '</div>';
+        }
+    });
+    bar.innerHTML = html;
+}
+
 function idleRenderAll(){
+    idleRenderBuffs();
     idleUpdateStats();
     idleRenderBuildings();
     idleRenderUpgrades();
