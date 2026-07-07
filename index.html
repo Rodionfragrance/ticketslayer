@@ -1088,6 +1088,15 @@ input[type="text"] {
         <!-- BUFF-UHR (oben rechts): aktive Buffs + Restlaufzeit -->
         <div id="idleBuffBar" style="position:fixed;top:74px;right:18px;z-index:556;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
 
+        <!-- MADDIN-BERATER (unten links): Stronghold-Sprüche im IT-Wahnsinn -->
+        <div id="idleMaddin" style="position:fixed;left:18px;bottom:14px;z-index:556;pointer-events:none;display:none;align-items:flex-end;gap:0;">
+            <div style="display:flex;flex-direction:column;align-items:center;">
+                <div id="idleMaddinBubble" style="max-width:260px;background:#fff;color:#111;border:2px solid #2980b9;border-radius:10px;padding:10px 12px;font-size:12px;font-weight:bold;font-family:'Courier New',monospace;margin-bottom:10px;position:relative;box-shadow:0 4px 14px rgba(0,0,0,0.6);"></div>
+                <img id="idleMaddinImg" src="maddinr.png" onerror="this.style.display='none';document.getElementById('idleMaddinEmoji').style.display='block';" style="width:74px;height:auto;image-rendering:pixelated;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.7));">
+                <div id="idleMaddinEmoji" style="display:none;font-size:56px;">👨‍🔧</div>
+            </div>
+        </div>
+
         <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;">
 
             <!-- LINKE SPALTE: Klicker + Upgrades -->
@@ -1105,6 +1114,17 @@ input[type="text"] {
                     <div style="color:#f1c40f;font-size:13px;margin-bottom:4px;">💰 AUSZAHLEN → HAUPTSPIEL</div>
                     <div style="color:#888;font-size:11px;margin-bottom:8px;">Wandelt Tickets in Wurmcoins um (<span id="idleRate">50.000</span> 🎫 = 1 🪙)</div>
                     <button onclick="idlePayout()" style="width:100%;background:#e67e22;color:#000;border:none;padding:12px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">Auszahlen: <span id="idlePayoutAmount">0</span> 🪙</button>
+                </div>
+
+                <!-- WECHSELSTUBE (Trophäe Ticket-Tsunami): 500.000 WC → 1 KB -->
+                <div id="idleExchangeBox" style="display:none;background:#000;border:2px solid #f1c40f;border-radius:6px;padding:12px;margin-bottom:16px;">
+                    <div style="color:#f1c40f;font-size:13px;margin-bottom:4px;">🏦 WECHSELSTUBE <span style="color:#888;font-size:10px;">(Trophäe: Ticket-Tsunami)</span></div>
+                    <div style="color:#888;font-size:11px;margin-bottom:8px;">Wandelt Wurmcoins in Kaffeebons um (500.000 🪙 = 1 ☕) · Du hast <span id="idleExWc">0</span> 🪙</div>
+                    <div style="display:flex;gap:8px;">
+                        <button onclick="idleExchangeWc(1)" style="flex:1;background:#f1c40f;color:#000;border:none;padding:10px;font-size:13px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">×1 KB</button>
+                        <button onclick="idleExchangeWc(10)" style="flex:1;background:#f1c40f;color:#000;border:none;padding:10px;font-size:13px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">×10 KB</button>
+                        <button onclick="idleExchangeWc(-1)" style="flex:1;background:#e67e22;color:#000;border:none;padding:10px;font-size:13px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;border-radius:3px;">MAX</button>
+                    </div>
                 </div>
 
                 <div style="background:#000;border:2px solid #9b59b6;border-radius:6px;padding:12px;margin-bottom:16px;">
@@ -1403,6 +1423,7 @@ function renderHsMenu(tab) {
 
 // --- NEU: ZENTRALE QUEST-VERRECHNUNG ---
 function processActiveQuest(timeSec) {
+    checkDailyQuestReset();
     if(activeQuest) {
         let q = QUESTS.find(x => x.id === activeQuest);
         if(!q) return;
@@ -1423,7 +1444,7 @@ function processActiveQuest(timeSec) {
             if(currentJob) jobExp += q.exp; 
             kaffeebons += q.kb;
             if(!completedQuests.includes(q.id)) completedQuests.push(q.id);
-            lsSet('ts_completed_quests', JSON.stringify(completedQuests));
+            saveDailyQuestState();
             showToast("AUFTRAG ERFÜLLT!", "#2ecc71", `${q.name}: +${q.exp} EXP / +${q.kb} KB`, true);
             playSound('evolve');
             checkLevelUp(); // Level-Up direkt auslösen, falls genug EXP da sind
@@ -1564,20 +1585,68 @@ const QUESTS = [
     { id: 'q12', name: 'Combo-Gott',        desc: 'Erreiche eine ×50 Combo.', target: 50, type: 'combo', exp: 5000, kb: 1000 }
 ];
 
-let activeQuest = lsGet('ts_active_quest', null);
-let completedQuests = JSON.parse(lsGet('ts_completed_quests', '[]'));
+// BUGFIX 07.07.: '' aus lsGet zu null normalisieren — der leere String hat sonst
+// dauerhaft alle ANNEHMEN-Buttons blockiert (war weder null noch abgeschlossen).
+let activeQuest = lsGet('ts_active_quest', null) || null;
+
+// ===== TAGES-AUFTRÄGE: 6 Quests rotieren täglich, Reset um Mitternacht =====
+let dailyQuestState = null;
+try { dailyQuestState = JSON.parse(lsGet('ts_daily_quests', 'null')); } catch(e){ dailyQuestState = null; }
+if(!dailyQuestState || !Array.isArray(dailyQuestState.completed)) dailyQuestState = { date:'', completed:[] };
+let completedQuests = dailyQuestState.completed;
+
+function questTodayKey(){
+    let d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function saveDailyQuestState(){
+    dailyQuestState.completed = completedQuests;
+    lsSet('ts_daily_quests', JSON.stringify(dailyQuestState));
+}
+function checkDailyQuestReset(){
+    let today = questTodayKey();
+    if(dailyQuestState.date !== today){
+        dailyQuestState = { date: today, completed: [] };
+        completedQuests = dailyQuestState.completed;
+        saveDailyQuestState();
+        // Aktiver Quest verfällt, wenn er nicht im neuen Tagespool liegt
+        if(activeQuest && !getDailyQuests().some(function(q){ return q.id === activeQuest; })){
+            activeQuest = null; lsSet('ts_active_quest', '');
+        }
+    }
+}
+function getDailyQuests(){
+    // Deterministischer Tages-Seed: gleiche 6 Quests für alle, rotieren um Mitternacht
+    let k = questTodayKey(), seed = 0;
+    for(let i=0; i<k.length; i++) seed = (seed*31 + k.charCodeAt(i)) >>> 0;
+    let pool = QUESTS.slice(), picked = [];
+    for(let n=0; n<6 && pool.length>0; n++){
+        seed = (seed*1103515245 + 12345) >>> 0;
+        picked.push(pool.splice(seed % pool.length, 1)[0]);
+    }
+    return picked;
+}
+function questMidnightCountdown(){
+    let now = new Date();
+    let mid = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1, 0, 0, 0);
+    let ms = mid - now;
+    let h = Math.floor(ms/3600000), m = Math.floor((ms%3600000)/60000);
+    return h + 'h ' + m + 'm';
+}
 
 function openQuestBoard() {
+    checkDailyQuestReset();
     let cont = document.getElementById('questContent');
-    let html = '';
+    let html = '<div style="background:rgba(241,196,15,0.08);border:1px solid #f1c40f;padding:10px;text-align:center;color:#f1c40f;font-size:12px;border-radius:3px;">'
+        + '\uD83D\uDCC5 TAGES-AUFTR\u00c4GE \u2014 6 Auftr\u00e4ge rotieren t\u00e4glich \u00b7 Reset um Mitternacht (in ' + questMidnightCountdown() + ')</div>';
 
-    // BUG FIX: Wenn activeQuest auf einen bereits erledigten Quest zeigt → zurücksetzen
+    // Wenn activeQuest auf einen bereits erledigten Quest zeigt \u2192 zur\u00fccksetzen
     if(activeQuest && completedQuests.includes(activeQuest)) {
         activeQuest = null;
         lsSet('ts_active_quest', '');
     }
     
-    QUESTS.forEach(q => {
+    getDailyQuests().forEach(q => {
         let isDone = completedQuests.includes(q.id);
         let isActive = activeQuest === q.id;
         let borderCol = isActive ? '#f1c40f' : (isDone ? '#2ecc71' : '#333');
@@ -1862,6 +1931,7 @@ const TROPHIES_DEF = [
     { id:'felix_tier2', icon:'💸', name:'Mehrheitsaktionär', desc:'Felix-Modus: S-Rang + 2.500.000 Pkt.', perk:'Kloska -50% & Start mit +5 Suppen.' },
     { id:'felix_tier3', icon:'👑', name:'Der wahre CEO', desc:'Felix-Modus: S-Rang + 5.000.000 Pkt.', perk:'Azubis spawnen als Junior. +25% Schaden.' },
     { id:'refine_max',  icon:'🔨', name:'Schmiedemeister', desc:'Werte eine Waffe auf +10 auf.', perk:'Schmiede-Rabatt: Alle Kosten -20%' },
+    { id:'idle_qua',    icon:'🐛', name:'Ticket-Tsunami',  desc:'Verdiene insgesamt 1 Qa Tickets im Wurm-Klicker.', perk:'Wechselstube: 500.000 Wurmcoins → 1 Kaffeebon', noPrestige:true },
     { id:'rune_master', icon:'🔮', name:'Runen-Meister',   desc:'Lege 10 Runen gleichzeitig ins Grid.', perk:'Runen-Resonanz: Alle Runen-Boni +20%' }
 ];
 
@@ -2166,7 +2236,35 @@ function earnExp(enemyType, isBoss) {
     jobExp  += jexp;
     runExpGained += bexp;
     runKillCount++;
+    processKillStreak();
     checkLevelUp();
+}
+
+// ===== UNREAL-TOURNAMENT-KILLSTREAKS (07.07.) =====
+// Kills innerhalb von 1,5s (90 Frames) verketten sich zu Announcements.
+let _ksChain = 0, _ksLastFrame = -9999;
+const KILLSTREAK_STEPS = [
+    { n:2,  txt:'DOUBLE KILL!',   col:'#f1c40f', size:1.0 },
+    { n:3,  txt:'TRIPLE KILL!',   col:'#e67e22', size:1.1 },
+    { n:4,  txt:'MULTI KILL!',    col:'#e74c3c', size:1.2 },
+    { n:5,  txt:'MEGA KILL!',     col:'#9b59b6', size:1.3 },
+    { n:6,  txt:'ULTRA KILL!',    col:'#00e5ff', size:1.4 },
+    { n:7,  txt:'M-M-MONSTER KILL!', col:'#ff00ff', size:1.6 },
+    { n:10, txt:'HOLY SHIT!',     col:'#ff0000', size:1.8 }
+];
+function processKillStreak(){
+    if(!player) return;
+    if(frame - _ksLastFrame <= 90) _ksChain++;
+    else _ksChain = 1;
+    _ksLastFrame = frame;
+    let step = null;
+    for(let i=0; i<KILLSTREAK_STEPS.length; i++) if(KILLSTREAK_STEPS[i].n === _ksChain) step = KILLSTREAK_STEPS[i];
+    if(step){
+        floatingTexts.push(new FloatingText(player.x, player.y - 70 - Math.random()*20, step.txt, step.col));
+        if(_ksChain >= 5){ screenShake = Math.max(screenShake, 8 + _ksChain); playSound('evolve'); }
+        else playSound('delivery');
+        score += _ksChain * 50 * comboMult;
+    }
 }
 
 function earnTimeExp() {
@@ -4332,7 +4430,7 @@ function openTrophies() {
     let grid = document.getElementById('trophyGrid');
     grid.innerHTML = '';
     // Prestige-Button oben
-    let allTrophies = TROPHIES_DEF.every(t => hasTrophy(t.id));
+    let allTrophies = TROPHIES_DEF.filter(t => !t.noPrestige).every(t => hasTrophy(t.id));
     let prestigeHtml = `<div style="grid-column:1/-1;background:rgba(241,196,15,0.08);border:2px solid #f1c40f;padding:16px;border-radius:4px;margin-bottom:8px;text-align:center;">
         <div style="color:#f1c40f;font-size:16px;font-weight:bold;letter-spacing:3px;">⭐ PRESTIGE LEVEL ${prestigeLevel}</div>
         <div style="color:#aaa;font-size:11px;margin:6px 0;">Pro Prestige: +5% Schaden, +10 HP, +10% KB dauerhaft.</div>
@@ -4353,7 +4451,7 @@ function openTrophies() {
 function closeTrophies() { document.getElementById('trophyOverlay').style.display = 'none'; }
 
 function doPrestige() {
-    if(!TROPHIES_DEF.every(t => hasTrophy(t.id))) { showToast('NICHT MÖGLICH', '#e74c3c', 'Alle Trophäen zuerst freischalten!'); return; }
+    if(!TROPHIES_DEF.filter(t => !t.noPrestige).every(t => hasTrophy(t.id))) { showToast('NICHT MÖGLICH', '#e74c3c', 'Alle Trophäen zuerst freischalten!'); return; }
     if(!confirm(`Prestige ${prestigeLevel+1} starten? Upgrades, Skills und Job werden RESETTET. Trophäen, KB und permanente Boni bleiben!`)) return;
     prestigeLevel++;
     // Reset: Upgrades, Skilltree, Job
@@ -4557,6 +4655,20 @@ function enterBossRoom() {
     let powerBonus = Math.min(2.0, 1.0 + powerScore * 0.006); 
     hpMult  *= powerBonus;
     spdMult *= Math.min(1.5, 1.0 + powerScore * 0.003);
+    // NEU 07.07.: Bayer skaliert dynamisch mit der ECHTEN Kampfkraft des Spielers.
+    // Grobe DPS-Schätzung aus Schaden, Feuerrate und aktiven Waffen → Bayer-HP so,
+    // dass der Kampf mind. ~45-120s dauert (+10% über Spieler-Power). Die alte Formel
+    // bleibt als Untergrenze — Bayer wird dadurch nie SCHWÄCHER als bisher.
+    if(player) {
+        let _pDmg = 10 + (player.dmgBonus||0);
+        let _wepN = Object.keys(player.activeWeapons||{}).length + (player.mouseTimer>0 ? 1 : 0);
+        let _fr   = Math.max(2, player.fireRate||20);
+        let _dps  = _pDmg * (60/_fr) * (1 + _wepN*0.8);
+        let _ttk  = 45 + lastChosenDifficulty * 5;
+        let _dyn  = (_dps * _ttk) / BAYER_STATS.hp * 1.10;
+        if(player._bossHpRed) _dyn *= Math.max(0.3, 1.0 - player._bossHpRed);
+        hpMult = Math.max(hpMult, _dyn);
+    }
     // BALANCE 06.07.: Im Felix-Modus Bayer-HP halbieren, damit das Endgame erreichbar ist
     if(currentDiffLabel === "WEIL WEGEN FELIX") hpMult *= 0.5;
     
@@ -10774,11 +10886,12 @@ function loop(){
                         playSound('evolve');
                         showToast("✋ MEISTER HAND BESIEGT!", "#9b59b6", "+25.000 Score · +2.000 KB · Phantom Grip freigeschaltet!");
                         rollBossCardDrop('hand');
-                        for(let i=0;i<3;i++) items.push(new Item('briefcase', e.x + (Math.random()-0.5)*100, e.y + (Math.random()-0.5)*100));
+                        let _handDrop = (currentDiffLabel === 'WEIL WEGEN FELIX') ? 'shield' : 'briefcase'; // FELIX 07.07.: Schild statt Gehaltserhöhung
+                        for(let i=0;i<3;i++) items.push(new Item(_handDrop, e.x + (Math.random()-0.5)*100, e.y + (Math.random()-0.5)*100));
                     } else {
                         floatingTexts.push(new FloatingText(e.x,e.y,"PROJEKT ABGESCHLOSSEN!","#ffd700"));
                         screenShake = 50;
-                        items.push(new Item('briefcase',e.x,e.y));
+                        items.push(new Item((currentDiffLabel === 'WEIL WEGEN FELIX') ? 'shield' : 'briefcase', e.x, e.y)); // FELIX 07.07.: Schild statt Gehaltserhöhung
                         showToast("BOSS BESIEGT!","#ffd700","Projekt abgeschlossen!");
                         rollBossCardDrop('mini');
                     }
@@ -11203,6 +11316,7 @@ IDLE_BUILDINGS.forEach(function(b){
         { thr:1,  mult:10,     label:'I' },
         { thr:25, mult:500,    label:'II' },
         { thr:50, mult:50000,  label:'III' },
+        { thr:100, mult:5000000, label:'IV' },
     ];
     tiers.forEach(function(t){
         IDLE_UPGRADES.push({
@@ -11247,13 +11361,44 @@ IDLE_BUILDINGS.forEach(function(b){
     { id:'syn_bayer_azubi',  icon:'🔗', tgt:'bayer', src:'azubi',  per:0.005, cost:200000000,    name:'Peter kennt alle',       d:'Peter Bayer +0,5% je Azubi',          ra:1,  rb:25 },
     { id:'syn_sachb_sap',    icon:'🔗', tgt:'sachb', src:'sap',    per:0.01,  cost:1000000000,   name:'SAP-Schulung',           d:'Sachbearbeiter +1% je SAP-Magier',    ra:10, rb:1  },
     { id:'syn_kloska_lkw',   icon:'🔗', tgt:'kloska',src:'lkw',    per:0.02,  cost:50000000000,  name:'Kloska kennt jemanden',  d:'Kloska-Lager +2% je Logistik-Flotte', ra:10, rb:1  },
-    { id:'syn_zeit_fabrik',  icon:'🔗', tgt:'zeit',  src:'fabrik', per:0.01,  cost:500000000000, name:'Zeit ist Geld',          d:'Zeiterfassung +1% je Ticket-Fabrik',  ra:1,  rb:10 }
+    { id:'syn_zeit_fabrik',  icon:'🔗', tgt:'zeit',  src:'fabrik', per:0.01,  cost:500000000000, name:'Zeit ist Geld',          d:'Zeiterfassung +1% je Ticket-Fabrik',  ra:1,  rb:10 },
+    // NEU 07.07.: mehr Querverbindungen
+    { id:'syn_sap_bank',     icon:'🔗', tgt:'sap',   src:'bank',   per:0.02,  cost:2000000000,   name:'Budget-Zauber',          d:'SAP-Magier +2% je Kaffeekasse-Bank',  ra:1,  rb:5  },
+    { id:'syn_lkw_kloska',   icon:'🔗', tgt:'lkw',   src:'kloska', per:0.01,  cost:80000000000,  name:'Ladeliste vom Lager',    d:'Logistik-Flotte +1% je Kloska-Lager', ra:1,  rb:25 },
+    { id:'syn_zeit_bayer',   icon:'🔗', tgt:'zeit',  src:'bayer',  per:0.05,  cost:900000000000, name:'Bayer stempelt nicht',   d:'Zeiterfassung +5% je Peter Bayer',    ra:1,  rb:5  },
+    { id:'syn_bank_sachb',   icon:'🔗', tgt:'bank',  src:'sachb',  per:0.005, cost:30000000,     name:'Kaffeekassenbuch',       d:'Kaffeekasse-Bank +0,5% je Sachbearbeiter', ra:1, rb:50 }
 ].forEach(function(u){
     IDLE_UPGRADES.push({
         id:u.id, icon:u.icon, name:u.name, desc:u.d,
         cost:u.cost, kind:'synergy', target:u.tgt, source:u.src, per:u.per,
         req:function(s){ return (s.buildings[u.tgt]||0) >= u.ra && (s.buildings[u.src]||0) >= u.rb; }
     });
+});
+
+// META-UPGRADES (07.07.): setzen andere UPGRADES voraus — echte Abhängigkeitskette
+IDLE_UPGRADES.push({
+    id:'meta_click', icon:'🧤', name:'Klick-Grossmeister',
+    desc:'Klickkraft ×5 — benötigt Stärkerer Klick V und alle Klick-Boni',
+    cost:100000000000, kind:'metaclick', factor:5,
+    req:function(s){ return idleHasUpg('click_V') && idleHasUpg('cc_1%') && idleHasUpg('cc_5%') && idleHasUpg('cc_10%'); }
+});
+IDLE_UPGRADES.push({
+    id:'meta_ausflug', icon:'🏖️', name:'Prozessoptimierung',
+    desc:'ALLE Gebäude ×3 — benötigt alle drei Betriebsausflüge',
+    cost:10000000000000, kind:'metaall', factor:3,
+    req:function(s){ return idleHasUpg('all_I') && idleHasUpg('all_II') && idleHasUpg('all_III'); }
+});
+IDLE_UPGRADES.push({
+    id:'gold_magnet', icon:'🪱', name:'Wurm-Magnet',
+    desc:'Der Goldene Wurm erscheint doppelt so oft — benötigt Betriebsausflug I',
+    cost:500000000, kind:'gold',
+    req:function(s){ return idleHasUpg('all_I'); }
+});
+IDLE_UPGRADES.push({
+    id:'gold_dauer', icon:'⏳', name:'Rausch-Verlängerung',
+    desc:'Goldwurm-Buffs halten 50% länger — benötigt Wurm-Magnet',
+    cost:50000000000, kind:'gold',
+    req:function(s){ return idleHasUpg('gold_magnet'); }
 });
 
 // State laden / migrieren
@@ -11302,7 +11447,7 @@ function idleBuildMult(id){
 }
 function idleAllMult(){
     let m = 1;
-    IDLE_UPGRADES.forEach(function(u){ if(u.kind==='all' && idleHasUpg(u.id)) m *= u.factor; });
+    IDLE_UPGRADES.forEach(function(u){ if((u.kind==='all' || u.kind==='metaall') && idleHasUpg(u.id)) m *= u.factor; });
     if(idleBuffs.frenzy > 0) m *= 7;
     m *= idlePrestigeMult();
     return m;
@@ -11320,7 +11465,7 @@ function idleClickPower(){
     let cpsPct = 0;
     IDLE_UPGRADES.forEach(function(u){
         if(idleHasUpg(u.id)){
-            if(u.kind==='click') mult *= u.factor;
+            if(u.kind==='click' || u.kind==='metaclick') mult *= u.factor;
             if(u.kind==='clickcps') cpsPct += u.pct;
         }
     });
@@ -11418,6 +11563,8 @@ function idleTick(){
     idleTickCounter++;
     idleUpdateStats();
     idleRenderBuffs();
+    idleMaddinTick(0.1);
+    if(idleTickCounter % 10 === 0){ idleCheckQuaTrophy(); }
     if(idleTickCounter % 5 === 0){ idleRenderBuildings(); idleRenderUpgrades(); }
     if(idleTickCounter % 50 === 0){ idleSave(); }
 }
@@ -11510,7 +11657,7 @@ function idleSpawnGolden(){
     idleGoldenHideTimer = setTimeout(function(){
         g.style.display = 'none';
         idleGoldenActive = false;
-        idleGoldenCountdown = 90 + Math.random()*210;
+        idleGoldenCountdown = (90 + Math.random()*210) * (idleHasUpg('gold_magnet') ? 0.5 : 1);
     }, 13000);
 }
 function idleClickGolden(){
@@ -11518,10 +11665,10 @@ function idleClickGolden(){
     if(g) g.style.display = 'none';
     if(idleGoldenHideTimer) clearTimeout(idleGoldenHideTimer);
     idleGoldenActive = false;
-    idleGoldenCountdown = 90 + Math.random()*210;
+    idleGoldenCountdown = (90 + Math.random()*210) * (idleHasUpg('gold_magnet') ? 0.5 : 1);
     let roll = Math.random();
     if(roll < 0.4){
-        idleBuffs.frenzy = 30;
+        idleBuffs.frenzy = idleHasUpg('gold_dauer') ? 45 : 30;
         showToast('🌟 KAFFEE-RAUSCH!', '#f1c40f', 'Produktion ×7 für 30s');
     } else if(roll < 0.8){
         let bonus = Math.max(Math.floor(idleState.tickets*0.12), Math.floor(idleCps()*60)+13);
@@ -11529,7 +11676,7 @@ function idleClickGolden(){
         idleState.totalEarned += bonus;
         showToast('🌟 GLÜCKSTREFFER!', '#2ecc71', '+' + idleFmt(bonus) + ' 🎫');
     } else {
-        idleBuffs.clickFrenzy = 13;
+        idleBuffs.clickFrenzy = idleHasUpg('gold_dauer') ? 20 : 13;
         showToast('🌟 KLICK-RAUSCH!', '#00e5ff', 'Klick ×777 für 13s');
     }
     if(typeof playSound==='function') playSound('powerup');
@@ -11612,12 +11759,86 @@ function idleRenderUpgrades(){
 }
 
 // --- BUFF-UHR (Kaffee-Rausch / Klick-Rausch) ---
+// ===== WECHSELSTUBE (Trophäe Ticket-Tsunami): 500.000 WC → 1 KB =====
+const IDLE_EXCHANGE_RATE = 500000; // Wurmcoins pro 1 Kaffeebon
+function idleExchangeWc(n){
+    if(!hasTrophy('idle_qua')) return;
+    if(n === -1) n = Math.floor(wurmcoins / IDLE_EXCHANGE_RATE); // MAX
+    if(n <= 0 || wurmcoins < n * IDLE_EXCHANGE_RATE){ showToast('ZU WENIG WURMCOINS', '#e74c3c', 'Kurs: 500.000 🪙 = 1 ☕'); return; }
+    wurmcoins -= n * IDLE_EXCHANGE_RATE;
+    kaffeebons += n;
+    lsSet('ts_wurmcoins', wurmcoins);
+    saveProgress();
+    playSound('delivery');
+    showToast('🏦 GETAUSCHT!', '#f1c40f', '-' + idleFmt(n*IDLE_EXCHANGE_RATE) + ' 🪙 → +' + n + ' ☕');
+    idleUpdateStats();
+}
+function idleCheckQuaTrophy(){
+    if(!hasTrophy('idle_qua') && idleState.totalEarned >= 1e24) unlockTrophy('idle_qua');
+    let box = document.getElementById('idleExchangeBox');
+    if(box) box.style.display = hasTrophy('idle_qua') ? 'block' : 'none';
+    let wcEl = document.getElementById('idleExWc');
+    if(wcEl) wcEl.innerText = idleFmt(wurmcoins);
+}
+
+// ===== MADDIN-BERATER: Stronghold-Sprüche × IT-Wahnsinn =====
+const MADDIN_QUOTES = [
+    'Die Tickets sind knapp, Mylord!',
+    'Wir brauchen mehr Kaffee!',
+    'Der Azubi arbeitet... langsam.',
+    'Eure Server-Farm glüht, Sire!',
+    'Das Volk murrt über SAP!',
+    'Ein Meeting naht, Mylord! Versteckt euch!',
+    'Die Drucker-Warteschlange wächst!',
+    'Habt ihr es schon aus- und wieder eingeschaltet?',
+    'Peter Bayer wurde in der Nähe gesichtet!',
+    'Die Kaffeekasse ist... leer, Mylord.',
+    'Prio 1! Alles ist Prio 1!',
+    'Der Feind hat ein Update ausgerollt — freitags!',
+    'Eure Untertanen fordern Homeoffice!',
+    'Die Zeiterfassung vergisst nichts. NICHTS.',
+    'Ein IDOC hängt, Sire! Schon wieder!',
+    'Mehr Klicks! Die Fabrik verlangt Klicks!',
+    'Das WLAN, Mylord... es ist gefallen.',
+    'Der Betriebsrat ist erfreut über eure Arbeit.',
+    'Kloska kennt da jemanden, Mylord.',
+    'Ihr habt eine neue E-Mail. Und 4.999 ungelesene.',
+    'Die Nachtschicht meldet: alles bröselt stabil.',
+    'Ein goldener Wurm wäre jetzt ein Segen, Sire!',
+    'Das Backup? Welches Backup, Mylord?',
+    'Eure Produktion erfreut das Königreich!'
+];
+let _maddinTimer = 12; // erster Spruch nach ~12s
+let _maddinShowLeft = 0;
+let _maddinLastIdx = -1;
+function idleMaddinTick(dt){
+    let box = document.getElementById('idleMaddin');
+    if(!box) return;
+    if(_maddinShowLeft > 0){
+        _maddinShowLeft -= dt;
+        if(_maddinShowLeft <= 0) box.style.display = 'none';
+        return;
+    }
+    _maddinTimer -= dt;
+    if(_maddinTimer <= 0){
+        let idx;
+        do { idx = Math.floor(Math.random()*MADDIN_QUOTES.length); } while(idx === _maddinLastIdx && MADDIN_QUOTES.length > 1);
+        _maddinLastIdx = idx;
+        let bub = document.getElementById('idleMaddinBubble');
+        if(bub) bub.innerText = '„' + MADDIN_QUOTES[idx] + '“';
+        box.style.display = 'flex';
+        _maddinShowLeft = 8;                       // 8s sichtbar
+        _maddinTimer = 35 + Math.random()*45;      // nächster Spruch in 35-80s
+    }
+}
+
 function idleRenderBuffs(){
     let bar = document.getElementById('idleBuffBar');
     if(!bar) return;
+    let _gd = idleHasUpg('gold_dauer');
     const defs = [
-        { key:'frenzy',      max:30, icon:'🌟', label:'PRODUKTION ×7', col:'#f1c40f' },
-        { key:'clickFrenzy', max:13, icon:'👆', label:'KLICK ×777',    col:'#00e5ff' }
+        { key:'frenzy',      max:(_gd?45:30), icon:'🌟', label:'PRODUKTION ×7', col:'#f1c40f' },
+        { key:'clickFrenzy', max:(_gd?20:13), icon:'👆', label:'KLICK ×777',    col:'#00e5ff' }
     ];
     let html = '';
     defs.forEach(function(d){
