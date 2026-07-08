@@ -915,7 +915,7 @@ input[type="text"] {
         </div>
         <div style="text-align:right;">
             <div style="color:#ffd700;font-size:16px;">☕ <span id="stKB">0</span> KB</div>
-            <div style="color:#aaa;font-size:11px;margin-top:3px;">Punkte verteilt: <span id="stUsed">0</span> / <span id="stMax">20</span></div>
+            <div style="color:#aaa;font-size:11px;margin-top:3px;">Punkte verteilt: <span id="stUsed">0</span> / <span id="stMax">100</span></div>
         </div>
     </div>
     <div style="display:flex;gap:8px;padding:8px 30px;flex-shrink:0;flex-wrap:wrap;">
@@ -1062,6 +1062,7 @@ input[type="text"] {
         <h2>☕ Upgrade Shop</h2>
         <div id="shopBalance">Kaffeebons: <span id="shopKBAmount">0</span> KB</div>
         <div class="shop-grid" id="shopGrid"></div>
+        <button onclick="resetAllUpgrades()" style="display:block;width:100%;margin-top:20px;background:#1a0a00;color:#e67e22;border:2px solid #e67e22;padding:12px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">↺ ALLE ZURÜCKSETZEN (50% REFUND)</button>
         <button id="shopClose" onclick="closeShop()">← ZURÜCK</button>
     </div>
 </div>
@@ -2672,7 +2673,7 @@ let favoriteWeapon   = lsGet('ts_favorite', null);
 // SKILLTREE SYSTEM — POE-STYLE
 // ============================================================
 let unlockedSkills = JSON.parse(lsGet('ts_skills', '[]'));
-const ST_MAX_POINTS = 80;
+const ST_MAX_POINTS = 100;
 
 const ZONE_COLORS = {
     center: '#ffffff', rage: '#e74c3c', panzer: '#3498db',
@@ -4671,6 +4672,8 @@ function enterBossRoom() {
     }
     // BALANCE 06.07.: Im Felix-Modus Bayer-HP halbieren, damit das Endgame erreichbar ist
     if(currentDiffLabel === "WEIL WEGEN FELIX") hpMult *= 0.5;
+    // BALANCE: Bayer-HP nach Spieler-Power-Schaetzung pauschal um 1/3 senken
+    hpMult *= (2/3);
     
     bossRoomState = {
         bayer: {
@@ -5543,6 +5546,38 @@ function applyUpgradesToPlayer(p) {
 function getMaxFarms() { return 3 + getUpgradeLevel('farm_slots') + (player && player._stFarmSlots ? player._stFarmSlots : 0); }
 function openShop(fromGameOver=false) { renderShop(); document.getElementById('shopOverlay').style.display = 'block'; }
 function closeShop() { document.getElementById('shopOverlay').style.display = 'none'; document.getElementById('startKBAmount').innerText = kaffeebons; }
+const UPGRADE_MAX_LEVEL = 99;
+function upgradeSpent(upg) {
+    let lvl = getUpgradeLevel(upg.id), s = 0;
+    for(let i = 0; i < lvl; i++) s += Math.floor(upg.baseCost * Math.pow(upg.costMult, i));
+    return s;
+}
+function resetSingleUpgrade(id) {
+    let upg = UPGRADES_DEF.find(u => u.id === id);
+    if(!upg) return;
+    let lvl = getUpgradeLevel(id);
+    if(lvl <= 0) return;
+    let refund = Math.floor(upgradeSpent(upg) * 0.5);
+    if(!confirm('"' + upg.name + '" (Stufe ' + lvl + ') zur\u00fccksetzen?\n\nRefund: +' + refund + ' KB (50% der Ausgaben)')) return;
+    kaffeebons += refund;
+    upgradeProgress[id] = 0;
+    saveProgress();
+    playSound('hit');
+    showToast('\u21ba UPGRADE RESET', '#e67e22', upg.name + ' \u2192 +' + refund + ' KB');
+    renderShop();
+}
+function resetAllUpgrades() {
+    let refund = 0;
+    UPGRADES_DEF.forEach(u => refund += Math.floor(upgradeSpent(u) * 0.5));
+    if(refund <= 0) { showToast('NICHTS ZU RESETTEN', '#888'); return; }
+    if(!confirm('ALLE Upgrades auf Stufe 0 zur\u00fccksetzen?\n\nRefund: +' + refund + ' KB (50% aller Ausgaben)')) return;
+    kaffeebons += refund;
+    upgradeProgress = {};
+    saveProgress();
+    playSound('hit');
+    showToast('\u21ba ALLE UPGRADES RESET', '#e67e22', '+' + refund + ' KB zur\u00fcckerstattet');
+    renderShop();
+}
 function renderShop() {
     document.getElementById('shopKBAmount').innerText = kaffeebons;
     let grid = document.getElementById('shopGrid');
@@ -5553,15 +5588,25 @@ function renderShop() {
         if (upg.minScore && best < upg.minScore) return;
         let lvl   = getUpgradeLevel(upg.id);
         let cost  = getUpgradeCost(upg);
+        let atMax = lvl >= UPGRADE_MAX_LEVEL;
         let cantAfford = kaffeebons < cost;
-        let cls = 'shop-item' + (cantAfford?' cant-afford':'');
-        let levelDisplay = `<span style="color:#00e5ff">Stufe ${lvl}</span>`;
-        grid.innerHTML += `<div class="${cls}" onclick="buyUpgrade('${upg.id}')"><div class="shop-item-level">${levelDisplay}</div><div class="shop-item-icon">${upg.icon}</div><div><div class="shop-item-name">${upg.name}</div><div class="shop-item-desc">${upg.desc}</div><div class="shop-item-price"><span class="toast-icon">☕</span>${cost} KB</div></div></div>`;
+        let cls = 'shop-item' + (atMax ? ' maxed' : (cantAfford ? ' cant-afford' : ''));
+        let levelDisplay = atMax
+            ? `<span style="color:#f1c40f">MAX (99)</span>`
+            : `<span style="color:#00e5ff">Stufe ${lvl}/99</span>`;
+        let priceHtml = atMax
+            ? `<div class="shop-item-price" style="color:#f1c40f;">MAXIMALSTUFE</div>`
+            : `<div class="shop-item-price"><span class="toast-icon">\u2615</span>${cost} KB</div>`;
+        let resetBtn = lvl > 0
+            ? `<button onclick="event.stopPropagation();resetSingleUpgrade('${upg.id}')" title="Auf Stufe 0 zur\u00fccksetzen (50% Refund)" style="position:absolute;bottom:8px;right:10px;background:#1a0a00;color:#e67e22;border:1px solid #e67e22;padding:2px 8px;font-size:10px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;">\u21ba</button>`
+            : '';
+        grid.innerHTML += `<div class="${cls}" onclick="${atMax ? 'void(0)' : `buyUpgrade('${upg.id}')`}"><div class="shop-item-level">${levelDisplay}</div><div class="shop-item-icon">${upg.icon}</div><div><div class="shop-item-name">${upg.name}</div><div class="shop-item-desc">${upg.desc}</div>${priceHtml}</div>${resetBtn}</div>`;
     });
 }
 function buyUpgrade(id) {
     let upg  = UPGRADES_DEF.find(u=>u.id===id);
     let lvl  = getUpgradeLevel(id);
+    if (lvl >= UPGRADE_MAX_LEVEL) { showToast('MAX-STUFE 99 ERREICHT!', '#e74c3c'); return; }
     let cost = getUpgradeCost(upg);
     if (kaffeebons < cost) return;
     kaffeebons -= cost;
@@ -5958,7 +6003,13 @@ class DOOM3DEngine {
     // ── Welt aufbauen aus obstacles/stations/servers ──────────
     buildWorld(gs) {
         if (this._worldBuilt) return;
-        const s = this.scene;
+        // FIX: alte Welt-Meshes entsorgen - verhindert Geisterwaende + GPU-Leak bei jedem Neustart
+        if (this._worldMeshes) {
+            this._worldMeshes.forEach(m => { this.scene.remove(m); this._disposeObject(m); });
+        }
+        this._worldMeshes = [];
+        const _scene = this.scene, _wm = this._worldMeshes;
+        const s = { add(m) { _scene.add(m); _wm.push(m); } };
 
         // Obstacles → Wände / Möbel
         // WICHTIG: Jedes Objekt das in checkWallCollision() blockiert, muss
@@ -6518,6 +6569,8 @@ class DOOM3DEngine {
     // ── Garbage Collection ────────────────────────────────────
     _gc(prefix, liveIds) {
         for (const [id, obj] of this._meshPool.entries()) {
+            // FIX: 'ev_'-Marker beginnen mit 'e' - sonst loescht die Enemy-GC sie jeden Frame neu
+            if (id.startsWith('ev_') && prefix !== 'ev_') continue;
             if (id.startsWith(prefix) && !liveIds.has(id)) {
                 this.scene.remove(obj);
                 this._disposeObject(obj);   // GPU-Speicher freigeben — verhindert Stocken!
@@ -6803,6 +6856,7 @@ function togglePause() {
 function quitToMenu() {
     gamePaused = false;
     gameRunning = false;
+    if(window._use3d) _doom3dDeactivate();
     document.getElementById('pauseOverlay').classList.remove('active');
     bgMusic.pause();
     let mm = document.getElementById('menuMusic');
@@ -6872,6 +6926,13 @@ function calculateRunRating(sc, kills, timeSec, bossKilled, bestCombo, diff) {
     return {grade:'F', color:'#555', label:'FAIL!!', pts};
 }
 
+// Was fehlt bis zum naechsten Rang? (F->E->D->C->B->A->S)
+function nextRankNeed(pts) {
+    const t = [{g:'E',p:10},{g:'D',p:24},{g:'C',p:38},{g:'B',p:55},{g:'A',p:72},{g:'S',p:88}];
+    for(let x of t) { if(pts < x.p) return {g:x.g, need:x.p - pts}; }
+    return null;
+}
+
 function checkGameOver(){
     if(player && player.hp<=0){
         
@@ -6880,6 +6941,7 @@ function checkGameOver(){
         // --------------------------
 
         gameRunning=false;
+        if(window._use3d) _doom3dDeactivate(); // FIX: Cursor/Crosshair im Game-Over-Screen
         unlockTrophy('first_game');
         if(systemCollapse) {
             document.getElementById('goTitle').innerText = "SYSTEM TOTALAUSFALL";
@@ -6901,6 +6963,11 @@ function checkGameOver(){
         // Run-Bewertung
         let rating = calculateRunRating(score, runKillCount, timeSec, runBossKilled, bestComboThisRun, lastChosenDifficulty);
         let rEl = document.getElementById('goRunRating');
+        let _nr = nextRankNeed(rating.pts);
+        let _dmX = {1:1.0, 3:1.4, 6:2.2, 9:3.5}[lastChosenDifficulty] || 1.0;
+        let _nrHtml = _nr
+            ? `<div style="color:#aaa;font-size:11px;margin-top:4px;">⬆ Für Rang <b style="color:#fff;">${_nr.g}</b> fehlten <b style="color:#f1c40f;">${_nr.need}</b> Pkt (≈ +${Math.ceil(_nr.need*625*_dmX).toLocaleString('de-DE')} Score oder +${Math.ceil(_nr.need*7.5*_dmX)} Kills · Boss-Kill = +15 Pkt)</div>`
+            : `<div style="color:#f1c40f;font-size:11px;margin-top:4px;">👑 MAXIMALER RANG ERREICHT!</div>`;
         // Highscore-Vergleich aus Firebase
         let compareHtml = '';
         if(db) {
@@ -6918,7 +6985,7 @@ function checkGameOver(){
           <div style="font-size:72px;font-weight:bold;color:${rating.color};text-shadow:0 0 30px ${rating.color},0 0 60px ${rating.color};line-height:1;">${rating.grade}</div>
           <div style="color:${rating.color};font-size:16px;font-weight:bold;letter-spacing:2px;">${rating.label}</div>
           <div style="color:#666;font-size:11px;margin-top:4px;">${rating.pts}/100 Pkt • ${runKillCount} Kills • ${Math.floor(timeSec)}s${runBossKilled?' • 💀 BAYER BESIEGT':''}</div>
-          <div id="goCompare" style="margin-top:3px;"></div>`;
+          <div id="goCompare" style="margin-top:3px;"></div>${_nrHtml}`;
         // Besten Combo anzeigen
         if(bestComboThisRun >= 2) {
             document.getElementById('goBestCombo').style.display = 'block';
@@ -8579,6 +8646,13 @@ if ((activeBoss && activeBoss.hp > 0) || (gamePhase === 'bossroom' && bossRoomSt
 
     // Status Overlay
     let statusHtml = "<span style='color:#fff;text-decoration:underline;font-size:14px;font-weight:bold;'>📡 LEITSTAND-SYSTEME:</span><br>";
+    // LIVE-RANG (F bis S) - aktualisiert sich laufend mit Score/Kills/Zeit
+    if(gameRunning && runStartTime > 0) {
+        let _rT = (Date.now() - runStartTime) / 1000;
+        let _rR = calculateRunRating(score, runKillCount, _rT, runBossKilled, bestComboThisRun, lastChosenDifficulty);
+        let _rN = nextRankNeed(_rR.pts);
+        statusHtml = `<div style="margin-bottom:8px;padding:6px 10px;border:2px solid ${_rR.color};border-radius:4px;background:rgba(0,0,0,0.6);display:inline-block;"><span style="font-size:26px;font-weight:bold;color:${_rR.color};text-shadow:0 0 10px ${_rR.color};">RANG ${_rR.grade}</span> <span style="font-size:11px;color:#aaa;">${_rR.pts}/100</span>${_rN ? `<div style="font-size:10px;color:#888;">bis Rang ${_rN.g}: noch ${_rN.need} Pkt</div>` : `<div style="font-size:10px;color:#f1c40f;">MAX!</div>`}</div><br>` + statusHtml;
+    }
     let hasStatus = false;
     function addStatus(label, timer, color) {
         if (timer > 0 && timer !== Infinity) { hasStatus = true; statusHtml += `<div style="color:${color}; margin-top:4px; font-weight:bold;">${label}: ${(timer/60).toFixed(1)}s</div>`; }
@@ -11007,6 +11081,9 @@ function loop(){
         // Render
         // ── 3D DOOM MODUS: Renderer übernimmt wenn aktiv ─────
         if (window._use3d && window._3d) {
+            // FIX: Shake/Flash klingen sonst im 3D-Modus nie ab (Endlos-Wackeln nach erstem Treffer)
+            if (screenShake > 0) { screenShake *= .9; if (screenShake < .5) screenShake = 0; }
+            if (flashScreen > 0) { flashScreen *= .9; if (flashScreen < .1) flashScreen = 0; }
             // 2D-Canvas leer halten (opacity:0 aber trotzdem clearen)
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             // 3D Frame rendern
@@ -11218,7 +11295,7 @@ function startGame(diff=1, gameMode='normal'){
         if (window._3d) {
             // Welt-Rebuild bei jedem Spielstart
             window._3d._worldBuilt = false;
-            window._3d._meshPool.forEach((obj) => { if(window._3d.scene) window._3d.scene.remove(obj); });
+            window._3d._meshPool.forEach((obj) => { if(window._3d.scene) window._3d.scene.remove(obj); window._3d._disposeObject(obj); });
             window._3d._meshPool.clear();
             _doom3dActivate();
             showToast('🔥 3D DOOM-MODUS', '#ff4400', 'KLICK = Maus fangen · WASD = laufen · Maus = umschauen · ESC = frei');
@@ -11294,6 +11371,13 @@ const IDLE_BUILDINGS = [
     { id:'sap',    icon:'🧙', name:'SAP-Magier',      baseCost:330000000,   baseCps:44000 },
     { id:'lkw',    icon:'🚚', name:'Logistik-Flotte', baseCost:5100000000,  baseCps:260000 },
     { id:'zeit',   icon:'⏱️', name:'Zeiterfassung',   baseCost:75000000000, baseCps:1600000 },
+    // NEUE ENDGAME-GEBAEUDE - IT & Logistik
+    { id:'hwraum',    icon:'🔧', name:'Hardware-Raum',       baseCost:1.1e12,  baseCps:9500000 },
+    { id:'sonntag',   icon:'🌙', name:'Sonntag-Spätschicht', baseCost:1.6e13,  baseCps:57000000 },
+    { id:'wagen',     icon:'🍗', name:'Hähnchenwagen',       baseCost:2.4e14,  baseCps:340000000 },
+    { id:'drucker',   icon:'🖨️', name:'Drucker-Etage',       baseCost:3.5e15,  baseCps:2000000000 },
+    { id:'leitstand', icon:'🎛️', name:'Leitstand',           baseCost:5.1e16,  baseCps:12000000000 },
+    { id:'rechenz',   icon:'🏢', name:'Rechenzentrum',       baseCost:7.5e17,  baseCps:72000000000 },
 ];
 
 const IDLE_BUILD_DESC = {
@@ -11306,7 +11390,13 @@ const IDLE_BUILD_DESC = {
     bayer:'Peter Bayer telefoniert Tickets einfach weg.',
     sap:'Der SAP-Magier verhext ganze Ticket-Stapel auf einmal.',
     lkw:'Logistik-Flotte liefert Lösungen frei Haus.',
-    zeit:'Zeiterfassung bucht Tickets weg, bevor sie entstehen.'
+    zeit:'Zeiterfassung bucht Tickets weg, bevor sie entstehen.',
+    hwraum:'Hardware-Raum – Ersatzteile für alles, was blinkt und piept.',
+    sonntag:'Sonntag-Spätschicht – niemand will sie, alle brauchen sie.',
+    wagen:'Hähnchenwagen von Witwe Bolte – Motivation auf Rädern.',
+    drucker:'Drucker-Etage – 400 Drucker, davon 3 funktionsfähig.',
+    leitstand:'Der Leitstand – sieht alles, weiß alles, eskaliert alles.',
+    rechenz:'Eigenes Rechenzentrum – hier wohnen die Tickets jetzt.'
 };
 
 // Upgrades programmatisch erzeugen
@@ -11366,7 +11456,20 @@ IDLE_BUILDINGS.forEach(function(b){
     { id:'syn_sap_bank',     icon:'🔗', tgt:'sap',   src:'bank',   per:0.02,  cost:2000000000,   name:'Budget-Zauber',          d:'SAP-Magier +2% je Kaffeekasse-Bank',  ra:1,  rb:5  },
     { id:'syn_lkw_kloska',   icon:'🔗', tgt:'lkw',   src:'kloska', per:0.01,  cost:80000000000,  name:'Ladeliste vom Lager',    d:'Logistik-Flotte +1% je Kloska-Lager', ra:1,  rb:25 },
     { id:'syn_zeit_bayer',   icon:'🔗', tgt:'zeit',  src:'bayer',  per:0.05,  cost:900000000000, name:'Bayer stempelt nicht',   d:'Zeiterfassung +5% je Peter Bayer',    ra:1,  rb:5  },
-    { id:'syn_bank_sachb',   icon:'🔗', tgt:'bank',  src:'sachb',  per:0.005, cost:30000000,     name:'Kaffeekassenbuch',       d:'Kaffeekasse-Bank +0,5% je Sachbearbeiter', ra:1, rb:50 }
+    { id:'syn_bank_sachb',   icon:'🔗', tgt:'bank',  src:'sachb',  per:0.005, cost:30000000,     name:'Kaffeekassenbuch',       d:'Kaffeekasse-Bank +0,5% je Sachbearbeiter', ra:1, rb:50 },
+    // NEUE GEBAEUDE-SYNERGIEN - jedes neue Gebaeude haengt mit alten & neuen zusammen
+    { id:'syn_hwraum_kloska',  icon:'🔗', tgt:'hwraum',    src:'kloska',    per:0.01,  cost:5e12,   name:'Ersatzteil-Pipeline',        d:'Hardware-Raum +1% je Kloska-Lager',           ra:1,  rb:25  },
+    { id:'syn_farm_hwraum',    icon:'🔗', tgt:'farm',      src:'hwraum',    per:0.05,  cost:8e12,   name:'Frische Hardware',           d:'Server-Farm +5% je Hardware-Raum',            ra:25, rb:1   },
+    { id:'syn_sonntag_azubi',  icon:'🔗', tgt:'sonntag',   src:'azubi',     per:0.002, cost:6e13,   name:'Azubis am Sonntag',          d:'Sonntag-Spätschicht +0,2% je Azubi',          ra:1,  rb:100 },
+    { id:'syn_wagen_bank',     icon:'🔗', tgt:'wagen',     src:'bank',      per:0.01,  cost:8e14,   name:'Hähnchen auf Firmenkosten',  d:'Hähnchenwagen +1% je Kaffeekasse-Bank',       ra:1,  rb:25  },
+    { id:'syn_sonntag_wagen',  icon:'🔗', tgt:'sonntag',   src:'wagen',     per:0.05,  cost:9e14,   name:'Verpflegung inklusive',      d:'Sonntag-Spätschicht +5% je Hähnchenwagen',    ra:5,  rb:1   },
+    { id:'syn_wagen_hwraum',   icon:'🔗', tgt:'wagen',     src:'hwraum',    per:0.01,  cost:1.5e15, name:'Fritteusen-Wartung',         d:'Hähnchenwagen +1% je Hardware-Raum',          ra:10, rb:10  },
+    { id:'syn_drucker_sachb',  icon:'🔗', tgt:'drucker',   src:'sachb',     per:0.005, cost:1.2e16, name:'Druckaufträge',              d:'Drucker-Etage +0,5% je Sachbearbeiter',       ra:1,  rb:100 },
+    { id:'syn_fabrik_drucker', icon:'🔗', tgt:'fabrik',    src:'drucker',   per:0.05,  cost:2e16,   name:'Papier-Nachschub',           d:'Ticket-Fabrik +5% je Drucker-Etage',          ra:50, rb:1   },
+    { id:'syn_leitstand_bayer',icon:'🔗', tgt:'leitstand', src:'bayer',     per:0.03,  cost:2e17,   name:'Chefaufsicht',               d:'Leitstand +3% je Peter Bayer',                ra:1,  rb:10  },
+    { id:'syn_zeit_leitstand', icon:'🔗', tgt:'zeit',      src:'leitstand', per:0.05,  cost:3e17,   name:'Zentrale Stempeluhr',        d:'Zeiterfassung +5% je Leitstand',              ra:25, rb:1   },
+    { id:'syn_rechenz_farm',   icon:'🔗', tgt:'rechenz',   src:'farm',      per:0.005, cost:2e18,   name:'Farm-Cluster',               d:'Rechenzentrum +0,5% je Server-Farm',          ra:1,  rb:100 },
+    { id:'syn_sap_rechenz',    icon:'🔗', tgt:'sap',       src:'rechenz',   per:0.05,  cost:3e18,   name:'Unbegrenzte Rechenleistung', d:'SAP-Magier +5% je Rechenzentrum',             ra:25, rb:1   }
 ].forEach(function(u){
     IDLE_UPGRADES.push({
         id:u.id, icon:u.icon, name:u.name, desc:u.d,
