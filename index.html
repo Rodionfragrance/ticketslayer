@@ -1082,7 +1082,7 @@ input[type="text"] {
 
     <div style="max-width:1080px;margin:0 auto;padding:22px 18px 60px;">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
-            <h2 style="color:#f1c40f;font-size:26px;letter-spacing:5px;margin:0;text-transform:uppercase;text-shadow:0 0 14px rgba(241,196,15,0.4);">🪱 WURM-KLICKER</h2>
+            <h2 style="color:#f1c40f;font-size:26px;letter-spacing:5px;margin:0;text-transform:uppercase;text-shadow:0 0 14px rgba(241,196,15,0.4);">🪱 WURM-KLICKER <span style="font-size:10px;color:#e67e22;letter-spacing:1px;vertical-align:middle;border:1px solid #e67e22;padding:2px 6px;border-radius:3px;">⚡ SESSION-MODUS — Tab zu = Reset! Nur die Kommando-Zentrale bleibt.</span></h2>
             <div style="display:flex;gap:10px;">
                 <button onclick="openCnc()" style="background:#0a1a0a;color:#2ecc71;border:2px solid #2ecc71;padding:11px 20px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;border-radius:3px;">🎖️ KOMMANDO-ZENTRALE</button>
                 <button onclick="closeIdleMode()" style="background:#c0392b;color:#fff;border:none;padding:11px 20px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;border-radius:3px;">← ZURÜCK</button>
@@ -11572,15 +11572,35 @@ IDLE_UPGRADES.push({
     req:function(s){ return idleHasUpg('gold_magnet'); }
 });
 
-// State laden / migrieren
-let idleParsed = null;
-try { idleParsed = JSON.parse(lsGet('ts_idle', 'null')); } catch(e){ idleParsed = null; }
-let idleState;
-if(idleParsed && idleParsed.buildings && typeof idleParsed.buildings === 'object' && Array.isArray(idleParsed.upgrades)){
-    idleState = idleParsed;
-} else {
-    idleState = { tickets:0, buildings:{}, upgrades:[], buyAmount:1, totalClicks:0, totalEarned:0, lastTick:Date.now() };
-}
+// ============================================================
+// SESSION-MODUS 09.07.: Der Wurm-Klicker startet bei JEDEM Seitenaufruf
+// komplett bei 0 — kein Laden, kein Speichern des Klicker-Fortschritts.
+// Tab zu / Browser zu / F5 = vollstaendiger Reset.
+// Persistent bleiben NUR: die Kommando-Zentrale (C&C-Basis + Spezialteile,
+// eigener Key 'ts_cnc') und der Lebenszeit-Zaehler fuer die Qa-Trophaee.
+// Alte Spielstaende (ts_idle) werden beim ersten Laden EINMALIG geloescht —
+// alle bisherigen "zu krassen" Spieler starten damit automatisch bei 0.
+// ============================================================
+let idleState = { tickets:0, buildings:{}, upgrades:[], buyAmount:1, totalClicks:0, totalEarned:0, lastTick:Date.now() };
+let idleLifetimeBase = parseFloat(lsGet('ts_idle_lifetime', '0')) || 0;
+let _cncSaved = null;
+try { _cncSaved = JSON.parse(lsGet('ts_cnc', 'null')); } catch(e){ _cncSaved = null; }
+// EINMALIGE MIGRATION + WIPE des alten Spielstands
+try {
+    let _old = JSON.parse(lsGet('ts_idle', 'null'));
+    if(_old && typeof _old === 'object'){
+        if(!_cncSaved && _old.cnc && typeof _old.cnc === 'object'){
+            _cncSaved = _old.cnc; // C&C-Basis + Spezialteile retten
+            lsSet('ts_cnc', JSON.stringify(_cncSaved));
+        }
+        if(typeof _old.totalEarned === 'number' && _old.totalEarned > idleLifetimeBase){
+            idleLifetimeBase = _old.totalEarned; // Qa-Trophaeen-Fortschritt retten
+            lsSet('ts_idle_lifetime', String(idleLifetimeBase));
+        }
+        localStorage.removeItem('ts_idle'); // ALTER SPIELSTAND ENDGUELTIG WEG
+    }
+} catch(e){}
+if(_cncSaved && typeof _cncSaved === 'object') idleState.cnc = _cncSaved;
 if(typeof idleState.buyAmount !== 'number') idleState.buyAmount = 1;
 if(typeof idleState.prestige !== 'number') idleState.prestige = 0;
 if(typeof idleState.sellMode !== 'boolean') idleState.sellMode = false;
@@ -11941,7 +11961,12 @@ function closeIdleMode(){
 }
 function idleSave(){
     idleState.lastTick = Date.now();
-    lsSet('ts_idle', JSON.stringify(idleState));
+    // SESSION-MODUS: Klicker-Fortschritt wird bewusst NICHT gespeichert.
+    // Nur C&C-Basis + Lebenszeit-Zaehler (Qa-Trophaee) ueberleben den Tab.
+    try {
+        if(idleState.cnc) lsSet('ts_cnc', JSON.stringify(idleState.cnc));
+        lsSet('ts_idle_lifetime', String(idleLifetimeBase + (idleState.totalEarned || 0)));
+    } catch(e){}
 }
 
 function idleTick(){
@@ -12173,7 +12198,8 @@ function idleExchangeWc(n){
     idleUpdateStats();
 }
 function idleCheckQuaTrophy(){
-    if(!hasTrophy('idle_qua') && idleState.totalEarned >= 1e24) unlockTrophy('idle_qua');
+    // Lebenszeit-Zaehler: Fortschritt aus frueheren Sessions + aktuelle Session
+    if(!hasTrophy('idle_qua') && (idleLifetimeBase + idleState.totalEarned) >= 1e24) unlockTrophy('idle_qua');
     let box = document.getElementById('idleExchangeBox');
     if(box) box.style.display = hasTrophy('idle_qua') ? 'block' : 'none';
     let wcEl = document.getElementById('idleExWc');
