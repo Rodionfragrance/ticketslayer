@@ -466,14 +466,7 @@ input[type="text"] {
 .refine-result-success { color:#2ecc71; font-size:20px; font-weight:bold; text-align:center; padding:10px; animation:refineFlash 0.5s ease; }
 .refine-result-fail { color:#c0392b; font-size:20px; font-weight:bold; text-align:center; padding:10px; animation:refineFlash 0.5s ease; }
 @keyframes refineFlash { 0%{opacity:0;transform:scale(0.8)} 100%{opacity:1;transform:scale(1)} }
-/* ============================================================
-   PET SYSTEM HUD
-   ============================================================ */
-#petHud { position:absolute; bottom:125px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.75); border:2px solid #9b59b6; border-radius:6px; padding:6px 14px; display:none; z-index:120; font-family:'Courier New',monospace; text-align:center; pointer-events:none; white-space:nowrap; }
-#petHud .pet-name { color:#9b59b6; font-size:11px; font-weight:bold; letter-spacing:2px; }
-#petHud .pet-mood { color:#fff; font-size:13px; margin:2px 0; }
-#petHud .pet-hunger-outer { width:140px; height:7px; background:#1a1a1a; border:1px solid #333; border-radius:3px; margin:3px auto 0; }
-#petHud .pet-hunger-inner { height:100%; border-radius:3px; transition:width 0.5s; }
+/* CHANGE 09.07.: Pet-HUD CSS entfernt */
 
 </style>
 </head>
@@ -537,7 +530,7 @@ input[type="text"] {
         <div><span>SHIFT / RMB</span> — Hechtrolle (i-Frames)</div>
         <div><span>E</span> — Interagieren (Heilen/IDOC/Shop)</div>
         <div><span>B</span> — Azubi einsetzen (5000 Pkt)</div>
-        <div><span>C</span> — Pet füttern (1🥣)</div>
+        <div><span>X</span> — Zeitstopp 3s (Trophäen-Perk)</div>
         <div><span>V</span> — Phantom Grip [Trophäe Meister Hand]</div>
         <div><span>F</span> — Server-Farm aktivieren</div>
         <div><span>G</span> — Urlaub einlösen (Heilung)</div>
@@ -803,7 +796,6 @@ input[type="text"] {
            <button onclick="openDailyOverlay()" id="daily-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;">☕ TAGES-BONUS</button>
             <button onclick="openQuestBoard()" style="background:#111;color:#2ecc71;border:2px solid #2ecc71;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#2ecc71';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#2ecc71'">📋 AUFTRÄGE</button>
             <button onclick="openJobOverlay()" id="job-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">⚔️ JOB</button>
-            <!-- Pet-Button entfernt -->
             <!-- Runen-Button entfernt -->
             <button onclick="showEmail()" style="background:#111;color:#3498db;border:2px solid #3498db;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#3498db';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#3498db'">[I] ANLEITUNG</button>
             <button onclick="openSkillTree()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🌳 SKILLTREE</button>
@@ -991,15 +983,7 @@ input[type="text"] {
     </div>
 </div>
 
-<!-- PET SYSTEM OVERLAY -->
-<div id="petOverlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.93);z-index:610;overflow-y:auto;font-family:'Courier New',monospace;">
-    <div style="max-width:640px;margin:40px auto;padding:28px;border:3px solid #9b59b6;background:#0a0a0a;border-radius:4px;">
-        <h2 style="color:#9b59b6;font-size:22px;letter-spacing:4px;margin:0 0 4px;text-transform:uppercase;">🐾 AZUBI-HAMSTER</h2>
-        <div style="color:#666;font-size:11px;margin-bottom:18px;">Dein permanenter Begleiter — für jeden Run</div>
-        <div id="petOverlayContent"></div>
-        <button onclick="closePetOverlay()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
-    </div>
-</div>
+<!-- CHANGE 09.07.: Pet-Overlay entfernt -->
 
 <!-- SCHMIEDE / REFINEMENT / KARTEN -->
 <div id="cardOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.95); z-index:650; overflow-y:auto; font-family:'Courier New',monospace;">
@@ -1162,14 +1146,7 @@ input[type="text"] {
 
 <!-- FARM INDICATOR -->
 <div id="farmIndicator"></div>
-<!-- PET HUD -->
-<div id="petHud">
-    <div class="pet-name" id="petHudName">🐾 AZUBI-HAMSTER</div>
-    <div class="pet-mood" id="petHudMood">Neutral</div>
-    <div class="pet-hunger-outer"><div class="pet-hunger-inner" id="petHudHunger" style="width:100%;background:#2ecc71;"></div></div>
-    <div style="color:#555;font-size:9px;margin-top:2px;">[C] Füttern (1🥣)</div>
-</div>
-
+<!-- CHANGE 09.07.: Pet-HUD entfernt -->
 
 <!-- MISC HUD -->
 // <div id="highscore-overlay">Lade Online Scores...</div>
@@ -1410,7 +1387,7 @@ function renderHsMenu(tab) {
                 let medal = rank<=3?['🥇','🥈','🥉'][rank-1]:(rank+'.');
                 let coll = parseFloat(d.collapseTime)>0?` · 🔥${d.collapseTime}s`:'';
                 let boss = d.bossKilled?' · 💀':'';
-                let grade = d.grade?`<span style="color:${({S:'#f1c40f',A:'#2ecc71',B:'#3498db',C:'#9b59b6',D:'#e67e22',E:'#e74c3c',F:'#555'})[d.grade]||'#aaa'};font-weight:bold;">[${d.grade}]</span> `:'';
+                let grade = d.grade?`<span style="color:${({Z:'#4D3095',S:'#f1c40f',A:'#2ecc71',B:'#3498db',C:'#9b59b6',D:'#e67e22',E:'#e74c3c',F:'#555'})[d.grade]||'#aaa'};font-weight:bold;">[${d.grade}]</span> `:'';
                 html += `<div style="color:${c};font-size:12px;padding:3px 0;display:flex;align-items:center;gap:8px;">
                     <span style="width:28px;text-align:right;">${medal}</span>
                     <span style="flex:1;">${grade}${(d.name||'???').substring(0,10)}</span>
@@ -1470,7 +1447,7 @@ function saveHighscoreAndRestart() {
     let rat = calculateRunRating(score, runKillCount, timeSec, runBossKilled, bestComboThisRun, lastChosenDifficulty);
     // --- NEU: S-Rang Trophäen Tracking ---
     // --- S-RANG & FELIX TROPHÄEN ---
-    if(rat.grade === 'S') {
+    if(rat.grade === 'S' || rat.grade === 'Z') { // CHANGE 09.07.: Z zählt als S+
         let sRanks = JSON.parse(lsGet('ts_s_ranks', '[]'));
         if(!sRanks.includes(currentDiffLabel)) {
             sRanks.push(currentDiffLabel);
@@ -1517,7 +1494,7 @@ function saveHighscoreAndMainMenu() {
     processActiveQuest(timeSec2);
     let rat2 = calculateRunRating(score, runKillCount, timeSec2, runBossKilled, bestComboThisRun, lastChosenDifficulty);
     // --- S-RANG & FELIX TROPHÄEN ---
-    if(rat2.grade === 'S') {
+    if(rat2.grade === 'S' || rat2.grade === 'Z') { // CHANGE 09.07.: Z zählt als S+
         let sRanks = JSON.parse(lsGet('ts_s_ranks', '[]'));
         if(!sRanks.includes(currentDiffLabel)) {
             sRanks.push(currentDiffLabel);
@@ -1934,6 +1911,10 @@ const TROPHIES_DEF = [
     { id:'felix_tier1', icon:'🚀', name:'Das Ticket-Kartell', desc:'Felix-Modus: S-Rang + 1.000.000 Pkt.', perk:'Combo startet bei ×3.' },
     { id:'felix_tier2', icon:'💸', name:'Mehrheitsaktionär', desc:'Felix-Modus: S-Rang + 2.500.000 Pkt.', perk:'Kloska -50% & Start mit +5 Suppen.' },
     { id:'felix_tier3', icon:'👑', name:'Der wahre CEO', desc:'Felix-Modus: S-Rang + 5.000.000 Pkt.', perk:'Azubis spawnen als Junior. +25% Schaden.' },
+    // --- CHANGE 09.07.: RANG-SYSTEM & FPS TROPHÄEN ---
+    { id:'max_power',   icon:'💯', name:'Maximale Power',  desc:'Erreiche einen perfekten Score (100/100 Pkt).', perk:'Machtrausch: Base- & Job-EXP jeweils +10%' },
+    { id:'zyzz',        icon:'🧬', name:'The Zyzz',        desc:'Erreiche den Rang Z (95+ Pkt).', perk:'Aesthetic: Aufgesammelte Waffen halten 50% länger', hidden:true },
+    { id:'fps_zero',    icon:'🖥️', name:'Haben wir noch FPS? gar keine mehr?', desc:'Erreiche 420 Sekunden in Burnout oder höher.', perk:'Lag-Switch: [X] hält die Zeit 3s an (60s Abklingzeit) — auch bei Bayer' },
     { id:'refine_max',  icon:'🔨', name:'Schmiedemeister', desc:'Werte eine Waffe auf +10 auf.', perk:'Schmiede-Rabatt: Alle Kosten -20%' },
     { id:'idle_qua',    icon:'🐛', name:'Ticket-Tsunami',  desc:'Verdiene insgesamt 1 Qa Tickets im Wurm-Klicker.', perk:'Wechselstube: 500.000 Wurmcoins → 1 Kaffeebon', noPrestige:true },
     { id:'rune_master', icon:'🔮', name:'Runen-Meister',   desc:'Lege 10 Runen gleichzeitig ins Grid.', perk:'Runen-Resonanz: Alle Runen-Boni +20%' }
@@ -2236,6 +2217,8 @@ function earnExp(enemyType, isBoss) {
     let jexp = JOB_EXP_TABLE[enemyType] || 3;
     // EXP-Multiplikator (Doram/Absolvent-Bonus aus applyJobEffects)
     if(player && player._expMult) { bexp = Math.floor(bexp * player._expMult); jexp = Math.floor(jexp * player._expMult); }
+    // CHANGE 09.07.: Trophäe 'Maximale Power' — Base- & Job-EXP +10%
+    if(hasTrophy('max_power')) { bexp = Math.ceil(bexp * 1.1); jexp = Math.ceil(jexp * 1.1); }
     baseExp += bexp;
     jobExp  += jexp;
     runExpGained += bexp;
@@ -2273,8 +2256,9 @@ function processKillStreak(){
 
 function earnTimeExp() {
     // Wird im Game Loop jede Minute aufgerufen
-    baseExp += 20;
-    jobExp += 10; // Auch Novice erhält Job-EXP (Zeitbonus)
+    let _mpX = hasTrophy('max_power') ? 1.1 : 1.0; // CHANGE 09.07.: Maximale Power +10%
+    baseExp += Math.ceil(20 * _mpX);
+    jobExp += Math.ceil(10 * _mpX); // Auch Novice erhält Job-EXP (Zeitbonus)
     checkLevelUp();
 }
 
@@ -4158,162 +4142,7 @@ function doRefine(weaponId) {
     if(gameRunning && player) applyJobEffects(player);
 }
 
-function savePetData() { lsSet('ts_pet', JSON.stringify(petData)); }
-function getPetStage() { let stage = PET_STAGES[0]; for(let s of PET_STAGES) { if(petData.intimacy >= s.minIntimacy) stage = s; } return stage; }
-let activePet = null;
-
-class Pet {
-    constructor() {
-        this.x=0; this.y=0; this.vx=0; this.vy=0; this.frame=0;
-        this.attackTimer=0; this.attackCooldown=90; this.size=14;
-        this.hungerTimer=0; this.hungerTickRate=600; this.feedFlash=0;
-    }
-    update() {
-        this.frame++;
-        if(player) {
-            let offsetAngle = Math.sin(this.frame*0.02)*0.8;
-            let followDist = 55;
-            let tx = player.x + Math.cos(offsetAngle)*followDist;
-            let ty = player.y + Math.sin(offsetAngle+1.2)*followDist;
-            let dx = tx-this.x, dy = ty-this.y, dist = Math.hypot(dx,dy);
-            let stg = getPetStage();
-            let sm = (stg.name==='Loyal'||stg.name==='Vertraut') ? 1.3 : 1.0;
-            if(dist>8) { this.vx += (dx/dist)*0.5*sm; this.vy += (dy/dist)*0.5*sm; }
-            this.vx*=0.82; this.vy*=0.82; this.x+=this.vx; this.y+=this.vy;
-        }
-        this.hungerTimer++;
-        if(this.hungerTimer >= this.hungerTickRate) {
-            this.hungerTimer=0; petData.hunger=Math.min(100,petData.hunger+1);
-            if(petData.hunger>=80) { petData.intimacy=Math.max(0,petData.intimacy-8); if(petData.hunger>=90&&frame%600===0){floatingTexts.push(new FloatingText(this.x,this.y-30,'😢 HUNGER!','#e74c3c'));showToast('🐾 HAMSTER HUNGRIG!','#e74c3c','Füttere ihn mit [C]!');} }
-            savePetData(); updatePetHUD();
-        }
-        if(getPetStage().name==='Loyal') {
-            this.attackTimer++;
-            if(this.attackTimer>=this.attackCooldown) {
-                let nearest=null, nearDist=200;
-                enemies.forEach(e=>{let d=Math.hypot(e.x-this.x,e.y-this.y); if(d<nearDist){nearDist=d;nearest=e;}});
-                if(nearest){this.attackTimer=0;let dmg=8+Math.floor(petData.intimacy/100);nearest.hp-=dmg;spawnParticles(nearest.x,nearest.y,'#9b59b6',4);floatingTexts.push(new FloatingText(nearest.x,nearest.y-20,'🐾'+dmg,'#9b59b6'));}
-            }
-        }
-        let stg=getPetStage();
-        if(player&&(stg.name==='Vertraut'||stg.name==='Loyal')) player._petSpeedBuff=0.3;
-        else if(player) player._petSpeedBuff=0;
-        if(this.feedFlash>0) this.feedFlash--;
-    }
-    draw() {
-        if(!player) return;
-        ctx.save();
-        let stg=getPetStage(); let bob=Math.sin(this.frame*0.12)*3; let s=this.size;
-        ctx.fillStyle=this.feedFlash>0?'#fff':stg.color;
-        ctx.beginPath(); ctx.ellipse(this.x,this.y+bob,s,s*0.75,0,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle=stg.color;
-        ctx.beginPath(); ctx.ellipse(this.x-s*0.6,this.y+bob-s*0.5,s*0.35,s*0.55,-0.4,0,Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(this.x+s*0.6,this.y+bob-s*0.5,s*0.35,s*0.55,0.4,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle='#ff9f9f';
-        ctx.beginPath(); ctx.ellipse(this.x-s*0.6,this.y+bob-s*0.5,s*0.18,s*0.3,-0.4,0,Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(this.x+s*0.6,this.y+bob-s*0.5,s*0.18,s*0.3,0.4,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle='#000';
-        ctx.beginPath(); ctx.arc(this.x-s*0.3,this.y+bob-s*0.1,2.5,0,Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(this.x+s*0.3,this.y+bob-s*0.1,2.5,0,Math.PI*2); ctx.fill();
-        if(stg.name==='Loyal'){ctx.strokeStyle='rgba(155,89,182,'+(.3+Math.sin(this.frame*.1)*.2)+')';ctx.lineWidth=2;ctx.beginPath();ctx.arc(this.x,this.y+bob,s+6,0,Math.PI*2);ctx.stroke();}
-        ctx.font='12px serif'; ctx.textAlign='center'; ctx.fillText(stg.emoji,this.x,this.y+bob-s-4);
-        ctx.restore();
-    }
-}
-
-function feedPet() {
-    if(!activePet||!gameRunning) return;
-    if(!player||player.suppe<1) { showToast('KEINE SUPPE!','#e74c3c','Brauchst 1 🥣 zum Füttern'); return; }
-    player.suppe-=1;
-    let hunger=petData.hunger;
-    if(hunger>=20&&hunger<=40) { petData.intimacy=Math.min(PET_MAX_INTIMACY,petData.intimacy+25); floatingTexts.push(new FloatingText(activePet.x,activePet.y-40,'💕 +25 ZUNEIGUNG','#2ecc71')); }
-    else if(hunger<20) { petData.intimacy=Math.max(0,petData.intimacy-10); floatingTexts.push(new FloatingText(activePet.x,activePet.y-40,'😵 ÜBERFÜTTERT -10','#e67e22')); }
-    else { petData.intimacy=Math.min(PET_MAX_INTIMACY,petData.intimacy+10); floatingTexts.push(new FloatingText(activePet.x,activePet.y-40,'😋 +10 ZUNEIGUNG','#f1c40f')); }
-    petData.hunger=Math.max(0,hunger-30); petData.lastFed=Date.now();
-    activePet.feedFlash=15; savePetData(); updatePetHUD(); playSound('powerup');
-    let newStage=getPetStage();
-    if(newStage.name==='Vertraut'&&petData.intimacy>=500&&petData.intimacy<525) showToast('🐾 PET: VERTRAUT!','#2ecc71','+5% Speed!');
-    if(newStage.name==='Loyal'&&petData.intimacy>=750&&petData.intimacy<775) { showToast('🐾 PET: LOYAL!','#9b59b6','Hamster greift Feinde an!'); }
-}
-
-function updatePetHUD() {
-    let hud=document.getElementById('petHud'); if(!hud) return;
-    if(!petData.active||!gameRunning) { hud.style.display='none'; return; }
-    hud.style.display='block';
-    let stg=getPetStage(); let hungerPct=100-petData.hunger;
-    let hungerColor=hungerPct>60?'#2ecc71':(hungerPct>30?'#f39c12':'#e74c3c');
-    let nameEl=document.getElementById('petHudName'); if(nameEl) nameEl.innerHTML='🐾 HAMSTER <span style="color:'+stg.color+';font-size:10px;">['+stg.name.toUpperCase()+']</span>';
-    let moodEl=document.getElementById('petHudMood'); if(moodEl) moodEl.innerHTML=stg.emoji+' Zuneigung: <span style="color:'+stg.color+';">'+petData.intimacy+'</span>/1000';
-    let hungerEl=document.getElementById('petHudHunger'); if(hungerEl){hungerEl.style.width=hungerPct+'%';hungerEl.style.background=hungerColor;}
-}
-
-function openPetOverlay() { renderPetOverlay(); document.getElementById('petOverlay').style.display='block'; }
-function closePetOverlay() { document.getElementById('petOverlay').style.display='none'; }
-
-function renderPetOverlay() {
-    let cont = document.getElementById('petOverlayContent');
-    if(!cont) return;
-    let stg = getPetStage();
-    let hungerPct = Math.max(0, 100 - petData.hunger);
-    let hungerColor = hungerPct > 60 ? '#2ecc71' : (hungerPct > 30 ? '#f39c12' : '#e74c3c');
-    let intimacyPct = Math.round(petData.intimacy / PET_MAX_INTIMACY * 100);
-
-    if(!petData.active) {
-        cont.innerHTML = `
-        <div style="text-align:center;padding:20px;border:2px dashed #9b59b6;border-radius:4px;margin-bottom:16px;">
-            <div style="font-size:48px;margin-bottom:10px;">🐾</div>
-            <div style="color:#9b59b6;font-size:16px;font-weight:bold;margin-bottom:8px;">AZUBI-HAMSTER ADOPTIEREN</div>
-            <div style="color:#888;font-size:12px;margin-bottom:16px;">Permanenter Begleiter für alle Runs.</div>
-            <button onclick="adoptPet()" style="background:#9b59b6;color:#fff;border:none;padding:12px 30px;font-size:14px;font-weight:bold;font-family:monospace;cursor:pointer;text-transform:uppercase;border-radius:3px;">
-                🐾 ADOPTIEREN (50 🪙)
-            </button>
-        </div>`;
-        return;
-    }
-
-    let stagesHtml = PET_STAGES.map(s => {
-        let active = stg.name === s.name;
-        let reached = petData.intimacy >= s.minIntimacy;
-        return `<div style="padding:8px 12px;border:1px solid ${active ? s.color : '#222'};border-radius:3px;background:${active ? s.color + '22' : '#0a0a0a'};display:flex;justify-content:space-between;align-items:center;">
-            <span style="color:${reached ? s.color : '#333'};font-weight:bold;">${s.emoji} ${s.name}${active ? ' ← AKTIV' : ''}</span>
-            <span style="color:#555;font-size:11px;">${s.minIntimacy} Zuneigung${s.buff ? ' · ' + s.buff : ' · kein Buff'}</span>
-        </div>`;
-    }).join('');
-
-    cont.innerHTML = `
-    <div style="background:#111;border:2px solid ${stg.color};padding:16px;border-radius:4px;margin-bottom:14px;display:flex;gap:16px;align-items:center;">
-        <div style="font-size:52px;line-height:1;">${stg.emoji}</div>
-        <div style="flex:1;">
-            <div style="color:${stg.color};font-size:16px;font-weight:bold;">Hamster · ${stg.name.toUpperCase()}</div>
-            <div style="color:#888;font-size:11px;margin:4px 0;">Zuneigung: ${petData.intimacy} / ${PET_MAX_INTIMACY}</div>
-            <div style="background:#1a1a1a;height:8px;border-radius:4px;margin:6px 0;">
-                <div style="background:${stg.color};height:8px;border-radius:4px;width:${intimacyPct}%;"></div>
-            </div>
-            <div style="color:#aaa;font-size:11px;">Sättigung: <span style="color:${hungerColor};">${hungerPct}%</span> <span style="color:#555;">(Ideal: 60–80%)</span></div>
-        </div>
-    </div>
-    <div style="background:#0a0a0a;border:1px solid #333;padding:12px;border-radius:4px;margin-bottom:14px;font-size:11px;color:#888;line-height:1.8;">
-        <strong style="color:#9b59b6;">FÜTTER-GUIDE [C] im Run:</strong><br>
-        🟢 60–80% Sättigung → <span style="color:#2ecc71;">+25 Zuneigung</span><br>
-        🟡 40–60% → <span style="color:#f1c40f;">+10</span><br>
-        🔴 &gt;80% (überfüttert) → <span style="color:#e74c3c;">-10</span><br>
-        💀 &lt;20% Hunger → <span style="color:#e74c3c;">-8 automatisch</span>
-    </div>
-    <div>
-        <div style="color:#888;font-size:11px;letter-spacing:2px;margin-bottom:8px;">STUFEN</div>
-        <div style="display:flex;flex-direction:column;gap:6px;">${stagesHtml}</div>
-    </div>`;
-}
-
-function adoptPet() {
-    if(wurmcoins < 50) { showToast('ZU WENIG WURMCOINS!','#e74c3c','50 🪙 nötig'); return; }
-    wurmcoins -= 50; 
-    lsSet('ts_wurmcoins', wurmcoins);
-    petData.active = true; petData.intimacy = 250; petData.hunger = 0;
-    savePetData(); saveProgress(); 
-    showToast('🐾 HAMSTER ADOPTIERT!','#9b59b6','Dein Begleiter wartet!'); 
-    renderPetOverlay();
-}
+// CHANGE 09.07.: Pet-System vollständig entfernt (verursachte Crash über Taste C)
 
 // ============================================================
 // RUNE TABLET SYSTEM — PHASE 3 ENDGAME
@@ -4452,6 +4281,11 @@ function openTrophies() {
     TROPHIES_DEF.forEach(t => {
         let unlocked = hasTrophy(t.id);
         let cls = 'trophy-item' + (unlocked ? ' unlocked' : '');
+        // Versteckte Trophäen (z.B. The Zyzz) erscheinen erst nach Freischaltung im Klartext
+        if(t.hidden && !unlocked) {
+            grid.innerHTML += `<div class="${cls}"><div class="trophy-icon">❓</div><div class="trophy-info"><div class="trophy-name">???</div><div class="trophy-desc">Versteckte Trophäe — finde sie selbst heraus.</div><div class="trophy-perk">PERK: ???</div></div></div>`;
+            return;
+        }
         grid.innerHTML += `<div class="${cls}"><div class="trophy-icon">${t.icon}</div><div class="trophy-info"><div class="trophy-name">${t.name}</div><div class="trophy-desc">${t.desc}</div><div class="trophy-perk">PERK: ${t.perk}</div></div></div>`;
     });
     document.getElementById('trophyOverlay').style.display = 'block';
@@ -4783,9 +4617,10 @@ function updateBossRoom() {
             if(player) player.rollTimer = br._rollTimer;
         } else {
             if(br._rollCD > 0) br._rollCD--;
-            if(input.keys['KeyC']) {
-                if(typeof feedPet === 'function' && activePet && petData.active) feedPet();
-                input.keys['KeyC'] = false;
+            // CHANGE 09.07.: [X] Zeitstopp — funktioniert auch bei Bayer im Boss-Raum
+            if(input.keys['KeyX']) {
+                tryTimeStop();
+                input.keys['KeyX'] = false;
             }
             if((input.keys['ShiftLeft']||input.rightClick) && br._rollCD <= 0 && player.sapDebuffTimer <= 0) {
                 br._rollDx = Math.cos(aimAngle) * 16; 
@@ -5001,6 +4836,22 @@ function updateBossRoom() {
         }
     }
 
+    // CHANGE 09.07.: ZEITSTOPP — Bayer, Stampfer, Laser & Minis komplett eingefroren.
+    // Spieler-Bewegung, Schüsse & Schaden am Boss laufen weiter (oben bereits verarbeitet).
+    if(timeStopTimer > 0) {
+        if(b.speechTimer > 0) b.speechTimer--;
+        for(let i=br.particles.length-1; i>=0; i--) {
+            let pt = br.particles[i];
+            pt.x+=pt.dx; pt.y+=pt.dy; pt.life--; pt.dy += 0.1;
+            if(pt.life<=0) br.particles.splice(i,1);
+        }
+        if(player && player.hp <= 0) {
+            if(!player.checkUnkuendbar()) { br.result = 'lose'; exitBossRoom(false); return; }
+        }
+        if(activeBoss) { activeBoss.hp = b.hp; activeBoss.maxHp = b.maxHp; }
+        return;
+    }
+
     let spMult = b.phase === 3 ? 2.0 : (b.phase === 2 ? 1.5 : 1.0);
     b.x += b.dx * b.speed * spMult; 
     b.y += b.dy * b.speed * spMult;
@@ -5185,6 +5036,8 @@ function exitBossRoom(won) {
             bossRoomState = null;
             enemies = []; obstacles = []; stations = []; servers = [];
             serverFarms = []; turrets = []; items = [];
+            // FIX 09.07.: 3D-Welt neu bauen — vorher blieben die Wände nach Bayer sichtbar (Kollision war weg)
+            if(window._3d) window._3d._worldBuilt = false;
             idocEvent = null; kloskaEvent = null;
             flashScreen = 100; playSound('alarm');
             if(currentDiffLabel === 'BURNOUT' || currentDiffLabel === 'SURVIVAL') unlockTrophy('boss_killer');
@@ -6392,8 +6245,10 @@ class DOOM3DEngine {
         }
         const r = Math.max(e.radius || 20, 16);
         // Sprite steht auf dem Boden: halbe Höhe nach oben
+        // FIX 09.07.: Zentrum bei max. 80 klemmen (Augenhöhe 35) — Bosse schweben
+        // beim Nahkommen nicht mehr über dem Spieler
         const spriteH = g.userData.spriteH || (r * 4);
-        g.position.set(e.x, spriteH * 0.5, e.y);
+        g.position.set(e.x, Math.min(spriteH * 0.5, 80), e.y);
 
         // Billboard: Sprite richtet sich automatisch zur Kamera (THREE.Sprite)
         // HP-Bar-Wert aktualisieren — nur bei Änderung neu zeichnen (Performance)
@@ -6417,7 +6272,9 @@ class DOOM3DEngine {
         const sprite = new THREE.Sprite(mat);
 
         // Sprite-Größe in Welt-Einheiten (proportional zum 2D-Radius)
-        const worldSize = r * 4;
+        // FIX 09.07.: Deckel bei 180 — Bosse (Radius 50+) wurden sonst so groß,
+        // dass ihr Sprite-Zentrum weit über Augenhöhe lag und sie über dem Spieler schwebten
+        const worldSize = Math.min(r * 4, 180);
         sprite.scale.set(worldSize, worldSize, 1);
 
         const g = new THREE.Group();
@@ -6762,6 +6619,21 @@ let comboTimer = 0;      // Frames bis Combo verfällt (180 = 3 Sek)
 let comboMult = 1;       // Aktueller Multiplikator (1, 2, 3 oder 5)
 let bestComboThisRun = 1;
 
+// ── CHANGE 09.07.: ZEITSTOPP (Trophäe 'Haben wir noch FPS?') ──
+// [X] friert Gegner, Fahrzeuge, Spawns & Bayer für 3s ein. 60s Abklingzeit.
+let timeStopTimer = 0, timeStopCD = 0;
+function tryTimeStop() {
+    if(!hasTrophy('fps_zero')) return;
+    if(timeStopTimer > 0) return;
+    if(timeStopCD > 0) { showToast('⏳ ZEITSTOPP LÄDT', '#888', Math.ceil(timeStopCD/60) + 's Abklingzeit'); return; }
+    timeStopTimer = 180;  // 3 Sekunden
+    timeStopCD    = 3600; // 60 Sekunden
+    flashScreen = 20; screenShake = 10;
+    playSound('alarm');
+    showToast('🖥️ GAR KEINE FPS MEHR!', '#4D3095', 'Zeit steht für 3 Sekunden!');
+    if(player) floatingTexts.push(new FloatingText(player.x, player.y - 60, '⏸ ZEITSTOPP', '#4D3095'));
+}
+
 
 function updateCombo(kill=true) {
     if(!kill) {
@@ -6953,11 +6825,12 @@ function calculateRunRating(sc, kills, timeSec, bossKilled, bestCombo, diff) {
     pts += Math.min(20, (kills / (150 * dm)) * 20);
     // Überlebenszeit (0–15)
     pts += Math.min(15, (timeSec / (480 * dm)) * 15);
-    // Combo (0–10)
-    pts += Math.min(10, ((bestCombo-1) / 9) * 10);
+    // Combo (0–10) — FIX 09.07.: Max-Multiplikator ist ×5, Divisor war 9 → nur 94/100 erreichbar
+    pts += Math.min(10, ((bestCombo-1) / 4) * 10);
     // Boss-Bonus (+15)
     if(bossKilled) pts += 15;
     pts = Math.round(pts);
+    if(pts >= 95) return {grade:'Z', color:'#4D3095', label:'THE ZYZZ', pts};
     if(pts >= 88) return {grade:'S', color:'#f1c40f', label:'LEGENDÄR', pts};
     if(pts >= 72) return {grade:'A', color:'#2ecc71', label:'SEHR GUT', pts};
     if(pts >= 55) return {grade:'B', color:'#3498db', label:'GUT', pts};
@@ -6967,9 +6840,9 @@ function calculateRunRating(sc, kills, timeSec, bossKilled, bestCombo, diff) {
     return {grade:'F', color:'#555', label:'FAIL!!', pts};
 }
 
-// Was fehlt bis zum naechsten Rang? (F->E->D->C->B->A->S)
+// Was fehlt bis zum naechsten Rang? (F->E->D->C->B->A->S->Z)
 function nextRankNeed(pts) {
-    const t = [{g:'E',p:10},{g:'D',p:24},{g:'C',p:38},{g:'B',p:55},{g:'A',p:72},{g:'S',p:88}];
+    const t = [{g:'E',p:10},{g:'D',p:24},{g:'C',p:38},{g:'B',p:55},{g:'A',p:72},{g:'S',p:88},{g:'Z',p:95}];
     for(let x of t) { if(pts < x.p) return {g:x.g, need:x.p - pts}; }
     return null;
 }
@@ -7021,6 +6894,9 @@ function checkGameOver(){
         document.getElementById('goRunExp').innerHTML = `+${totalRunExp} Base-EXP${jobLabel} <span style="color:#888;font-size:10px;">(${runKillCount} Kills + ${Math.floor(timeSec/60)}min Bonus)</span>`;
         // Run-Bewertung
         let rating = calculateRunRating(score, runKillCount, timeSec, runBossKilled, bestComboThisRun, lastChosenDifficulty);
+        // CHANGE 09.07.: Perfekter Score & Z-Rang Trophäen
+        if(rating.pts >= 100) unlockTrophy('max_power');
+        if(rating.grade === 'Z') unlockTrophy('zyzz');
         let rEl = document.getElementById('goRunRating');
         let _nr = nextRankNeed(rating.pts);
         let _dmX = {1:1.0, 3:1.4, 6:2.2, 9:3.5}[lastChosenDifficulty] || 1.0;
@@ -7417,11 +7293,10 @@ class Player{
             showToast('✋ PHANTOM GRIP!', '#9b59b6', killCount + ' Gegner vernichtet! (60s CD)');
             input.keys['KeyV'] = false;
         }
-        // PET FÜTTERN — [C] Taste
-        if(input.keys['KeyC']) {
-            if(typeof feedPet === 'function' && activePet && petData.active) feedPet();
-            else if(petData && petData.active === false) showToast('🐾 KEIN PET', '#555', 'Adoptiere einen Hamster im Menü');
-            input.keys['KeyC'] = false;
+        // CHANGE 09.07.: ZEITSTOPP — [X] Taste (Pet-System komplett entfernt, C-Bindung tot)
+        if(input.keys['KeyX']) {
+            tryTimeStop();
+            input.keys['KeyX'] = false;
         }
         if(input.keys['KeyQ']){
             for(let s of stations){
@@ -7549,15 +7424,16 @@ class Player{
     }
 
     equipWeapon(type){
+        let _zyzzX = hasTrophy('zyzz') ? 1.5 : 1.0; // CHANGE 09.07.: The Zyzz — Waffen halten 50% länger
         if(type === 'mouse') {
-            if(this.mouseTimer !== Infinity) { this.mouseTimer = 1800; showToast("ORBIT-MAUS!", "#0ff", "AKTIVIERT (30 SEK)"); }
+            if(this.mouseTimer !== Infinity) { this.mouseTimer = Math.floor(1800 * _zyzzX); showToast("ORBIT-MAUS!", "#0ff", "AKTIVIERT (" + Math.floor(30 * _zyzzX) + " SEK)"); }
             return; 
         }
         if(this.activeWeapons[type] === Infinity) {
             showToast("FAVORIT AKTIV!", "#f1c40f", type.toUpperCase() + " — bereits permanent");
             return;
         }
-        this.activeWeapons[type] = hasTrophy('collapse_survivor') ? 2250 : 1800;
+        this.activeWeapons[type] = Math.floor((hasTrophy('collapse_survivor') ? 2250 : 1800) * _zyzzX);
         this.crateFlashTimer=120; flashScreen=10;
         showToast("ARSENAL ERWEITERT!", "#0ff", type.toUpperCase());
     }
@@ -8717,6 +8593,9 @@ if ((activeBoss && activeBoss.hp > 0) || (gamePhase === 'bossroom' && bossRoomSt
     if(gameRunning && runStartTime > 0) {
         let _rT = (Date.now() - runStartTime) / 1000;
         let _rR = calculateRunRating(score, runKillCount, _rT, runBossKilled, bestComboThisRun, lastChosenDifficulty);
+        // CHANGE 09.07.: Trophäen-Check live — perfekter Score & Z-Rang
+        if(_rR.pts >= 100) unlockTrophy('max_power');
+        if(_rR.grade === 'Z') unlockTrophy('zyzz');
         let _rN = nextRankNeed(_rR.pts);
         statusHtml = `<div style="margin-bottom:8px;padding:6px 10px;border:2px solid ${_rR.color};border-radius:4px;background:rgba(0,0,0,0.6);display:inline-block;"><span style="font-size:26px;font-weight:bold;color:${_rR.color};text-shadow:0 0 10px ${_rR.color};">RANG ${_rR.grade}</span> <span style="font-size:11px;color:#aaa;">${_rR.pts}/100</span>${_rN ? `<div style="font-size:10px;color:#888;">bis Rang ${_rN.g}: noch ${_rN.need} Pkt</div>` : `<div style="font-size:10px;color:#f1c40f;">MAX!</div>`}</div><br>` + statusHtml;
     }
@@ -8727,6 +8606,8 @@ if ((activeBoss && activeBoss.hp > 0) || (gamePhase === 'bossroom' && bossRoomSt
     }
     if(player) {
         if(player.rollCooldown > 0) addStatus("HECHTROLLE CD", player.rollCooldown, "#aaa");
+        if(timeStopTimer > 0) addStatus("⏸️ ZEITSTOPP", timeStopTimer, "#4D3095");
+        else if(hasTrophy('fps_zero') && timeStopCD > 0) addStatus("⏳ ZEITSTOPP CD", timeStopCD, "#666");
         addStatus("🛡️ SCHUTZSCHILD", player.shieldTimer, "#FFFFFF");
         addStatus("🍺 VODKA (IMMUN)", player.vodkaTimer, "#0984e3");
         addStatus("🚲 RADL-RAMBO", player.bikeTimer, "#FFFFFF");
@@ -10716,6 +10597,9 @@ function loop(){
         // Boss-Room Modus
         if(gamePhase === 'bossroom') {
             frame++;
+            // CHANGE 09.07.: Zeitstopp tickt auch im Boss-Raum (Bayer)
+            if(timeStopTimer > 0) timeStopTimer--;
+            if(timeStopCD > 0) timeStopCD--;
             updateBossRoom();
             // HUD Boss-HP
             if(bossRoomState) {
@@ -10750,6 +10634,10 @@ function loop(){
 
         frame++; shiftTimer++;
 
+        // CHANGE 09.07.: Zeitstopp-Timer ticken
+        if(timeStopTimer > 0) timeStopTimer--;
+        if(timeStopCD > 0) timeStopCD--;
+
         // ── 3D DOOM: Blickrichtung aus Pointer-Lock + Schussrichtung ──
         // Yaw kommt jetzt aus echter Maus-Drehung (window._look.yaw).
         // Alles in EINEM Frame → Kamera, Crosshair und Schuss 100% synchron.
@@ -10765,7 +10653,7 @@ function loop(){
         }
         // ─────────────────────────────────────────────────────────────────
 
-        spawnLogic();
+        if(timeStopTimer <= 0) spawnLogic(); // CHANGE 09.07.: keine Spawns während Zeitstopp
         player.update();
 
         if(isWegflexenMode && gameRunning && !gamePaused) {
@@ -10830,7 +10718,7 @@ function loop(){
         for(let t of turrets) t.update();
 
         // === VEHICLES (Gabelstapler + LKW) ===
-        for(let i=vehicles.length-1; i>=0; i--) {
+        for(let i=vehicles.length-1; i>=0 && timeStopTimer <= 0; i--) { // CHANGE 09.07.: Zeitstopp friert Fahrzeuge ein
             let v = vehicles[i];
             v.x += v.dx;
             // Aus der Welt raus = entfernen
@@ -10887,7 +10775,7 @@ function loop(){
         }
 
         for(let i=enemies.length-1;i>=0;i--){
-            let e=enemies[i]; e.update();
+            let e=enemies[i]; if(timeStopTimer <= 0) e.update(); // CHANGE 09.07.: Zeitstopp friert Gegner ein
             for(let j=bullets.length-1;j>=0;j--){
                 let b=bullets[j];
                 let hr=e.radius+(b.type==='rocket'?20:0);
@@ -11015,6 +10903,8 @@ function loop(){
                         collapseTimer = 0;
                         enemies = []; obstacles = []; stations = []; servers = [];
                         serverFarms = []; turrets = []; items = [];
+                        // FIX 09.07.: 3D-Welt neu bauen — Wände nach Bayer visuell entfernen
+                        if(window._3d) window._3d._worldBuilt = false;
                         idocEvent = null; kloskaEvent = null;
                         flashScreen = 100; playSound('alarm');
                         showToast("SYSTEM-KOLLAPS!", "#f00", "ÜBERLEBE DAS CHAOS!");
@@ -11028,12 +10918,12 @@ function loop(){
                         playSound('evolve');
                         showToast("✋ MEISTER HAND BESIEGT!", "#9b59b6", "+25.000 Score · +2.000 KB · Phantom Grip freigeschaltet!");
                         rollBossCardDrop('hand');
-                        let _handDrop = (currentDiffLabel === 'WEIL WEGEN FELIX') ? 'shield' : 'briefcase'; // FELIX 07.07.: Schild statt Gehaltserhöhung
+                        let _handDrop = (currentDiffLabel === 'WEIL WEGEN FELIX') ? 'crate' : 'briefcase'; // CHANGE 09.07.: Felix — zufällige Waffe statt Schild
                         for(let i=0;i<3;i++) items.push(new Item(_handDrop, e.x + (Math.random()-0.5)*100, e.y + (Math.random()-0.5)*100));
                     } else {
                         floatingTexts.push(new FloatingText(e.x,e.y,"PROJEKT ABGESCHLOSSEN!","#ffd700"));
                         screenShake = 50;
-                        items.push(new Item((currentDiffLabel === 'WEIL WEGEN FELIX') ? 'shield' : 'briefcase', e.x, e.y)); // FELIX 07.07.: Schild statt Gehaltserhöhung
+                        items.push(new Item((currentDiffLabel === 'WEIL WEGEN FELIX') ? 'crate' : 'briefcase', e.x, e.y)); // CHANGE 09.07.: Felix — zufällige Waffe statt Schild
                         showToast("BOSS BESIEGT!","#ffd700","Projekt abgeschlossen!");
                         rollBossCardDrop('mini');
                     }
@@ -11144,6 +11034,8 @@ function loop(){
 
         if(frame === 10800 && player.shotsFired === 0) unlockTrophy('pacifist');
         if(systemCollapse && collapseTimer === 10800) unlockTrophy('collapse_survivor');
+        // CHANGE 09.07.: 420 Sekunden (25200 Frames) in Burnout oder höher überleben
+        if(frame >= 25200 && !hasTrophy('fps_zero') && ['BURNOUT','SURVIVAL','WEGFLEXEN','WEIL WEGEN FELIX'].includes(currentDiffLabel)) unlockTrophy('fps_zero');
         if(currentDiffLabel === "SURVIVAL" && score >= 250000) unlockTrophy('survival_master');
 
         // Render
@@ -11311,6 +11203,7 @@ function startGame(diff=1, gameMode='normal'){
    
     // Reset Combo
     combo = 0; comboTimer = 0; comboMult = 1; bestComboThisRun = 1; comboHitCount = 0;
+    timeStopTimer = 0; timeStopCD = 0; // CHANGE 09.07.: Zeitstopp-Reset
     // Reset Run-Tracking
     runExpGained = 0; runKillCount = 0; runStartTime = Date.now(); runBossKilled = false;
     
