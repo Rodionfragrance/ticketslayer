@@ -1083,7 +1083,10 @@ input[type="text"] {
     <div style="max-width:1080px;margin:0 auto;padding:22px 18px 60px;">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
             <h2 style="color:#f1c40f;font-size:26px;letter-spacing:5px;margin:0;text-transform:uppercase;text-shadow:0 0 14px rgba(241,196,15,0.4);">🪱 WURM-KLICKER</h2>
-            <button onclick="closeIdleMode()" style="background:#c0392b;color:#fff;border:none;padding:11px 20px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;border-radius:3px;">← ZURÜCK</button>
+            <div style="display:flex;gap:10px;">
+                <button onclick="openCnc()" style="background:#0a1a0a;color:#2ecc71;border:2px solid #2ecc71;padding:11px 20px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;border-radius:3px;">🎖️ KOMMANDO-ZENTRALE</button>
+                <button onclick="closeIdleMode()" style="background:#c0392b;color:#fff;border:none;padding:11px 20px;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;border-radius:3px;">← ZURÜCK</button>
+            </div>
         </div>
 
         <!-- BUFF-UHR (oben rechts): aktive Buffs + Restlaufzeit -->
@@ -2639,8 +2642,12 @@ function renderJobOverlay() {
         </div>`;
     } else if (currentJob) {
         // BUG FIX: nextReqJ einheitlich — immer 70 für classLevel >= 2 (konsistent mit jobCap)
-        let nextReqJ = j.classLevel === 1 ? (j.isAlt||j.isDoram ? 70 : 50) : 70;
-        let nextReqB = j.classLevel >= 2 ? (j.classLevel === 2 && !isTrans ? 99 : (j.classLevel >= 3 ? 200 : 1)) : 1;
+        // FIX 08.07.: Anforderungen direkt aus der ECHTEN naechsten Klasse lesen.
+        // Vorher zeigte die Heuristik bei Trans-2nd-Class (z.B. Abteilungsleiter) faelschlich
+        // "Base 1 erfuellt" an, obwohl der Wechsel-Check korrekt Base 99 verlangt (IT-Director).
+        let _nextJob = Object.values(JOBS).find(x => x.prev === currentJob);
+        let nextReqJ = _nextJob ? (_nextJob.reqJob !== undefined ? _nextJob.reqJob : (_nextJob.classLevel === 2 ? 50 : 70)) : 70;
+        let nextReqB = _nextJob ? (_nextJob.reqBase || 1) : 1;
         if(j.classLevel < 4 && !(j.isExtended && j.classLevel >= 3)) {
             let reqs = [];
             if(baseLevel < nextReqB) reqs.push(`<span style="color:#e74c3c;">Base ${baseLevel}/${nextReqB}</span>`);
@@ -4686,7 +4693,7 @@ function enterBossRoom() {
             phase: 1,
             dx: 2, dy: 1,
             attackTimer: 0, stampTimer: 0, stampCharge: 0, stampX: 0, stampY: 0,
-            laserAngle: 0, laserActive: false, laserTimer: 0, spawnTimer: 0,
+            laserAngle: 0, laserActive: false, laserTimer: 0, laserCharge: 0, spawnTimer: 0,
             miniEnemies: [], speechTimer: 0, speech: '', flashTimer: 0, enrageTimer: 0,
         },
         player: { x: BR_W/2, y: BR_H - 80 },
@@ -5050,10 +5057,22 @@ function updateBossRoom() {
     if(b.phase >= 2) {
         b.laserTimer++;
         let laserInterval = b.phase === 3 ? 120 : 180;
-        if(b.laserTimer >= laserInterval) {
-            b.laserTimer = 0; b.laserActive = true;
+        // FIX 08.07.: 2 Sekunden AUFLADUNG statt Instant-Schuss — Telegraph zum Ausweichen
+        if(b.laserTimer >= laserInterval && !b.laserActive && (b.laserCharge||0) <= 0) {
+            b.laserTimer = 0;
+            b.laserCharge = 120; // 2s Aufladezeit (60fps)
             b.laserAngle = Math.atan2(p.y - b.y, p.x - b.x);
-            setTimeout(() => { if(bossRoomState) bossRoomState.bayer.laserActive = false; }, 1500);
+            playSound('alarm');
+        }
+        if((b.laserCharge||0) > 0) {
+            b.laserCharge--;
+            // 1. Sekunde: Laser trackt den Spieler noch — 2. Sekunde: Winkel eingefroren = Ausweich-Fenster
+            if(b.laserCharge > 60) b.laserAngle = Math.atan2(p.y - b.y, p.x - b.x);
+            if(b.laserCharge === 0) {
+                b.laserActive = true;
+                b.laserTimer = -30; // kurze Verschnaufpause nach dem Schuss
+                setTimeout(() => { if(bossRoomState) bossRoomState.bayer.laserActive = false; }, 1500);
+            }
         }
         if(b.laserActive) {
             let lx = b.x, ly = b.y;
@@ -5062,7 +5081,8 @@ function updateBossRoom() {
                 if(Math.hypot(lx-p.x, ly-p.y) < 20) {
                     if(br._rollTimer <= 0 && player) { 
                         let ldmg = (b.phase === 3 ? 3.5 : 2.0) * diffMult;
-                        if(isWegflexenMode) player.hp = 0; else player.hp -= ldmg; 
+                        if(player.shieldTimer > 0) { player.shieldTimer -= 3; spawnBRParticles(p.x, p.y, '#00ffff', 2); }
+                        else if(isWegflexenMode) player.hp = 0; else player.hp -= ldmg; 
                     }
                     break;
                 }
@@ -5109,7 +5129,8 @@ function updateBossRoom() {
         
         if(Math.hypot(m.x-p.x, m.y-p.y) < m.radius + player.radius && br._rollTimer <= 0 && player) { 
             let dmg = 2.5 * diffMult;
-            if(isWegflexenMode) player.hp = 0; else player.hp -= dmg; 
+            if(player.shieldTimer > 0) { player.shieldTimer -= 30; spawnBRParticles(p.x, p.y, '#00ffff', 4); }
+            else if(isWegflexenMode) player.hp = 0; else player.hp -= dmg; 
             playSound('hit'); 
             m.x -= Math.cos(ma)*20; m.y -= Math.sin(ma)*20; 
         }
@@ -5256,6 +5277,24 @@ function drawBossRoom() {
         ctx.fillText('⚠', b.stampX, b.stampY);
     }
 
+    if((b.laserCharge||0) > 0) {
+        // AUFLADUNGS-TELEGRAPH: gestrichelte Ziellinie + wachsender Ladekreis
+        let _cp = 1 - (b.laserCharge / 120);
+        ctx.save();
+        ctx.setLineDash([12, 10]);
+        ctx.strokeStyle = 'rgba(255,' + Math.floor(140 - _cp*140) + ',0,' + (0.35 + _cp*0.5).toFixed(2) + ')';
+        ctx.lineWidth = 2 + _cp * 3;
+        ctx.beginPath();
+        ctx.moveTo(b.x, b.y);
+        ctx.lineTo(b.x + Math.cos(b.laserAngle)*900, b.y + Math.sin(b.laserAngle)*900);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 20 + _cp * 26, -Math.PI/2, -Math.PI/2 + Math.PI * 2 * _cp);
+        ctx.strokeStyle = '#ff4400'; ctx.lineWidth = 5;
+        ctx.stroke();
+        ctx.restore();
+    }
     if(b.laserActive) {
         ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 5;
         ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 20;
@@ -6788,7 +6827,9 @@ window.addEventListener('keydown',e=>{
 window.addEventListener('keyup',  e=>  input.keys[e.code]=false);
 window.addEventListener('mousedown',e=>{ 
     // Im 3D-Modus: erster Klick fängt nur die Maus, löst keinen Schuss aus
-    if (window._use3d && gameRunning && !gamePaused && window._look && !window._look.locked) return;
+    // FIX 08.07.: Guard nur in der 3D-Welt — im Bossraum (2D-Arena, Pointer-Lock aus)
+    // blockte er ALLE Klicks, dadurch konnte man dort nicht schiessen ("Waffen weg")
+    if (window._use3d && gameRunning && !gamePaused && window._look && !window._look.locked && gamePhase === 'normal') return;
     if(e.button === 0) input.mouseDown=true; 
     if(e.button === 2) input.rightClick=true; 
 });
@@ -6933,6 +6974,24 @@ function nextRankNeed(pts) {
     return null;
 }
 
+// FIX 08.07.: Schild-Timer tickt jetzt im Spiel-Loop statt in Player.draw() —
+// im 3D-Modus wird draw() nie aufgerufen, das Schild lief dort NIE ab.
+setInterval(function(){ if(gameRunning && !gamePaused && gamePhase === 'normal' && window._use3d && player && player.shieldTimer > 0) player.shieldTimer--; }, 1000/60);
+
+// FIX 08.07.: Zentraler Schild-Check — absorbiert Treffer AUCH im Felix/Wegflexen-Modus.
+// Vorher ignorierten Stampfer, Meister Hand, SAP-Kontakt & Fahrzeuge das Schild komplett.
+function shieldAbsorb(cost){
+    if(player && player.shieldTimer > 0){
+        player.shieldTimer = Math.max(0, player.shieldTimer - (cost||60));
+        if(gamePhase !== 'bossroom'){
+            spawnParticles(player.x, player.y, '#00ffff', 8);
+            floatingTexts.push(new FloatingText(player.x, player.y - 50, '\u{1F6E1} ABSORBIERT!', '#00ffff'));
+        }
+        playSound('hit');
+        return true;
+    }
+    return false;
+}
 function checkGameOver(){
     if(player && player.hp<=0){
         
@@ -7572,7 +7631,7 @@ class Player{
         }
         let w=60,h=this.isMartin?90:60;
         if(this.vodkaTimer>0){ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(255,0,0,.3)';ctx.fillRect(-w/2,-h/2,w,h);ctx.globalCompositeOperation='source-over';}
-        if(this.shieldTimer>0){ctx.beginPath();ctx.arc(0,0,50,0,Math.PI*2);ctx.strokeStyle=`rgba(0,255,255,${.5+Math.sin(frame*.2)*.5})`;ctx.lineWidth=3;ctx.stroke();this.shieldTimer--;}
+        if(this.shieldTimer>0){ctx.beginPath();ctx.arc(0,0,50,0,Math.PI*2);ctx.strokeStyle=`rgba(0,255,255,${.5+Math.sin(frame*.2)*.5})`;ctx.lineWidth=3;ctx.stroke();if(!window._use3d)this.shieldTimer--;}
         if(this.sapDebuffTimer>0){ctx.beginPath();ctx.arc(0,0,55,0,Math.PI*2);ctx.strokeStyle=`rgba(31,97,141,${.6+Math.sin(frame*.3)*.4})`;ctx.lineWidth=4;ctx.stroke();}
         if(this.mouseTimer > 0){
             let ox=Math.cos(this.orbitAngle)*180, oy=Math.sin(this.orbitAngle)*180-10;
@@ -7811,11 +7870,13 @@ class Enemy{
                 });
                 if(Math.hypot(player.x - this.x, player.y - this.y) < 250) {
                     if(player.rollTimer <= 0) {
-                        if(isWegflexenMode) { player.hp = 0; }
-                        else { player.hp -= 40; player.orangeHp += 40; player.orangeTimer = 120; }
-                        player.stunned = 45;
-                        spawnParticles(player.x, player.y, '#f00', 15);
-                        showToast("VOM CHEF ZERSTAMPFT!", "#f00", isWegflexenMode ? "WEGGEFLEXT!" : "Shift für Hechtrolle nutzen!");
+                        if(!shieldAbsorb(120)) {
+                            if(isWegflexenMode) { player.hp = 0; }
+                            else { player.hp -= 40; player.orangeHp += 40; player.orangeTimer = 120; }
+                            player.stunned = 45;
+                            spawnParticles(player.x, player.y, '#f00', 15);
+                            showToast("VOM CHEF ZERSTAMPFT!", "#f00", isWegflexenMode ? "WEGGEFLEXT!" : "Shift für Hechtrolle nutzen!");
+                        }
                     } else {
                         unlockTrophy('perfect_dodge');
                         floatingTexts.push(new FloatingText(player.x, player.y - 40, "PERFEKT AUSGEWICHEN!", "#0f0"));
@@ -7861,10 +7922,12 @@ class Enemy{
                     // Radius 160: Der Spieler hat 35 Frames Zeit, um den Kreis zu verlassen.
                     if(Math.hypot(player.x - this.x, player.y - this.y) < 320) {
                         if(player.rollTimer <= 0) {
-                            if(isWegflexenMode) player.hp = 0;
-                            else { player.hp -= 60; player.orangeHp += 60; player.orangeTimer = 120; }
-                            player.stunned = 30;
-                            showToast("ZERSCHMETTERT!", "#9b59b6", "Zu langsam!");
+                            if(!shieldAbsorb(120)) {
+                                if(isWegflexenMode) player.hp = 0;
+                                else { player.hp -= 60; player.orangeHp += 60; player.orangeTimer = 120; }
+                                player.stunned = 30;
+                                showToast("ZERSCHMETTERT!", "#9b59b6", "Zu langsam!");
+                            }
                         } else {
                             score += 1500;
                             floatingTexts.push(new FloatingText(player.x, player.y - 40, "PERFEKT AUSGEWICHEN!", "#0f0"));
@@ -7904,9 +7967,11 @@ class Enemy{
                 if(Math.hypot(player.x - this.x, player.y - this.y) < this.radius + player.radius) {
                     if(player.rollTimer <= 0 && !this.dashHit) {
                         this.dashHit = true;
-                        if(isWegflexenMode) player.hp = 0;
-                        else { player.hp -= 40; player.orangeHp += 40; player.orangeTimer = 120; }
-                        showToast("WEGGEKLATSCHT!", "#9b59b6", "Raketen-Schlag!");
+                        if(!shieldAbsorb(120)) {
+                            if(isWegflexenMode) player.hp = 0;
+                            else { player.hp -= 40; player.orangeHp += 40; player.orangeTimer = 120; }
+                            showToast("WEGGEKLATSCHT!", "#9b59b6", "Raketen-Schlag!");
+                        }
                     }
                 }
                 
@@ -7963,14 +8028,16 @@ class Enemy{
             } else if(this.type===8&&frame%30===0){
                 // FIX V20: dmg war undeclared → ReferenceError in production
                 let dmg = 0.5;
-                if(player.sapDebuffTimer<=0){
-                    player.sapDebuffTimer = player._sapResist ? 120 : 300;
-                    document.getElementById('sapOverlay').style.display='block';
-                    playSound('sap'); screenShake=10;
-                    showToast("SAP-UPDATE LÄUFT!","#1f618d","Speed massiv reduziert für 5 Sek");
+                if(!shieldAbsorb(30)){
+                    if(player.sapDebuffTimer<=0){
+                        player.sapDebuffTimer = player._sapResist ? 120 : 300;
+                        document.getElementById('sapOverlay').style.display='block';
+                        playSound('sap'); screenShake=10;
+                        showToast("SAP-UPDATE LÄUFT!","#1f618d","Speed massiv reduziert für 5 Sek");
+                    }
+                    if(isWegflexenMode) { player.hp = 0; } 
+                    else { player.hp -= dmg; player.orangeHp += 0.5; player.orangeTimer = 120; }
                 }
-                if(isWegflexenMode) { player.hp = 0; } 
-                else { player.hp -= dmg; player.orangeHp += 0.5; player.orangeTimer = 120; }
                 spawnParticles(player.x,player.y,'#1f618d',2);
             } else {
                 if(player.isMartin&&player.vodkaTimer>0){this.x-=Math.cos(angle)*5;this.y-=Math.sin(angle)*5;}
@@ -10777,7 +10844,8 @@ function loop(){
                 if(pInX && pInY) {
                     if(!v.hitPlayed) {
                         v.hitPlayed = true;
-                        if(isWegflexenMode) { player.hp = 0; }
+                        if(shieldAbsorb(180)) { /* Schild frisst den Aufprall */ }
+                        else if(isWegflexenMode) { player.hp = 0; }
                         else {
                             let dmg = v.type === 'truck' ? (player.maxHp * 0.90) : (player.maxHp * 0.50);
                             player.hp -= dmg;
@@ -11533,10 +11601,234 @@ function idleHasUpg(id){ return idleState.upgrades.indexOf(id) !== -1; }
 
 function idleFmt(n){
     if(n < 1000) return (Math.floor(n*10)/10).toString().replace(/\.0$/,'');
-    const suf = ['','K','M','Mrd','Bio','Brd','Trio','Trd','Qa','Qi','Sx','Sp'];
-    let i = 0;
-    while(n >= 1000 && i < suf.length-1){ n /= 1000; i++; }
-    return (Math.floor(n*100)/100).toFixed(2).replace(/\.?0+$/,'') + suf[i];
+    // FIX 08.07.: Skala ging nur bis Sp (Septillion) — jetzt weiter: Ok, No, Dz (Dezillion) usw.
+    const suf = ['','K','M','Mrd','Bio','Brd','Trio','Trd','Qa','Qi','Sx','Sp','Ok','No','Dz','UDz','DDz','TDz','QaDz','QiDz','SxDz','SpDz','OkDz','NoDz','Vg'];
+    if(n >= Math.pow(1000, suf.length)) return n.toExponential(2).replace('e+','e'); // jenseits der Namensskala
+    // Exponent-basiert statt Divisions-Schleife: vermeidet Float-Drift (1e33 zeigte "999.99Sx" statt "1Sp")
+    let i = Math.min(suf.length-1, Math.floor((Math.log10(n) + 1e-9) / 3));
+    let v = n / Math.pow(1000, i);
+    if(Math.abs(v - Math.round(v)) < 1e-6) v = Math.round(v); // Float-Snapping (0.99999 -> 1)
+    if(v >= 1000 && i < suf.length-1){ i++; v /= 1000; }
+    if(v < 1 && i > 0){ i--; v *= 1000; }
+    return (Math.floor(v*100)/100).toFixed(2).replace(/\.?0+$/,'') + suf[i];
+}
+
+// ============================================================
+// C&C MODUS PHASE 1 — KOMMANDO-ZENTRALE (08.07.)
+// Sammel-Items im Wurm-Klicker -> Basis bauen -> Raids (PvE).
+// Verzahnt Wurm-Klicker (Items, CpS-Boni) + Ticket Slayer (Kampfkraft).
+// Phase 2 (Firebase-PvP) baut auf demselben State auf.
+// ============================================================
+const CNC_ITEMS = {
+    schrott: { icon:'🔩', name:'Schrott',         weight:60 },
+    kabel:   { icon:'🔌', name:'Kabel',           weight:25 },
+    chip:    { icon:'💾', name:'Chip',            weight:10 },
+    blade:   { icon:'🖥️', name:'Server-Blade',    weight:4  },
+    gold:    { icon:'🎫', name:'Goldenes Ticket', weight:1  }
+};
+const CNC_BUILDINGS = {
+    hq:      { icon:'🏰', name:'Hauptquartier',  desc:'Schaltet die Basis frei. Nur 1x baubar.',
+               cost:{schrott:50}, max:1, req:null },
+    silo:    { icon:'🏗️', name:'Materiallager',  desc:'+10% Item-Dropchance je Lager.',
+               cost:{schrott:40, kabel:10}, max:5, req:'hq' },
+    kaserne: { icon:'⚔️', name:'Kaserne',        desc:'+10% Kampfkraft je Kaserne.',
+               cost:{schrott:60, kabel:20}, max:5, req:'hq' },
+    turm:    { icon:'🗼', name:'Abwehrturm',     desc:'-15% Raid-Verluste je Turm.',
+               cost:{schrott:80, kabel:15, chip:5}, max:4, req:'kaserne' },
+    radar:   { icon:'📡', name:'Radar',          desc:'+20% Raid-Beute je Radar.',
+               cost:{kabel:30, chip:10}, max:3, req:'hq' },
+    fabrik:  { icon:'🏭', name:'Wurm-Fabrik',    desc:'+5% Klicker-CpS je Fabrik.',
+               cost:{schrott:100, chip:15, blade:2}, max:5, req:'hq' },
+    labor:   { icon:'🧪', name:'Labor',          desc:'+10% Klickkraft je Labor.',
+               cost:{chip:25, blade:5}, max:3, req:'radar' },
+    tresor:  { icon:'🏆', name:'Ticket-Tresor',  desc:'Endgame: +25% Raid-Beute. Braucht Goldene Tickets.',
+               cost:{blade:10, gold:3}, max:2, req:'labor' }
+};
+// State migrieren (haengt am idleState -> wird automatisch mitgespeichert)
+if(!idleState.cnc || typeof idleState.cnc !== 'object'){
+    idleState.cnc = { grid: [], items:{schrott:0,kabel:0,chip:0,blade:0,gold:0}, raidsWon:0, raidsLost:0, lastRaid:0 };
+}
+if(!Array.isArray(idleState.cnc.grid)) idleState.cnc.grid = [];
+while(idleState.cnc.grid.length < 25) idleState.cnc.grid.push(null);
+if(!idleState.cnc.items) idleState.cnc.items = {};
+Object.keys(CNC_ITEMS).forEach(function(k){ if(typeof idleState.cnc.items[k] !== 'number') idleState.cnc.items[k] = 0; });
+
+function cncCount(id){ return idleState.cnc.grid.filter(function(c){ return c === id; }).length; }
+function cncHasHq(){ return cncCount('hq') > 0; }
+
+// Item-Drop beim Klicken: Basis 0.8%, +10% je Materiallager
+function cncTryDrop(){
+    let chance = 0.008 * (1 + cncCount('silo') * 0.10);
+    if(Math.random() >= chance) return;
+    let pool = [], total = 0;
+    Object.keys(CNC_ITEMS).forEach(function(k){ total += CNC_ITEMS[k].weight; pool.push([k, total]); });
+    let r = Math.random() * total, drop = 'schrott';
+    for(let e of pool){ if(r < e[1]){ drop = e[0]; break; } }
+    idleState.cnc.items[drop]++;
+    let it = CNC_ITEMS[drop];
+    showToast(it.icon + ' SPEZIALTEIL!', drop==='gold' ? '#f1c40f' : '#2ecc71', it.name + ' gefunden (' + idleState.cnc.items[drop] + ')');
+    playSound('powerup');
+    let ov = document.getElementById('cncOverlay');
+    if(ov && ov.style.display !== 'none') renderCnc();
+}
+
+// Kampfkraft: Ticket-Slayer-Daten + Kasernen
+function cncPower(){
+    let best = parseInt(lsGet('ts_best_score','0')) || 0;
+    let base = Math.floor(Math.sqrt(best) + (typeof baseLevel==='number' ? baseLevel*2 : 0) + (typeof unlockedTrophies !== 'undefined' && unlockedTrophies ? unlockedTrophies.length*5 : 0));
+    return Math.max(10, Math.floor(base * (1 + cncCount('kaserne') * 0.10)));
+}
+
+function cncCanAfford(cost){
+    return Object.keys(cost).every(function(k){ return (idleState.cnc.items[k]||0) >= cost[k]; });
+}
+function cncCostStr(cost){
+    return Object.keys(cost).map(function(k){
+        let have = idleState.cnc.items[k]||0;
+        let col = have >= cost[k] ? '#2ecc71' : '#e74c3c';
+        return '<span style="color:'+col+';">'+CNC_ITEMS[k].icon+' '+cost[k]+'</span>';
+    }).join(' ');
+}
+
+let _cncSelectedCell = -1;
+function cncCellClick(idx){
+    let cur = idleState.cnc.grid[idx];
+    if(cur){
+        let b = CNC_BUILDINGS[cur];
+        if(confirm(b.icon+' '+b.name+' abreissen?\n\n50% der Schrott-Kosten zurueck.')){
+            idleState.cnc.grid[idx] = null;
+            idleState.cnc.items.schrott += Math.floor((b.cost.schrott||0) * 0.5);
+            idleSave(); renderCnc();
+        }
+        return;
+    }
+    _cncSelectedCell = idx;
+    renderCnc();
+}
+function cncBuild(id){
+    if(_cncSelectedCell < 0 || idleState.cnc.grid[_cncSelectedCell]) return;
+    let b = CNC_BUILDINGS[id];
+    if(!b) return;
+    if(id !== 'hq' && !cncHasHq()){ showToast('KEIN HQ','#e74c3c','Baue zuerst das Hauptquartier!'); return; }
+    if(b.req && cncCount(b.req) === 0){ showToast('VORAUSSETZUNG FEHLT','#e74c3c','Benoetigt: '+CNC_BUILDINGS[b.req].name); return; }
+    if(cncCount(id) >= b.max){ showToast('MAXIMUM ERREICHT','#e74c3c', b.name+' max. '+b.max+'x'); return; }
+    if(!cncCanAfford(b.cost)){ showToast('ZU WENIG MATERIAL','#e74c3c','Sammle Spezialteile durch Klicken!'); return; }
+    Object.keys(b.cost).forEach(function(k){ idleState.cnc.items[k] -= b.cost[k]; });
+    idleState.cnc.grid[_cncSelectedCell] = id;
+    _cncSelectedCell = -1;
+    playSound('powerup');
+    showToast(b.icon+' GEBAUT!', '#2ecc71', b.name+' errichtet');
+    idleSave(); renderCnc();
+}
+
+// PvE-Raid: Gegnerbasis prozedural, Gewinnchance aus Kampfkraft
+function cncRaid(){
+    if(!cncHasHq()){ showToast('KEIN HQ','#e74c3c','Baue zuerst das Hauptquartier!'); return; }
+    let now = Date.now();
+    let cd = 60000; // 60s Cooldown
+    if(now - (idleState.cnc.lastRaid||0) < cd){
+        showToast('TRUPPEN ERSCHOEPFT','#e67e22','Noch '+Math.ceil((cd-(now-idleState.cnc.lastRaid))/1000)+'s Cooldown');
+        return;
+    }
+    idleState.cnc.lastRaid = now;
+    let pPow = cncPower();
+    let ePow = Math.floor(pPow * (0.7 + Math.random() * 0.6));
+    let winChance = pPow / (pPow + ePow);
+    let won = Math.random() < winChance;
+    if(won){
+        idleState.cnc.raidsWon = (idleState.cnc.raidsWon||0) + 1;
+        let lootMult = (1 + cncCount('radar') * 0.20) * (1 + cncCount('tresor') * 0.25);
+        let loot = {
+            schrott: Math.floor((5 + Math.random()*12) * lootMult),
+            kabel:   Math.floor((2 + Math.random()*5)  * lootMult),
+            chip:    Math.random() < 0.5 ? Math.max(1, Math.floor((1 + Math.random()*2) * lootMult)) : 0,
+            blade:   Math.random() < 0.15 ? 1 : 0,
+            gold:    Math.random() < 0.05 ? 1 : 0
+        };
+        let ticketLoot = Math.floor(idleCps() * 30 * lootMult); // 30s CpS als Bonus
+        idleState.tickets += ticketLoot; idleState.totalEarned += ticketLoot;
+        let lootStr = Object.keys(loot).filter(function(k){return loot[k]>0;}).map(function(k){ idleState.cnc.items[k]+=loot[k]; return CNC_ITEMS[k].icon+'+'+loot[k]; }).join(' ');
+        showToast('⚔️ RAID GEWONNEN!', '#2ecc71', '('+pPow+' vs '+ePow+') Beute: '+lootStr+(ticketLoot>0?' 🎫+'+idleFmt(ticketLoot):''));
+        playSound('evolve');
+    } else {
+        idleState.cnc.raidsLost = (idleState.cnc.raidsLost||0) + 1;
+        let lossPct = Math.max(0.05, 0.25 - cncCount('turm') * 0.0375); // Tuerme daempfen Verluste
+        let loss = Math.floor((idleState.cnc.items.schrott||0) * lossPct);
+        idleState.cnc.items.schrott -= loss;
+        showToast('☠️ RAID VERLOREN', '#e74c3c', '('+pPow+' vs '+ePow+') -'+loss+' Schrott');
+        playSound('hit');
+    }
+    idleSave(); renderCnc();
+}
+
+function openCnc(){
+    let ov = document.getElementById('cncOverlay');
+    if(!ov){
+        ov = document.createElement('div');
+        ov.id = 'cncOverlay';
+        ov.style.cssText = 'display:none;position:fixed;inset:0;background:linear-gradient(160deg,#050a05,#0a140a);z-index:560;overflow-y:auto;font-family:Courier New,monospace;color:#fff;padding:20px;';
+        document.body.appendChild(ov);
+    }
+    ov.style.display = 'block';
+    renderCnc();
+}
+function closeCnc(){
+    let ov = document.getElementById('cncOverlay');
+    if(ov) ov.style.display = 'none';
+    _cncSelectedCell = -1;
+    idleSave();
+}
+
+function renderCnc(){
+    let ov = document.getElementById('cncOverlay');
+    if(!ov) return;
+    let c = idleState.cnc;
+    let itemsHtml = Object.keys(CNC_ITEMS).map(function(k){
+        return '<span style="margin-right:14px;">'+CNC_ITEMS[k].icon+' <b style="color:#f1c40f;">'+(c.items[k]||0)+'</b> <span style="color:#666;font-size:10px;">'+CNC_ITEMS[k].name+'</span></span>';
+    }).join('');
+    let gridHtml = '';
+    for(let i=0;i<25;i++){
+        let cell = c.grid[i];
+        let sel = i === _cncSelectedCell;
+        let inner = cell ? '<span style="font-size:26px;">'+CNC_BUILDINGS[cell].icon+'</span>' : (sel ? '<span style="color:#2ecc71;font-size:20px;">+</span>' : '');
+        gridHtml += '<div onclick="cncCellClick('+i+')" title="'+(cell ? CNC_BUILDINGS[cell].name : 'Freies Feld')+'" style="width:62px;height:62px;background:'+(cell?'#0f1f0f':'#080f08')+';border:2px solid '+(sel?'#2ecc71':(cell?'#1e4620':'#12281a'))+';border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;">'+inner+'</div>';
+    }
+    let buildMenu = '';
+    if(_cncSelectedCell >= 0){
+        buildMenu = '<div style="background:#000;border:2px solid #2ecc71;border-radius:6px;padding:14px;margin-top:14px;"><div style="color:#2ecc71;font-weight:bold;letter-spacing:2px;margin-bottom:10px;">🛠️ BAUEN (Feld '+(_cncSelectedCell+1)+'):</div>';
+        Object.keys(CNC_BUILDINGS).forEach(function(id){
+            let b = CNC_BUILDINGS[id];
+            let owned = cncCount(id);
+            let locked = (id!=='hq' && !cncHasHq()) || (b.req && cncCount(b.req)===0) || owned >= b.max;
+            let afford = cncCanAfford(b.cost);
+            let reqStr = b.req ? ' <span style="color:#e67e22;font-size:9px;">braucht '+CNC_BUILDINGS[b.req].icon+'</span>' : '';
+            buildMenu += '<div onclick="cncBuild(\''+id+'\')" style="display:flex;justify-content:space-between;align-items:center;padding:8px;margin-bottom:6px;background:'+(locked?'#0a0a0a':'#0f1a0f')+';border:1px solid '+(locked?'#222':(afford?'#2ecc71':'#553311'))+';border-radius:4px;cursor:'+(locked?'not-allowed':'pointer')+';opacity:'+(locked?'0.45':'1')+';"><div><span style="font-size:18px;">'+b.icon+'</span> <b>'+b.name+'</b> <span style="color:#888;font-size:10px;">('+owned+'/'+b.max+')</span>'+reqStr+'<div style="color:#888;font-size:10px;">'+b.desc+'</div></div><div style="font-size:12px;white-space:nowrap;margin-left:10px;">'+cncCostStr(b.cost)+'</div></div>';
+        });
+        buildMenu += '<button onclick="_cncSelectedCell=-1;renderCnc()" style="width:100%;background:#222;color:#aaa;border:1px solid #444;padding:8px;cursor:pointer;font-family:Courier New,monospace;">ABBRECHEN</button></div>';
+    }
+    let cdLeft = Math.max(0, 60 - Math.floor((Date.now() - (c.lastRaid||0))/1000));
+    ov.innerHTML =
+        '<div style="max-width:900px;margin:0 auto;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">'
+        + '<h2 style="color:#2ecc71;font-size:24px;letter-spacing:4px;margin:0;text-shadow:0 0 12px rgba(46,204,113,0.4);">🎖️ KOMMANDO-ZENTRALE</h2>'
+        + '<button onclick="closeCnc()" style="background:#c0392b;color:#fff;border:none;padding:11px 20px;font-size:14px;cursor:pointer;font-family:Courier New,monospace;font-weight:bold;letter-spacing:2px;border-radius:3px;">← ZURÜCK</button></div>'
+        + '<div style="background:#000;border:2px solid #f1c40f;border-radius:6px;padding:12px;margin-bottom:14px;font-size:13px;">📦 MATERIAL: '+itemsHtml+'<div style="color:#666;font-size:10px;margin-top:6px;">Spezialteile droppen beim Klicken auf den Wurm (Chance: '+(0.8*(1+cncCount('silo')*0.10)).toFixed(1)+'%) und bei gewonnenen Raids.</div></div>'
+        + '<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;">'
+        + '<div><div style="color:#2ecc71;font-size:11px;letter-spacing:2px;margin-bottom:8px;">🏗️ DEINE BASIS (5×5):</div>'
+        + '<div style="display:grid;grid-template-columns:repeat(5,62px);gap:6px;">'+gridHtml+'</div></div>'
+        + '<div style="flex:1;min-width:280px;">'
+        + '<div style="background:#000;border:2px solid #e74c3c;border-radius:6px;padding:14px;margin-bottom:12px;">'
+        + '<div style="color:#e74c3c;font-weight:bold;letter-spacing:2px;margin-bottom:8px;">⚔️ MILITAER</div>'
+        + '<div style="font-size:13px;margin-bottom:4px;">Kampfkraft: <b style="color:#f1c40f;">'+cncPower()+'</b> <span style="color:#666;font-size:10px;">(Ticket-Slayer-Bestscore + Base-Level + Trophaeen + Kasernen)</span></div>'
+        + '<div style="font-size:11px;color:#888;margin-bottom:10px;">Raids: <span style="color:#2ecc71;">'+(c.raidsWon||0)+' gewonnen</span> / <span style="color:#e74c3c;">'+(c.raidsLost||0)+' verloren</span></div>'
+        + '<button onclick="cncRaid()" style="width:100%;background:'+(cdLeft>0?'#331111':'#7a1f1f')+';color:#fff;border:2px solid #e74c3c;padding:12px;font-size:14px;font-weight:bold;cursor:pointer;font-family:Courier New,monospace;letter-spacing:2px;border-radius:4px;">'+(cdLeft>0 ? '⏳ TRUPPEN BEREIT IN '+cdLeft+'s' : '⚔️ RAID STARTEN')+'</button></div>'
+        + '<div style="background:#000;border:2px solid #444;border-radius:6px;padding:14px;">'
+        + '<div style="color:#888;font-weight:bold;letter-spacing:2px;margin-bottom:6px;">🌐 PVP — PHASE 2</div>'
+        + '<div style="color:#555;font-size:11px;line-height:1.6;">Online-Angriffe auf Basen anderer Spieler (Firebase) kommen im naechsten Update. Deine Basis, Items und Raid-Statistik werden dafuer uebernommen.</div>'
+        + '<button disabled style="width:100%;margin-top:8px;background:#111;color:#444;border:2px solid #333;padding:10px;font-family:Courier New,monospace;letter-spacing:2px;border-radius:4px;">🔒 BALD VERFUEGBAR</button></div>'
+        + '</div></div>'
+        + buildMenu
+        + '</div>';
 }
 
 function idleBuildMult(id){
@@ -11561,7 +11853,8 @@ function idleBuildCps(b){
 function idleCps(){
     let total = 0;
     IDLE_BUILDINGS.forEach(function(b){ total += b.baseCps * (idleState.buildings[b.id]||0) * idleBuildMult(b.id); });
-    return total * idleAllMult();
+    // C&C-VERZAHNUNG: jede Wurm-Fabrik der Kommando-Zentrale gibt +5% CpS
+    return total * idleAllMult() * (1 + cncCount('fabrik') * 0.05);
 }
 function idleClickPower(){
     let mult = 1;
@@ -11575,6 +11868,8 @@ function idleClickPower(){
     // BUGFIX 06.07.: Klick-Upgrades verdoppeln jetzt den GESAMTEN Klickwert
     // (vorher nur die Basis von 1 — sobald Klick-Bonus-Upgrades aktiv waren, war der Effekt unsichtbar)
     let val = (1 + idleCps()*cpsPct) * mult;
+    // C&C-VERZAHNUNG: jedes Labor gibt +10% Klickkraft
+    val *= (1 + cncCount('labor') * 0.10);
     if(idleBuffs.clickFrenzy > 0) val *= 777;
     return val;
 }
@@ -11677,6 +11972,7 @@ function idleClick(event){
     idleState.tickets += p;
     idleState.totalEarned += p;
     idleState.totalClicks++;
+    cncTryDrop();
     let fc = document.getElementById('idleFloatContainer');
     if(fc){
         let f = document.createElement('div');
