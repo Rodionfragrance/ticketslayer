@@ -842,6 +842,15 @@ input[type="text"] {
                 <div class="shop-item-icon">☢️</div>
                 <div><div class="shop-item-name" style="color:#f00;">SYSTEM-REBOOT</div><div class="shop-item-desc">Löscht ALLE Gegner auf der Map.</div><div class="shop-item-price" style="color:#ff9f43;">20 Suppen</div></div>
             </div>
+            <!-- CHANGE 10.07.: Orbit-Maus-Upgrades -->
+            <div class="shop-item" onclick="buyKloskaItem('mouse_twin', 12)" style="border-color:#00ffff;">
+                <div class="shop-item-icon">🖱️🖱️</div>
+                <div><div class="shop-item-name" style="color:#0ff;">ZWEITE ORBIT-MAUS</div><div class="shop-item-desc">Verdoppelt die Orbit-Maus (gegenüberliegend).</div><div class="shop-item-price" style="color:#ff9f43;">12 Suppen</div></div>
+            </div>
+            <div class="shop-item" onclick="buyKloskaItem('mouse_radius', 6)" style="border-color:#00ffff;">
+                <div class="shop-item-icon">📏</div>
+                <div><div class="shop-item-name" style="color:#0ff;">LÄNGERES MAUSKABEL</div><div class="shop-item-desc">Orbit-Radius +60px (max. 300px, stapelbar).</div><div class="shop-item-price" style="color:#ff9f43;">6 Suppen</div></div>
+            </div>
         </div>
         <button class="btn-easy" onclick="closeKloskaShop()" style="margin-top:20px; width:100%; background:#222; border-color:#9b59b6; color:#9b59b6;">LAGER VERLASSEN</button>
     </div>
@@ -1160,6 +1169,8 @@ input[type="text"] {
         <div><span class="hud-label">TICKETS</span><span id="hud-score" class="hud-value hud-gold">0</span></div>
         <div><span class="hud-label">SCHICHT</span><span id="hud-shift" class="hud-value" style="color:#aaa;font-size:18px;">FRÜH</span></div>
         <div><span class="hud-label">MODUS</span><span id="hud-mode" class="hud-value" style="font-size:15px;">–</span></div>
+        <!-- CHANGE 10.07.: Azubi-Zähler (Azubis/Junior/Senior) — nur sichtbar wenn vorhanden -->
+        <div id="hud-azubis" style="display:none;font-size:12px;line-height:1.5;color:#ddd;font-family:'Courier New',monospace;white-space:pre;"></div>
     </div>
     <div class="hud-section hud-center">
         <div id="hud-face-frame"><img id="hud-face" src="wurmr.png" alt="Face"></div>
@@ -1170,6 +1181,15 @@ input[type="text"] {
         <div><span class="hud-label">URLAUB [G]</span><span id="hud-slips" class="hud-value">2</span></div>
         <div><span class="hud-label" id="hud-weapon-name">STANDARD</span><div id="weapon-bar-container"><div id="weapon-bar"></div></div></div>
     </div>
+</div>
+
+<!-- CHANGE 10.07.: KLOSKA-KOMMENTATOR — beleidigt uns unten links (humorvoll, DE/PL) -->
+<div id="kloskaTalker" style="display:none;position:fixed;left:12px;bottom:110px;z-index:450;pointer-events:none;font-family:'Courier New',monospace;">
+    <div id="kloskaBubble" style="position:relative;max-width:260px;background:#1a1024;border:2px solid #9b59b6;border-radius:8px;padding:10px 12px;color:#e8d5ff;font-size:12px;line-height:1.4;margin-bottom:6px;box-shadow:0 0 14px rgba(155,89,182,0.4);">
+        <span id="kloskaBubbleText">...</span>
+        <div style="position:absolute;left:24px;bottom:-9px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:9px solid #9b59b6;"></div>
+    </div>
+    <img src="kloska.png" style="width:72px;height:auto;display:block;filter:drop-shadow(0 0 8px rgba(155,89,182,0.5));">
 </div>
 
 <!-- PASSWORT LOGIK -->
@@ -1905,12 +1925,16 @@ const TROPHIES_DEF = [
     { id:'nervensaege',     icon:'😤', name:'Nervensäge',          desc:'Verscheuche Kloska 3× in einem Run.', perk:'Respekt: Kloska erscheint 25% seltener' },
     { id:'speedster',       icon:'⚡', name:'Speedster',           desc:'Besiege Peter Bayer in unter 5 Sekunden im Boss-Room.', perk:'Präzision: +5% Schaden auf alle Waffen' },
     { id:'ceo_perk',        icon:'👑', name:'Vorstandsvorsitzender',desc:'Schließe alle 5 Ligen mit dem S-Rang ab.', perk:'Unkündbar: Überlebe 1 tödlichen Treffer mit 1 HP (3s Schild)' },
-    { id:'ueberqualifiziert', icon:'🎓', name:'Überqualifiziert',   desc:'Schließe alle 3 Hauptpfade durch Rebirth ab und wechsle in die 3. Klasse.', perk:'Universalgenie: Alle Job-Passivs gleichzeitig aktiv' },
+    { id:'ueberqualifiziert', icon:'🎓', name:'Überqualifiziert',   desc:'Erreiche nach dem Rebirth die 3. Klasse eines Hauptpfads (z.B. IT-Director, Supply Chain Mgr, Lead Architect).', perk:'Universalgenie: Alle Job-Passivs gleichzeitig aktiv' },
     { id:'meister_hand',    icon:'✋', name:'Meister Hand',         desc:'Besiege die geheime Hand im Logistics-Bereich.', perk:'Phantomgriff: [V] Vernichtet alle Gegner auf der Map (60s CD)' },
     // --- WEIL WEGEN FELIX - ENDGAME TROPHÄEN ---
     { id:'felix_tier1', icon:'🚀', name:'Das Ticket-Kartell', desc:'Felix-Modus: S-Rang + 1.000.000 Pkt.', perk:'Combo startet bei ×3.' },
     { id:'felix_tier2', icon:'💸', name:'Mehrheitsaktionär', desc:'Felix-Modus: S-Rang + 2.500.000 Pkt.', perk:'Kloska -50% & Start mit +5 Suppen.' },
     { id:'felix_tier3', icon:'👑', name:'Der wahre CEO', desc:'Felix-Modus: S-Rang + 5.000.000 Pkt.', perk:'Azubis spawnen als Junior. +25% Schaden.' },
+    // CHANGE 10.07.: Geheime Anti-Trophaee — Wurm-Klicker: 100 Raids verlieren. Bewusst OHNE Bonus.
+    { id:'teilnehmerurkunde', icon:'📜', name:'Teilnehmerurkunde', desc:'Verliere 100 Raids in der Kommando-Zentrale. Respekt. Irgendwie.', perk:'Keiner. Wirklich gar keiner. Du warst dabei, das zählt. 🎉', hidden:true, noPrestige:true },
+    // CHANGE 10.07.: Nahkampf-Trophaee fuer die neue Tastatur
+    { id:'tastatur_krieger', icon:'⌨️', name:'Tastatur-Krieger', desc:'Überlebe 3 Minuten in einem Run und kämpfe dabei AUSSCHLIESSLICH mit der Tastatur (min. 50 Hiebe).', perk:'Mechanische Switches: Tastatur-Schaden +25%' },
     // --- CHANGE 09.07.: RANG-SYSTEM & FPS TROPHÄEN ---
     { id:'max_power',   icon:'💯', name:'Maximale Power',  desc:'Erreiche einen perfekten Score (100/100 Pkt).', perk:'Machtrausch: Base- & Job-EXP jeweils +10%' },
     { id:'zyzz',        icon:'🧬', name:'The Zyzz',        desc:'Erreiche den Rang Z (95+ Pkt).', perk:'Aesthetic: Aufgesammelte Waffen halten 50% länger', hidden:true },
@@ -2166,7 +2190,20 @@ function advanceJob(jobId) {
     let classLabel = j.classLevel===1?'1. KLASSE':j.classLevel===2?'2. KLASSE':j.classLevel===3?'3. KLASSE':'🏆 4. KLASSE — ENDGAME!';
     showToast(`⚔️ ${classLabel}`, j.color, j.name + ' erreicht!');
     playSound('evolve');
+    checkUeberqualifiziert();
     renderJobOverlay();
+}
+
+// BUG FIX 10.07.: Trophäe 'Überqualifiziert' wurde nie vergeben.
+// Vergabe: 3. Klasse (oder höher) eines Hauptpfads erreicht (Trans-Linie, kein Alt/Extended/Doram).
+// Wird bei Jobwechsel UND beim Laden geprüft (retroaktiv für Spieler, die schon Class 3 sind).
+function checkUeberqualifiziert() {
+    if(hasTrophy('ueberqualifiziert')) return;
+    if(!currentJob || !JOBS[currentJob]) return;
+    let j = JOBS[currentJob];
+    if(j.classLevel >= 3 && !j.isAlt && !j.isExtended && !j.isDoram) {
+        unlockTrophy('ueberqualifiziert');
+    }
 }
 
 function performRebirth() {
@@ -2367,9 +2404,14 @@ function upgradeJobSkill(skillId) {
 function applyJobEffects(p) {
     if (!currentJob) return;
     let j = JOBS[currentJob];
+    checkUeberqualifiziert(); // Retro-Check beim Rundenstart
 
     // Alle abgeschlossenen + aktueller Job → Perks kumulieren
     let allJobs = [...(completedJobs||[]), currentJob];
+    // TROPHÄE 'Überqualifiziert' — Universalgenie: ALLE Job-Passivs gleichzeitig aktiv
+    if(typeof hasTrophy === 'function' && hasTrophy('ueberqualifiziert')) {
+        allJobs = Object.keys(JOBS);
+    }
 
     // ── LOGISTIK-LINIE (Swordsman) ──
     if(allJobs.some(jj=>['lagermitarbeiter','high_lagermitarbeiter'].includes(jj))) {
@@ -2694,7 +2736,7 @@ const SKILL_NODES = [
     { id:'r6',  x:375,  y:-265, type:'minor',    zone:'rage', name:'Explosive Wut',      desc:'15% Chance pro Treffer: kleiner Splash-Effekt (+30px).',   cost:4000,  requires:['r3b'],         effect:'explosive_chance:0.15' },
     { id:'r7',  x:475,  y:-280, type:'minor',    zone:'rage', name:'Splittermunition',   desc:'Jede Kugel hat 20% Chance zu splitten (2 Splitter).',      cost:5000,  requires:['r6'],          effect:'split_chance:0.20' },
     { id:'r8',  x:500,  y:-185, type:'notable',  zone:'rage', name:'Dauerfeuer',         desc:'+30% Feuerrate. Nach 3s Dauerschießen: +20% Schaden.',     cost:7000,  requires:['r5'],          effect:'dauerfeuer' },
-    { id:'r9',  x:560,  y:-130, type:'minor',    zone:'rage', name:'Waffenmeister',      desc:'Waffenwechsel-Cooldown -50%.',                             cost:4500,  requires:['r8'],          effect:'weapon_swap:0.5' },
+    { id:'r9',  x:560,  y:-130, type:'minor',    zone:'rage', name:'Waffenmeister',      desc:'Waffen aus Kisten halten 50% länger.',                             cost:4500,  requires:['r8'],          effect:'weapon_swap:0.5' },
     { id:'r10', x:550,  y:-260, type:'minor',    zone:'rage', name:'Durchschlag',        desc:'Kugeln durchdringen 1 zusätzlichen Gegner.',               cost:6000,  requires:['r7'],          effect:'pierce:1' },
     { id:'r_ks',x:620,  y:-220, type:'keystone', zone:'rage', name:'ÜBERSTUNDEN-RAGE',   desc:'+100% Schaden unter 30% HP. Kein Schutzschild-Item wirkt.',cost:18000, requires:['r8','r10'],    effect:'ks_rage' },
 
@@ -2726,7 +2768,7 @@ const SKILL_NODES = [
     { id:'k4',  x:330,  y:270,  type:'minor',    zone:'kasse', name:'Sozialkasse',        desc:'Starte mit 2 Suppen extra.',                              cost:2000,  requires:['k3'],          effect:'start_suppe:2' },
     { id:'k4b', x:350,  y:175,  type:'minor',    zone:'kasse', name:'Steueroptimierung',  desc:'Kaffeebons aus Trophäen +50%.',                           cost:2200,  requires:['k3'],          effect:'kb_rate:0.20' },
     { id:'k5',  x:430,  y:230,  type:'notable',  zone:'kasse', name:'Gewerkschaft',       desc:'Azubi kostet 2000 weniger Pkt. Reichweite +300px.',       cost:7000,  requires:['k4'],          effect:'gewerkschaft' },
-    { id:'k5b', x:440,  y:145,  type:'minor',    zone:'kasse', name:'Mengenrabatt',       desc:'Zweite Suppe im Run: 50% günstiger.',                     cost:2500,  requires:['k4b'],         effect:'suppe_discount' },
+    { id:'k5b', x:440,  y:145,  type:'minor',    zone:'kasse', name:'Mengenrabatt',       desc:'Kloska-Shop: alle Preise -10% (stapelt mit Schwarzmarkt).',                     cost:2500,  requires:['k4b'],         effect:'suppe_discount' },
     { id:'k6',  x:510,  y:195,  type:'notable',  zone:'kasse', name:'Schwarzmarkt',       desc:'Kloska-Shop: alle Preise -20%.',                          cost:8000,  requires:['k5'],          effect:'kloska_discount:0.20' },
     { id:'k7',  x:550,  y:280,  type:'minor',    zone:'kasse', name:'Betriebsausflug',    desc:'Pro Meeting: +200 KB.',                                   cost:3000,  requires:['k5'],          effect:'meeting_kb:200' },
     { id:'k8',  x:610,  y:220,  type:'minor',    zone:'kasse', name:'Jahresbonus',        desc:'+50% KB wenn Score über 500.000.',                        cost:7000,  requires:['k6'],          effect:'score_kb_bonus' },
@@ -2756,11 +2798,11 @@ const SKILL_NODES = [
     { id:'t2',  x:-220, y:65,   type:'minor',    zone:'technik', name:'IT-Support',        desc:'IDOC-Zeitfenster +8s.',                                  cost:1200,  requires:['t1'],          effect:'idoc_time:480' },
     { id:'t2b', x:-205, y:-20,  type:'minor',    zone:'technik', name:'Ping-Optimierung',  desc:'Suppe erscheint 9s früher pro Farm.',                             cost:1200,  requires:['t1'],          effect:'farm_income:6' },
     { id:'t3',  x:-315, y:35,   type:'notable',  zone:'technik', name:'Netzwerk-Admin',    desc:'Max. Server-Farmen +2. Hack-Zeitfenster +3s.',           cost:5500,  requires:['t2'],          effect:'farm_slots:2' },
-    { id:'t3b', x:-300, y:115,  type:'minor',    zone:'technik', name:'Backup-System',     desc:'Server-Farm hält 50% länger wenn angegriffen.',          cost:1800,  requires:['t2'],          effect:'farm_defense:0.50' },
+    { id:'t3b', x:-300, y:115,  type:'minor',    zone:'technik', name:'Backup-System',     desc:'Server-Farmen arbeiten 10% schneller.',          cost:1800,  requires:['t2'],          effect:'farm_defense:0.50' },
     { id:'t4',  x:-385, y:95,   type:'minor',    zone:'technik', name:'Azubi-Coaching',    desc:'Azubis haben +250px Reichweite und +20% Feuerrate.',     cost:1800,  requires:['t3'],          effect:'azubi_boost' },
     { id:'t4b', x:-375, y:15,   type:'minor',    zone:'technik', name:'Firmennetzwerk',    desc:'Suppe erscheint 4.5s früher pro Farm.',                    cost:2000,  requires:['t3'],          effect:'farm_income:3' },
     { id:'t5',  x:-455, y:40,   type:'notable',  zone:'technik', name:'Automatisierung',   desc:'Azubis feuern doppelt so schnell. Cooldown halbiert.',   cost:7000,  requires:['t4'],          effect:'azubi_auto' },
-    { id:'t5b', x:-465, y:130,  type:'minor',    zone:'technik', name:'Cloud-Backup',      desc:'Bei Farm-Zerstörung: 50% Chance Wiederherstellung.',     cost:3000,  requires:['t3b'],         effect:'farm_revive:0.50' },
+    { id:'t5b', x:-465, y:130,  type:'minor',    zone:'technik', name:'Cloud-Backup',      desc:'Cloud-Backup: Starte jeden Run mit +2 Suppen.',     cost:3000,  requires:['t3b'],         effect:'farm_revive:0.50' },
     { id:'t6',  x:-530, y:75,   type:'notable',  zone:'technik', name:'Quantencomputer',   desc:'Farm-Einkommen ×2. Max. gleichzeitige Farmen +1.',       cost:8000,  requires:['t5'],          effect:'farm_double' },
     { id:'t7',  x:-565, y:165,  type:'minor',    zone:'technik', name:'Turret-Upgrade',    desc:'Turrets haben +40% Reichweite und +20% Feuerrate.',      cost:3000,  requires:['t4'],          effect:'turret_boost' },
     { id:'t8',  x:-615, y:95,   type:'minor',    zone:'technik', name:'Server-Farm XL',    desc:'Suppe erscheint 12s früher pro Farm.',                       cost:7000,  requires:['t6'],          effect:'farm_income:8' },
@@ -2788,7 +2830,7 @@ const SKILL_NODES = [
     // ═══════════════════════════════════════════
     { id:'e1',  x:30,   y:-135, type:'minor',    zone:'erfahrung', name:'Arbeitserfahrung', desc:'+5% Score für jede freigeschaltete Trophäe.',          cost:1200,  requires:['start'],       effect:'trophy_score:0.05' },
     { id:'e2',  x:80,   y:-195, type:'minor',    zone:'erfahrung', name:'Lernkurve',        desc:'Nach jedem Run: +2% permanenter KB-Bonus (max +20%).', cost:1500,  requires:['e1'],          effect:'kb_rate:0.02' },
-    { id:'e2b', x:-30,  y:-170, type:'minor',    zone:'erfahrung', name:'Intuition',        desc:'Gegner-Angriffsmuster +0.3s früher sichtbar.',          cost:1200,  requires:['e1'],          effect:'enemy_warn:18' },
+    { id:'e2b', x:-30,  y:-170, type:'minor',    zone:'erfahrung', name:'Intuition',        desc:'Frisch gespawnte Gegner sind 0.3s eingefroren.',          cost:1200,  requires:['e1'],          effect:'enemy_warn:18' },
     { id:'e3',  x:100,  y:-280, type:'notable',  zone:'erfahrung', name:'Veteran',          desc:'Pro Prestige-Level: +5% Schaden und +10 HP.',           cost:5500,  requires:['e2'],          effect:'prestige_bonus' },
     { id:'e3b', x:-20,  y:-260, type:'minor',    zone:'erfahrung', name:'Muskelgedächtnis', desc:'Bekannte Gegner-Typen machen -8% Schaden.',             cost:2000,  requires:['e2b'],         effect:'dmg_reduction:0.08' },
     { id:'e4',  x:165,  y:-310, type:'minor',    zone:'erfahrung', name:'Karriereleiter',   desc:'Score-Multiplikator +0.1 für Burnout+ Modus.',         cost:2000,  requires:['e3'],          effect:'score_mult:0.10' },
@@ -2796,7 +2838,7 @@ const SKILL_NODES = [
     { id:'e5',  x:240,  y:-300, type:'notable',  zone:'erfahrung', name:'Seniorität',       desc:'Combo-Multiplikator baut 50% langsamer ab.',            cost:7000,  requires:['e4'],          effect:'combo_decay:0.50' },
     { id:'e5b', x:100,  y:-420, type:'minor',    zone:'erfahrung', name:'Jubiläum',         desc:'Jeder 100. Kill im Run: +500 Bonus-Score.',             cost:3000,  requires:['e4b'],         effect:'milestone_score:500' },
     { id:'e6',  x:330,  y:-340, type:'notable',  zone:'erfahrung', name:'Meisterschaft',    desc:'+25% Score. Combo zählt ab ×2 statt ×3.',              cost:8000,  requires:['e5'],          effect:'combo_start:2' },
-    { id:'e7',  x:200,  y:-410, type:'minor',    zone:'erfahrung', name:'Lebenswerk',       desc:'Trophäen-Belohnungen ×1.5.',                            cost:3500,  requires:['e5b'],         effect:'trophy_kb:1.5' },
+    { id:'e7',  x:200,  y:-410, type:'minor',    zone:'erfahrung', name:'Lebenswerk',       desc:'Pro Trophäe: +1.5% Kaffeebon-Bonus.',                            cost:3500,  requires:['e5b'],         effect:'trophy_kb:1.5' },
     { id:'e8',  x:380,  y:-430, type:'minor',    zone:'erfahrung', name:'Legende',          desc:'+10% aller Stats für jeden Keystone-Skill aktiv.',      cost:10000, requires:['e6'],          effect:'keystone_bonus:0.10' },
     { id:'e_ks',x:460,  y:-380, type:'keystone', zone:'erfahrung', name:'LEBENDE LEGENDE',  desc:'Score ×2 im gesamten Run. Nur 1 Leben.',                cost:18000, requires:['e6','e8'],     effect:'ks_legende' },
 
@@ -2804,8 +2846,8 @@ const SKILL_NODES = [
     // 🔶 BOSS — Peter Bayer, Spezial-Perks
     // ═══════════════════════════════════════════
     { id:'bo1', x:-30,  y:165,  type:'minor',    zone:'boss', name:'Respekt verdient',    desc:'Boss-HP -5% pro Run den du überlebt hast (max -25%).',  cost:1500,  requires:['start'],       effect:'boss_hp_red:0.05' },
-    { id:'bo2', x:-80,  y:235,  type:'minor',    zone:'boss', name:'Schwachstellenanalyse',desc:'Bosse haben 10% Trefferzone auf Rücken: ×2 Schaden.',  cost:1500,  requires:['bo1'],         effect:'boss_weak' },
-    { id:'bo2b',x:30,   y:210,  type:'minor',    zone:'boss', name:'Bossbeobachtung',     desc:'Boss-Angriffe sind 0.5s früher angekündigt.',           cost:1500,  requires:['bo1'],         effect:'boss_warn' },
+    { id:'bo2', x:-80,  y:235,  type:'minor',    zone:'boss', name:'Schwachstellenanalyse',desc:'Bosse: 10% Chance auf Schwachstellen-Treffer (×2 Schaden).',  cost:1500,  requires:['bo1'],         effect:'boss_weak' },
+    { id:'bo2b',x:30,   y:210,  type:'minor',    zone:'boss', name:'Bossbeobachtung',     desc:'Bosse bewegen sich 8% langsamer.',           cost:1500,  requires:['bo1'],         effect:'boss_warn' },
     { id:'bo3', x:-100, y:320,  type:'notable',  zone:'boss', name:'Petermanager',        desc:'Peter Bayer hat 15% weniger HP und Speed.',             cost:6000,  requires:['bo2'],         effect:'bayer_nerf:0.15' },
     { id:'bo3b',x:30,   y:320,  type:'minor',    zone:'boss', name:'Taktiker',            desc:'Nach Bayer-Kill: alle Stats +10% für 30s.',             cost:2500,  requires:['bo2b'],        effect:'boss_kill_buff' },
     { id:'bo4', x:-155, y:390,  type:'minor',    zone:'boss', name:'Laser-Abwehr',        desc:'Laser-Schaden -30%.',                                    cost:2500,  requires:['bo3'],         effect:'laser_resist:0.30' },
@@ -3238,6 +3280,90 @@ function applySkillTree(p) {
         if(ef === 'ks_buerokrat')          { p.speed += 2.0; p.dmgBonus -= Math.floor(p.dmgBonus * 0.25 + 3); }
         if(ef === 'ks_unantastbar')        p._rollInvFrames = 180; // 3s bei 60fps
         if(ef === 'ks_ki')                 p._aiTurrets = true;
+        // ══════════════════════════════════════════════════════════════
+        // CHANGE 10.07.: SKILLTREE-AUDIT — ~40 Effekte waren reine Deko
+        // (geparst aber nie konsumiert, oder gar nicht geparst).
+        // Ab hier: vollständige Verdrahtung. Hooks: skillFrameTick(),
+        // onSkillKill(), applyKillScoreSkills(), applyPlayerDefense().
+        // ══════════════════════════════════════════════════════════════
+        if(ef.startsWith('firerate_pct:')) p.fireRate = Math.max(2, Math.round((p.fireRate||20) * (1 - parseFloat(ef.split(':')[1]))));
+        if(ef.startsWith('dmg_per_weapon:')) p._dmgPerWeapon = (p._dmgPerWeapon||0) + parseFloat(ef.split(':')[1]);
+        if(ef.startsWith('weapon_swap:'))  p._weaponDurMult = (p._weaponDurMult||1) * 1.5;   // Waffen aus Kisten halten 50% länger
+        if(ef.startsWith('explosive_chance:')) p._explosiveChance = (p._explosiveChance||0) + parseFloat(ef.split(':')[1]);
+        if(ef.startsWith('split_chance:')) p._splitChance = (p._splitChance||0) + parseFloat(ef.split(':')[1]);
+        if(ef === 'pierce:1')              p.hasPierceMod = true;
+        if(ef === 'ks_rage')               p._ksRage = true; // +100% DMG < 30% HP, Schutzschild-Items blockiert
+        if(ef.startsWith('dmg_reduction:')) p._dmgReduction = (p._dmgReduction||0) + parseFloat(ef.split(':')[1]);
+        if(ef.startsWith('low_hp_def:'))   p._lowHpDef = parseFloat(ef.split(':')[1]);
+        if(ef === 'stun_resist')           p._stunResist = true;
+        if(ef === 'auto_shield')           p._autoShield = true;
+        if(ef.startsWith('kill_heal:'))    p._killHealChance = (p._killHealChance||0) + parseFloat(ef.split(':')[1]);
+        if(ef.startsWith('kill_item:'))    p._killItemChance = (p._killItemChance||0) + parseFloat(ef.split(':')[1]);
+        if(ef.startsWith('triple_score:')) p._tripleScore = parseFloat(ef.split(':')[1]);
+        if(ef === 'lucky_streak')          p._luckyStreak = true;
+        if(ef === 'rocket_mod')            p._rocketMod = true;
+        if(ef === 'random_hp_bonus')       { let _rb = 10 + Math.floor(Math.random()*41); p.maxHp += _rb; }
+        if(ef.startsWith('double_nothing:')) p._doubleNothing = true;
+        if(ef === 'joker_block')           p._jokerBlock = 1;
+        if(ef === 'chaos_weapon')          p._chaosWeapon = true; // BUG FIX: Chaostheorie war nie implementiert
+        if(ef.startsWith('item_quality:')) p._itemQuality = parseFloat(ef.split(':')[1]);
+        if(ef.startsWith('luck_all:'))     p._luckAdd = (p._luckAdd||0) + parseFloat(ef.split(':')[1]);
+        if(ef.startsWith('crate_chance:')) p._crateChance = (p._crateChance||0) + parseFloat(ef.split(':')[1]);
+        if(ef === 'kaffeevoll')            p._suppeDropBonus = true; // 2. Hälfte des Skills: Suppe-Drops +25%
+        if(ef === 'suppe_discount')        p._shopDiscount = (p._shopDiscount||0) + 0.10;
+        if(ef.startsWith('kloska_discount:')) p._shopDiscount = (p._shopDiscount||0) + parseFloat(ef.split(':')[1]);
+        if(ef.startsWith('meeting_kb:'))   p._meetingKb = parseInt(ef.split(':')[1]);
+        if(ef === 'score_kb_bonus')        p._scoreKbBonus = true;
+        if(ef === 'ks_betriebsrat')        p._ksBetriebsrat = true; // Meetings 2× Punkte
+        if(ef.startsWith('idoc_time:'))    p._idocTimeBonus = parseInt(ef.split(':')[1]);
+        if(ef.startsWith('farm_defense:')) p._farmIntervalMult = (p._farmIntervalMult||1) * 0.9; // reinterpretiert: Farmen 10% schneller
+        if(ef === 'azubi_boost')           p._azubiBoost = true;
+        if(ef === 'azubi_auto')            p._azubiAuto = true;
+        if(ef.startsWith('farm_revive:'))  p.suppe += 2; // reinterpretiert: +2 Suppen aus dem Cloud-Backup
+        if(ef.startsWith('enemy_warn:'))   p._enemyWarn = parseInt(ef.split(':')[1]); // frisch gespawnte Gegner kurz eingefroren
+        if(ef === 'boss_weak')             p._bossWeak = true; // 10% Chance: ×2 Schaden auf Bosse
+        if(ef === 'boss_warn')             p._bossSlow = 0.08; // reinterpretiert: Bosse 8% langsamer
+        if(ef === 'boss_kill_buff')        p._bossKillBuff = true;
+        if(ef.startsWith('boss_score:'))   p._bossScoreBonus = parseInt(ef.split(':')[1]);
+        if(ef.startsWith('boss_kb:'))      p._bossKbBonus = parseInt(ef.split(':')[1]);
+        if(ef.startsWith('boss_loot:'))    p._bossLoot = parseFloat(ef.split(':')[1]);
+        if(ef.startsWith('boss_invuln:'))  p._bossInvuln = parseInt(ef.split(':')[1]);
+        if(ef.startsWith('boss_low_speed:')) p._bossLowSpeed = parseFloat(ef.split(':')[1]);
+        if(ef === 'boss_phase_buff')       p._bossPhaseBuff = true;
+        if(ef === 'final_boss_buff')       p._finalBossBuff = true;
+        if(ef.startsWith('flex_timer:'))   p._flexTimer = parseFloat(ef.split(':')[1]);
+        if(ef === 'synergy')               p._farmSynergy = true;
+        if(ef.startsWith('crit:'))         p._critChance = (p._critChance||0) + parseFloat(ef.split(':')[1]);
+        if(ef.startsWith('roll_dmg_buff:')) p._rollDmgBuff = true;
+        if(ef.startsWith('swap_dmg:'))     p._swapDmg = true;
+        if(ef.startsWith('turret_dmg_share:')) p._turretDmgShare = parseFloat(ef.split(':')[1]);
+        if(ef === 'windschatten')          p._windschatten = true;
+        if(ef === 'suppe_rush')            p._suppeRush = true;
+        if(ef.startsWith('milestone_score:')) p._milestoneScore = parseInt(ef.split(':')[1]);
+        if(ef === 'nightshift_kb')         p._nightshiftKb = true;
+    }
+    // ── META-SKILLS (abhängig von anderen Skills/Trophäen/Upgrades — NACH der Schleife) ──
+    if(unlockedSkills.includes('x7')) { // Kampferfahrung: +3% Schaden pro Notable
+        let _nc = unlockedSkills.filter(id=>{let s=SKILL_NODES.find(x=>x.id===id);return s&&s.type==='notable';}).length;
+        p.dmgBonus += (p.dmgBonus + 10) * 0.03 * _nc;
+    }
+    if(unlockedSkills.includes('e8')) { // Legende: +10% Stats je aktivem Keystone
+        let _kc = unlockedSkills.filter(id=>{let s=SKILL_NODES.find(x=>x.id===id);return s&&s.type==='keystone';}).length;
+        if(_kc>0){ p.dmgBonus += (p.dmgBonus + 10) * 0.10 * _kc; p.maxHp = Math.floor(p.maxHp * (1 + 0.05*_kc)); p.speed += 0.1*_kc; }
+    }
+    if(unlockedSkills.includes('e1')) { // Arbeitserfahrung: +5% Score je Trophäe (Cap +100%)
+        p._scoreMult = (p._scoreMult||1) + Math.min(1.0, 0.05 * unlockedTrophies.length);
+    }
+    if(unlockedSkills.includes('e7')) { // Lebenswerk: +1.5% KB je Trophäe
+        p._stKbBonus = (p._stKbBonus||0) + 0.015 * unlockedTrophies.length;
+    }
+    if(unlockedSkills.includes('k3b')) { // Investition: +5% KB je Upgrade-Level (Cap +50%)
+        let _ul = Object.values(upgradeProgress||{}).reduce((s,v)=>s+(v||0),0);
+        p._stKbBonus = (p._stKbBonus||0) + Math.min(0.50, 0.05 * _ul);
+    }
+    if(unlockedSkills.includes('x15')) { // Effizienz: +5% KB je freigeschalteter Zone
+        let _zones = new Set(unlockedSkills.map(id=>{let s=SKILL_NODES.find(x=>x.id===id);return s?s.zone:null;}).filter(Boolean));
+        p._stKbBonus = (p._stKbBonus||0) + 0.05 * _zones.size;
     }
     // --- FELIX PERKS AKTIVIEREN ---
     if(hasTrophy('felix_tier1')) { p._comboStart = 3; }
@@ -3245,6 +3371,161 @@ function applySkillTree(p) {
     if(hasTrophy('felix_tier3')) { p.dmgBonus += Math.floor(p.dmgBonus * 0.25 + 5); p._azubiStartLevel = 1; }
     // HP nach allen Upgrades setzen
     p.hp = p.maxHp;
+}
+
+// ============================================================
+// CHANGE 10.07.: SKILLTREE-HOOKS — machen die Flags oben funktional
+// ============================================================
+const CHAOS_WEAPON_POOL = ['minigun','shotgun','rocket','uzi','ak47','railgun','flamer','tastatur'];
+function grantTempWeapon(frames, label, col){
+    if(!player) return;
+    let w = CHAOS_WEAPON_POOL[Math.floor(Math.random()*CHAOS_WEAPON_POOL.length)];
+    if(player.activeWeapons[w] !== Infinity) player.activeWeapons[w] = Math.max(player.activeWeapons[w]||0, frames);
+    showToast(label, col, w.toUpperCase() + ' für ' + Math.floor(frames/60) + ' Sekunden!');
+    playSound('powerup');
+}
+
+// Läuft jeden Frame im Game-Loop
+function skillFrameTick(){
+    let p = player; if(!p || !gameRunning) return;
+    if(p._invulnTimer > 0)        p._invulnTimer--;
+    if(p._windschattenTimer > 0)  p._windschattenTimer--;
+    if(p._rollDmgBuffTimer > 0)   p._rollDmgBuffTimer--;
+    if(p._swapDmgTimer > 0)       p._swapDmgTimer--;
+    if(p._bossKillBuffTimer > 0)  p._bossKillBuffTimer--;
+    if(p._luckyStreakTimer > 0)   p._luckyStreakTimer--;
+    let noHeal = (currentDiffLabel === 'SURVIVAL' || isWegflexenMode);
+    // Regeneration (p3b): +X HP alle 5 Sekunden
+    if(p._hpRegen && frame > 0 && frame % 300 === 0 && !noHeal) p.hp = Math.min(p.maxHp, p.hp + p._hpRegen);
+    // Schildwall (p6): alle 45s automatisch 20 Schild-HP (max 1× aktiv)
+    if(p._autoShield && frame > 0 && frame % 2700 === 0 && (p._shieldHp||0) <= 0){
+        p._shieldHp = 20;
+        floatingTexts.push(new FloatingText(p.x, p.y - 50, '🛡 SCHILDWALL +20', '#00bbff'));
+    }
+    // Stahlhaut (up1): alle 60s voll heilen
+    if(p._autoHealInterval && frame > 0 && frame % p._autoHealInterval === 0 && !noHeal){
+        p.hp = p.maxHp;
+        floatingTexts.push(new FloatingText(p.x, p.y - 50, '⚙ STAHLHAUT — VOLL GEHEILT', '#95a5a6'));
+        playSound('powerup');
+    }
+    // Quantennetzwerk (ut2): +1 KB pro Sekunde je aktiver Farm
+    if(p._farmKbPerSec && frame % 60 === 0 && serverFarms.length > 0){
+        kaffeebons += p._farmKbPerSec * serverFarms.length;
+    }
+    // CHAOSTHEORIE (c6) — BUG FIX: war nie implementiert. Alle 30s: zufällige Waffe für 15s.
+    if(p._chaosWeapon && frame > 0 && frame % 1800 === 0){
+        grantTempWeapon(900, '🎲 CHAOSTHEORIE!', '#9b59b6');
+    }
+}
+
+// Wird bei jedem Gegner-Kill aufgerufen (Items, Heilung, Waffen, Zähler)
+function onSkillKill(e){
+    let p = player; if(!p) return;
+    let luck = (p._luckMult||1), add = (p._luckAdd||0);
+    let noHeal = (currentDiffLabel === 'SURVIVAL' || isWegflexenMode);
+    // Wundpflaster (p5b): Kill heilt X HP — war Deko
+    if(p._killHealHp && !noHeal) p.hp = Math.min(p.maxHp, p.hp + p._killHealHp);
+    // Würfelwurf (c2): Chance auf +5 HP
+    if(p._killHealChance && !noHeal && Math.random() < (p._killHealChance + add) * luck){
+        p.hp = Math.min(p.maxHp, p.hp + 5);
+        floatingTexts.push(new FloatingText(p.x, p.y - 30, '🎲 +5 HP', '#2ecc71'));
+    }
+    // Schmetterling (c2b): Chance auf zufälliges Item
+    if(p._killItemChance && Math.random() < (p._killItemChance + add) * luck){
+        const _it = ['suppe','chicken','crate','vacation','shield'];
+        items.push(new Item(_it[Math.floor(Math.random()*_it.length)], e.x, e.y));
+        floatingTexts.push(new FloatingText(e.x, e.y - 20, '🦋 ITEM!', '#9b59b6'));
+    }
+    // Quantenfluktuation (uc2): 15% Chance zufällige Waffe für 10s — war Deko
+    if(p._quantumFlux && Math.random() < (0.15 + add) * luck){
+        grantTempWeapon(600, '⚛ QUANTENFLUX!', '#00e5ff');
+    }
+    // Glückssträhne (c3b): 10 Kills ohne Schaden → +30% Score für 15s
+    if(p._luckyStreak){
+        p._noDmgKills = (p._noDmgKills||0) + 1;
+        if(p._noDmgKills >= 10 && p._luckyStreakTimer <= 0){
+            p._luckyStreakTimer = 900;
+            showToast('🍀 GLÜCKSSTRÄHNE!', '#2ecc71', '+30% Score für 15 Sekunden');
+        }
+    }
+    // Jubiläum (e5b): jeder 100. Kill +Bonus-Score
+    if(p._milestoneScore){
+        p._msKills = (p._msKills||0) + 1;
+        if(p._msKills % 100 === 0){
+            score += p._milestoneScore;
+            floatingTexts.push(new FloatingText(e.x, e.y - 30, '🎉 JUBILÄUM +' + p._milestoneScore, '#f1c40f'));
+        }
+    }
+    // Pure Anarchie (uc1): 1% Chance instant 10× Score
+    if((p._luckMult||1) >= 3 && Math.random() < 0.01){
+        let bonus = e.score * 10 * comboMult;
+        score += bonus;
+        floatingTexts.push(new FloatingText(e.x, e.y - 40, '💥 ANARCHIE! +' + bonus, '#ff00ff'));
+    }
+}
+
+// Modifiziert den Score eines Kills (Zufalls-Skills + Multiplikatoren)
+function applyKillScoreSkills(e, earned){
+    let p = player; if(!p) return earned;
+    let luck = (p._luckMult||1), add = (p._luckAdd||0);
+    if(p._scoreMult && p._scoreMult !== 1) earned = Math.floor(earned * p._scoreMult); // war Deko!
+    if(p._luckyStreakTimer > 0) earned = Math.floor(earned * 1.3);
+    if(p._collapseMult && typeof systemCollapse !== 'undefined' && systemCollapse) earned = Math.floor(earned * p._collapseMult);
+    // Russisches Roulette (c3): 12% → 3× Score
+    if(p._tripleScore && Math.random() < (p._tripleScore + add) * luck){
+        earned *= 3;
+        floatingTexts.push(new FloatingText(e.x, e.y - 35, '🎰 3× SCORE!', '#e74c3c'));
+    }
+    // Doppelt oder Nichts (c5)
+    if(p._doubleNothing){
+        let r = Math.random();
+        if(r < (0.25 + add) * luck) earned *= 2;
+        else if(r > 0.95){ earned = 0; floatingTexts.push(new FloatingText(e.x, e.y - 35, '💀 NICHTS!', '#555')); }
+    }
+    return earned;
+}
+
+// Zentrale Verteidigung — ALLE Spieler-Schadensquellen laufen hier durch.
+// Vorher waren _dmgReduction & Co. reine Anzeige-Werte.
+function applyPlayerDefense(dmg, opts){
+    opts = opts || {};
+    let p = player; if(!p) return dmg;
+    if(p._invulnTimer > 0) return 0;                       // Siegestaumel / UNANTASTBAR
+    if(p.rollTimer > 0 && p._ghostRoll) return 0;          // Geisterläufer
+    // Joker (c5b): 1× pro Run kompletter Block
+    if(p._jokerBlock > 0 && dmg >= 5){
+        p._jokerBlock = 0;
+        floatingTexts.push(new FloatingText(p.x, p.y - 50, '🃏 JOKER!', '#f1c40f'));
+        playSound('powerup');
+        return 0;
+    }
+    // Slalom (b3b): Ausweichen während Bewegung
+    if(p._moveDodge && p._isMoving && Math.random() < p._moveDodge){
+        floatingTexts.push(new FloatingText(p.x, p.y - 40, 'AUSGEWICHEN!', '#2ecc71'));
+        return 0;
+    }
+    let d = dmg;
+    if(p._dmgReduction) d *= (1 - Math.min(0.6, p._dmgReduction));
+    if(p._lowHpDef && p.hp < p.maxHp * 0.20) d *= (1 - p._lowHpDef);
+    if(opts.boss){
+        if(p._bossDmgRed)    d *= (1 - p._bossDmgRed);
+        if(p._bossPhaseBuff) d *= 0.90;
+    }
+    if(opts.laser && p._laserResist) d *= (1 - p._laserResist);
+    // Schildwall-HP absorbiert zuerst
+    if((p._shieldHp||0) > 0 && d > 0){
+        let ab = Math.min(p._shieldHp, d);
+        p._shieldHp -= ab; d -= ab;
+        floatingTexts.push(new FloatingText(p.x, p.y - 45, '🛡 -' + Math.ceil(ab), '#00bbff'));
+    }
+    // Gegenschlag (up2): 20% Chance, 50% des Schadens reflektieren
+    if(p._reflectChance && opts.source && opts.source.hp !== undefined && Math.random() < p._reflectChance){
+        opts.source.hp -= dmg * (p._reflectMult||0.5);
+        spawnParticles(opts.source.x, opts.source.y, '#f1c40f', 6);
+        floatingTexts.push(new FloatingText(opts.source.x, opts.source.y - 20, '↩ REFLEKT!', '#f1c40f'));
+    }
+    if(d > 0) p._noDmgKills = 0; // Glückssträhne-Zähler reset
+    return d;
 }
 
 let playerAkten = parseInt(lsGet('ts_akten', '0'));
@@ -3943,6 +4224,8 @@ const WEAPON_SHOP = [
     { id:'mouse',    icon:'🖱️', name:'Orbit-Maus',    desc:'Kreist um dich, knockt zurück (50 Dmg).',       cost:30 },
     { id:'rocket',   icon:'🚀', name:'Raketenwerfer', desc:'Splash-Damage 150px. Rückstoß schiebt zurück.', cost:40 },
     { id:'railgun',  icon:'⚡', name:'Railgun',        desc:'Durchdringt Gegner in einer Linie. Stark.',     cost:50 },
+    // CHANGE 10.07.: Erste Nahkampfwaffe — die gute alte Cherry-Tastatur
+    { id:'tastatur', icon:'⌨️', name:'Tastatur',       desc:'NAHKAMPF: Schwungangriff im Bogen. Hoher Schaden + Knockback.', cost:30 },
 ];
 
 function hasWeaponUnlocked(id) { return unlockedWeapons.includes(id); }
@@ -4547,7 +4830,7 @@ function enterBossRoom() {
     if(player) player.lastShot = {};
 
     // WAFFEN BLEIBEN NORMAL AKTIV (Laufen in Sekunden weiter ab, außer Favorit)
-    let _wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫'};
+    let _wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫',tastatur:'⌨️'};
     let _carried = [];
     if(player) {
         let wk = Object.keys(player.activeWeapons||{});
@@ -5332,7 +5615,7 @@ function drawBossRoom() {
         let wk = Object.keys(player.activeWeapons||{});
         if(player.mouseTimer > 0) wk.push('mouse');
         if(wk.length > 0) {
-            let wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫'};
+            let wepIcons = {minigun:'🌀',shotgun:'💥',rocket:'🚀',railgun:'⚡',flamer:'🔥',mouse:'🖱️',uzi:'🔫',ak47:'🔫',tastatur:'⌨️'};
             let txt = wk.map(w => wepIcons[w]||w.toUpperCase()).join(' ');
             ctx.font='bold 16px Courier New'; ctx.textAlign='left'; 
             ctx.fillStyle='#f1c40f';
@@ -7073,13 +7356,21 @@ class Turret {
         }
     }
     draw(){
+        // CHANGE 10.07.: Azubis als Emojis — 📎 Azubi, 💻 Junior, 🖨️ Senior (statt Sprite-Kreis)
         let color = this.level === 2 ? '#f1c40f' : (this.level === 1 ? '#00e5ff' : '#aaa');
-        ctx.fillStyle=color; ctx.beginPath(); ctx.arc(this.x, this.y, 20, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle='#fff'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
-        ctx.fillText(this.level === 2 ? "SENIOR" : (this.level === 1 ? "JUNIOR" : "AZUBI"), this.x, this.y+4);
+        let icon = this.level === 2 ? '🖨️' : (this.level === 1 ? '💻' : '📎');
+        ctx.save();
+        ctx.font='34px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.shadowColor = color; ctx.shadowBlur = 8;
+        ctx.strokeStyle='#000'; ctx.lineWidth=2;
+        ctx.strokeText(icon, this.x, this.y);
+        ctx.fillText(icon, this.x, this.y);
+        ctx.restore();
+        ctx.fillStyle=color; ctx.font='bold 9px Arial'; ctx.textAlign='center';
+        ctx.fillText(this.level === 2 ? "SENIOR" : (this.level === 1 ? "JUNIOR" : "AZUBI"), this.x, this.y+30);
         // XP-Balken
         let req = this.level === 0 ? 30 : 100;
-        if(this.level < 2) { ctx.fillStyle='#222'; ctx.fillRect(this.x-15, this.y+15, 30, 4); ctx.fillStyle=color; ctx.fillRect(this.x-15, this.y+15, 30 * (this.kills/req), 4); }
+        if(this.level < 2) { ctx.fillStyle='#222'; ctx.fillRect(this.x-15, this.y+36, 30, 4); ctx.fillStyle=color; ctx.fillRect(this.x-15, this.y+36, 30 * (this.kills/req), 4); }
     }
 }
 
@@ -7106,6 +7397,9 @@ class Player{
         this.sapDebuffTimer=0;   
         this.azubiCost=5000;
         this.mouseTimer=0;
+        this.mouseCount=1;      // CHANGE 10.07.: Orbit-Maus verdoppelbar (Kloska-Shop)
+        this.mouseRadius=180;   // CHANGE 10.07.: Orbit-Radius erweiterbar (Kloska-Shop)
+        this.meleeShots=0; this.rangedShots=0; this.meleeSwingTimer=0; this.meleeSwingAngle=0;
         this.orangeHp = 0;
         this.orangeTimer = 0;
         this.suppe=0;
@@ -7251,7 +7545,8 @@ class Player{
                     let diffMult = lastChosenDifficulty >= 3 ? lastChosenDifficulty : 3; 
                     
                     // FIX: Base HP von 50000 auf 5000 gesenkt -> ~5,5 Mio HP statt 55 Mio
-                    let mhHp = Math.floor(5000 * diffMult * Math.max(1, pwr * 0.15));
+                    // CHANGE 10.07.: HP um 15% gesenkt (5000 → 4250)
+                    let mhHp = Math.floor(4250 * diffMult * Math.max(1, pwr * 0.15));
                     let mhSpeed = 6.0 + (diffMult * 0.3) + (pwr * 0.03);
 
                     let mh = new Enemy({ name:"MEISTER HAND", subtitle:"???", hp:mhHp, color:'#9b59b6', radius:80, speed:mhSpeed });
@@ -7315,6 +7610,8 @@ class Player{
 
         if(this.vacationTimer>0){this.vacationTimer--;if(frame%(hasTrophy('vacation_hoarder') ? 48 : 60)===0&&this.hp<this.maxHp && currentDiffLabel !== "SURVIVAL")this.hp+=2;}
         if(this.bikeTimer>0)        this.bikeTimer--;
+        if(this.meleeSwingTimer>0)  this.meleeSwingTimer--;
+        if(this._suppeRushTimer>0)  this._suppeRushTimer--;
         if(this.speedBoostTimer>0)  this.speedBoostTimer--;
         if(this.sapDebuffTimer>0){  this.sapDebuffTimer--; if(this.sapDebuffTimer<=0){ document.getElementById('sapOverlay').style.display='none'; showToast("SAP-UPDATE ABGESCHLOSSEN","#1f618d","Speed wiederhergestellt"); } }
         if(this.bugTimer>0)         this.bugTimer--;
@@ -7364,7 +7661,9 @@ class Player{
 
         let spd=this.speed;
         if(idocEvent && hasTrophy('idoc_savior')) spd *= 1.1;
-        if(this.bikeTimer>0)       spd=10;
+        // BUG FIX 10.07.: Fahrrad setzte Speed hart auf 10 → schnelle Builds (Maddin) wurden LANGSAMER.
+        // Jetzt: mindestens 10, sonst ×1.6 vom aktuellen Speed — nie langsamer als vorher.
+        if(this.bikeTimer>0)       spd=Math.max(10, spd*1.6);
         if(this.speedBoostTimer>0) spd+=3;
         if(this.sapDebuffTimer>0)  spd=Math.max(1, spd-3); 
 
@@ -7393,7 +7692,8 @@ class Player{
         }
 
         let canShoot=(this.vodkaTimer<=0)||this.isMartin;
-        let isShooting = input.mouseDown || (this.activeWeapons['uzi'] && this.bikeTimer > 0);
+        // BUG FIX 10.07.: Autofire beim Fahrrad ging nur mit Uzi — jetzt mit JEDER Waffe (inkl. Standard)
+        let isShooting = input.mouseDown || this.bikeTimer > 0;
         
         // ── RIFT MODE: kein Maus-Schießen — stattdessen Auto-Attack ──
         if(riftMode) { riftAutoAttack(this); return; }
@@ -7407,7 +7707,7 @@ class Player{
                 if(frame - (this.lastShot['standard']||0) > fr) { this.shootWeapon('standard'); this.lastShot['standard'] = frame; }
             } else {
                 for(let w of wepKeys) {
-                    let frBase = {minigun:4,uzi:7,ak47:6,shotgun:40,rocket:60,railgun:50,flamer:3}[w]||20;
+                    let frBase = {minigun:4,uzi:7,ak47:6,shotgun:40,rocket:60,railgun:50,flamer:3,tastatur:24}[w]||20;
                     let fr = Math.max(2, frBase - Math.ceil(frBase * 0.15 * getUpgradeLevel('fire_rate')));
                     if(frame - (this.lastShot[w]||0) > fr) { this.shootWeapon(w); this.lastShot[w] = frame; }
                 }
@@ -7447,9 +7747,45 @@ class Player{
             // Welt-Winkel aus Yaw: forward = (sin, cos) → atan2(sin, cos) = yaw-bezogen
             angle = Math.atan2(Math.cos(window._look.yaw), Math.sin(window._look.yaw));
         }
-        if(w==='uzi'&&this.bikeTimer>0&&!input.mouseDown) angle=Math.random()*Math.PI*2;
+        // BUG FIX 10.07.: Bike-Autofire zielt jetzt auf den nächsten Gegner (Uzi behält Wildspray)
+        if(this.bikeTimer>0 && !input.mouseDown) {
+            if(w==='uzi') angle=Math.random()*Math.PI*2;
+            else {
+                let nearest=null, nd=99999;
+                for(let e of enemies){ let d=Math.hypot(e.x-this.x,e.y-this.y); if(d<nd){nd=d;nearest=e;} }
+                if(nearest) angle=Math.atan2(nearest.y-(this.y+offset), nearest.x-this.x);
+            }
+        }
         let dmg=10+this.dmgBonus;
         let recoil = 0;
+        // ── CHANGE 10.07.: TASTATUR — NAHKAMPF ────────────────────────
+        if(w==='tastatur'){
+            this.meleeShots = (this.meleeShots||0) + 1;
+            this.meleeSwingTimer = 12;         // Frames für die Schwung-Animation
+            this.meleeSwingAngle = angle;
+            let mDmg = Math.floor((25 + this.dmgBonus * 1.5) * (hasTrophy('tastatur_krieger') ? 1.25 : 1.0));
+            let range = 120, arc = 1.3; // ~75° Halbbogen je Seite
+            let hitAny = false;
+            for(let e of enemies){
+                let d = Math.hypot(e.x-this.x, e.y-this.y);
+                if(d < range + e.radius){
+                    let ea = Math.atan2(e.y-this.y, e.x-this.x);
+                    let diff = Math.abs(Math.atan2(Math.sin(ea-angle), Math.cos(ea-angle)));
+                    if(diff < arc){
+                        applyElementalDamage(e, mDmg, 'neutral', e.x, e.y);
+                        e.lastHitBy = null; hitAny = true;
+                        // Knockback — Schatten & Bosse resistent
+                        if(e.label !== "DEIN SCHATTEN" && e.type !== 99){ e.x += Math.cos(ea)*35; e.y += Math.sin(ea)*35; }
+                        spawnParticles(e.x, e.y, '#f1c40f', 5);
+                    }
+                }
+            }
+            playSound(hitAny ? 'hammer' : 'hit');
+            if(hitAny) screenShake = Math.max(screenShake, 3);
+            return;
+        }
+        this.rangedShots = (this.rangedShots||0) + 1;
+        // ──────────────────────────────────────────────────────────────
         if(w==='shotgun')    {for(let i=-2;i<=2;i++) bullets.push(new Bullet(this.x,this.y+offset,angle+i*0.15,'standard',dmg)); playSound('shoot'); recoil=3;}
         else if(w==='minigun'){bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.4,'standard',dmg)); playSound('shoot');}
         else if(w==='uzi')   {bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.1,'standard',dmg)); playSound('shoot');}
@@ -7509,10 +7845,33 @@ class Player{
         if(this.vodkaTimer>0){ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(255,0,0,.3)';ctx.fillRect(-w/2,-h/2,w,h);ctx.globalCompositeOperation='source-over';}
         if(this.shieldTimer>0){ctx.beginPath();ctx.arc(0,0,50,0,Math.PI*2);ctx.strokeStyle=`rgba(0,255,255,${.5+Math.sin(frame*.2)*.5})`;ctx.lineWidth=3;ctx.stroke();if(!window._use3d)this.shieldTimer--;}
         if(this.sapDebuffTimer>0){ctx.beginPath();ctx.arc(0,0,55,0,Math.PI*2);ctx.strokeStyle=`rgba(31,97,141,${.6+Math.sin(frame*.3)*.4})`;ctx.lineWidth=4;ctx.stroke();}
+        // CHANGE 10.07.: Orbit-Maus — mehrere Mäuse (mouseCount) + variabler Radius (mouseRadius)
         if(this.mouseTimer > 0){
-            let ox=Math.cos(this.orbitAngle)*180, oy=Math.sin(this.orbitAngle)*180-10;
-            ctx.strokeStyle='#555'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(ox,oy); ctx.stroke();
-            ctx.fillStyle='#ccc'; ctx.save(); ctx.translate(ox,oy); ctx.rotate(this.orbitAngle+Math.PI/2); ctx.fillRect(-6,-10,12,20); ctx.fillStyle='#f00'; ctx.fillRect(-2,-8,4,4); ctx.restore();
+            let mCount = this.mouseCount || 1;
+            let mRad = this.mouseRadius || 180;
+            for(let mi=0; mi<mCount; mi++){
+                let ma = this.orbitAngle + (Math.PI*2/mCount)*mi;
+                let ox=Math.cos(ma)*mRad, oy=Math.sin(ma)*mRad-10;
+                ctx.strokeStyle='#555'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(ox,oy); ctx.stroke();
+                ctx.fillStyle='#ccc'; ctx.save(); ctx.translate(ox,oy); ctx.rotate(ma+Math.PI/2); ctx.fillRect(-6,-10,12,20); ctx.fillStyle='#f00'; ctx.fillRect(-2,-8,4,4); ctx.restore();
+            }
+        }
+        // CHANGE 10.07.: TASTATUR-SCHWUNG-ANIMATION (Nahkampf)
+        if(this.meleeSwingTimer > 0){
+            let prog = 1 - (this.meleeSwingTimer / 12);           // 0 → 1
+            let swing = this.meleeSwingAngle - 1.1 + prog * 2.2;  // Bogen von -63° bis +63°
+            let kx = Math.cos(swing)*85, ky = Math.sin(swing)*85 - 10;
+            // Schwungspur
+            ctx.strokeStyle = 'rgba(241,196,15,'+(0.6*(1-prog))+')';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.arc(0, -10, 85, this.meleeSwingAngle - 1.1, swing);
+            ctx.stroke();
+            // Die Tastatur selbst
+            ctx.save(); ctx.translate(kx, ky); ctx.rotate(swing + Math.PI/2);
+            ctx.font='38px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+            ctx.fillText('⌨️', 0, 0);
+            ctx.restore();
         }
         ctx.globalAlpha=1; ctx.filter="none"; ctx.restore();
     }
@@ -8518,9 +8877,59 @@ function drawWorld(){
 }
 
 // ============================================================
+// CHANGE 10.07.: KLOSKA-KOMMENTATOR
+// Kloska erscheint unten links und macht uns humorvoll runter — DE & PL.
+// Erscheint alle 35–75s während des Runs für 7 Sekunden.
+// ============================================================
+const KLOSKA_INSULTS = [
+    "Kurwa... ich hab Praktikanten gesehen, die besser zielen. Und die waren blind.",
+    "Das nennst du spielen? Mein Gabelstapler fährt eleganter. Im Rückwärtsgang.",
+    "Ty głąbie! Die Suppe ist zum ESSEN da, nicht zum Sammeln wie Briefmarken!",
+    "Weißt du was? Ich verkauf dir gar nichts mehr. Doch. Aber teurer.",
+    "Boże drogi... sogar der Thinclient hat mehr FPS als dein Gehirn.",
+    "Deine Hechtrolle sieht aus wie ein Sack Kartoffeln beim Umfallen. Ziemniaki!",
+    "Ich hab dem Maddin gesagt, du schaffst das. Wir haben beide gelacht.",
+    "Nie no... 3 Azubis und trotzdem stirbst du? Die tragen dich doch schon!",
+    "In Polen hätten wir das Ticket längst gelöst. Mit Hammer. Und Wodka.",
+    "Dein Aim ist wie SAP am Montagmorgen — theoretisch vorhanden.",
+    "Psst... kauf was bei mir. Nicht weil du's brauchst. Weil du's NÖTIG hast.",
+    "Ja pierdolę... du rennst vor GEWÜRM weg. Vor WÜRMERN. Denk mal drüber nach.",
+    "Der Bayer fragt schon, ob du Home Office machst. Auf dem Boden. Liegend.",
+    "Masz dwie lewe ręce! Zwei linke Hände! Und beide klicken daneben!",
+    "Ich geb dir Rabatt, wenn du aufhörst so zu spielen. Ehrenwort. Słowo honoru.",
+    "Deine Combo bricht schneller ab als das WLAN im Leitstand.",
+    "Weißt du, was du und ein IDOC-Fehler gemeinsam habt? Keiner will euch, beide bleiben.",
+    "No dobra... ich hab schlechtere gesehen. Gelogen. Hab ich nicht.",
+    "Selbst der Kaffeeautomat gibt mehr Leistung ab. Und der ist seit 2019 kaputt.",
+    "Uważaj! Da vorne! Ach egal, du läufst ja eh rein. Wie immer."
+];
+let _kloskaTalkTimer = 1200; // erste Beleidigung nach ~20s
+let _kloskaHideTimer = 0;
+function kloskaTalkerTick(){
+    let el = document.getElementById('kloskaTalker');
+    if(!el) return;
+    if(!gameRunning || gamePaused){ el.style.display='none'; return; }
+    if(_kloskaHideTimer > 0){
+        _kloskaHideTimer--;
+        if(_kloskaHideTimer <= 0) el.style.display='none';
+        return;
+    }
+    _kloskaTalkTimer--;
+    if(_kloskaTalkTimer <= 0){
+        let txt = KLOSKA_INSULTS[Math.floor(Math.random()*KLOSKA_INSULTS.length)];
+        let tEl = document.getElementById('kloskaBubbleText');
+        if(tEl) tEl.innerText = txt;
+        el.style.display='block';
+        _kloskaHideTimer = 420;                              // 7s sichtbar
+        _kloskaTalkTimer = 2100 + Math.floor(Math.random()*2400); // nächster in 35–75s
+    }
+}
+
+// ============================================================
 // SECTION 15 — HUD UPDATE
 // ============================================================
 function updateHUD(){
+    kloskaTalkerTick();
     let rallyInfo = player.orangeHp > 0 ? ` (+${Math.ceil(player.orangeHp)})` : "";
     document.getElementById('hud-hp').innerText = Math.floor(player.hp) + "%" + rallyInfo;
     document.getElementById('hud-score').innerText = score;
@@ -8540,6 +8949,19 @@ function updateHUD(){
         else modeEl.style.textShadow = "2px 2px 0 #000";
     }
     
+    // CHANGE 10.07.: Azubi/Junior/Senior-Zähler im HUD (zwischen Modus und Portrait)
+    const azEl = document.getElementById('hud-azubis');
+    if(azEl) {
+        let cAz=0, cJr=0, cSr=0;
+        for(let t of turrets){ if(t.level>=2) cSr++; else if(t.level===1) cJr++; else cAz++; }
+        let lines = [];
+        if(cAz>0) lines.push('📎 AZUBIS | ' + cAz);
+        if(cJr>0) lines.push('💻 JUNIOR | ' + cJr);
+        if(cSr>0) lines.push('🖨️ SENIOR | ' + cSr);
+        if(lines.length > 0) { azEl.style.display='block'; azEl.innerText = lines.join('\n'); }
+        else azEl.style.display='none';
+    }
+
     let fi = document.getElementById('hud-face');
     let ts = player.isMartin ? "maddinl.png" : "wurml.png";
     if(fi && !fi.src.includes(ts)) fi.src = ts;
@@ -8906,13 +9328,42 @@ function openDeckBuilder() {
     ol.style.display='flex';
     renderDeckBuilder();
 }
+// CHANGE 10.07.: Karten verkaufen im Deck-Builder (nach Seltenheit gestaffelt, Wurmcoins)
+const DECK_SELL_VALUES = {'Gewöhnlich':25, 'Selten':100, 'Episch':400, 'Legendär':1200};
+function deckSellValue(card){ return card.ultra ? 4000 : (DECK_SELL_VALUES[card.rarity]||25); }
+function sellDeckCard(index){
+    let c = cardInventory[index];
+    if(!c) return;
+    let val = deckSellValue(c);
+    if(!confirm('🗑 "'+c.name+'" ('+c.rarity+(c.ultra?' · ULTRA':'')+') in den Aktenvernichter?\n\nErlös: +'+val+' Wurmcoins 🪙')) return;
+    cardInventory.splice(index, 1);
+    wurmcoins += val;
+    lsSet('ts_wurmcoins', wurmcoins);
+    saveCardData();
+    saveProgress();
+    playSound('hit');
+    showToast('KARTE VERKAUFT', '#c0392b', '+'+val+' Wurmcoins 🪙');
+    renderDeckBuilder();
+}
 function renderDeckBuilder() {
     let grid=document.getElementById('deckBuilderGrid'); if(!grid) return;
     let cnt=deckCount();
     let cEl=document.getElementById('deckBuilderCount');
     if(cEl){ cEl.innerText = cnt+' / 20 Karten im Deck'; cEl.style.color = cnt===20?'#2ecc71':(cnt>0?'#f1c40f':'#e74c3c'); }
     let rColMap={'Gewöhnlich':'#888','Selten':'#3498db','Episch':'#9b59b6','Legendär':'#f1c40f'};
-    grid.innerHTML = cardInventory.map((card,index)=>{
+    // CHANGE 10.07.: Sortierung — Monster und Zauber getrennt, jeweils nach Qualität (Legendär → Gewöhnlich)
+    let rOrder={'Legendär':0,'Episch':1,'Selten':2,'Gewöhnlich':3};
+    let indexed = cardInventory.map((card,index)=>({card,index}));
+    let sortFn = (a,b)=>{
+        let ua=a.card.ultra?-1:0, ub=b.card.ultra?-1:0;
+        if(ua!==ub) return ua-ub;
+        let ra=rOrder[a.card.rarity]??9, rb=rOrder[b.card.rarity]??9;
+        if(ra!==rb) return ra-rb;
+        return ((b.card.pvpAtk||0)+(b.card.pvpDef||0))-((a.card.pvpAtk||0)+(a.card.pvpDef||0));
+    };
+    let monsters = indexed.filter(e=>!pvpIsSpell(e.card)).sort(sortFn);
+    let spells   = indexed.filter(e=>pvpIsSpell(e.card)).sort(sortFn);
+    let renderCard = ({card,index})=>{
         let isSpell=pvpIsSpell(card);
         let playable=!isSpell || !!pvpSpellOf(card);
         let rCol=card.ultra?'#ff00ff':(rColMap[card.rarity]||'#888');
@@ -8932,8 +9383,17 @@ function renderDeckBuilder() {
                   : `<span style="color:#e74c3c;">⚔ ${pvA(card)}</span>&nbsp;&nbsp;<span style="color:#3498db;">🛡 ${pvD(card)}</span>`}
             </div>
             <div style="color:#aaa;font-size:10px;line-height:1.4;">${pvpFxText(card)}</div>
+            <button onclick="event.stopPropagation();sellDeckCard(${index})" title="Karte verkaufen"
+                style="margin-top:8px;width:100%;background:#1a0d0d;color:#e74c3c;border:1px solid #7a1f1f;padding:4px 6px;font-size:10px;cursor:pointer;font-family:'Courier New',monospace;border-radius:3px;">
+                🗑 VERKAUFEN (+${deckSellValue(card)} 🪙)</button>
         </div>`;
-    }).join('');
+    };
+    let header = (txt,col)=>`<div style="grid-column:1/-1;color:${col};font-size:13px;font-weight:bold;letter-spacing:3px;border-bottom:1px solid ${col}44;padding:6px 2px 4px;">${txt}</div>`;
+    let html = '';
+    if(monsters.length){ html += header('🐉 MONSTER ('+monsters.length+')','#e74c3c') + monsters.map(renderCard).join(''); }
+    if(spells.length){ html += header('✨ ZAUBER ('+spells.length+')','#9b59b6') + spells.map(renderCard).join(''); }
+    if(!html) html = '<div style="grid-column:1/-1;color:#666;text-align:center;padding:30px;">Keine Karten. Öffne Akten im Karten-Menü.</div>';
+    grid.innerHTML = html;
     updateDeckBtn();
 }
 
@@ -10715,6 +11175,7 @@ function loop(){
             }
         }
 
+        skillFrameTick(); // CHANGE 10.07.: Skilltree-Frame-Effekte (Regen, Schildwall, Chaostheorie ...)
         for(let t of turrets) t.update();
 
         // === VEHICLES (Gabelstapler + LKW) ===
@@ -10819,16 +11280,22 @@ function loop(){
             }
         }
 
+        // CHANGE 10.07.: Orbit-Maus — mehrere Mäuse + variabler Radius (Kloska-Upgrades)
         if (player.mouseTimer > 0) {
-            let mx = player.x + Math.cos(player.orbitAngle) * 180;
-            let my = player.y + Math.sin(player.orbitAngle) * 180 - 10;
-            for (let e of enemies) {
-                if (Math.hypot(e.x - mx, e.y - my) < e.radius + 35) {
-                    if (e.mouseCooldown <= 0) {
-                        applyElementalDamage(e, 50 + player.dmgBonus, 'neutral', e.x, e.y); e.mouseCooldown = 15;
-                        spawnParticles(e.x, e.y, '#f00', 8); playSound('hit');
-                        let a = Math.atan2(e.y - my, e.x - mx);
-                        e.x += Math.cos(a) * 40; e.y += Math.sin(a) * 40;
+            let mCount = player.mouseCount || 1;
+            let mRad = player.mouseRadius || 180;
+            for (let mi = 0; mi < mCount; mi++) {
+                let ma = player.orbitAngle + (Math.PI * 2 / mCount) * mi;
+                let mx = player.x + Math.cos(ma) * mRad;
+                let my = player.y + Math.sin(ma) * mRad - 10;
+                for (let e of enemies) {
+                    if (Math.hypot(e.x - mx, e.y - my) < e.radius + 35) {
+                        if (e.mouseCooldown <= 0) {
+                            applyElementalDamage(e, 50 + player.dmgBonus, 'neutral', e.x, e.y); e.mouseCooldown = 15;
+                            spawnParticles(e.x, e.y, '#f00', 8); playSound('hit');
+                            let a = Math.atan2(e.y - my, e.x - mx);
+                            e.x += Math.cos(a) * 40; e.y += Math.sin(a) * 40;
+                        }
                     }
                 }
             }
@@ -10959,7 +11426,16 @@ function loop(){
                     case 'suppe': 
                         player.suppe++; player.runSuppen++;
                         if(player.runSuppen === 50) unlockTrophy('soup_king');
-                        playSound('powerup'); showToast("SUPPE! 🥣", "#ff9f43", "Zahlungsmittel für Kloska"); 
+                        // BUG FIX 10.07.: Suppen-Heilung war nie implementiert (Job-Passivs & Skill 'Erste Hilfe Pro' liefen ins Leere).
+                        // Suppe heilt jetzt 10 HP Basis + alle _suppeHealBonus-Quellen. Blockiert in SURVIVAL/WEGFLEXEN (wie Chicken).
+                        if(currentDiffLabel !== "SURVIVAL" && !isWegflexenMode) {
+                            let sHeal = 10 + (player._suppeHealBonus || 0);
+                            player.hp = Math.min(player.maxHp, player.hp + sHeal);
+                            floatingTexts.push(new FloatingText(player.x, player.y - 25, "+" + sHeal + " HP", "#2ecc71"));
+                        }
+                        // SKILL x14 'Kaffee-Rausch': 5s +25% Speed / +10% Schaden beim Aufsammeln
+                        if(player._suppeRush) { player._suppeRushTimer = 300; }
+                        playSound('powerup'); showToast("SUPPE! 🥣", "#ff9f43", "Heilt & Zahlungsmittel für Kloska"); 
                         floatingTexts.push(new FloatingText(player.x,player.y,"+1 SUPPE","#ff9f43"));
                         break; 
                     case 'akte': 
@@ -10985,7 +11461,7 @@ function loop(){
         wep = item._forcedWeapon;
         floatingTexts.push(new FloatingText(item.x, item.y-30, '🔫 WAFFENKAMMER!', '#e74c3c'));
     } else {
-        const w=['minigun','shotgun','rocket','uzi','ak47','railgun','flamer','mouse'];
+        const w=['minigun','shotgun','rocket','uzi','ak47','railgun','flamer','mouse','tastatur'];
         wep = w[Math.floor(Math.random()*w.length)];
     }
     player.equipWeapon(wep);
@@ -11006,7 +11482,7 @@ function loop(){
                         playSound('vacation');showToast("+1 URLAUBSTAG! 💤","#ffff00","Minusstunden gespart");
                         floatingTexts.push(new FloatingText(player.x,player.y,"+1 URLAUB!","#ffff00"));
                         break;  
-                    case 'bike':    player.bikeTimer=600;playSound('powerup');showToast("RADL-RAMBO! 🚲","#0f0","Speed x2 + Autofire");floatingTexts.push(new FloatingText(player.x,player.y,"RADL-RAMBO!","#0f0"));break;
+                    case 'bike':    player.bikeTimer=300;playSound('powerup');showToast("RADL-RAMBO! 🚲","#0f0","5s Speed-Boost + Autofire");floatingTexts.push(new FloatingText(player.x,player.y,"RADL-RAMBO!","#0f0"));break;
                     case 'briefcase':
                         player.maxHp += 50;
                         if(currentDiffLabel !== "SURVIVAL" && !isWegflexenMode) player.hp = player.maxHp;
@@ -11033,6 +11509,8 @@ function loop(){
         updateHUD();
 
         if(frame === 10800 && player.shotsFired === 0) unlockTrophy('pacifist');
+        // CHANGE 10.07.: Tastatur-Krieger — 3 Min überlebt, NUR Nahkampf benutzt (min. 50 Hiebe)
+        if(frame === 10800 && (player.meleeShots||0) >= 50 && (player.rangedShots||0) === 0) unlockTrophy('tastatur_krieger');
         if(systemCollapse && collapseTimer === 10800) unlockTrophy('collapse_survivor');
         // CHANGE 09.07.: 420 Sekunden (25200 Frames) in Burnout oder höher überleben
         if(frame >= 25200 && !hasTrophy('fps_zero') && ['BURNOUT','SURVIVAL','WEGFLEXEN','WEIL WEGEN FELIX'].includes(currentDiffLabel)) unlockTrophy('fps_zero');
@@ -11296,6 +11774,15 @@ function buyKloskaItem(item, cost) {
         document.getElementById('shopSuppenCount').innerText = player.suppe;
         playSound('powerup');
         if(item === 'perm_mouse') { player.mouseTimer = Infinity; showToast("GEKAUFT!", "#0ff", "PERMANENTE ORBIT MAUS"); }
+        // CHANGE 10.07.: Orbit-Maus-Upgrades
+        if(item === 'mouse_twin') {
+            if(player.mouseCount >= 2) { player.suppe += finalCost; showToast("SCHON GEKAUFT!", "#888", "Du hast bereits 2 Orbit-Mäuse."); }
+            else { player.mouseCount = 2; showToast("GEKAUFT!", "#0ff", "ZWEITE ORBIT-MAUS AKTIV 🖱️🖱️"); }
+        }
+        if(item === 'mouse_radius') {
+            if(player.mouseRadius >= 300) { player.suppe += finalCost; showToast("MAXIMUM!", "#888", "Radius ist bereits maximal (300px)."); }
+            else { player.mouseRadius += 60; showToast("GEKAUFT!", "#0ff", "ORBIT-RADIUS: " + player.mouseRadius + "px"); }
+        }
         if(item === 'thinclient') { player.idocBlocker = true; showToast("GEKAUFT!", "#0ff", "KEINE PROZESSAUSFÄLLE MEHR"); }
         if(item === 'azubi_army') { 
             turrets.push(new Turret(player.x - 50, player.y + 50));
@@ -11555,7 +12042,14 @@ const CNC_BUILDINGS = {
     labor:   { icon:'🧪', name:'Labor',          desc:'+10% Klickkraft je Labor.',
                cost:{chip:25, blade:5}, max:3, req:'radar' },
     tresor:  { icon:'🏆', name:'Ticket-Tresor',  desc:'Endgame: +25% Raid-Beute. Braucht Goldene Tickets.',
-               cost:{blade:10, gold:3}, max:2, req:'labor' }
+               cost:{blade:10, gold:3}, max:2, req:'labor' },
+    // ══ CHANGE 10.07.: NEUE VERTEIDIGUNGS-GEBÄUDE (auch für PvP) ══
+    mauer:   { icon:'🧱', name:'Stahlmauer',     desc:'DEF: -10% Chance je Mauer, dass Gegner im PvP deine Gebäude zerstören.',
+               cost:{schrott:70, kabel:10}, max:4, req:'hq' },
+    flak:    { icon:'🚀', name:'Flak-Stellung',  desc:'DEF: +15% Verteidigungskraft je Flak gegen PvP-Angriffe & Raids.',
+               cost:{schrott:90, kabel:25, chip:8}, max:4, req:'kaserne' },
+    bunker:  { icon:'🛡️', name:'Bunker',         desc:'DEF: Verlorene Raids kosten -20% weniger Material je Bunker.',
+               cost:{schrott:120, chip:12, blade:1}, max:2, req:'mauer' }
 };
 // State migrieren (haengt am idleState -> wird automatisch mitgespeichert)
 if(!idleState.cnc || typeof idleState.cnc !== 'object'){
@@ -11666,12 +12160,157 @@ function cncRaid(){
     } else {
         idleState.cnc.raidsLost = (idleState.cnc.raidsLost||0) + 1;
         let lossPct = Math.max(0.05, 0.25 - cncCount('turm') * 0.0375); // Tuerme daempfen Verluste
+        lossPct *= Math.max(0.4, 1 - cncCount('bunker') * 0.20); // CHANGE 10.07.: Bunker daempfen zusaetzlich
         let loss = Math.floor((idleState.cnc.items.schrott||0) * lossPct);
         idleState.cnc.items.schrott -= loss;
         showToast('☠️ RAID VERLOREN', '#e74c3c', '('+pPow+' vs '+ePow+') -'+loss+' Schrott');
         playSound('hit');
+        // CHANGE 10.07.: Geheime Trophaee — 100 verlorene Raids. Kein Bonus. Nur Schande.
+        if((idleState.cnc.raidsLost||0) >= 100) unlockTrophy('teilnehmerurkunde');
     }
     idleSave(); renderCnc();
+}
+
+// CHANGE 10.07.: Live-Countdown fuer den Raid-Button (lief vorher nur beim Rendern einmal)
+let _cncCdInterval = null;
+function cncStartCdTicker(){
+    if(_cncCdInterval) clearInterval(_cncCdInterval);
+    _cncCdInterval = setInterval(function(){
+        let ov = document.getElementById('cncOverlay');
+        if(!ov || ov.style.display === 'none'){ clearInterval(_cncCdInterval); _cncCdInterval = null; return; }
+        let btn = document.getElementById('cncRaidBtn');
+        if(!btn) return;
+        let cdLeft = Math.max(0, 60 - Math.floor((Date.now() - (idleState.cnc.lastRaid||0))/1000));
+        btn.innerText = cdLeft > 0 ? ('⏳ TRUPPEN BEREIT IN '+cdLeft+'s') : '⚔️ RAID STARTEN';
+        btn.style.background = cdLeft > 0 ? '#331111' : '#7a1f1f';
+        let pbtn = document.getElementById('cncPvpRaidBtn');
+        if(pbtn && !pbtn.disabled) {
+            pbtn.innerText = cdLeft > 0 ? ('⏳ PVP BEREIT IN '+cdLeft+'s') : '🌐 SPIELER ANGREIFEN';
+        }
+    }, 1000);
+}
+
+// ============================================================
+// C&C PHASE 2 — FIREBASE-PVP (10.07.)
+// Nutzt die bereits vorhandene Firestore-Instanz (db) + Anon-Auth.
+//
+// ┌─ FIREBASE-ANLEITUNG (falls neues Projekt gewuenscht) ──────────────┐
+// │ 1. console.firebase.google.com → Projekt anlegen                   │
+// │ 2. Build → Firestore Database → "Create database" (Production)     │
+// │ 3. Build → Authentication → Sign-in method → "Anonymous" AKTIVIEREN│
+// │ 4. Projekteinstellungen → "Web-App" hinzufuegen → Config kopieren  │
+// │    und oben in `firebaseConfig` (SECTION 2) einsetzen              │
+// │ 5. Firestore → Rules → folgendes einfuegen & publishen:            │
+// │    rules_version = '2';                                            │
+// │    service cloud.firestore {                                       │
+// │      match /databases/{database}/documents {                       │
+// │        match /cnc_bases/{uid} {                                    │
+// │          allow read: if request.auth != null;                      │
+// │          allow write: if request.auth != null;                     │
+// │        }                                                           │
+// │        match /pvp_matches/{doc} { allow read, write: if request.auth != null; } │
+// │        match /highscores/{doc}  { allow read, write: if request.auth != null; } │
+// │      }                                                             │
+// │    }                                                               │
+// │ Das Spiel loggt sich automatisch anonym ein (SECTION 2).           │
+// └─────────────────────────────────────────────────────────────────────┘
+function cncDefense(){
+    // Verteidigungskraft = Kampfkraft-Basis + Flaks (+15% je) + Tuerme (+8% je) + Mauern (+5% je)
+    let base = cncPower();
+    return Math.floor(base * (1 + cncCount('flak')*0.15 + cncCount('turm')*0.08 + cncCount('mauer')*0.05));
+}
+function cncPvpName(){
+    let n = lsGet('ts_playername', '') || lsGet('ts_hs_name', '');
+    if(!n) n = 'Leitstand-' + Math.floor(Math.random()*9000+1000);
+    return String(n).slice(0, 20);
+}
+function cncPvpLogMsg(msg){
+    let el = document.getElementById('cncPvpLog');
+    if(el) el.innerHTML = '<div>› '+msg+'</div>' + el.innerHTML;
+}
+// Eigene Basis in die Cloud schreiben (wird beim Oeffnen der Zentrale aktualisiert)
+function cncPvpEnsureBase(){
+    if(!db || !auth || !auth.currentUser || !cncHasHq()) return;
+    let uid = auth.currentUser.uid;
+    db.collection('cnc_bases').doc(uid).set({
+        name: cncPvpName(),
+        power: cncPower(),
+        defense: cncDefense(),
+        grid: idleState.cnc.grid,
+        schrott: idleState.cnc.items.schrott||0,
+        raidsWon: idleState.cnc.raidsWon||0,
+        raidsLost: idleState.cnc.raidsLost||0,
+        updated: Date.now()
+    }, {merge:true}).catch(e=>console.warn('cnc base sync:', e));
+}
+// PvP-Angriff: zufaellige fremde Basis laden, Kampf ausrechnen, ggf. Gebaeude zerstoeren
+function cncPvpAttack(){
+    if(!db){ showToast('OFFLINE','#e74c3c','Firebase nicht konfiguriert — Anleitung im Code (C&C PHASE 2)'); return; }
+    if(!auth || !auth.currentUser){ showToast('NICHT VERBUNDEN','#e67e22','Anonymer Login laeuft noch — kurz warten.'); return; }
+    if(!cncHasHq()){ showToast('KEIN HQ','#e74c3c','Baue zuerst das Hauptquartier!'); return; }
+    let now = Date.now();
+    let cd = 60000; // teilt sich den 60s-Cooldown mit PvE-Raids
+    if(now - (idleState.cnc.lastRaid||0) < cd){
+        showToast('TRUPPEN ERSCHOEPFT','#e67e22','Noch '+Math.ceil((cd-(now-idleState.cnc.lastRaid))/1000)+'s Cooldown');
+        return;
+    }
+    let myUid = auth.currentUser.uid;
+    db.collection('cnc_bases').orderBy('updated','desc').limit(25).get().then(function(snap){
+        let targets = [];
+        snap.forEach(function(doc){ if(doc.id !== myUid) targets.push({id:doc.id, d:doc.data()}); });
+        if(targets.length === 0){ showToast('KEINE GEGNER','#888','Noch keine anderen Basen online. PvE-Raid nutzen!'); return; }
+        let t = targets[Math.floor(Math.random()*targets.length)];
+        idleState.cnc.lastRaid = Date.now();
+        let pPow = cncPower();
+        let ePow = Math.max(10, t.d.defense || t.d.power || 10);
+        let winChance = pPow / (pPow + ePow);
+        let won = Math.random() < winChance;
+        let tGrid = Array.isArray(t.d.grid) ? t.d.grid.slice() : [];
+        if(won){
+            idleState.cnc.raidsWon = (idleState.cnc.raidsWon||0) + 1;
+            let lootMult = (1 + cncCount('radar')*0.20) * (1 + cncCount('tresor')*0.25);
+            let loot = {
+                schrott: Math.floor((10 + Math.random()*20) * lootMult),
+                kabel:   Math.floor((4 + Math.random()*8) * lootMult),
+                chip:    Math.random() < 0.6 ? Math.max(1, Math.floor((1 + Math.random()*3) * lootMult)) : 0,
+                blade:   Math.random() < 0.25 ? 1 : 0,
+                gold:    Math.random() < 0.08 ? 1 : 0
+            };
+            let lootStr = Object.keys(loot).filter(k=>loot[k]>0).map(k=>{ idleState.cnc.items[k]+=loot[k]; return CNC_ITEMS[k].icon+'+'+loot[k]; }).join(' ');
+            // GEBAEUDE-ZERSTOERUNG: 35% Basis, jede gegnerische Mauer -10% (min 5%)
+            let enemyMauern = tGrid.filter(c=>c==='mauer').length;
+            let destroyChance = Math.max(0.05, 0.35 - enemyMauern*0.10);
+            let destroyed = null;
+            if(Math.random() < destroyChance){
+                let idxs = tGrid.map((c,i)=>c && c!=='hq' ? i : -1).filter(i=>i>=0);
+                if(idxs.length > 0){
+                    let di = idxs[Math.floor(Math.random()*idxs.length)];
+                    destroyed = tGrid[di];
+                    tGrid[di] = null;
+                    db.collection('cnc_bases').doc(t.id).update({ grid: tGrid, raidsLost: (t.d.raidsLost||0)+1 }).catch(()=>{});
+                }
+            } else {
+                db.collection('cnc_bases').doc(t.id).update({ raidsLost: (t.d.raidsLost||0)+1 }).catch(()=>{});
+            }
+            playSound('evolve');
+            showToast('🌐 PVP GEWONNEN!', '#00bbff', 'vs '+(t.d.name||'???')+' ('+pPow+' vs '+ePow+') — '+lootStr);
+            cncPvpLogMsg('✅ Sieg gegen <b>'+(t.d.name||'???')+'</b> ('+pPow+' vs '+ePow+') — Beute: '+lootStr + (destroyed ? ' — 💥 <b style="color:#e74c3c;">'+CNC_BUILDINGS[destroyed].icon+' '+CNC_BUILDINGS[destroyed].name+' ZERSTOERT!</b>' : ' — Zerstoerung fehlgeschlagen ('+Math.round(destroyChance*100)+'% Chance)'));
+        } else {
+            idleState.cnc.raidsLost = (idleState.cnc.raidsLost||0) + 1;
+            let lossPct = Math.max(0.05, 0.20 - cncCount('bunker')*0.05);
+            let loss = Math.floor((idleState.cnc.items.schrott||0) * lossPct);
+            idleState.cnc.items.schrott -= loss;
+            db.collection('cnc_bases').doc(t.id).update({ raidsWon: (t.d.raidsWon||0)+1 }).catch(()=>{});
+            playSound('hit');
+            showToast('☠️ PVP VERLOREN', '#e74c3c', 'vs '+(t.d.name||'???')+' ('+pPow+' vs '+ePow+') — -'+loss+' Schrott');
+            cncPvpLogMsg('❌ Niederlage gegen <b>'+(t.d.name||'???')+'</b> ('+pPow+' vs '+ePow+') — -'+loss+' 🔩');
+            if((idleState.cnc.raidsLost||0) >= 100) unlockTrophy('teilnehmerurkunde');
+        }
+        idleSave(); renderCnc(); cncPvpEnsureBase();
+    }).catch(function(e){
+        console.warn('cnc pvp:', e);
+        showToast('PVP-FEHLER','#e74c3c','Firestore nicht erreichbar — Rules pruefen (Anleitung im Code).');
+    });
 }
 
 function openCnc(){
@@ -11684,6 +12323,8 @@ function openCnc(){
     }
     ov.style.display = 'block';
     renderCnc();
+    cncStartCdTicker();
+    cncPvpEnsureBase(); // PvP: eigene Basis in Firebase registrieren/aktualisieren
 }
 function closeCnc(){
     let ov = document.getElementById('cncOverlay');
@@ -11733,12 +12374,16 @@ function renderCnc(){
         + '<div style="background:#000;border:2px solid #e74c3c;border-radius:6px;padding:14px;margin-bottom:12px;">'
         + '<div style="color:#e74c3c;font-weight:bold;letter-spacing:2px;margin-bottom:8px;">⚔️ MILITAER</div>'
         + '<div style="font-size:13px;margin-bottom:4px;">Kampfkraft: <b style="color:#f1c40f;">'+cncPower()+'</b> <span style="color:#666;font-size:10px;">(Ticket-Slayer-Bestscore + Base-Level + Trophaeen + Kasernen)</span></div>'
+        + '<div style="font-size:13px;margin-bottom:4px;">Verteidigung: <b style="color:#2ecc71;">'+cncDefense()+'</b> <span style="color:#666;font-size:10px;">(Kampfkraft + Flaks/Tuerme/Mauern)</span></div>'
         + '<div style="font-size:11px;color:#888;margin-bottom:10px;">Raids: <span style="color:#2ecc71;">'+(c.raidsWon||0)+' gewonnen</span> / <span style="color:#e74c3c;">'+(c.raidsLost||0)+' verloren</span></div>'
-        + '<button onclick="cncRaid()" style="width:100%;background:'+(cdLeft>0?'#331111':'#7a1f1f')+';color:#fff;border:2px solid #e74c3c;padding:12px;font-size:14px;font-weight:bold;cursor:pointer;font-family:Courier New,monospace;letter-spacing:2px;border-radius:4px;">'+(cdLeft>0 ? '⏳ TRUPPEN BEREIT IN '+cdLeft+'s' : '⚔️ RAID STARTEN')+'</button></div>'
-        + '<div style="background:#000;border:2px solid #444;border-radius:6px;padding:14px;">'
-        + '<div style="color:#888;font-weight:bold;letter-spacing:2px;margin-bottom:6px;">🌐 PVP — PHASE 2</div>'
-        + '<div style="color:#555;font-size:11px;line-height:1.6;">Online-Angriffe auf Basen anderer Spieler (Firebase) kommen im naechsten Update. Deine Basis, Items und Raid-Statistik werden dafuer uebernommen.</div>'
-        + '<button disabled style="width:100%;margin-top:8px;background:#111;color:#444;border:2px solid #333;padding:10px;font-family:Courier New,monospace;letter-spacing:2px;border-radius:4px;">🔒 BALD VERFUEGBAR</button></div>'
+        + '<button id="cncRaidBtn" onclick="cncRaid()" style="width:100%;background:'+(cdLeft>0?'#331111':'#7a1f1f')+';color:#fff;border:2px solid #e74c3c;padding:12px;font-size:14px;font-weight:bold;cursor:pointer;font-family:Courier New,monospace;letter-spacing:2px;border-radius:4px;">'+(cdLeft>0 ? '⏳ TRUPPEN BEREIT IN '+cdLeft+'s' : '⚔️ RAID STARTEN')+'</button></div>'
+        + '<div style="background:#000;border:2px solid #00bbff;border-radius:6px;padding:14px;">'
+        + '<div style="color:#00bbff;font-weight:bold;letter-spacing:2px;margin-bottom:6px;">🌐 PVP — SPIELER-RAIDS</div>'
+        + '<div style="color:#8ab;font-size:11px;line-height:1.6;margin-bottom:8px;">Greife die Basis eines anderen Spielers an. Bei Sieg: Beute + <b style="color:#e74c3c;">35% Chance ein Gebaeude des Gegners zu zerstoeren</b> (seine 🧱 Mauern senken das). Verlierst du gegen seine Verteidigung, kostet es dich Schrott.</div>'
+        + '<div id="cncPvpStatus" style="color:#666;font-size:10px;margin-bottom:8px;">'+(db ? (auth && auth.currentUser ? '✅ Online — verbunden als '+cncPvpName() : '⏳ Verbinde mit Firebase...') : '🔌 Offline — Firebase nicht konfiguriert (siehe Anleitung unten)')+'</div>'
+        + '<button id="cncPvpRaidBtn" onclick="cncPvpAttack()" '+(db?'':'disabled')+' style="width:100%;background:'+(db?'#0a2a3a':'#111')+';color:'+(db?'#fff':'#444')+';border:2px solid '+(db?'#00bbff':'#333')+';padding:12px;font-size:14px;font-weight:bold;cursor:'+(db?'pointer':'default')+';font-family:Courier New,monospace;letter-spacing:2px;border-radius:4px;">🌐 SPIELER ANGREIFEN</button>'
+        + '<div id="cncPvpLog" style="color:#789;font-size:10px;margin-top:8px;max-height:90px;overflow-y:auto;"></div>'
+        + '</div>'
         + '</div></div>'
         + buildMenu
         + '</div>';
@@ -12041,7 +12686,7 @@ function idleRenderBuildings(){
             + '<div style="flex:1;min-width:0;">'
                 + '<div style="color:#fff;font-weight:bold;font-size:14px;">'+b.name+'</div>'
                 + '<div style="color:#9a8c6a;font-size:10px;line-height:1.25;">'+desc+'</div>'
-                + '<div style="color:#2ecc71;font-size:10px;">je Stück +'+idleFmt(perUnit)+'/s'+(owned>0?' · gesamt +'+idleFmt(cps)+'/s':'')+'</div>'
+                + '<div style="color:#2ecc71;font-size:10px;">produziert je '+b.icon+': <b>+'+idleFmt(perUnit)+' 🎫/s</b>'+(owned>0?' · deine '+owned+' zusammen: <b>+'+idleFmt(cps)+' 🎫/s</b>':'')+'</div>'
                 + (owned>0 ? '<div style="color:#e67e22;font-size:10px;">'+(idleMsCount(b.id)>0?('×'+idleMilestoneMult(b.id)+' '):'')+(idleNextMs(b.id)?('noch '+(idleNextMs(b.id)-owned)+' bis ×2'):'MAX ★')+'</div>' : '')
             + '</div>'
             + '<div style="text-align:right;white-space:nowrap;">'
