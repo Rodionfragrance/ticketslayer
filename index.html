@@ -12212,10 +12212,18 @@ function cncDefense(){
     let base = cncPower();
     return Math.floor(base * (1 + cncCount('flak')*0.15 + cncCount('turm')*0.08 + cncCount('mauer')*0.05));
 }
+// CHANGE 14.07.: Identitaet = Spielername, exakt wie bei playerProfiles.
+// Kein Firebase-Auth noetig — der Name IST die Dokument-ID (cnc_bases/FELIX).
 function cncPvpName(){
-    let n = lsGet('ts_playername', '') || lsGet('ts_hs_name', '');
-    if(!n) n = 'Leitstand-' + Math.floor(Math.random()*9000+1000);
-    return String(n).slice(0, 20);
+    let el = document.getElementById('playerName');
+    let n = el ? el.value : '';
+    n = (n||'').toUpperCase().trim();
+    if(!n) n = String(lsGet('ts_name', '') || '').toUpperCase().trim();
+    return n; // '' oder 'ANONYM' = kein Cloud-Profil = kein PvP
+}
+function cncPvpHasIdentity(){
+    let n = cncPvpName();
+    return !!n && n !== 'ANONYM';
 }
 function cncPvpLogMsg(msg){
     let el = document.getElementById('cncPvpLog');
@@ -12223,10 +12231,10 @@ function cncPvpLogMsg(msg){
 }
 // Eigene Basis in die Cloud schreiben (wird beim Oeffnen der Zentrale aktualisiert)
 function cncPvpEnsureBase(){
-    if(!db || !auth || !auth.currentUser || !cncHasHq()) return;
-    let uid = auth.currentUser.uid;
-    db.collection('cnc_bases').doc(uid).set({
-        name: cncPvpName(),
+    if(!db || !cncPvpHasIdentity() || !cncHasHq()) return; // CHANGE 14.07.: kein Auth mehr noetig
+    let myName = cncPvpName();
+    db.collection('cnc_bases').doc(myName).set({
+        name: myName,
         power: cncPower(),
         defense: cncDefense(),
         grid: idleState.cnc.grid,
@@ -12238,8 +12246,9 @@ function cncPvpEnsureBase(){
 }
 // PvP-Angriff: zufaellige fremde Basis laden, Kampf ausrechnen, ggf. Gebaeude zerstoeren
 function cncPvpAttack(){
-    if(!db){ showToast('OFFLINE','#e74c3c','Firebase nicht konfiguriert — Anleitung im Code (C&C PHASE 2)'); return; }
-    if(!auth || !auth.currentUser){ showToast('NICHT VERBUNDEN','#e67e22','Anonymer Login laeuft noch — kurz warten.'); return; }
+    if(!db){ showToast('OFFLINE','#e74c3c','Keine Verbindung — Adblocker/Firewall pruefen.'); return; }
+    // CHANGE 14.07.: PvP braucht ein Cloud-Profil (Name), genau wie das Speichern im Hauptmenue
+    if(!cncPvpHasIdentity()){ showToast('KEIN PROFIL','#e67e22','Trage im Hauptmenue einen Spielernamen ein — ohne Profil kein PvP.'); return; }
     if(!cncHasHq()){ showToast('KEIN HQ','#e74c3c','Baue zuerst das Hauptquartier!'); return; }
     let now = Date.now();
     let cd = 60000; // teilt sich den 60s-Cooldown mit PvE-Raids
@@ -12247,10 +12256,10 @@ function cncPvpAttack(){
         showToast('TRUPPEN ERSCHOEPFT','#e67e22','Noch '+Math.ceil((cd-(now-idleState.cnc.lastRaid))/1000)+'s Cooldown');
         return;
     }
-    let myUid = auth.currentUser.uid;
+    let myName = cncPvpName();
     db.collection('cnc_bases').orderBy('updated','desc').limit(25).get().then(function(snap){
         let targets = [];
-        snap.forEach(function(doc){ if(doc.id !== myUid) targets.push({id:doc.id, d:doc.data()}); });
+        snap.forEach(function(doc){ if(doc.id !== myName) targets.push({id:doc.id, d:doc.data()}); });
         if(targets.length === 0){ showToast('KEINE GEGNER','#888','Noch keine anderen Basen online. PvE-Raid nutzen!'); return; }
         let t = targets[Math.floor(Math.random()*targets.length)];
         idleState.cnc.lastRaid = Date.now();
@@ -12354,6 +12363,14 @@ function renderCnc(){
         buildMenu += '<button onclick="_cncSelectedCell=-1;renderCnc()" style="width:100%;background:#222;color:#aaa;border:1px solid #444;padding:8px;cursor:pointer;font-family:Courier New,monospace;">ABBRECHEN</button></div>';
     }
     let cdLeft = Math.max(0, 60 - Math.floor((Date.now() - (c.lastRaid||0))/1000));
+    // CHANGE 14.07.: PvP-Status haengt am Spielernamen (= Cloud-Profil), nicht an Firebase-Auth
+    let _pvpName = cncPvpName();
+    let _pvpOk = !!db && cncPvpHasIdentity();
+    let _pvpStatusTxt = !db
+        ? '🔌 Offline — keine Verbindung zur Cloud (Adblocker/Firewall?)'
+        : (_pvpOk
+            ? '✅ Online — deine Basis kaempft als <b style="color:#00bbff;">' + _pvpName + '</b>'
+            : '⚠️ Kein Profil — trage im Hauptmenue einen Spielernamen ein, dann ist PvP freigeschaltet.');
     ov.innerHTML =
         '<div style="max-width:900px;margin:0 auto;">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">'
@@ -12373,8 +12390,8 @@ function renderCnc(){
         + '<div style="background:#000;border:2px solid #00bbff;border-radius:6px;padding:14px;">'
         + '<div style="color:#00bbff;font-weight:bold;letter-spacing:2px;margin-bottom:6px;">🌐 PVP — SPIELER-RAIDS</div>'
         + '<div style="color:#8ab;font-size:11px;line-height:1.6;margin-bottom:8px;">Greife die Basis eines anderen Spielers an. Bei Sieg: Beute + <b style="color:#e74c3c;">35% Chance ein Gebaeude des Gegners zu zerstoeren</b> (seine 🧱 Mauern senken das). Verlierst du gegen seine Verteidigung, kostet es dich Schrott.</div>'
-        + '<div id="cncPvpStatus" style="color:#666;font-size:10px;margin-bottom:8px;">'+(db ? (auth && auth.currentUser ? '✅ Online — verbunden als '+cncPvpName() : '⏳ Verbinde mit Firebase...') : '🔌 Offline — Firebase nicht konfiguriert (siehe Anleitung unten)')+'</div>'
-        + '<button id="cncPvpRaidBtn" onclick="cncPvpAttack()" '+(db?'':'disabled')+' style="width:100%;background:'+(db?'#0a2a3a':'#111')+';color:'+(db?'#fff':'#444')+';border:2px solid '+(db?'#00bbff':'#333')+';padding:12px;font-size:14px;font-weight:bold;cursor:'+(db?'pointer':'default')+';font-family:Courier New,monospace;letter-spacing:2px;border-radius:4px;">🌐 SPIELER ANGREIFEN</button>'
+        + '<div id="cncPvpStatus" style="color:#666;font-size:10px;margin-bottom:8px;">'+_pvpStatusTxt+'</div>'
+        + '<button id="cncPvpRaidBtn" onclick="cncPvpAttack()" '+(_pvpOk?'':'disabled')+' style="width:100%;background:'+(_pvpOk?'#0a2a3a':'#111')+';color:'+(_pvpOk?'#fff':'#444')+';border:2px solid '+(_pvpOk?'#00bbff':'#333')+';padding:12px;font-size:14px;font-weight:bold;cursor:'+(_pvpOk?'pointer':'default')+';font-family:Courier New,monospace;letter-spacing:2px;border-radius:4px;">🌐 SPIELER ANGREIFEN</button>'
         + '<div id="cncPvpLog" style="color:#789;font-size:10px;margin-top:8px;max-height:90px;overflow-y:auto;"></div>'
         + '</div>'
         + '</div></div>'
