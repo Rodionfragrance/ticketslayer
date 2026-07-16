@@ -410,22 +410,6 @@ input[type="text"] {
 #pw-error { color:#c0392b; font-size:12px; height:16px; margin:0; }
 #pw-logo  { font-size:60px; }
 
-/* ============================================================
-   RUNE TABLET SYSTEM
-   ============================================================ */
-#runeOverlay { display:none; position:absolute; inset:0; background:rgba(0,0,0,0.95); z-index:620; overflow-y:auto; font-family:'Courier New',monospace; }
-#runeInner { max-width:820px; margin:30px auto; padding:28px; border:3px solid #00e5ff; background:#030a0f; border-radius:4px; box-shadow:0 0 80px rgba(0,229,255,0.15); }
-#runeInner h2 { color:#00e5ff; font-size:22px; letter-spacing:4px; margin:0 0 4px; text-transform:uppercase; }
-.rune-grid-wrapper { display:grid; grid-template-columns:repeat(5,52px); grid-template-rows:repeat(5,52px); gap:3px; background:#0a1a20; border:2px solid #00e5ff33; padding:6px; border-radius:4px; width:fit-content; }
-.rune-cell { width:52px; height:52px; background:#0d1f28; border:1px solid #1a3040; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:10px; color:#1a4060; cursor:pointer; transition:background 0.15s; }
-.rune-cell.filled { border-color:#00e5ff44; }
-.rune-cell.drag-over { background:#0a2535 !important; border-color:#00e5ff !important; }
-.rune-card { background:#0d1a24; border:2px solid #1a4060; border-radius:4px; padding:12px; cursor:grab; transition:0.15s; }
-.rune-card:hover { border-color:#00e5ff; background:#0a1e2c; }
-.rune-card.equipped { border-color:#f1c40f; background:#1a1400; }
-.rune-shape-preview { display:grid; gap:2px; margin-bottom:8px; width:fit-content; }
-.rune-shape-cell { width:12px; height:12px; border-radius:1px; background:#00e5ff; display:inline-block; }
-.rune-shape-cell.empty { background:transparent; }
 
 /* ============================================================
    KARTENSYSTEM (PHASE 4)
@@ -796,7 +780,6 @@ input[type="text"] {
            <button onclick="openDailyOverlay()" id="daily-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;">☕ TAGES-BONUS</button>
             <button onclick="openQuestBoard()" style="background:#111;color:#2ecc71;border:2px solid #2ecc71;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#2ecc71';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#2ecc71'">📋 AUFTRÄGE</button>
             <button onclick="openJobOverlay()" id="job-menu-btn" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">⚔️ JOB</button>
-            <!-- Runen-Button entfernt -->
             <button onclick="showEmail()" style="background:#111;color:#3498db;border:2px solid #3498db;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#3498db';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#3498db'">[I] ANLEITUNG</button>
             <button onclick="openSkillTree()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🌳 SKILLTREE</button>
             <button onclick="openIdleMode()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🪱 IDLE-KLICKER</button>
@@ -982,15 +965,6 @@ input[type="text"] {
     </div>
 </div>
 
-<!-- RUNE TABLET SYSTEM -->
-<div id="runeOverlay" style="display:none;">
-    <div id="runeInner">
-        <h2>🔮 RUNEN-TAFEL</h2>
-        <div style="color:#666;font-size:11px;margin-bottom:16px;">Platziere Runen im 5×5 Grid — nur eingelegte Runen aktivieren ihre Boni</div>
-        <div id="runeContent"></div>
-        <button onclick="closeRuneOverlay()" style="display:block;width:100%;margin-top:20px;background:#c0392b;color:#fff;border:none;padding:14px;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;font-weight:bold;text-transform:uppercase;letter-spacing:2px;">← ZURÜCK</button>
-    </div>
-</div>
 
 <!-- CHANGE 09.07.: Pet-Overlay entfernt -->
 
@@ -1560,7 +1534,7 @@ const UPGRADES_DEF = [
     { id:'fire_rate',   name:'Trigger-Finger',    icon:'🔫',  desc:'Feuerrate +15%',             baseCost:150, costMult:1.7, apply:(p,lvl)=>{ p.fireRate=Math.max(2, p.fireRate - Math.ceil(p.fireRate*0.15*lvl)); } },
     { id:'damage',      name:'Überstunden-Wut',   icon:'💢',  desc:'Schaden +5 pro Schuss',      baseCost:200, costMult:1.8, apply:(p,lvl)=>{ p.dmgBonus+=5*lvl; } },
     { id:'vacation',    name:'Resturlaub',         icon:'🏖️',  desc:'Start-Urlaubstage +1',       baseCost:100, costMult:2.0, apply:(p,lvl)=>{ p.yellowSlips+=lvl; } },
-    { id:'azubi_cost',  name:'HR-Kontakte',        icon:'👷',  desc:'Azubi kostet -1000 Pkt',     baseCost:180, costMult:2.2, apply:(p,lvl)=>{ p.azubiCost=Math.max(1000,5000-1000*lvl); } },
+    { id:'azubi_cost',  name:'HR-Kontakte',        icon:'👷',  desc:'Azubi kostet -1000 Pkt',     baseCost:180, costMult:2.2, apply:(p,lvl)=>{ p.azubiCost=Math.min(p.azubiCost ?? 5000, Math.max(1000,5000-1000*lvl)); } },
     { id:'farm_slots',  name:'Server-Optimierung', icon:'🖥️',  desc:'Max. Server-Farmen +1',      baseCost:250, costMult:2.0, apply:()=>{} },
     { id:'kb_rate',     name:'Kaffee-Effizenz',    icon:'☕',  desc:'Kaffeebons-Ertrag +20%',     baseCost:300, costMult:2.5, apply:()=>{} },
     { id:'mod_fire',    name:'Brand-Munition',   icon:'🔥',  desc:'Gegner brennen (Ab 30k)',   baseCost:1000, costMult:3.0, minScore:30000, apply:(p,lvl)=>{ p.hasFireMod=true; } },
@@ -1934,14 +1908,13 @@ const TROPHIES_DEF = [
     // CHANGE 10.07.: Geheime Anti-Trophaee — Wurm-Klicker: 100 Raids verlieren. Bewusst OHNE Bonus.
     { id:'teilnehmerurkunde', icon:'📜', name:'Teilnehmerurkunde', desc:'Verliere 100 Raids in der Kommando-Zentrale. Respekt. Irgendwie.', perk:'Keiner. Wirklich gar keiner. Du warst dabei, das zählt. 🎉', hidden:true, noPrestige:true },
     // CHANGE 10.07.: Nahkampf-Trophaee fuer die neue Tastatur
-    { id:'tastatur_krieger', icon:'⌨️', name:'Tastatur-Krieger', desc:'Überlebe 3 Minuten in einem Run und kämpfe dabei AUSSCHLIESSLICH mit der Tastatur (min. 50 Hiebe).', perk:'Mechanische Switches: Tastatur-Schaden +25%' },
+    { id:'tastatur_krieger', icon:'⌨️', name:'Tastatur-Krieger', desc:'Überlebe 3 Minuten und benutze dabei KEINE aufgesammelte Schusswaffe — nur die Tastatur (min. 50 Hiebe). Standard-Pistole & Skill-Waffen (Chaostheorie) zählen nicht als Verstoß.', perk:'Mechanische Switches: Tastatur-Schaden +25%' },
     // --- CHANGE 09.07.: RANG-SYSTEM & FPS TROPHÄEN ---
     { id:'max_power',   icon:'💯', name:'Maximale Power',  desc:'Erreiche einen perfekten Score (100/100 Pkt).', perk:'Machtrausch: Base- & Job-EXP jeweils +10%' },
     { id:'zyzz',        icon:'🧬', name:'The Zyzz',        desc:'Erreiche den Rang Z (95+ Pkt).', perk:'Aesthetic: Aufgesammelte Waffen halten 50% länger', hidden:true },
     { id:'fps_zero',    icon:'🖥️', name:'Haben wir noch FPS? gar keine mehr?', desc:'Erreiche 420 Sekunden in Burnout oder höher.', perk:'Lag-Switch: [X] hält die Zeit 3s an (60s Abklingzeit) — auch bei Bayer' },
     { id:'refine_max',  icon:'🔨', name:'Schmiedemeister', desc:'Werte eine Waffe auf +10 auf.', perk:'Schmiede-Rabatt: Alle Kosten -20%' },
     { id:'idle_qua',    icon:'🐛', name:'Ticket-Tsunami',  desc:'Verdiene insgesamt 1 Qa Tickets im Wurm-Klicker.', perk:'Wechselstube: 500.000 Wurmcoins → 1 Kaffeebon', noPrestige:true },
-    { id:'rune_master', icon:'🔮', name:'Runen-Meister',   desc:'Lege 10 Runen gleichzeitig ins Grid.', perk:'Runen-Resonanz: Alle Runen-Boni +20%' }
 ];
 
 let unlockedTrophies = JSON.parse(lsGet('ts_trophies', '[]'));
@@ -2040,7 +2013,7 @@ const JOBS = {
         desc:'Lord Knight. Führt die Schicht mit eiserner Hand.',
         passiv:'Schaden +30%, Hechtrolle cooldownfrei, HP +50' },
     supply_chain_manager: { name:'🚄 Supply Chain Mgr', classLevel:3, prev:'schichtleiter', reqBase:99, reqJob:70, color:'#ff6b35',
-        desc:'Rune Knight. Dominiert die gesamte Lieferkette.',
+        desc:'Dominiert die gesamte Lieferkette.',
         passiv:'Schaden +60%, Max HP +150, Fahrzeug-Immunität' },
     coo: { name:'🐉 Chief Operating Officer', classLevel:4, prev:'supply_chain_manager', reqBase:200, reqJob:70, color:'#ff0000',
         desc:'Dragon Knight. Absolute Kontrolle aller Operationen.',
@@ -2437,12 +2410,12 @@ function applyJobEffects(p) {
         p._suppeHealBonus = (p._suppeHealBonus || 0) + 15;
     }
     if(allJobs.some(jj=>['maddin','abteilungsleiter'].includes(jj))) {
-        p.isMartin = true; p.radius = 28; p.azubiCost = 0; p._maddingMode = true;
+        p.isMartin = true; p.radius = 28; p.azubiCost = 0; p._azubiFree = true; p._maddingMode = true; // BUG FIX 14.07.: Flag gegen spätere Überschreibung
         p._suppeHealBonus = (p._suppeHealBonus || 0) + 20;
         p._azubiDmgBonus = 0.05;   // Azubis +5% Schaden
     }
     if(allJobs.some(jj=>['it_director','cio'].includes(jj))) {
-        p.isMartin = true; p.radius = 28; p.azubiCost = 0; p._maddingMode = true;
+        p.isMartin = true; p.radius = 28; p.azubiCost = 0; p._azubiFree = true; p._maddingMode = true; // BUG FIX 14.07.: Flag gegen spätere Überschreibung
         p._suppeHealBonus = (p._suppeHealBonus || 0) + 30;
         p._azubiDmgBonus = 0.10;
         p._dashCooldownMult = (p._dashCooldownMult || 1) * 0.5; // Cooldowns -50%
@@ -2495,7 +2468,7 @@ function applyJobEffects(p) {
     // ── DUALER STUDENT (Doram) ──
     if(allJobs.some(jj=>['dualer_student','absolvent'].includes(jj))) {
         p._expMult = (p._expMult || 1) * 1.2;
-        if(allJobs.includes('dualer_student')) { p.azubiCost = Math.max(1000, p.azubiCost - 2000); }
+        if(allJobs.includes('dualer_student')) { if(p.azubiCost > 1000) p.azubiCost = Math.max(1000, p.azubiCost - 2000); } // BUG FIX 14.07.: darf Kosten nie ERHÖHEN (Universalgenie!)
         if(allJobs.includes('absolvent')) { p._expMult = (p._expMult || 1) * 1.4; p._luckMult = (p._luckMult||1) * 2; }
     }
 }
@@ -3230,7 +3203,7 @@ function applySkillTree(p) {
         if(ef === 'parkour')               { p.speed += 0.6; p._rollDistMult = (p._rollDistMult||1) * 1.4; }
         if(ef === 'arbeitsrecht')          { p.maxHp += 30; p._dmgReduction = (p._dmgReduction||0) + 0.10; }
         if(ef === 'kaffeevoll')            { p._stKbBonus = (p._stKbBonus||0) + 0.35; }
-        if(ef === 'gewerkschaft')          { p.azubiCost = Math.max(500, (p.azubiCost||5000) - 2000); }
+        if(ef === 'gewerkschaft')          { if(p.azubiCost > 500) p.azubiCost = Math.max(500, p.azubiCost - 2000); } // BUG FIX 14.07.: 0 ist falsy — Maddin zahlte plötzlich wieder
         if(ef === 'sap_resist')            p._sapResist = true;
         if(ef === 'ghost_roll')            p._ghostRoll = true;
         if(ef === 'regen:2')               p._hpRegen = (p._hpRegen||0) + 2;
@@ -3381,6 +3354,9 @@ function grantTempWeapon(frames, label, col){
     if(!player) return;
     let w = CHAOS_WEAPON_POOL[Math.floor(Math.random()*CHAOS_WEAPON_POOL.length)];
     if(player.activeWeapons[w] !== Infinity) player.activeWeapons[w] = Math.max(player.activeWeapons[w]||0, frames);
+    // BUG FIX 14.07.: Skill-Waffen (Chaostheorie/Quantenflux) sind KEINE Pickups — zählen nicht gegen 'Tastatur-Krieger'
+    player._grantedWeapons = player._grantedWeapons || {};
+    player._grantedWeapons[w] = true;
     showToast(label, col, w.toUpperCase() + ' für ' + Math.floor(frames/60) + ' Sekunden!');
     playSound('powerup');
 }
@@ -4427,113 +4403,8 @@ function doRefine(weaponId) {
 
 // CHANGE 09.07.: Pet-System vollständig entfernt (verursachte Crash über Taste C)
 
-// ============================================================
-// RUNE TABLET SYSTEM — PHASE 3 ENDGAME
-// ============================================================
-const RUNE_SHAPES = { I1x1:[[1]], I2x1:[[1,1]], I1x2:[[1],[1]], L:[[1,0],[1,0],[1,1]], J:[[0,1],[0,1],[1,1]], T:[[1,1,1],[0,1,0]], S:[[0,1,1],[1,1,0]], Z:[[1,1,0],[0,1,1]], O2x2:[[1,1],[1,1]], I3x1:[[1,1,1]], I1x3:[[1],[1],[1]] };
-const SHAPE_KEYS = Object.keys(RUNE_SHAPES);
-const RUNE_STAT_POOL = [
-    {key:'dmgPct',label:'Schaden',unit:'%',min:3,max:15},{key:'hpFlat',label:'Max HP',unit:'',min:10,max:50},
-    {key:'speedPct',label:'Speed',unit:'%',min:2,max:8},{key:'critPct',label:'Crit-Chance',unit:'%',min:1,max:5},
-    {key:'fireDmg',label:'Feuer-DMG',unit:'%',min:5,max:20},{key:'waterDmg',label:'Wasser-DMG',unit:'%',min:5,max:20},
-    {key:'windDmg',label:'Wind-DMG',unit:'%',min:5,max:20},{key:'earthDmg',label:'Erde-DMG',unit:'%',min:5,max:20},
-    {key:'wcBonus',label:'Wurmcoins 🪙',unit:'%',min:5,max:15},{key:'farmSpd',label:'Farm-Speed',unit:'%',min:10,max:30}
-];
-const RUNE_RARITIES = [{name:'Gewöhnlich',color:'#aaa',weight:50,statCount:1,mult:1.0},{name:'Selten',color:'#3498db',weight:30,statCount:2,mult:1.3},{name:'Episch',color:'#9b59b6',weight:15,statCount:2,mult:1.7},{name:'Legendär',color:'#f1c40f',weight:5,statCount:3,mult:2.5}];
-
-let runeInventory = JSON.parse(lsGet('ts_runes', '[]'));
-let runeGrid = JSON.parse(lsGet('ts_rune_grid', null) || JSON.stringify(Array(25).fill(null)));
-function saveRuneData() { lsSet('ts_runes', JSON.stringify(runeInventory)); lsSet('ts_rune_grid', JSON.stringify(runeGrid)); }
-function rollRarity() { let total=RUNE_RARITIES.reduce((s,r)=>s+r.weight,0),r=Math.random()*total; for(let rr of RUNE_RARITIES){r-=rr.weight;if(r<=0)return rr;} return RUNE_RARITIES[0]; }
-function generateRune(sourceLabel) {
-    let rarity=rollRarity(); let shapeKey=SHAPE_KEYS[Math.floor(Math.random()*SHAPE_KEYS.length)];
-    let stats=[],usedKeys=[];
-    for(let i=0;i<rarity.statCount;i++){let pool=RUNE_STAT_POOL.filter(s=>!usedKeys.includes(s.key));if(!pool.length)break;let s=pool[Math.floor(Math.random()*pool.length)];usedKeys.push(s.key);let val=Math.floor((s.min+Math.random()*(s.max-s.min))*rarity.mult);stats.push({key:s.key,label:s.label,unit:s.unit,value:val});}
-    return {id:'rune_'+Date.now()+'_'+Math.floor(Math.random()*9999),name:rarity.name+' Rune',rarity:rarity.name,rarityColor:rarity.color,shape:shapeKey,stats,source:sourceLabel||'Unbekannt',gridPos:null};
-}
-function shapeToGridCells(shapeKey,startRow,startCol){let shape=RUNE_SHAPES[shapeKey];if(!shape)return null;let cells=[];for(let r=0;r<shape.length;r++)for(let c=0;c<shape[r].length;c++)if(shape[r][c]){let gr=startRow+r,gc=startCol+c;if(gr>=5||gc>=5)return null;cells.push(gr*5+gc);}return cells;}
-function canPlace(shapeKey,startRow,startCol,skipRuneId){let cells=shapeToGridCells(shapeKey,startRow,startCol);if(!cells)return false;for(let ci of cells)if(runeGrid[ci]&&runeGrid[ci]!==skipRuneId)return false;return true;}
-function placeRune(runeId,startRow,startCol){let rune=runeInventory.find(r=>r.id===runeId);if(!rune)return false;removeFromGrid(runeId);if(!canPlace(rune.shape,startRow,startCol,runeId))return false;let cells=shapeToGridCells(rune.shape,startRow,startCol);cells.forEach(ci=>{runeGrid[ci]=runeId;});rune.gridPos={row:startRow,col:startCol};saveRuneData();if(runeGrid.filter(Boolean).length>=10&&typeof unlockTrophy==='function')unlockTrophy('rune_master');return true;}
-function removeFromGrid(runeId){runeGrid=runeGrid.map(cell=>cell===runeId?null:cell);let rune=runeInventory.find(r=>r.id===runeId);if(rune)rune.gridPos=null;saveRuneData();}
-function getActiveRuneStats(){let totals={},placed=new Set(runeGrid.filter(Boolean));placed.forEach(rid=>{let rune=runeInventory.find(r=>r.id===rid);if(!rune)return;rune.stats.forEach(s=>{totals[s.key]=(totals[s.key]||0)+s.value;});});return totals;}
-function applyRuneStats(p){let s=getActiveRuneStats();if(s.dmgPct)p.dmgBonus=(p.dmgBonus||0)+(p.dmgBonus+10)*s.dmgPct/100;if(s.hpFlat){p.maxHp+=s.hpFlat;p.hp+=s.hpFlat;}if(s.speedPct)p.speed+=p.speed*s.speedPct/100;if(s.critPct)p._critChance=(p._critChance||0)+s.critPct/100;if(s.fireDmg)p._fireDmgBonus=(p._fireDmgBonus||0)+s.fireDmg/100;if(s.waterDmg)p._waterDmgBonus=(p._waterDmgBonus||0)+s.waterDmg/100;if(s.windDmg)p._windDmgBonus=(p._windDmgBonus||0)+s.windDmg/100;if(s.earthDmg)p._earthDmgBonus=(p._earthDmgBonus||0)+s.earthDmg/100;if(s.farmSpd)p._stFarmBonus=(p._stFarmBonus||0)+s.farmSpd;if(s.wcBonus)p._wcDropBonus=(p._wcDropBonus||0)+s.wcBonus/100;let bonusLines=Object.entries(s).map(([k,v])=>{let stat=RUNE_STAT_POOL.find(x=>x.key===k);return stat?stat.label+'+'+v+stat.unit:'';}).filter(Boolean);if(bonusLines.length>0)showToast('🔮 RUNEN AKTIV','#00e5ff',bonusLines.slice(0,3).join(' · '));}
-let dragRuneId=null;
-function openRuneOverlay(){renderRuneOverlay();document.getElementById('runeOverlay').style.display='block';}
-function closeRuneOverlay(){document.getElementById('runeOverlay').style.display='none';document.getElementById('startKBAmount').innerText=kaffeebons;}
-function renderRuneOverlay() {
-    let cont = document.getElementById('runeContent');
-    if(!cont) return;
-    let placed = new Set(runeGrid.filter(Boolean));
-    let activeStats = getActiveRuneStats();
-
-    let statsHtml = Object.entries(activeStats).map(([k,v]) => {
-        let s = RUNE_STAT_POOL.find(x => x.key === k);
-        return s ? `<span style="color:#00e5ff;margin-right:10px;">+${v}${s.unit} ${s.label}</span>` : '';
-    }).join('');
-
-    let gridHtml = '<div class="rune-grid-wrapper" id="runeGridEl">';
-    for(let r=0;r<5;r++) {
-        for(let c=0;c<5;c++) {
-            let ci = r*5+c;
-            let rid = runeGrid[ci];
-            let rune = rid ? runeInventory.find(x => x.id===rid) : null;
-            let cellContent = rune ? `<div style="width:100%;height:100%;background:${rune.rarityColor}22;display:flex;align-items:center;justify-content:center;font-size:16px;" title="${rune.name}">🔮</div>` : '';
-            gridHtml += `<div class="rune-cell ${rune?'filled':''}" data-row="${r}" data-col="${c}" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="onDropCell(event,${r},${c})" onclick="onCellClick(${r},${c})">${cellContent}</div>`;
-        }
-    }
-    gridHtml += '</div>';
-
-    let invHtml = runeInventory.length === 0
-        ? '<div style="color:#555;font-size:12px;text-align:center;padding:20px;border:2px dashed #1a3040;border-radius:4px;">Keine Runen.<br><span style="font-size:10px;">Besiege Bosse!</span></div>'
-        : '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + runeInventory.map(rune => {
-            let shape = RUNE_SHAPES[rune.shape];
-            let isPlaced = placed.has(rune.id);
-            let sgHtml = `<div class="rune-shape-preview" style="grid-template-columns:repeat(${shape[0].length},12px);">`;
-            shape.forEach(row => row.forEach(cell => { sgHtml += `<div class="rune-shape-cell ${cell?'':'empty'}"></div>`; }));
-            sgHtml += '</div>';
-            let statsHtmlRune = rune.stats.map(s => `<div style="color:#aaa;font-size:11px;">+${s.value}${s.unit} ${s.label}</div>`).join('');
-            let removeBtn = isPlaced
-                ? `<button data-rid="${rune.id}" class="rune-remove-btn" style="width:100%;margin-top:6px;background:#1a0000;color:#e74c3c;border:1px solid #e74c3c;padding:3px;font-size:10px;cursor:pointer;font-family:monospace;">✖ ENTFERNEN</button>`
-                : `<button data-rid="${rune.id}" class="rune-delete-btn" style="width:100%;margin-top:6px;background:#0a0a0a;color:#555;border:1px solid #222;padding:3px;font-size:10px;cursor:pointer;font-family:monospace;">🗑 LÖSCHEN</button>`;
-            return `<div class="rune-card ${isPlaced?'equipped':''}" draggable="true" data-rid="${rune.id}">${sgHtml}<div style="color:${rune.rarityColor};font-size:11px;font-weight:bold;">${rune.name}</div><div style="color:#555;font-size:9px;">${rune.source}</div>${isPlaced?'<span style=\"color:#f1c40f;font-size:10px;\">IM GRID</span>':''}<div style="margin-top:6px;">${statsHtmlRune}</div>${removeBtn}</div>`;
-        }).join('') + '</div>';
-
-    cont.innerHTML = `
-    <div style="background:#0a1a20;border:1px solid #1a3040;padding:10px 14px;border-radius:4px;margin-bottom:14px;font-size:11px;">
-        <strong style="color:#00e5ff;">AKTIVE RUNEN-BONI:</strong> ${statsHtml || '<span style="color:#333;">— Keine Runen im Grid</span>'}
-    </div>
-    <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start;">
-        <div>
-            <div style="color:#555;font-size:10px;letter-spacing:2px;margin-bottom:8px;">5×5 GRID</div>
-            ${gridHtml}
-            <div style="color:#555;font-size:9px;margin-top:6px;">${placed.size} Zellen belegt</div>
-        </div>
-        <div>
-            <div style="color:#555;font-size:10px;letter-spacing:2px;margin-bottom:8px;">INVENTAR (${runeInventory.length})</div>
-            ${invHtml}
-        </div>
-    </div>`;
-
-    // Attach drag/click events after render
-    cont.querySelectorAll('.rune-card[data-rid]').forEach(function(card) {
-        let rid = card.getAttribute('data-rid');
-        card.addEventListener('dragstart', function() { dragRuneId = rid; card.classList.add('dragging'); });
-        card.addEventListener('dragend', function() { card.classList.remove('dragging'); });
-        card.addEventListener('click', function() { onRuneCardClick(rid); });
-    });
-    cont.querySelectorAll('.rune-remove-btn[data-rid]').forEach(function(btn) {
-        btn.addEventListener('click', function(e) { e.stopPropagation(); removeFromGrid(btn.getAttribute('data-rid')); renderRuneOverlay(); });
-    });
-    cont.querySelectorAll('.rune-delete-btn[data-rid]').forEach(function(btn) {
-        btn.addEventListener('click', function(e) { e.stopPropagation(); deleteRune(btn.getAttribute('data-rid')); });
-    });
-}
-
-function onDropCell(event,row,col){event.preventDefault();document.querySelectorAll('.rune-cell').forEach(c=>c.classList.remove('drag-over'));if(!dragRuneId)return;let ok=placeRune(dragRuneId,row,col);dragRuneId=null;if(!ok)showToast('KEIN PLATZ!','#e74c3c','Rune passt nicht');renderRuneOverlay();}
-function onRuneCardClick(runeId){let rune=runeInventory.find(r=>r.id===runeId);if(!rune||rune.gridPos)return;let shape=RUNE_SHAPES[rune.shape];let h=shape.length,w=shape[0].length;for(let r=0;r<=5-h;r++)for(let c=0;c<=5-w;c++){if(canPlace(rune.shape,r,c,runeId)){placeRune(runeId,r,c);renderRuneOverlay();return;}}showToast('GRID VOLL!','#e74c3c','Kein Platz');}
-function onCellClick(row,col){let ci=row*5+col;let rid=runeGrid[ci];if(rid){removeFromGrid(rid);renderRuneOverlay();}}
-function deleteRune(runeId){if(!confirm('Rune löschen?'))return;runeInventory=runeInventory.filter(r=>r.id!==runeId);runeGrid=runeGrid.map(c=>c===runeId?null:c);saveRuneData();renderRuneOverlay();}
-function dropRuneFragment(sourceLabel){let rune=generateRune(sourceLabel);runeInventory.push(rune);saveRuneData();showToast('🔮 RUNEN-FRAGMENT!',rune.rarityColor,'['+rune.rarity+'] '+rune.stats.map(s=>'+'+s.value+s.unit+' '+s.label).join(', '));}
+// CHANGE 14.07.: RUNE TABLET SYSTEM komplett entfernt (inkl. Trophäe Runen-Meister)
+try { localStorage.removeItem('ts_runes'); localStorage.removeItem('ts_rune_grid'); } catch(e) {}
 
 
 function hasTrophy(id) { return unlockedTrophies.includes(id); }
@@ -4628,8 +4499,6 @@ function saveProgress() {
             baseLevel, jobLevel, baseExp, jobExp, currentJob: currentJob||null,
             isTrans: isTrans||false, statPoints: statPoints||0, stats: stats||{},
             jobSkillPts, jobSkills, completedJobs, rebirthSkills,
-            runeInv: typeof runeInventory !== 'undefined' ? runeInventory : [],
-            runeGrid: typeof runeGrid !== 'undefined' ? runeGrid : [],
             akten: playerAkten, cards: cardInventory,
             daily: _daily, bestScore: _best,
             lastSeen: new Date().toISOString()        
@@ -4717,8 +4586,6 @@ async function loadCloudProfile() {
             lsSet('ts_isTrans', isTrans ? 'true' : 'false');
             lsSet('ts_statpts', statPoints);
             if(d.stats) lsSet('ts_stats', JSON.stringify(d.stats));
-            if(d.runeInv)  { runeInventory = d.runeInv;  lsSet('ts_runes', JSON.stringify(runeInventory)); }
-            if(d.runeGrid) { runeGrid = d.runeGrid;       lsSet('ts_rune_grid', JSON.stringify(runeGrid)); }
             if(d.akten !== undefined) { playerAkten = d.akten; lsSet('ts_akten', playerAkten); }
             
             if(d.cards && d.cards.length > 0) { 
@@ -4948,11 +4815,30 @@ function updateBossRoom() {
             }
             
             for(let w of wepKeys) {
-                let frBase = {minigun:4,uzi:7,ak47:6,shotgun:40,rocket:60,railgun:50,flamer:3}[w]||20;
+                let frBase = {minigun:4,uzi:7,ak47:6,shotgun:40,rocket:60,railgun:50,flamer:3,tastatur:24}[w]||20;
                 let fr = Math.max(2, frBase - Math.ceil(frBase * 0.15 * getUpgradeLevel('fire_rate')));
                 if(br.frame - (player.lastShot[w]||0) > fr) {
                     let a = aimAngle;
                     let recoil = 0;
+                    // BUG FIX 14.07.: Tastatur hatte im Bayer-Bossraum keinen Branch → Nahkampf wirkungslos
+                    if(w==='tastatur') {
+                        player.meleeShots = (player.meleeShots||0) + 1;
+                        br.meleeSwingTimer = 12;
+                        let mDmg = Math.floor((25 + (player.dmgBonus||0) * 1.5) * (hasTrophy('tastatur_krieger') ? 1.25 : 1.0));
+                        let mRange = 120 + b.radius;
+                        let ba = Math.atan2(b.y - p.y, b.x - p.x);
+                        let diff = Math.abs(Math.atan2(Math.sin(ba - a), Math.cos(ba - a)));
+                        if(Math.hypot(b.x - p.x, b.y - p.y) < mRange && diff < 1.3) {
+                            applyElementalDamage(b, mDmg, 'neutral', b.x, b.y);
+                            spawnBRParticles(b.x, b.y, '#f1c40f', 6);
+                            playSound('hammer');
+                            screenShake = Math.max(screenShake, 3);
+                        } else {
+                            playSound('hit');
+                        }
+                        player.lastShot[w] = br.frame;
+                        continue;
+                    }
                     if(w==='shotgun')    { for(let i=-2;i<=2;i++) br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+i*0.15)*14,dy:Math.sin(a+i*0.15)*14,dmg:baseDmg,life:60,type:'standard',color:'#ff8800',size:5,element:'neutral'}); playSound('shoot'); recoil=3; }
                     else if(w==='minigun'){ br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.4)*18,dy:Math.sin(a+(Math.random()-.5)*0.4)*18,dmg:baseDmg,life:75,type:'standard',color:'#ff00ff',size:3,element:'neutral'}); playSound('shoot'); }
                     else if(w==='rocket') { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a)*13,dy:Math.sin(a)*13,dmg:baseDmg,life:80,type:'rocket',color:'#ff4444',size:8,element:'feuer'}); playSound('shoot'); recoil=5; }
@@ -4961,6 +4847,8 @@ function updateBossRoom() {
                     else if(w==='uzi')    { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.1)*17,dy:Math.sin(a+(Math.random()-.5)*0.1)*17,dmg:baseDmg,life:70,type:'standard',color:'#aaffaa',size:3,element:'neutral'}); playSound('shoot'); }
                     else if(w==='ak47')   { br.bullets.push({x:p.x,y:p.y,dx:Math.cos(a+(Math.random()-.5)*0.05)*18,dy:Math.sin(a+(Math.random()-.5)*0.05)*18,dmg:baseDmg,life:75,type:'standard',color:'#ffdd44',size:4,element:'neutral'}); playSound('shoot'); recoil=1; }
                     
+                    // BUG FIX 14.07.: Auch im Bossraum zählen Pickup-Schüsse gegen 'Tastatur-Krieger'
+                    if(w !== 'standard' && !(player._grantedWeapons && player._grantedWeapons[w])) player.rangedShots = (player.rangedShots||0) + 1;
                     player.lastShot[w] = br.frame;
                     p.x -= Math.cos(a) * recoil;
                     p.y -= Math.sin(a) * recoil;
@@ -5581,6 +5469,23 @@ function drawBossRoom() {
     }
     ctx.shadowBlur = 0;
 
+    // BUG FIX 14.07.: Tastatur-Schwung-Animation auch im Bayer-Bossraum (live am Cursor ausgerichtet)
+    if(br.meleeSwingTimer > 0) {
+        br.meleeSwingTimer--;
+        let _aimA = Math.atan2(mouseArenaY - p.y, mouseArenaX - p.x);
+        let _prog = 1 - (br.meleeSwingTimer / 12);
+        let _swing = _aimA - 1.3 + _prog * 2.6;
+        ctx.strokeStyle = 'rgba(241,196,15,' + (0.6 * (1 - _prog)) + ')';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 85, _aimA - 1.3, _swing);
+        ctx.stroke();
+        ctx.save(); ctx.translate(p.x + Math.cos(_swing) * 85, p.y + Math.sin(_swing) * 85); ctx.rotate(_swing + Math.PI/2);
+        ctx.font = '38px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('⌨️', 0, 0);
+        ctx.restore();
+    }
+
     if(player) {
         if(player.shieldTimer > 0) {
             ctx.beginPath(); ctx.arc(p.x, p.y, 35, 0, Math.PI*2);
@@ -5681,6 +5586,9 @@ function drawBueroDoor() {
 function earnKaffeebons(sc) {
     let baseRate = 0.5 + getUpgradeLevel('kb_rate') * 0.1;
     if(player && player._stKbBonus) baseRate += player._stKbBonus;
+    // CHANGE 10.07.: Skilltree — 'Ueberstunden-Bonus' (>500k Score: x1.5) & 'Nachtschicht' (ab 22 Uhr: x1.15)
+    if(player && player._scoreKbBonus && sc > 500000) baseRate *= 1.5;
+    if(player && player._nightshiftKb && new Date().getHours() >= 22) baseRate *= 1.15;
     
     let earnedKb = Math.floor(sc / 100 * baseRate);
     let earnedWc = Math.floor(sc / 50000); // 1 Wurmcoin pro 50000 Score
@@ -5697,7 +5605,7 @@ function applyUpgradesToPlayer(p) {
         let lvl = getUpgradeLevel(upg.id);
         if (lvl > 0) upg.apply(p, lvl);
     });
-    p.azubiCost = p.azubiCost || 5000;
+    if(p.azubiCost === undefined || p.azubiCost === null) p.azubiCost = 5000; // BUG FIX 14.07.: 0 ist falsy — Maddins Gratis-Azubis wurden auf 5000 resettet
     // Prestige-Boni (permanent, stapeln sich)
     if(prestigeLevel > 0) {
         p.dmgBonus  += p.dmgBonus * prestigeLevel * 0.05;
@@ -5706,6 +5614,7 @@ function applyUpgradesToPlayer(p) {
     }
     applySkillTree(p); // Skilltree-Effekte anwenden
     applyJobEffects(p); // Job-Effekte anwenden
+    if(p._azubiFree) p.azubiCost = 0; // BUG FIX 14.07.: Maddin-Klassen — Azubis GRATIS, egal was Upgrades/Skills danach rechnen
 
     // --- NEU: RO STATS ANWENDEN ---
     p.dmgBonus += (stats.str - 1) * 1.5;                                        // STR: +1.5 Dmg pro Punkt
@@ -7255,6 +7164,7 @@ function updateFarms(){
     let farmInterval = 1200; // 20s bei 60fps
     farmInterval -= getUpgradeLevel('damage') * 60;           // Upgrade: bis -5s
     farmInterval -= (player && player._stFarmBonus ? player._stFarmBonus * 30 : 0); // Skilltree
+    if(player && player._farmIntervalMult) farmInterval = Math.floor(farmInterval * player._farmIntervalMult); // CHANGE 10.07.: Job-Passivs & Backup-System (waren Deko)
     farmInterval = Math.max(300, farmInterval);                // Minimum 5s
     for(let f of serverFarms){
         f.ticker = (f.ticker||0) + 1;
@@ -7266,6 +7176,9 @@ function updateFarms(){
             items.push(new Item('suppe', sx, sy));
             floatingTexts.push(new FloatingText(f.serverRef.x+f.serverRef.w/2, f.serverRef.y-15, '🍜 SUPPE!', '#f39c12'));
             playSound('delivery');
+            // CHANGE 10.07.: Skilltree/Job — Doppelte Ernte & Waffen-Drop aus Farmen (waren Deko)
+            if(player && player._farmDouble) items.push(new Item('suppe', sx + 40, sy));
+            if(player && player._farmWeaponDrop && Math.random() < 0.15) items.push(new Item('crate', sx - 40, sy));
         }
         // Fortschrittsbalken visuell (0-1)
         f.progress = f.ticker / farmInterval;
@@ -7335,7 +7248,7 @@ class Turret {
             // KI-Turrets priorisieren stärkste Gegner (ks_ki oder IT-Director)
             let sortFn = (player && (player._aiTurrets || (currentJob && ['it_director','cio','lead_architect','cto'].includes(currentJob))))
                 ? (a,b) => b.hp - a.hp : null;
-            let nearest=null, minDist=800 + (player && player._turretBoost ? 250 : 0);
+            let nearest=null, minDist=800 + (player && player._turretBoost ? 250 : 0) + (player && player._azubiBoost ? 250 : 0); // CHANGE 10.07.: 'Mentor'-Skill
             let pool = sortFn ? [...enemies].sort(sortFn) : enemies;
             for(let e of pool){ let d=Math.hypot(e.x-this.x, e.y-this.y); if(d<minDist){minDist=d; nearest=e; if(sortFn) break;} }
             if(nearest){
@@ -7343,13 +7256,17 @@ class Turret {
                 // Job-Passiv: Turret-Schaden-Bonus
                 let jobDmgMult = 1.0 + (player && player._turretDmgBonus ? player._turretDmgBonus : 0);
                 let jobDmgBonus = player && player._azubiDmgBonus ? player._azubiDmgBonus : 0;
+                // CHANGE 10.07.: Skilltree — 'Delegieren' (Feuerrate x2) & 'Mentor' (Feuerrate +20%)
+                let _cdMult = 1;
+                if(player && player._azubiAuto)  _cdMult *= 0.5;
+                if(player && player._azubiBoost) _cdMult *= 0.8;
                 if(this.level === 2) {
                     bullets.push(new Bullet(this.x, this.y, a, 'rocket', Math.floor(40 * jobDmgMult), this));
-                    this.cooldown = 45;
+                    this.cooldown = Math.max(5, Math.round(45 * _cdMult));
                 } else {
                     let dmg = Math.floor((12 + (player ? player.dmgBonus * jobDmgBonus : 0)) * jobDmgMult);
                     bullets.push(new Bullet(this.x, this.y, a, 'standard', dmg, this));
-                    this.cooldown = (this.level === 1 ? 10 : 20);
+                    this.cooldown = Math.max(3, Math.round((this.level === 1 ? 10 : 20) * _cdMult));
                 }
                 shells.push(new Shell(this.x, this.y, a)); playSound('shoot');
             }
@@ -7481,10 +7398,20 @@ class Player{
 
         if ((input.keys['ShiftLeft'] || input.rightClick) && this.rollCooldown <= 0 && this.sapDebuffTimer <= 0) {
             let angle = Math.atan2(input.worldY - this.y, input.worldX - this.x);
-            this.rollDx = Math.cos(angle) * 15; 
-            this.rollDy = Math.sin(angle) * 15;
+            // CHANGE 10.07.: Roll-Skills verdrahtet (Distanz, Cooldown, Unverwundbarkeit, Zeitlupe, Windschatten, Kampfrolle)
+            this.rollDx = Math.cos(angle) * 15 * (this._rollDistMult||1); 
+            this.rollDy = Math.sin(angle) * 15 * (this._rollDistMult||1);
             this.rollTimer = 15;      
-            this.rollCooldown = hasTrophy('perfect_dodge') ? 90 : 120;  
+            let _rollCd = hasTrophy('perfect_dodge') ? 90 : 120;
+            _rollCd += (this._stRollCD||0);                                   // Skilltree: negative Werte = schneller
+            if(this._dashCooldownMult) _rollCd = Math.floor(_rollCd * this._dashCooldownMult);
+            if(this._rollCDZero) _rollCd = 0;                                 // PARKOUR-GOTT
+            if(this._rollInvFrames) _rollCd += 30;                            // UNANTASTBAR: +0.5s CD als Preis
+            this.rollCooldown = Math.max(0, _rollCd);
+            if(this._rollInvFrames)     this._invulnTimer = this._rollInvFrames;   // UNANTASTBAR: 3s unverwundbar
+            if(this._rollFreezeEnemies) enemies.forEach(e=>e.freezeTimer=Math.max(e.freezeTimer||0,120)); // Zeitsprung
+            if(this._windschatten)      this._windschattenTimer = 75;              // Windschatten: Speed-Burst danach
+            if(this._rollDmgBuff)       this._rollDmgBuffTimer = 180;              // Kampfrolle: +10% DMG 3s
             playSound('delivery');    
             input.rightClick = false; 
             return; 
@@ -7661,6 +7588,16 @@ class Player{
 
         let spd=this.speed;
         if(idocEvent && hasTrophy('idoc_savior')) spd *= 1.1;
+        // CHANGE 10.07.: Skilltree-Speed-Modifikatoren (waren Deko)
+        this._isMoving = (dx !== 0 || dy !== 0);
+        if(this._suppeRushTimer > 0)    spd *= 1.25;                        // Kaffee-Rausch
+        if(this._windschattenTimer > 0) spd *= 1.6;                         // Windschatten (nach Hechtrolle)
+        if(this._farmSynergy)           spd += 0.2 * serverFarms.length;    // Symbiose
+        if(this._bossLowSpeed && activeBoss && this.hp < this.maxHp * 0.25) spd *= (1 + this._bossLowSpeed); // Adrenalin
+        if(this._bossKillBuffTimer > 0) spd *= 1.10;                        // Momentum
+        // Tempolimit: 12 Basis, 'Autobahn'-Skill hebt das Cap an (greift nicht beim Fahrrad)
+        let _spdCap = 12 + (this._speedCap||0);
+        if(spd > _spdCap && this.bikeTimer <= 0) spd = _spdCap;
         // BUG FIX 10.07.: Fahrrad setzte Speed hart auf 10 → schnelle Builds (Maddin) wurden LANGSAMER.
         // Jetzt: mindestens 10, sonst ×1.6 vom aktuellen Speed — nie langsamer als vorher.
         if(this.bikeTimer>0)       spd=Math.max(10, spd*1.6);
@@ -7733,7 +7670,10 @@ class Player{
             showToast("FAVORIT AKTIV!", "#f1c40f", type.toUpperCase() + " — bereits permanent");
             return;
         }
-        this.activeWeapons[type] = Math.floor((hasTrophy('collapse_survivor') ? 2250 : 1800) * _zyzzX);
+        // CHANGE 10.07.: Skilltree — 'Waffen halten länger' + 'Frischer Wind' (+15% DMG 3s nach Wechsel)
+        this.activeWeapons[type] = Math.floor((hasTrophy('collapse_survivor') ? 2250 : 1800) * _zyzzX * (this._weaponDurMult||1));
+        if(this._swapDmg) this._swapDmgTimer = 180;
+        if(this._grantedWeapons) this._grantedWeapons[type] = false; // BUG FIX 14.07.: echtes Pickup überschreibt Skill-Waffen-Marker
         this.crateFlashTimer=120; flashScreen=10;
         showToast("ARSENAL ERWEITERT!", "#0ff", type.toUpperCase());
     }
@@ -7765,11 +7705,12 @@ class Player{
             this.meleeSwingAngle = angle;
             let mDmg = Math.floor((25 + this.dmgBonus * 1.5) * (hasTrophy('tastatur_krieger') ? 1.25 : 1.0));
             let range = 120, arc = 1.3; // ~75° Halbbogen je Seite
+            let _my = this.y + offset; // BUG FIX 14.07.: gleiche Origin wie Zielwinkel (Cursor-bündig)
             let hitAny = false;
             for(let e of enemies){
-                let d = Math.hypot(e.x-this.x, e.y-this.y);
+                let d = Math.hypot(e.x-this.x, e.y-_my);
                 if(d < range + e.radius){
-                    let ea = Math.atan2(e.y-this.y, e.x-this.x);
+                    let ea = Math.atan2(e.y-_my, e.x-this.x);
                     let diff = Math.abs(Math.atan2(Math.sin(ea-angle), Math.cos(ea-angle)));
                     if(diff < arc){
                         applyElementalDamage(e, mDmg, 'neutral', e.x, e.y);
@@ -7784,7 +7725,27 @@ class Player{
             if(hitAny) screenShake = Math.max(screenShake, 3);
             return;
         }
-        this.rangedShots = (this.rangedShots||0) + 1;
+        // BUG FIX 14.07.: 'Tastatur-Krieger' zählt nur echte Waffen-PICKUPS als Verstoß.
+        // Standard-Pistole und Skill-Waffen (Chaostheorie/Quantenflux) unterbrechen den Fortschritt nicht.
+        if(w !== 'standard' && !(this._grantedWeapons && this._grantedWeapons[w])) this.rangedShots = (this.rangedShots||0) + 1;
+        // ── CHANGE 10.07.: Skilltree-Schadensmodifikatoren (waren Deko) ──
+        if(this._dmgPerWeapon)       dmg += dmg * this._dmgPerWeapon * Math.max(1, Object.keys(this.activeWeapons).length); // Arsenal
+        if(this._farmSynergy)        dmg += dmg * 0.03 * serverFarms.length;                    // Symbiose
+        if(this._turretDmgShare)     dmg += dmg * this._turretDmgShare * turrets.length;        // Team-Carry
+        if(this._swapDmgTimer > 0)   dmg *= 1.15;  // Frischer Wind (nach Waffenwechsel)
+        if(this._rollDmgBuffTimer>0) dmg *= 1.10;  // Kampfrolle
+        if(this._bossKillBuffTimer>0)dmg *= 1.10;  // Momentum (nach Boss-Kill)
+        if(this._ksRage && this.hp < this.maxHp * 0.3) dmg *= 2;                                // BERSERKER
+        if(this._finalBossBuff && activeBoss && activeBoss.label === 'PETER BAYER') dmg *= 1.3; // Endgegner-Mentalität
+        // Kritische Treffer (Skill-Crit + 'jeder 5. Schuss'-Keystone)
+        this._shotCounter = (this._shotCounter||0) + 1;
+        let _critC = (this._critChance||0);
+        if(this._everyFifthCrit && this._shotCounter % 5 === 0) _critC = 1;
+        if(_critC > 0 && Math.random() < _critC){
+            dmg *= 1.5;
+            if(frame % 5 === 0) floatingTexts.push(new FloatingText(this.x, this.y - 55, 'CRIT!', '#ff4444'));
+        }
+        dmg = Math.floor(dmg);
         // ──────────────────────────────────────────────────────────────
         if(w==='shotgun')    {for(let i=-2;i<=2;i++) bullets.push(new Bullet(this.x,this.y+offset,angle+i*0.15,'standard',dmg)); playSound('shoot'); recoil=3;}
         else if(w==='minigun'){bullets.push(new Bullet(this.x,this.y+offset,angle+(Math.random()-.5)*0.4,'standard',dmg)); playSound('shoot');}
@@ -7856,16 +7817,18 @@ class Player{
                 ctx.fillStyle='#ccc'; ctx.save(); ctx.translate(ox,oy); ctx.rotate(ma+Math.PI/2); ctx.fillRect(-6,-10,12,20); ctx.fillStyle='#f00'; ctx.fillRect(-2,-8,4,4); ctx.restore();
             }
         }
-        // CHANGE 10.07.: TASTATUR-SCHWUNG-ANIMATION (Nahkampf)
+        // CHANGE 10.07. / BUG FIX 14.07.: TASTATUR-SCHWUNG — jetzt LIVE am Mauscursor ausgerichtet
+        // (vorher: eingefrorener Winkel vom Schwungbeginn → wirkte versetzt zum Cursor)
         if(this.meleeSwingTimer > 0){
             let prog = 1 - (this.meleeSwingTimer / 12);           // 0 → 1
-            let swing = this.meleeSwingAngle - 1.1 + prog * 2.2;  // Bogen von -63° bis +63°
+            let aimA = Math.atan2(input.worldY - (this.y - 10), input.worldX - this.x); // live, gleiche Origin wie Zeichnung
+            let swing = aimA - 1.3 + prog * 2.6;                  // Bogen ±75°, deckungsgleich mit dem Schadensbogen
             let kx = Math.cos(swing)*85, ky = Math.sin(swing)*85 - 10;
             // Schwungspur
             ctx.strokeStyle = 'rgba(241,196,15,'+(0.6*(1-prog))+')';
             ctx.lineWidth = 6;
             ctx.beginPath();
-            ctx.arc(0, -10, 85, this.meleeSwingAngle - 1.1, swing);
+            ctx.arc(0, -10, 85, aimA - 1.3, swing);
             ctx.stroke();
             // Die Tastatur selbst
             ctx.save(); ctx.translate(kx, ky); ctx.rotate(swing + Math.PI/2);
@@ -7935,6 +7898,11 @@ const ELEMENT_CHART = {
 function applyElementalDamage(enemy, baseDmg, attackElement, x, y) {
     let mult = (ELEMENT_CHART[attackElement] && ELEMENT_CHART[attackElement][enemy.element]) ? ELEMENT_CHART[attackElement][enemy.element] : 1.0;
     let finalDmg = baseDmg * mult;
+    // CHANGE 10.07.: SKILL bo2 'Schwachstellen-Analyse' — 10% Chance auf ×2 gegen Bosse (war Deko)
+    if(enemy.type === 99 && player && player._bossWeak && Math.random() < 0.10){
+        finalDmg *= 2;
+        floatingTexts.push(new FloatingText(x, y - 40, "SCHWACHSTELLE! ×2", "#ff00ff"));
+    }
     enemy.hp -= finalDmg;
     
     // Visuelles Feedback
@@ -8106,9 +8074,11 @@ class Enemy{
                 if(Math.hypot(player.x - this.x, player.y - this.y) < 250) {
                     if(player.rollTimer <= 0) {
                         if(!shieldAbsorb(120)) {
+                            // CHANGE 10.07.: Skilltree-Verteidigung + Stur-wie-Beton (Stun -50%)
+                            let _sd = applyPlayerDefense(40, {boss:true, source:this});
                             if(isWegflexenMode) { player.hp = 0; }
-                            else { player.hp -= 40; player.orangeHp += 40; player.orangeTimer = 120; }
-                            player.stunned = 45;
+                            else if(_sd > 0) { player.hp -= _sd; player.orangeHp += _sd; player.orangeTimer = 120; }
+                            player.stunned = player._stunResist ? 23 : 45;
                             spawnParticles(player.x, player.y, '#f00', 15);
                             showToast("VOM CHEF ZERSTAMPFT!", "#f00", isWegflexenMode ? "WEGGEFLEXT!" : "Shift für Hechtrolle nutzen!");
                         }
@@ -8158,9 +8128,10 @@ class Enemy{
                     if(Math.hypot(player.x - this.x, player.y - this.y) < 320) {
                         if(player.rollTimer <= 0) {
                             if(!shieldAbsorb(120)) {
+                                let _sd = applyPlayerDefense(60, {boss:true, source:this}); // CHANGE 10.07.
                                 if(isWegflexenMode) player.hp = 0;
-                                else { player.hp -= 60; player.orangeHp += 60; player.orangeTimer = 120; }
-                                player.stunned = 30;
+                                else if(_sd > 0) { player.hp -= _sd; player.orangeHp += _sd; player.orangeTimer = 120; }
+                                player.stunned = player._stunResist ? 15 : 30;
                                 showToast("ZERSCHMETTERT!", "#9b59b6", "Zu langsam!");
                             }
                         } else {
@@ -8203,8 +8174,9 @@ class Enemy{
                     if(player.rollTimer <= 0 && !this.dashHit) {
                         this.dashHit = true;
                         if(!shieldAbsorb(120)) {
+                            let _sd = applyPlayerDefense(40, {boss:true, source:this}); // CHANGE 10.07.
                             if(isWegflexenMode) player.hp = 0;
-                            else { player.hp -= 40; player.orangeHp += 40; player.orangeTimer = 120; }
+                            else if(_sd > 0) { player.hp -= _sd; player.orangeHp += _sd; player.orangeTimer = 120; }
                             showToast("WEGGEKLATSCHT!", "#9b59b6", "Raketen-Schlag!");
                         }
                     }
@@ -8300,7 +8272,11 @@ class Enemy{
                     // ------------------------------------
 
                     if(isWegflexenMode) { player.hp = 0; }
-                    else { player.hp -= dmg; player.orangeHp += dmg; player.orangeTimer = 120; }
+                    else {
+                        // CHANGE 10.07.: Kontaktschaden läuft durch die zentrale Verteidigung (Skilltree)
+                        dmg = applyPlayerDefense(dmg, {boss: this.type===99, source: this});
+                        if(dmg > 0){ player.hp -= dmg; player.orangeHp += dmg; player.orangeTimer = 120; }
+                    }
                     spawnParticles(player.x,player.y,'#f00',1);
                     this.x-=Math.cos(angle)*5; this.y-=Math.sin(angle)*5;
                     screenShake=5;
@@ -8499,7 +8475,7 @@ if(!bueroDoor && currentBossStage >= 4 && !activeBoss && gamePhase === 'normal' 
     if(!idocEvent && !player.idocBlocker && frame%3000===1000){
         let sv=servers[Math.floor(Math.random()*servers.length)];
         if(sv){
-            idocEvent={x:sv.x,y:sv.y,label:Math.random()>.5?"PROZESSAUSFALL!":"AUFTRAGSFREIGABE!",timer:1800};
+            idocEvent={x:sv.x,y:sv.y,label:Math.random()>.5?"PROZESSAUSFALL!":"AUFTRAGSFREIGABE!",timer:1800 + ((player&&player._idocTimeBonus)||0)}; // CHANGE 10.07.: Skill 'Priorisierung' — mehr Zeit
             playSound('alarm');
             showToast("🚨 "+idocEvent.label,"#f00","Rotem Pfeil folgen → [E] drücken! (30 Sek)",true);
         }
@@ -11168,6 +11144,9 @@ function loop(){
                     if(player.runMeetings === 3) unlockTrophy('meeting_survivor');
                     let earnedScore = 3000;
                     if(hasTrophy('meeting_survivor')) earnedScore += 1000; 
+                    // CHANGE 10.07.: Skilltree — BETRIEBSRAT (Meetings 2x Punkte) + 'Spesenabrechnung' (+KB)
+                    if(player._ksBetriebsrat) earnedScore *= 2;
+                    if(player._meetingKb){ kaffeebons += player._meetingKb; floatingTexts.push(new FloatingText(player.x, player.y - 60, "☕ +" + player._meetingKb + " KB", "#a67c52")); }
                     score += earnedScore;
                     floatingTexts.push(new FloatingText(player.x,player.y,"MEETING ÜBERLEBT!","#0f0"));
                     showToast("MEETING ÜBERLEBT!","#00ff00","+" + earnedScore + " Punkte");
@@ -11197,10 +11176,11 @@ function loop(){
                         else if(isWegflexenMode) { player.hp = 0; }
                         else {
                             let dmg = v.type === 'truck' ? (player.maxHp * 0.90) : (player.maxHp * 0.50);
+                            dmg = applyPlayerDefense(dmg, {}); // CHANGE 10.07.: Skilltree-Verteidigung
                             player.hp -= dmg;
                             player.orangeHp += dmg; 
                             player.orangeTimer = 120;
-                            player.stunned = 180; // 3 Sekunden Stun (180 Frames)
+                            player.stunned = player._stunResist ? 90 : 180; // Stur wie Beton: Stun -50%
                             player.speedBoostTimer = 0;
                         }
                         screenShake = v.type === 'truck' ? 40 : 25;
@@ -11236,7 +11216,14 @@ function loop(){
         }
 
         for(let i=enemies.length-1;i>=0;i--){
-            let e=enemies[i]; if(timeStopTimer <= 0) e.update(); // CHANGE 09.07.: Zeitstopp friert Gegner ein
+            let e=enemies[i];
+            // CHANGE 10.07.: Skilltree — 'Bosse langsamer' & 'Frühwarnsystem' (frisch gespawnte Gegner kurz eingefroren)
+            if(!e._skillInit){
+                e._skillInit = true;
+                if(e.type===99 && player && player._bossSlow && e.speed) e.speed *= (1 - player._bossSlow);
+                if(player && player._enemyWarn && e.type !== 99) e.freezeTimer = Math.max(e.freezeTimer||0, 18);
+            }
+            if(timeStopTimer <= 0) e.update(); // CHANGE 09.07.: Zeitstopp friert Gegner ein
             for(let j=bullets.length-1;j>=0;j--){
                 let b=bullets[j];
                 let hr=e.radius+(b.type==='rocket'?20:0);
@@ -11244,7 +11231,8 @@ function loop(){
                     if(e.type===6){if(!player.isMartin||b.type!=='rocket'){bullets.splice(j,1);spawnParticles(e.x,e.y,'#f1c40f',2);playSound('hit');continue;}}
                     if(b.type === 'rocket') {
                         screenShake=15;playSound('hammer');spawnParticles(b.x,b.y,'#f00',20);
-                        enemies.forEach(oe=>{if(Math.hypot(oe.x-b.x,oe.y-b.y)<150){applyElementalDamage(oe, 100, b.element, oe.x, oe.y);floatingTexts.push(new FloatingText(oe.x,oe.y,"BOOM","#f00"));}});
+                        let _splash = 150 + (player._rocketMod ? 40 : 0); // SKILL c4 'Raketen-Bastler': +Splash-Radius
+                        enemies.forEach(oe=>{if(Math.hypot(oe.x-b.x,oe.y-b.y)<_splash){applyElementalDamage(oe, 100, b.element, oe.x, oe.y);floatingTexts.push(new FloatingText(oe.x,oe.y,"BOOM","#f00"));}});
                         bullets.splice(j,1);
                     } else if (b.type === 'railgun') {
                         if (!b.hitEnemies.includes(e)) {
@@ -11272,6 +11260,17 @@ function loop(){
                             }
                             // -----------------------------------------
 
+                            // CHANGE 10.07.: Skilltree — Explosiv-Munition & Splitter-Geschosse (waren Deko)
+                            if(player._explosiveChance && Math.random() < player._explosiveChance){
+                                spawnParticles(b.x, b.y, '#e67e22', 6);
+                                enemies.forEach(oe=>{ if(oe!==e && Math.hypot(oe.x-b.x,oe.y-b.y)<60) applyElementalDamage(oe, b.dmg*0.5, b.element, oe.x, oe.y); });
+                            }
+                            if(player._splitChance && !b._isSplit && Math.random() < player._splitChance){
+                                for(let _sd=-1;_sd<=1;_sd+=2){
+                                    let nb = new Bullet(b.x, b.y, b.angle + _sd*0.5, 'standard', Math.max(1, Math.floor(b.dmg*0.5)), b.owner);
+                                    nb._isSplit = true; nb.life = 25; bullets.push(nb);
+                                }
+                            }
                             if(!player.hasPierceMod || b.hitEnemies.length >= 2) bullets.splice(j, 1);
                         }
                     }
@@ -11341,9 +11340,11 @@ function loop(){
                 // NEU V20: Combo-System bei jedem Kill
                 updateCombo(true);
                 earnExp(e.type, e.type===99); // Job-System EXP
+                onSkillKill(e); // CHANGE 10.07.: Skilltree-Kill-Effekte (Heilung, Items, Glückssträhne ...)
 
                 // Score mit Combo-Multiplikator
                 let earnedScore = e.score * comboMult;
+                earnedScore = applyKillScoreSkills(e, earnedScore); // CHANGE 10.07.: Score-Skills (3×, Doppelt/Nichts, Trophäen-Bonus)
                 score += earnedScore;
                 if(currentShift===2) score += Math.floor(e.score * 0.5 * comboMult);
 
@@ -11357,10 +11358,16 @@ function loop(){
                     floatingTexts.push(new FloatingText(e.x, e.y - 20, `×${comboMult} ${earnedScore}`, comboMult >= 5 ? '#e74c3c' : (comboMult >= 3 ? '#e67e22' : '#f1c40f')));
                 }
 
-                if(isWegflexenMode) wegflexenTimer = 300;
+                if(isWegflexenMode) wegflexenTimer = 300 + (player._flexTimer ? 90 : 0); // SKILL e2 'Flow-State': +1.5s pro Kill
                 splatters.push(new Splatter(e.x,e.y,e.color));
                 
                 if(e.type===99){
+                    // CHANGE 10.07.: Skilltree-Boss-Boni (waren Deko)
+                    if(player._bossScoreBonus){ score += player._bossScoreBonus; floatingTexts.push(new FloatingText(e.x, e.y-60, '📋 PROJEKTBONUS +'+player._bossScoreBonus, '#f1c40f')); }
+                    if(player._bossKbBonus){ let _bkb = Math.floor(player._bossKbBonus * (1+(player._stKbBonus||0))); kaffeebons += _bkb; floatingTexts.push(new FloatingText(e.x, e.y-80, '☕ +'+_bkb+' KB', '#a67c52')); }
+                    if(player._bossLoot && Math.random() < player._bossLoot) items.push(new Item('crate', e.x + 60, e.y));
+                    if(player._bossInvuln){ player._invulnTimer = player._bossInvuln; floatingTexts.push(new FloatingText(player.x, player.y-50, '✨ SIEGESTAUMEL!', '#fff')); }
+                    if(player._bossKillBuff){ player._bossKillBuffTimer = 1800; showToast('💪 MOMENTUM!', '#e67e22', '+10% Schaden für 30s'); }
                     activeBoss = null;
                     { let _bhc=document.getElementById('bossHpContainer'); if(_bhc) _bhc.style.display='none'; }
                     if(e.label === "PETER BAYER") {
@@ -11396,12 +11403,17 @@ function loop(){
                     }
                 }
 
-                if(Math.random() < 0.10){
+                // CHANGE 10.07.: Drop-Tabelle mit Skilltree-Boni (Kisten-Chance, Suppe-Drops, Item-Qualität, Loot-Goblin)
+                let _dropC = 0.10 * (1 + (player._crateChance||0) * 0.5) * (player._lootGoblin ? 1.5 : 1);
+                if(Math.random() < _dropC){
                     let l=Math.random();
-                    if     (l < 0.20) items.push(new Item('suppe', e.x, e.y));
-                    else if(l < 0.60) items.push(new Item('crate', e.x, e.y));
-                    else if(l < 0.90) items.push(new Item('chicken', e.x, e.y));
-                    else              items.push(new Item('vodka', e.x, e.y));
+                    if(player._itemQuality && Math.random() < player._itemQuality) l = 0.25 + Math.random()*0.75; // Qualitätskontrolle: keine Suppe, bessere Items
+                    let _suppeTop = player._suppeDropBonus ? 0.25 : 0.20;
+                    let _crateTop = _suppeTop + 0.40 + (player._crateChance ? 0.10 : 0);
+                    if     (l < _suppeTop) items.push(new Item('suppe', e.x, e.y));
+                    else if(l < _crateTop) items.push(new Item('crate', e.x, e.y));
+                    else if(l < 0.92)      items.push(new Item('chicken', e.x, e.y));
+                    else                   items.push(new Item('vodka', e.x, e.y));
                 }
                 enemies.splice(i,1); 
                 spawnParticles(e.x,e.y,'#fff',8);
@@ -11470,6 +11482,8 @@ function loop(){
 }
                     case 'shield':  
                         if(isWegflexenMode) { showToast("KEINE HILFE!", "#f00", "Götter brauchen keine Schilde!"); break; }
+                        // CHANGE 10.07.: Keystone BERSERKER — kein Schutzschild-Item wirkt
+                        if(player._ksRage) { showToast("BERSERKER! 🔥", "#f00", "Wut kennt keine Schilde!"); break; }
                         player.shieldTimer=600; playSound('powerup');
                         showToast("SCHUTZSCHILD! 🛡️","#00f","Immunität für 10 Sek");
                         floatingTexts.push(new FloatingText(player.x,player.y,"SCHUTZSCHILD!","#00f"));
@@ -12193,27 +12207,6 @@ function cncStartCdTicker(){
 // ============================================================
 // C&C PHASE 2 — FIREBASE-PVP (10.07.)
 // Nutzt die bereits vorhandene Firestore-Instanz (db) + Anon-Auth.
-//
-// ┌─ FIREBASE-ANLEITUNG (falls neues Projekt gewuenscht) ──────────────┐
-// │ 1. console.firebase.google.com → Projekt anlegen                   │
-// │ 2. Build → Firestore Database → "Create database" (Production)     │
-// │ 3. Build → Authentication → Sign-in method → "Anonymous" AKTIVIEREN│
-// │ 4. Projekteinstellungen → "Web-App" hinzufuegen → Config kopieren  │
-// │    und oben in `firebaseConfig` (SECTION 2) einsetzen              │
-// │ 5. Firestore → Rules → folgendes einfuegen & publishen:            │
-// │    rules_version = '2';                                            │
-// │    service cloud.firestore {                                       │
-// │      match /databases/{database}/documents {                       │
-// │        match /cnc_bases/{uid} {                                    │
-// │          allow read: if request.auth != null;                      │
-// │          allow write: if request.auth != null;                     │
-// │        }                                                           │
-// │        match /pvp_matches/{doc} { allow read, write: if request.auth != null; } │
-// │        match /highscores/{doc}  { allow read, write: if request.auth != null; } │
-// │      }                                                             │
-// │    }                                                               │
-// │ Das Spiel loggt sich automatisch anonym ein (SECTION 2).           │
-// └─────────────────────────────────────────────────────────────────────┘
 function cncDefense(){
     // Verteidigungskraft = Kampfkraft-Basis + Flaks (+15% je) + Tuerme (+8% je) + Mauern (+5% je)
     let base = cncPower();
