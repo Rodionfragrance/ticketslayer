@@ -628,6 +628,29 @@ input[type="text"] {
             <li>☢️ <strong>System-Reboot</strong> — Löscht ALLE normalen Gegner. Boss verliert nur 1500 HP. [20 🥣]</li>
         </ul>
 
+        <h3>10b. KÜHLSCHRANK — SCHICHTGETRÄNKE</h3>
+        <p>Im Hardwarelager kaufst du Dosen ins Inventar (max. 9 pro Sorte) und trinkst sie <strong>mitten im Run</strong> per Taste. Unten rechts siehst du deine Slots und den <strong>PEGEL</strong>.</p>
+        <ul>
+            <li>🥤 <strong>Monster Ultra White</strong> <span class="key-hint">1</span> — 8s Feuerrate +66%. Kein Malus. [4 🥣] <em>Pegel +25</em></li>
+            <li>🥤 <strong>Monster Ultra Black</strong> <span class="key-hint">2</span> — 8s Schaden +18, Speed −15%. [5 🥣] <em>Pegel +30</em></li>
+            <li>🍺 <strong>FAXE Strong 10%</strong> <span class="key-hint">3</span> — 6s Schaden +30 & Speed +40%, 4s unantastbar. Danach 6s <strong>KATER</strong>. [7 🥣] <em>Pegel +45</em></li>
+        </ul>
+        <p><strong>⚗️ MISCHKONSUM</strong> — Zwei verschiedene Dosen innerhalb von 5 Sekunden lösen statt der Einzeleffekte einen Kombi-Rausch aus:</p>
+        <ul>
+            <li>🌫 <strong>Grauzone</strong> (White + Black) — 10s Feuerrate ×1,8 <em>und</em> Schaden +20. Kein Malus. Der sauberste Play im Spiel.</li>
+            <li>😵 <strong>Wachkoma</strong> (White + FAXE) — 10s Feuerrate ×2,2, dafür 25% langsamer.</li>
+            <li>🔥 <strong>Eskalation</strong> (Black + FAXE) — 10s Schaden +45, kostet 1 HP pro Sekunde.</li>
+            <li>☠ <strong>Schichtübergabe</strong> (alle drei in 8s) — 12s unantastbar, Schaden +60, Feuerrate ×2,9. <strong>Danach bleibt dir 1 HP.</strong></li>
+        </ul>
+        <p><strong>PEGEL:</strong> Jede Dose füllt ihn, er baut sich langsam ab. Ab 80% zitterst du. Bei 100% gibt es 3 Sekunden <strong>BLACKOUT</strong> — keine Kontrolle, danach Pegel zurück auf 0 und 2s Unverwundbarkeit. Gier kostet.</p>
+
+        <h3>10c. GRAFIK & PERFORMANCE</h3>
+        <p>Das Spiel misst die Bildrate laufend und regelt die Effektlast automatisch nach (Schatten, Partikel-, Item- und Text-Limits). Auf schwacher Hardware fällt es selbstständig auf Stufe MITTEL oder NIEDRIG.</p>
+        <ul>
+            <li><span class="key-hint">F3</span> — FPS-Anzeige samt Objektzählern ein/aus.</li>
+            <li><span class="key-hint">F4</span> — Grafikstufe manuell durchschalten (HOCH / MITTEL / NIEDRIG).</li>
+        </ul>
+
         <h3>11. META-PROGRESSION — ÜBERSICHT</h3>
         <p><strong>☕ Kaffeebons (KB)</strong> sind die universelle Währung. Du verdienst sie nach jedem Run basierend auf deinem Score. KB werden geräteübergreifend in der Cloud gesichert.</p>
         <ul>
@@ -835,6 +858,25 @@ input[type="text"] {
                 <div><div class="shop-item-name" style="color:#0ff;">LÄNGERES MAUSKABEL</div><div class="shop-item-desc">Orbit-Radius +60px (max. 300px, stapelbar).</div><div class="shop-item-price" style="color:#ff9f43;">6 Suppen</div></div>
             </div>
         </div>
+
+        <!-- ══ GETRÄNKEREGAL ══ -->
+        <h2 style="color:#2ecc71; margin:22px 0 2px; letter-spacing:3px; font-size:18px;">🧊 KÜHLSCHRANK</h2>
+        <p style="color:#777; font-size:12px; margin:0 0 12px; font-style:italic;">"Der läuft schon seit 2016 auf Anschlag." — Im Run mit [1] [2] [3] trinken. Achte auf den PEGEL.</p>
+        <div class="shop-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+            <div class="shop-item" onclick="buyKloskaItem('drink_white', 4)" style="border-color:#e8f8ff;">
+                <div class="shop-item-icon">🥤</div>
+                <div><div class="shop-item-name" style="color:#e8f8ff;">MONSTER ULTRA WHITE [1]</div><div class="shop-item-desc">8s Feuerrate +66%. Sauber, kein Malus.<br><b style="color:#2ecc71;">Vorrat: <span id="drinkCntWhite">0</span></b></div><div class="shop-item-price" style="color:#ff9f43;">4 Suppen</div></div>
+            </div>
+            <div class="shop-item" onclick="buyKloskaItem('drink_black', 5)" style="border-color:#b06bff;">
+                <div class="shop-item-icon">🥤</div>
+                <div><div class="shop-item-name" style="color:#b06bff;">MONSTER ULTRA BLACK [2]</div><div class="shop-item-desc">8s Schaden +18, dafür 15% langsamer.<br><b style="color:#2ecc71;">Vorrat: <span id="drinkCntBlack">0</span></b></div><div class="shop-item-price" style="color:#ff9f43;">5 Suppen</div></div>
+            </div>
+            <div class="shop-item" onclick="buyKloskaItem('drink_faxe', 7)" style="border-color:#2ecc71;">
+                <div class="shop-item-icon">🍺</div>
+                <div><div class="shop-item-name" style="color:#2ecc71;">FAXE STRONG 10% [3]</div><div class="shop-item-desc">6s alles hoch + 4s unantastbar. Danach KATER.<br><b style="color:#2ecc71;">Vorrat: <span id="drinkCntFaxe">0</span></b></div><div class="shop-item-price" style="color:#ff9f43;">7 Suppen</div></div>
+            </div>
+        </div>
+        <p style="color:#9b59b6; font-size:12px; margin:12px 0 0; line-height:1.5;">⚗️ <b>MISCHKONSUM:</b> Zwei verschiedene Dosen innerhalb 5 Sekunden ergeben einen Kombi-Rausch. Alle drei in 8 Sekunden = <b style="color:#f00;">SCHICHTÜBERGABE</b>.</p>
         <button class="btn-easy" onclick="closeKloskaShop()" style="margin-top:20px; width:100%; background:#222; border-color:#9b59b6; color:#9b59b6;">LAGER VERLASSEN</button>
     </div>
 </div>
@@ -7298,6 +7340,7 @@ class Player{
         this.hp=100; this.maxHp=100;
         this.dmgBonus=0;
         this.isMartin=false; this.promoTriggered=false;
+        this.drinks={monster_white:0, monster_black:0, faxe:0};
         this.vodkaTimer=0;
         this.idocBlocker = false;
         this.activeWeapons = {};
@@ -7427,6 +7470,9 @@ class Player{
             input.keys['KeyB']=false;
         }
         if(input.keys['KeyF']){tryActivateFarm();input.keys['KeyF']=false;}
+        if(input.keys['Digit1']){ consumeDrink('monster_white'); input.keys['Digit1']=false; }
+        if(input.keys['Digit2']){ consumeDrink('monster_black'); input.keys['Digit2']=false; }
+        if(input.keys['Digit3']){ consumeDrink('faxe');          input.keys['Digit3']=false; }
         // if(score>=2500&&!this.isMartin&&!this.promoTriggered) this.triggerEvolution(); // DEAKTIVIERT — Maddin wird Job-System Klasse
 
         if(input.keys['KeyE']){
@@ -8460,7 +8506,7 @@ if(!bueroDoor && currentBossStage >= 4 && !activeBoss && gamePhase === 'normal' 
     if(currentShift===2) sr*=0.8;
     if(frame%Math.floor(sr)===0) enemies.push(new Enemy());
 
-    if(Math.random()<0.01){
+    if(items.length < PERF.maxItems*0.6 && Math.random() < 0.01*(1-items.length/PERF.maxItems)){
         let r=Math.random();
         if     (r<0.30) items.push(new Item('suppe'));
         else if(r<0.55) items.push(new Item('crate')); 
@@ -8676,7 +8722,7 @@ function drawWorld(){
     ctx.fillText("OFFICE",WORLD_WIDTH/2,600);ctx.fillText("WAREHOUSE",WORLD_WIDTH/2,1900);ctx.fillText("LOGISTICS",WORLD_WIDTH/2,3300);
     ctx.restore();
 
-    splatters.forEach(s=>s.draw());
+    splatters.forEach(s=>{ if(inView(s.x,s.y,70)) s.draw(); });
 
     if(meetingZone && meetingZone.active){
         ctx.beginPath();ctx.arc(meetingZone.x,meetingZone.y,meetingZone.r,0,Math.PI*2);
@@ -8686,6 +8732,7 @@ function drawWorld(){
     }
 
     obstacles.forEach(o=>{
+        if(!inView(o.x+o.w/2,o.y+o.h/2,Math.max(o.w,o.h)+60)) return;
         ctx.fillStyle='rgba(0,0,0,.9)';ctx.fillRect(o.x+8,o.y+8,o.w,o.h);
         if(o.type==='desk'){
             ctx.fillStyle='#37474f';ctx.fillRect(o.x,o.y,o.w,o.h);
@@ -11433,6 +11480,7 @@ function loop(){
                 item.y += Math.sin(angle) * 7;
             }
             if(item.life !== Infinity){ item.life--; if(item.life <= 0){ items.splice(i, 1); continue; } }
+            if(item._cd > 0){ continue; }
             if(Math.hypot(player.x-item.x, player.y-item.y) < player.radius + item.radius){
                 switch(item.type){
                     case 'suppe': 
@@ -11506,12 +11554,13 @@ function loop(){
                         spawnParticles(item.x,item.y,'#ffd700',20);
                         break;
                 }
-                items.splice(i, 1);
+                if((item.stack||1) > 1){ item.stack--; item._cd = 5; } else items.splice(i, 1);
             }
         }
 
         for(let i=particles.length-1;i>=0;i--){if(!particles[i])continue;particles[i].update();if(particles[i].life<=0)particles.splice(i,1);}
         shells.forEach(s=>s.update()); if(shells.length>200)shells.splice(0,50);
+        if(typeof PERF!=='undefined'){ PERF.maintain(); updateDrinks(); }
         for(let i=floatingTexts.length-1;i>=0;i--){if(!floatingTexts[i])continue;floatingTexts[i].update();if(floatingTexts[i].life<=0)floatingTexts.splice(i,1);}
         if(particles.length>500) particles.splice(0,100);
         
@@ -11553,7 +11602,7 @@ function loop(){
         if(riftMode) drawRiftBackground();
         // ───────────────────────────────────────────────────────
         drawWorld();
-        items.forEach(it=>it.draw());
+        items.forEach(it=>{ if(inView(it.x,it.y,60)) it.draw(); });
 
         // Vehicles zeichnen
         // Büro-Tür zeichnen
@@ -11614,11 +11663,11 @@ function loop(){
             ctx.shadowBlur = 0;
             ctx.restore();
         });
-        bullets.forEach(b=>b.draw());
-        particles.forEach(p=>p.draw()); shells.forEach(s=>s.draw());
-        enemies.forEach(e=>e.draw());
+        bullets.forEach(b=>{ if(inView(b.x,b.y,40)) b.draw(); });
+        particles.forEach(p=>{ if(inView(p.x,p.y,24)) p.draw(); }); shells.forEach(s=>{ if(inView(s.x,s.y,24)) s.draw(); });
+        enemies.forEach(e=>{ if(inView(e.x,e.y,(e.radius||30)+60)) e.draw(); });
         turrets.forEach(t=>t.draw());
-        floatingTexts.forEach(ft=>ft.draw());
+        floatingTexts.forEach(ft=>{ if(inView(ft.x,ft.y,100)) ft.draw(); });
         // ── RIFT MODE: Jungle Camps & Objectives ──
         if(riftMode) { drawRiftJungleCamps(); drawRiftObjectives(); checkPlayerJungleInteraction(); drawRiftAARange(); }
         // ──────────────────────────────────────────
@@ -11658,6 +11707,7 @@ function loop(){
         // ── RIFT MODE: HUD (Screen-Space, nach restore) ──
         if(riftMode) { drawRiftHUD(); drawRiftAbilityHUD(); }
         // ─────────────────────────────────────────────────
+        if(typeof drawDrinkHUD==='function'){ drawDrinkHUD(); PERF.drawHud(); }
 
         requestAnimationFrame(loop);
     } catch(err){ console.error("GAME ERROR:", err); alert("ERROR: "+err.message); gameRunning=false; }
@@ -11688,6 +11738,7 @@ function startGame(diff=1, gameMode='normal'){
     gamePaused=false;idocEvent=null;meetingZone=null;kloskaEvent=null;
     systemCollapse = false; collapseTimer = 0;
     enemies=[];bullets=[];particles=[];items=[];splatters=[];floatingTexts=[];turrets=[];shells=[];serverFarms=[];vehicles=[];
+    if(typeof resetDrinks==='function') resetDrinks();
     gamePhase='normal'; bueroDoor=null; bossRoomState=null; fadeAlpha=0; fadeDir=0;
     secretWall=null; secretBossActive=false; phantomTimer=0; phantomCooldown=0;
     blockadeEvent=null; // NEU: Reset beim Start
@@ -11774,6 +11825,7 @@ function openKloskaShop() {
     gamePaused = true;
     document.getElementById('kloskaShopScreen').style.display = 'block';
     document.getElementById('shopSuppenCount').innerText = player.suppe;
+    refreshDrinkShop();
     kloskaVoice.currentTime=0; kloskaVoice.play().catch(()=>{});
 }
 function closeKloskaShop() {
@@ -11796,6 +11848,13 @@ function buyKloskaItem(item, cost) {
         if(item === 'mouse_radius') {
             if(player.mouseRadius >= 300) { player.suppe += finalCost; showToast("MAXIMUM!", "#888", "Radius ist bereits maximal (300px)."); }
             else { player.mouseRadius += 60; showToast("GEKAUFT!", "#0ff", "ORBIT-RADIUS: " + player.mouseRadius + "px"); }
+        }
+        if(item === 'drink_white' || item === 'drink_black' || item === 'drink_faxe') {
+            const key = { drink_white:'monster_white', drink_black:'monster_black', drink_faxe:'faxe' }[item];
+            if(!player.drinks) player.drinks = { monster_white:0, monster_black:0, faxe:0 };
+            if(player.drinks[key] >= 9) { player.suppe += finalCost; showToast("REGAL VOLL!", "#888", "Maximal 9 Dosen pro Sorte."); }
+            else { player.drinks[key]++; refreshDrinkShop(); showToast("GEKAUFT!", "#2ecc71", "Im Run mit [" + ({monster_white:1,monster_black:2,faxe:3})[key] + "] trinken"); }
+            document.getElementById('shopSuppenCount').innerText = player.suppe;
         }
         if(item === 'thinclient') { player.idocBlocker = true; showToast("GEKAUFT!", "#0ff", "KEINE PROZESSAUSFÄLLE MEHR"); }
         if(item === 'azubi_army') { 
@@ -14006,6 +14065,410 @@ setTimeout(function(){
         if(ss) ss.style.display = 'block';
     }
 }, 5000);
+</script>
+<script>
+// ============================================================
+// TICKET SLAYER — PERF CORE + SYSTEM "SCHICHTGETRÄNKE"
+// ============================================================
+(function(){
+'use strict';
+
+// ── 1. ADAPTIVER QUALITÄTS-MANAGER ─────────────────────────
+const PERF = window.PERF = {
+  fps: 60, _frames: 0, _last: performance.now(),
+  tier: 2, shadows: true, _hold: 0, _manual: false,
+  maxItems: 26, maxTexts: 20, maxParticles: 400, maxSplatters: 140, cullPad: 140,
+
+  tick(){
+    this._frames++;
+    const now = performance.now(), dt = now - this._last;
+    if(dt < 500) return;
+    this.fps = this._frames * 1000 / dt;
+    this._frames = 0; this._last = now;
+    if(this._manual) return;
+    if(this._hold > 0){ this._hold--; return; }
+    if(this.fps < 42 && this.tier > 0){ this.setTier(this.tier - 1); this._hold = 4; }
+    else if(this.fps > 57 && this.tier < 2){ this.setTier(this.tier + 1); this._hold = 6; }
+  },
+
+  setTier(t){
+    this.tier = t;
+    this.shadows      = (t === 2);
+    this.maxItems     = [12, 20, 30][t];
+    this.maxTexts     = [ 8, 14, 22][t];
+    this.maxParticles = [120, 260, 450][t];
+    this.maxSplatters = [ 40,  90, 160][t];
+    this.cullPad      = [ 60, 100, 160][t];
+  }
+};
+
+// ── 2. SHADOW-GOVERNOR (kappt den teuersten Canvas2D-Call zentral) ──
+(function(){
+  const proto = CanvasRenderingContext2D.prototype;
+  const d = Object.getOwnPropertyDescriptor(proto, 'shadowBlur');
+  if(!d || !d.set) return;
+  Object.defineProperty(proto, 'shadowBlur', {
+    configurable: true,
+    get(){ return d.get.call(this); },
+    set(v){ d.set.call(this, PERF.shadows ? v : 0); }
+  });
+})();
+
+// ── 3. VIEWPORT-CULLING ────────────────────────────────────
+window.inView = function(x, y, pad){
+  pad = pad || PERF.cullPad;
+  return x > camera.x - pad && x < camera.x + canvas.width  + pad &&
+         y > camera.y - pad && y < camera.y + canvas.height + pad;
+};
+
+// ── 4. ITEM-DRAW: kein Blur, Stack-Badge ───────────────────
+const ICONS = {
+  chicken:'🍗', vodka:'🍺', crate:'📦', bug:'💾', hammer:'🔨',
+  vacation:'💤', bike:'🚲', shield:'🛡️', briefcase:'💼', suppe:'🥣', akte:'📁'
+};
+if(typeof Item !== 'undefined'){
+  Item.prototype.draw = function(){
+    const bob = Math.sin((frame + this.bobOffset) / 20) * 5;
+    const y   = this.y + bob;
+    const g   = 0.18 + Math.sin(frame * 0.1) * 0.06;
+    ctx.globalAlpha = g; ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(this.x, y, 22, 0, 6.2832); ctx.fill();
+    ctx.globalAlpha = g * 0.5;
+    ctx.beginPath(); ctx.arc(this.x, y, 32, 0, 6.2832); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath(); ctx.ellipse(this.x, this.y + 18, 12 - bob/2, 5 - bob/4, 0, 0, 6.2832); ctx.fill();
+    if(this.life < 120 && this.life % 10 < 5) ctx.globalAlpha = 0.3;
+    ctx.font = '40px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+    const ic = ICONS[this.type] || '?';
+    ctx.strokeText(ic, this.x, y);
+    ctx.fillStyle = '#fff'; ctx.fillText(ic, this.x, y);
+    if(this.stack > 1){
+      ctx.font = 'bold 16px Courier New';
+      ctx.fillStyle = '#000'; ctx.fillRect(this.x + 10, y - 26, 34, 19);
+      ctx.fillStyle = '#f1c40f'; ctx.fillText('×' + this.stack, this.x + 27, y - 16);
+    }
+    ctx.globalAlpha = 1; ctx.lineWidth = 1; ctx.textBaseline = 'alphabetic';
+  };
+}
+
+// ── 5. FLOATINGTEXT: Merge-Anzeige ─────────────────────────
+if(typeof FloatingText !== 'undefined'){
+  FloatingText.prototype.draw = function(){
+    const n = this.n || 1;
+    ctx.globalAlpha = this.life / 90;
+    ctx.fillStyle   = this.color;
+    ctx.font        = n > 1 ? 'bold 28px Courier New' : 'bold 24px Courier New';
+    ctx.textAlign   = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(n > 1 ? (this.base || this.text) + ' ×' + n : this.text, this.x, this.y);
+    ctx.globalAlpha = 1;
+  };
+}
+
+// ── 6. MAINTAIN ────────────────────────────────────────────
+PERF.maintain = function(){
+  this.tick();
+
+  // 6a) Identische FloatingTexts verschmelzen → "🎲 +5 HP ×7"
+  if(typeof floatingTexts !== 'undefined' && floatingTexts.length > 3){
+    const ft = floatingTexts;
+    for(let i = 0; i < ft.length; i++){
+      const a = ft[i]; if(!a || a._dead) continue;
+      if(a.base === undefined){ a.base = a.text; a.n = 1; }
+      for(let j = i + 1; j < ft.length; j++){
+        const b = ft[j]; if(!b || b._dead) continue;
+        if(b.base === undefined){ b.base = b.text; b.n = 1; }
+        if(a.base === b.base && Math.abs(a.x - b.x) < 170 && Math.abs(a.y - b.y) < 130){
+          a.n += b.n; a.life = Math.max(a.life, b.life); b._dead = true;
+        }
+      }
+    }
+    for(let i = ft.length - 1; i >= 0; i--) if(ft[i] && ft[i]._dead) ft.splice(i, 1);
+    if(ft.length > this.maxTexts) ft.splice(0, ft.length - this.maxTexts);
+  }
+
+  // 6b) Items gleichen Typs zu Stacks verschmelzen — kein Loot-Verlust
+  if(typeof items !== 'undefined'){
+    const it = items;
+    if(it.length > this.maxItems * 0.7){
+      for(let i = 0; i < it.length; i++){
+        const a = it[i]; if(!a || a.life === Infinity) continue;
+        if(!a.stack) a.stack = 1;
+        for(let j = it.length - 1; j > i; j--){
+          const b = it[j];
+          if(b && b.type === a.type && b.life !== Infinity &&
+             Math.abs(a.x - b.x) < 220 && Math.abs(a.y - b.y) < 220){
+            a.stack += (b.stack || 1);
+            a.life   = Math.max(a.life, b.life);
+            it.splice(j, 1);
+          }
+        }
+      }
+      if(it.length > this.maxItems){
+        let over = it.length - this.maxItems;
+        for(let i = 0; i < it.length && over > 0; i++){
+          if(it[i].life !== Infinity){ it.splice(i, 1); i--; over--; }
+        }
+      }
+    }
+    for(let i = 0; i < it.length; i++) if(it[i]._cd > 0) it[i]._cd--;
+  }
+
+  if(typeof particles !== 'undefined' && particles.length > this.maxParticles)
+    particles.splice(0, particles.length - this.maxParticles);
+  if(typeof splatters !== 'undefined' && splatters.length > this.maxSplatters)
+    splatters.splice(0, splatters.length - this.maxSplatters);
+};
+
+// ── 7. FPS-OVERLAY (F3) / Manuelles Tier (F4) ──────────────
+let showFps = false;
+addEventListener('keydown', e => {
+  if(e.key === 'F3'){ showFps = !showFps; e.preventDefault(); }
+  if(e.key === 'F4'){
+    PERF._manual = true;
+    PERF.setTier((PERF.tier + 2) % 3);
+    if(typeof showToast === 'function')
+      showToast('GRAFIK: ' + ['NIEDRIG','MITTEL','HOCH'][PERF.tier], '#3498db', 'F4 = umschalten, F3 = FPS-Anzeige');
+    e.preventDefault();
+  }
+});
+PERF.drawHud = function(){
+  if(!showFps) return;
+  ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+  ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillStyle = this.fps < 45 ? '#e74c3c' : (this.fps < 56 ? '#f1c40f' : '#2ecc71');
+  ctx.fillText(this.fps.toFixed(0) + ' FPS | TIER ' + this.tier +
+    ' | I:' + items.length + ' P:' + particles.length +
+    ' T:' + floatingTexts.length + ' E:' + enemies.length, 8, 8);
+  ctx.restore();
+};
+
+
+// ============================================================
+// SYSTEM "SCHICHTGETRÄNKE"
+// ============================================================
+const D = window.DRINKS = {
+  pegel: 0, active: null, history: [], blackout: 0, kater: 0,
+  dFire: 0, dDmg: 0, dSpd: 0
+};
+
+function setMods(fireMul, dmgAdd, spdMul){
+  const p = player; if(!p) return;
+  p.fireRate -= D.dFire; p.dmgBonus -= D.dDmg; p.speed -= D.dSpd;
+  const nf = Math.max(2, p.fireRate * fireMul);
+  D.dFire = nf - p.fireRate;
+  D.dDmg  = dmgAdd;
+  D.dSpd  = p.speed * (spdMul - 1);
+  p.fireRate += D.dFire; p.dmgBonus += D.dDmg; p.speed += D.dSpd;
+}
+function clearMods(){ setMods(1, 0, 1); D.dFire = D.dDmg = D.dSpd = 0; }
+
+function buff(name, color, secs, fireMul, dmgAdd, spdMul, desc, onTick, onEnd){
+  D.active = { name, color, timer: secs * 60, max: secs * 60, desc, onTick, onEnd };
+  setMods(fireMul, dmgAdd, spdMul);
+  showToast(name, color, desc);
+  playSound('powerup');
+  if(player) floatingTexts.push(new FloatingText(player.x, player.y - 60, name, color));
+}
+
+const RECIPES = {
+  monster_white: { pegel: 25, run: () =>
+    buff('⚪ ULTRA WHITE', '#e8f8ff', 8, 0.60, 0, 1.0,
+         'Feuerrate +66% — sauber, präzise, kein Schadensbonus') },
+
+  monster_black: { pegel: 30, run: () =>
+    buff('⚫ ULTRA BLACK', '#b06bff', 8, 1.0, 18, 0.85,
+         'Schaden +18 — dafür 15% langsamer. Tunnelblick.') },
+
+  faxe: { pegel: 45, run: () => {
+    if(player) player._invulnTimer = Math.max(player._invulnTimer || 0, 240);
+    buff('🍺 FAXE STRONG 10%', '#2ecc71', 6, 0.85, 30, 1.40,
+         'ALLES HOCH. 4s unantastbar. Danach: KATER.',
+         () => { if(frame % 4 === 0) screenShake = Math.max(screenShake, 4); },
+         () => { D.kater = 360; setMods(1.25, 0, 0.70);
+                 showToast('🤢 KATER', '#7f8c8d', '6s: langsam und schwach'); });
+  }}
+};
+
+const COMBOS = [
+  { need: ['monster_white','monster_black','faxe'], win: 480, run: () => {
+      if(player) player._invulnTimer = 720;
+      screenShake = 40;
+      buff('☠ SCHICHTÜBERGABE', '#ff0000', 12, 0.35, 60, 1.30,
+           'MARTIN BRÜLLT. 12s unantastbar. Danach bleibt 1 HP.',
+           () => { if(frame % 3 === 0) screenShake = Math.max(screenShake, 8); },
+           () => { if(player) player.hp = 1; showToast('FEIERABEND.', '#555', 'Du lebst. Knapp.'); });
+  }},
+  { need: ['monster_white','monster_black'], win: 300, run: () =>
+      buff('🌫 GRAUZONE', '#95a5a6', 10, 0.55, 20, 1.0,
+           'Feuerrate + Schaden, kein Malus. Der saubere Play.') },
+  { need: ['monster_white','faxe'], win: 300, run: () =>
+      buff('😵 WACHKOMA', '#16a085', 10, 0.45, 0, 0.75,
+           'Finger schneller als der Kopf. Beine aus Blei.') },
+  { need: ['monster_black','faxe'], win: 300, run: () =>
+      buff('🔥 ESKALATION', '#e74c3c', 10, 0.90, 45, 1.10,
+           'Schaden brutal — kostet 1 HP pro Sekunde.',
+           () => { if(frame % 60 === 0 && player && player.hp > 5) player.hp -= 1; }) }
+];
+
+function checkCombo(){
+  const now = frame;
+  for(const c of COMBOS){
+    if(c.need.every(t => D.history.some(h => h.type === t && now - h.frame <= c.win))){
+      D.history = D.history.filter(h => !c.need.includes(h.type));
+      c.run();
+      return true;
+    }
+  }
+  return false;
+}
+
+// ── Konsum ─────────────────────────────────────────────────
+window.consumeDrink = function(type){
+  if(!player || gamePaused) return;
+  if(!player.drinks) player.drinks = { monster_white:0, monster_black:0, faxe:0 };
+  if(D.blackout > 0){ showToast('DU LIEGST.', '#555', 'Erst wieder aufstehen.'); return; }
+  if((player.drinks[type] || 0) <= 0){
+    showToast('KÜHLSCHRANK LEER', '#888', 'Nachschub bei Kloska im Hardwarelager');
+    playSound('hit');
+    return;
+  }
+  player.drinks[type]--;
+  const r = RECIPES[type]; if(!r) return;
+  D.pegel = Math.min(120, D.pegel + r.pegel);
+  D.history.push({ type, frame });
+  D.history = D.history.filter(h => frame - h.frame <= 600);
+  spawnParticles(player.x, player.y, '#fff', 12);
+  if(!checkCombo()) r.run();
+};
+
+window.updateDrinks = function(){
+  if(!player) return;
+
+  if(D.blackout > 0){
+    D.blackout--;
+    if(frame % 5 === 0) screenShake = Math.max(screenShake, 12);
+    if(D.blackout === 0){
+      D.pegel = 0; clearMods();
+      player._invulnTimer = Math.max(player._invulnTimer || 0, 120);
+      showToast('WIEDER DA.', '#3498db', 'Pegel zurück auf 0');
+    }
+    return;
+  }
+
+  if(D.pegel > 0) D.pegel = Math.max(0, D.pegel - 0.028);
+
+  if(D.pegel >= 100){
+    D.blackout = 180; D.active = null;
+    setMods(6, 0, 0.4);
+    playSound('alarm');
+    showToast('💀 BLACKOUT', '#000', '3 Sekunden weg vom Fenster');
+    return;
+  }
+
+  if(D.kater > 0){
+    D.kater--;
+    if(D.kater === 0) clearMods();
+    return;
+  }
+
+  if(D.active){
+    if(D.active.onTick) D.active.onTick();
+    if(--D.active.timer <= 0){
+      const end = D.active.onEnd;
+      D.active = null; clearMods();
+      if(end) end();
+    }
+  }
+};
+
+// ── HUD ────────────────────────────────────────────────────
+const SLOTS = [
+  { k:'monster_white', key:'1', icon:'🥤', col:'#e8f8ff' },
+  { k:'monster_black', key:'2', icon:'🥤', col:'#b06bff' },
+  { k:'faxe',          key:'3', icon:'🍺', col:'#2ecc71' }
+];
+
+window.drawDrinkHUD = function(){
+  if(!player) return;
+  const inv = player.drinks || {};
+  ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+
+  // Dosen-Slots unten rechts
+  const sw = 54, gap = 8;
+  let bx = canvas.width - (sw * 3 + gap * 2) - 20;
+  let by = canvas.height - sw - 20;
+  for(let i = 0; i < 3; i++){
+    const s = SLOTS[i], n = inv[s.k] || 0;
+    const x = bx + i * (sw + gap);
+    ctx.fillStyle = n > 0 ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.35)';
+    ctx.fillRect(x, by, sw, sw);
+    ctx.strokeStyle = n > 0 ? s.col : '#333'; ctx.lineWidth = 2;
+    ctx.strokeRect(x, by, sw, sw);
+    ctx.globalAlpha = n > 0 ? 1 : 0.28;
+    ctx.font = '26px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(s.icon, x + sw/2, by + sw/2 - 4);
+    ctx.globalAlpha = 1;
+    ctx.font = 'bold 11px Courier New'; ctx.textBaseline = 'top';
+    ctx.fillStyle = '#777'; ctx.textAlign = 'left';
+    ctx.fillText('[' + s.key + ']', x + 4, by + 3);
+    ctx.fillStyle = n > 0 ? '#f1c40f' : '#444'; ctx.textAlign = 'right';
+    ctx.font = 'bold 15px Courier New';
+    ctx.fillText('' + n, x + sw - 4, by + sw - 18);
+  }
+
+  // Pegel-Balken
+  if(D.pegel > 0 || D.active || D.blackout > 0){
+    const w = sw * 3 + gap * 2, h = 10, py = by - 18;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(bx - 2, py - 2, w + 4, h + 4);
+    ctx.fillStyle = D.pegel > 80 ? '#e74c3c' : (D.pegel > 50 ? '#f39c12' : '#2ecc71');
+    ctx.fillRect(bx, py, w * Math.min(1, D.pegel / 100), h);
+    ctx.strokeStyle = '#555'; ctx.lineWidth = 1; ctx.strokeRect(bx, py, w, h);
+    ctx.font = 'bold 10px Courier New'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillStyle = D.pegel > 80 ? '#e74c3c' : '#999';
+    ctx.fillText('PEGEL ' + Math.floor(D.pegel) + '%' +
+      (D.pegel > 80 && frame % 30 < 15 ? '  ⚠ ZITTERN' : ''), bx, py - 3);
+  }
+
+  // Aktiver Rausch
+  if(D.active){
+    ctx.font = 'bold 16px Courier New'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillStyle = D.active.color;
+    ctx.fillText(D.active.name + '  ' + Math.ceil(D.active.timer / 60) + 's',
+                 canvas.width - 20, by - 34);
+  }
+  if(D.kater > 0){
+    ctx.font = 'bold 15px Courier New'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillStyle = '#7f8c8d';
+    ctx.fillText('🤢 KATER  ' + Math.ceil(D.kater / 60) + 's', canvas.width - 20, by - 34);
+  }
+  if(D.blackout > 0){
+    ctx.fillStyle = 'rgba(0,0,0,' + (0.55 + Math.sin(frame * 0.4) * 0.25) + ')';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#e74c3c'; ctx.font = 'bold 48px Courier New';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('BLACKOUT', canvas.width / 2, canvas.height / 2);
+  }
+  ctx.restore();
+};
+
+window.refreshDrinkShop = function(){
+  const inv = (player && player.drinks) || {};
+  const m = { drinkCntWhite:'monster_white', drinkCntBlack:'monster_black', drinkCntFaxe:'faxe' };
+  for(const id in m){
+    const el = document.getElementById(id);
+    if(el) el.innerText = inv[m[id]] || 0;
+  }
+};
+
+window.resetDrinks = function(){
+  D.pegel = 0; D.active = null; D.history = []; D.blackout = 0; D.kater = 0;
+  D.dFire = 0; D.dDmg = 0; D.dSpd = 0;
+};
+
+})();
+
 </script>
 </body>
 </html>
