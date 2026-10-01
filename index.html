@@ -807,6 +807,7 @@ input[type="text"] {
             <button onclick="openSkillTree()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🌳 SKILLTREE</button>
             <button onclick="openIdleMode()" style="background:#111;color:#f1c40f;border:2px solid #f1c40f;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f1c40f';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f1c40f'">🪱 IDLE-KLICKER</button>
             <button onclick="openHighscoreMenu()" style="background:#111;color:#fff;border:2px solid #fff;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#fff';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#fff'">🏆 RANGLISTE</button>
+            <button onclick="openLsChicken()" style="background:#111;color:#f0a03a;border:2px solid #f0a03a;padding:11px 6px;font-size:13px;cursor:pointer;font-weight:bold;text-transform:uppercase;font-family:'Courier New',monospace;letter-spacing:1px;transition:0.2s;" onmouseover="this.style.background='#f0a03a';this.style.color='#000'" onmouseout="this.style.background='#111';this.style.color='#f0a03a'">🍗 LS-CHICKEN</button>
         </div>
     </div>
     
@@ -1225,6 +1226,18 @@ var SESSION_HOURS = 8;
         }
     } catch(e) {}
 })();
+
+// CHANGE 01.10.: LS-Chicken (eigenes Spiel, lschicken.html im selben Repo) im eigenen Tab öffnen,
+// damit der Wurm-Klicker (Session-Modus) in diesem Tab nicht zurückgesetzt wird.
+function openLsChicken() {
+    try {
+        localStorage.setItem('lsc_ticket', String(Date.now()));
+        var n = (document.getElementById('playerName') || {value:''}).value.toUpperCase().trim().substring(0,10);
+        if (n) localStorage.setItem('lsc_player', n);
+    } catch(e) {}
+    var w = window.open('lschicken.html', 'lschicken');
+    if (!w) location.href = 'lschicken.html';
+}
 
 function checkPassword() {
     var pwField = document.getElementById('pw-input');
