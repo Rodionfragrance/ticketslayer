@@ -232,11 +232,45 @@ const esc = t=>String(t).replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp
 const cleanName = n=>String(n||'').toUpperCase().trim().substring(0,10);
 const profRef = ()=> fdb && PLAYER && PLAYER!=='ANONYM' ? fdb.collection('playerProfiles').doc(PLAYER) : null;
 const inc = n=>firebase.firestore.FieldValue.increment(n);
+let CLOUD_RUN=null, cloudFor='';
 async function fbLoadMine(){
-  CLOUD_BEST=null; const ref=profRef(); if(!ref) return;
-  try{ const d=await ref.get(); const l=d.exists?d.data().lsc:null; CLOUD_BEST={days:(l&&l.bestDays)||0, rev:(l&&l.bestRevenue)||0}; }catch(e){ console.warn('LSC load:',e); }
+  CLOUD_BEST=null; CLOUD_RUN=null; cloudFor=PLAYER; const ref=profRef(); if(!ref) return;
+  try{
+    const d=await ref.get(); const data=d.exists?d.data():{}; const l=data.lsc||null;
+    if (cloudFor!==PLAYER) return;                              // Name wurde inzwischen geändert
+    CLOUD_BEST={days:(l&&l.bestDays)||0, rev:(l&&l.bestRevenue)||0};
+    // gespeicherter Run (Spielstand nach dem letzten Feierabend)
+    const cr=data.lscRun;
+    if (cr && cr.data){ try{ CLOUD_RUN={savedAt:cr.savedAt||0, day:cr.day, S:JSON.parse(cr.data)}; }catch(e){ CLOUD_RUN=null; } }
+    // Statistik nach gelöschten Browserdaten aus der Cloud zurückholen
+    if (l && (l.days||0) > (STORE.life.days||0)){
+      STORE.life.days=l.days||0; STORE.life.runs=Math.max(STORE.life.runs,l.runs||0); STORE.life.served=l.served||0; STORE.life.revenue=l.revenue||0;
+      for(const p of P){ STORE.life.sold[p]=(l.sold&&l.sold[p])||0; STORE.life.waste[p]=(l.waste&&l.waste[p])||0; }
+    }
+    if (l && l.bestDays && !STORE.best.length) STORE.best.push({days:l.bestDays, revenue:Math.round(l.bestRevenue||0), date:l.bestDate?new Date(l.bestDate).toLocaleDateString('de-DE'):'–'});
+    saveStore();
+    if (!$('ovTitle').hidden) showTitle(true);                  // Titel mit Cloud-Spielstand neu zeichnen
+  }catch(e){ console.warn('LSC load:',e); }
 }
-function fbRunStart(){ const ref=profRef(); if(!ref) return; ref.set({lsc:{name:PLAYER, runs:inc(1), lastSeen:new Date().toISOString()}},{merge:true}).catch(e=>console.warn('LSC run:',e)); }
+// Run nach jedem Feierabend in der Cloud sichern, bei Game Over oder neuem Run löschen
+// Sperre gegen Neustart eines schlechten Tages: Stand zu Tagesbeginn sichern (phase 'day').
+// Wird der Tab geschlossen, rechnet "Weiter" diesen Tag als abgebrochen ab, statt ihn neu spielen zu lassen.
+function saveDayStart(){
+  const snap=JSON.parse(JSON.stringify(S));
+  STORE.run=snap; STORE.runAt=Date.now(); STORE.runName=PLAYER; saveStore();
+  const ref=profRef(); if(ref) ref.set({lscRun:runVal(snap)},{merge:true}).catch(e=>console.warn('LSC run save:',e));
+}
+function abandonDay(){
+  hideAll(); paused=false;
+  S.day_.abandoned=true;
+  S.ruf=clamp(S.ruf-10,0,100);
+  S.queue=[]; S.jobs=[]; S.kl.job=null;
+  S.time=DAYLEN;
+  endDay('abandon');
+}
+let RUN_SAVE;   // undefined = nichts ändern, null = löschen, Objekt = speichern
+function runVal(snap){ return snap ? {savedAt:Date.now(), day:snap.day, data:JSON.stringify(snap)} : null; }
+function fbRunStart(){ const ref=profRef(); if(!ref) return; ref.set({lscRun:null, lsc:{name:PLAYER, runs:inc(1), lastSeen:new Date().toISOString()}},{merge:true}).catch(e=>console.warn('LSC run:',e)); }
 function fbDay(d){
   const ref=profRef(); if(!ref) return;
   const lsc={name:PLAYER, days:inc(1), revenue:inc(Math.round(d.revenue*100)/100), served:inc(d.served), lastSeen:new Date().toISOString()};
@@ -248,7 +282,8 @@ function fbDay(d){
     Object.assign(lsc,{bestDays:d.n, bestRevenue:runRev, bestDate:new Date().toISOString(), bestSold:{...S.run.sold}});
     CLOUD_BEST={days:d.n, rev:runRev};
   }
-  ref.set({lsc},{merge:true}).catch(e=>console.warn('LSC save:',e));
+  const payload={lsc}; if (RUN_SAVE!==undefined){ payload.lscRun=RUN_SAVE; RUN_SAVE=undefined; }
+  ref.set(payload,{merge:true}).catch(e=>console.warn('LSC save:',e));
 }
 async function fbBoard(){
   if(!fdb) return null;
@@ -302,8 +337,8 @@ function newRun(){
     hist:[],
     day_:null,
   };
-  STORE.life.runs++; saveStore(); fbRunStart();
-  startDay(true);
+  STORE.life.runs++; STORE.run=null; STORE.runAt=0; saveStore(); fbRunStart();
+  startDay(true); saveDayStart();
 }
 function blank2(){ return Object.fromEntries(FOOD.map(p=>[p,[]])); }
 function blank3(){ return Object.fromEntries(Object.keys(UPG).map(k=>[k,0])); }
@@ -395,7 +430,8 @@ function endDay(reason){
   const pool=EVENTS.filter(e=>!e.minDay||e.minDay<=S.day);
   S.forecast = Math.random()<0.45 ? EVENTS[0] : pick(pool);
   if (isNightDay(S.day)){ S.forecast = NIGHT; S.night = makeContract(S.day); }
-  if (S.over){ recordBest(); STORE.run=null; } else { STORE.run=S; }
+  if (S.over){ recordBest(); STORE.run=null; STORE.runAt=0; RUN_SAVE=null; }
+  else { const snap=JSON.parse(JSON.stringify(S)); STORE.run=snap; STORE.runAt=Date.now(); STORE.runName=PLAYER; RUN_SAVE=runVal(snap); }
   saveStore();
   d.reviews=genReviews(d); for(const rv of d.reviews){ S.revSum+=rv.st; S.revN++; }
   fbDay(d);
@@ -1088,8 +1124,14 @@ const $=id=>document.getElementById(id);
 function hideAll(){ for(const id of ['ovTitle','ovBon','ovEve','ovOver','ovPause']) $(id).hidden=true; }
 function show(id,html){ hideAll(); const o=$(id); o.innerHTML=html; o.hidden=false; o.scrollTop=0; }
 
-function showTitle(){
-  const run=STORE.run, L=STORE.life;
+function pickRun(){
+  const local = STORE.run && (!STORE.runName || STORE.runName===PLAYER) ? {S:STORE.run, savedAt:STORE.runAt||0, src:'local'} : null;
+  const cloud = CLOUD_RUN && cloudFor===PLAYER ? {S:CLOUD_RUN.S, savedAt:CLOUD_RUN.savedAt, src:'cloud'} : null;
+  if (local && cloud) return cloud.savedAt>local.savedAt ? cloud : local;
+  return local||cloud;
+}
+function showTitle(fromCloud){
+  const pr0=pickRun(), run=pr0&&pr0.S, L=STORE.life;
   show('ovTitle',`<div class="card"><div class="title">
     <div class="stack">
       <div class="cartbox"><img src="${IMG_SRC.cart}" alt="Der LS-Chicken Grillwagen"><b>LS-CHICKEN</b></div>
@@ -1100,12 +1142,12 @@ function showTitle(){
       <h1>LS-CHICKEN</h1>
       <p>Ein Grillwagen. Ein Patriarch. Ein Kloska am Tresen. Die Schlange wird jeden Tag länger, die Preise steigen, und irgendwo auf dem Dach sitzen Max und Moritz. Halte durch, so lange du kannst.</p>
       <div class="row">
-        ${run?`<button class="btn go" id="bCont">Weiter: Tag ${run.day}</button>`:''}
+        ${run?`<button class="btn go" id="bCont">${run.phase==='day'?`Tag ${run.day} abrechnen`:`Weiter: Tag ${run.day}`}${pr0.src==='cloud'?' ☁':''}</button>`:''}
         <button class="btn ${run?'':'go'}" id="bNew">Neuer Run</button>
         ${IN_TS?'<button class="btn" id="bBack">Zurück zu Ticket Slayer</button>':''}
       </div>
       <div class="row"><label for="inName" class="dim" style="font-size:13px">Name für die Rangliste</label><input id="inName" class="qty" style="width:150px;text-align:left;text-transform:uppercase" maxlength="10" placeholder="NAME" value="${esc(PLAYER)}"><span class="dim" style="font-size:12.5px">${fdb?'gleicher Name wie in Ticket Slayer':'nur lokal'}</span></div>
-      ${run?'<p class="dim" style="font-size:13px">Ein neuer Run überschreibt den gespeicherten.</p>':''}
+      ${run?`<p class="dim" style="font-size:13px">${pr0.src==='cloud'?'Spielstand aus deinem Profil geladen. ':''}${run.phase==='day'?`<b style="color:var(--ketchup)">Tag ${run.day} wurde abgebrochen.</b> Er wird ohne Verkäufe abgerechnet, Ruf −10. `:''}Ein neuer Run überschreibt den gespeicherten.</p>`:''}
       <h3>Steuerung: nur Maus</h3>
       <div class="keys">
         <kbd>Spieß</kbd><span>Freien Platz im Ofen anklicken = Hähnchen (20 s). Haxe (45 s) über das Lager unten. Grün leuchtend = perfekt, jetzt runternehmen.</span>
@@ -1121,11 +1163,12 @@ function showTitle(){
       <p class="dim" style="font-size:13px">Wer mag, kann zusätzlich Tasten nutzen: 1–5, F, M, Leertaste, P.</p>
       <p class="dim" style="font-size:13px">Gesamt bisher: ${L.days} Tage · ${L.runs} Runs · ${P.map(p=>`${L.sold[p]||0} ${NAME[p]}`).join(' · ')}</p>
     </div></div></div>`);
-  if (run) $('bCont').onclick=()=>{ S=run; migrate(); S.up.fry=2; S.revSum=S.revSum||0; S.revN=S.revN||0; S.ask=null; S.fire=null; if(S.auto===undefined) S.auto=false; S.kl=S.kl||{x:1010,job:null,t:0}; S.jobs=S.jobs||[]; showEvening(); };
+  if (run) $('bCont').onclick=()=>{ S=JSON.parse(JSON.stringify(run)); migrate(); S.up.fry=2; S.revSum=S.revSum||0; S.revN=S.revN||0; S.ask=null; S.fire=null; if(S.auto===undefined) S.auto=false; S.kl=S.kl||{x:1010,job:null,t:0}; S.jobs=S.jobs||[]; if (S.phase==='day' && S.day_) abandonDay(); else showEvening(); };
   $('bNew').onclick=newRun;
   if (IN_TS) $('bBack').onclick=backToTS;
   $('inName').onchange=e=>{ PLAYER=cleanName(e.target.value); e.target.value=PLAYER; try{ localStorage.setItem('lsc_player',PLAYER); }catch(x){} fbLoadMine(); renderBoard($('lscBoard')); };
-  fbLoadMine(); renderBoard($('lscBoard'));
+  if (!fromCloud){ fbLoadMine(); }
+  renderBoard($('lscBoard'));
 }
 
 /* ===================== Bewertungen ===================== */
@@ -1136,6 +1179,7 @@ function genReviews(d){
   const add=(st,txt,w=1)=>pool.push({st,txt,w});
   if (d.night){
     const N=d.night, rate=N.delivered/Math.max(1,N.portions);
+    if (d.abandoned) add(1,'Pause um Mitternacht, Wagen war zu. Die Firma hat bezahlt, wir haben Automatensuppe gegessen.',8);
     if (N.missing===0) add(5,'Um drei Uhr nachts ein heißes Hähnchen an Rampe 4. Bester Tag seit dem letzten Tarifabschluss.',3);
     if (rate>0.9) add(5,'Zwei Monster und eine Haxe, danach hab ich die halbe Halle alleine kommissioniert.',2);
     if (N.missing>0) add(1,'Ich hatte Haxe bestellt. Bekommen hab ich ein Achselzucken von einem Mann mit Brille.',2);
@@ -1153,6 +1197,7 @@ function genReviews(d){
     return out;
   }
   const lostAll=d.lost+d.missed+d.refused;
+  if (d.abandoned) add(1,'Extra hingefahren, Wagen war zu. Klappe runter, kein Schild, nichts. Der Mann im Radtrikot ist auch nicht rangegangen.',8);
   if (d.why.verbrannt>0) add(1,'Hähnchen schwarz wie die Seele vom Chef. Ein Stern, und der ist geschenkt.',2);
   if (d.why.verbrannt>2) add(2,'Riecht man bis Rhynern-Mitte. Und zwar nicht im guten Sinne.');
   if (d.lost>2) add(1,'Ewig gewartet, dann bin ich zum Döner. Der hatte offen UND Personal.',2);
@@ -1250,6 +1295,7 @@ function showBon(d){
     <div class="l"><b>VERLUSTE</b><b>${P.reduce((a,p)=>a+d.waste[p],0)} Stk.</b></div>
     ${P.filter(p=>d.waste[p]>0).map(p=>`<div class="l"><span>${d.waste[p]} × ${NAME[p]}</span><span class="neg">${eur(-d.waste[p]*BUY[p])}</span></div>`).join('')}
     ${why}
+    ${d.abandoned?'<hr><div class="c"><b>TAG ABGEBROCHEN!</b><br>Der Wagen blieb zu, die Kundschaft stand vor der Klappe. Ruf −10.</div>':''}
     ${d.kontrolle?'<hr><div class="c"><b>KONTROLLE!</b> Aufgewärmte Ware gefunden. Ruf −15.</div>':''}
     <hr><div class="c">Vielen Dank für Ihren Einkauf.<br>Maddin sieht alles.</div>
    </div>${revHtml}</div>
@@ -1342,7 +1388,7 @@ function showEvening(){
     $('bPriceStd').onclick=()=>{ S.price={...PRICE}; draw(); };
     $('cbAuto').onchange=e=>{ S.auto=e.target.checked; draw(); };
     $('cbReheat').onchange=e=>{ S.reheat=e.target.checked; };
-    $('bStart').onclick=()=>{ const tot=P.reduce((a,p)=>a+S.order[p]*buyPrice(p),0); S.cash-=tot; STORE.run=null; saveStore(); startDay(false); };
+    $('bStart').onclick=()=>{ const tot=P.reduce((a,p)=>a+S.order[p]*buyPrice(p),0); S.cash-=tot; startDay(false); saveDayStart(); };
     if (focus&&$(focus)) $(focus).focus();
   };
   draw();
