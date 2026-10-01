@@ -56,6 +56,7 @@ td:first-child,th:first-child{text-align:left}
 .fc{font-family:var(--f-disp);font-size:18px;color:var(--mayo)}
 .up{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
 .up small{color:var(--dim);display:block;font-size:12.5px}
+.chip{display:inline-block;border:1px solid;padding:0 7px;font-size:12px;font-weight:600;white-space:nowrap}
 .tog{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px;line-height:1.35}
 .tog input{margin-top:3px;accent-color:var(--grill)}
 .spark{display:flex;gap:2px;align-items:flex-end;height:22px}
@@ -119,7 +120,24 @@ const isDrink = p => p==='monster'||p==='faxe';
 const NAME = {huhn:'Hähnchen',haxe:'Grillhaxe',wurst:'Bratwurst',pommes:'Pommes',salat:'Salat',monster:'Monster Ultra White',faxe:'Faxe Strong 10 %'};
 const RAW  = {huhn:'Hühner',haxe:'Haxen',wurst:'Würste',pommes:'Portionen',salat:'Salate',monster:'Dosen',faxe:'Dosen'};
 const EMO  = {huhn:'🍗',haxe:'🍖',wurst:'🌭',pommes:'🍟',salat:'🥗',monster:'🥤',faxe:'🍺'};
-const PRICE= {huhn:8.5,haxe:12.9,wurst:3.5,pommes:3,salat:4.5,monster:3.2,faxe:3.5};
+const PRICE= {huhn:10.9,haxe:15.9,wurst:4.5,pommes:3.9,salat:5.9,monster:3.9,faxe:3.9};   // Standardpreis = das, was die Kundschaft als fair empfindet
+const PSHARE = {huhn:.30,haxe:.08,wurst:.20,pommes:.17,salat:.09,monster:.08,faxe:.08};   // Gewicht fürs Gesamt-Preisgefühl
+const pr = p => (S&&S.price&&S.price[p]!=null) ? S.price[p] : PRICE[p];
+const pRatio = p => pr(p)/PRICE[p];
+// Nachfrage je Produkt: teurer = seltener bestellt, günstiger = öfter
+const demandMult = p => clamp(1-(pRatio(p)-1)*1.6, 0.15, 1.5);
+function priceIndex(){ let a=0; for(const p of P) a+=PSHARE[p]*pRatio(p); return a; }
+const custMult = () => clamp(1-(priceIndex()-1)*0.8, 0.5, 1.3);
+// Ruf pro verkauftem Teil: Abzocke kostet, Schnäppchen bringt ein bisschen
+const priceRuf = p => clamp((1.1-pRatio(p))*0.5, -0.8, 0.2);
+function priceFeel(ratio){
+  if (ratio<=0.85) return {t:'Schnäppchen', c:'#7fd6a6'};
+  if (ratio<=1.05) return {t:'fair', c:'#bfe3a0'};
+  if (ratio<=1.2)  return {t:'etwas teuer', c:'#f0c060'};
+  if (ratio<=1.4)  return {t:'teuer', c:'#f0a03a'};
+  return {t:'Abzocke', c:'#ff8a6e'};
+}
+const kundenScore = () => Math.round(clamp(100-(priceIndex()-0.8)*125, 0, 100));   // Standardpreise = 75
 const BUY  = {huhn:3.4,haxe:5.6,wurst:0.95,pommes:0.45,salat:1.3,monster:1.25,faxe:1.1};
 const SPOIL= {huhn:4,haxe:4,wurst:5,pommes:7,salat:2,monster:999,faxe:999};   // Tage bis Rohware verdirbt
 const NOTPACK = {huhn:8,haxe:3,wurst:12,pommes:15,salat:5,monster:12,faxe:12};  // Notlieferung: feste Menge, doppelter Preis
@@ -248,6 +266,7 @@ function migrate(){
   fillKeys(S.run.sold); fillKeys(S.run.waste);
   for(const h of S.hist){ fillKeys(h.sold); fillKeys(h.waste); }
   S.rush=S.rush||[];
+  S.price=Object.assign({...PRICE}, S.price||{});
 }
 const SKEY='lschicken_v1';
 function loadStore(){ try{ return JSON.parse(localStorage.getItem(SKEY))||{}; }catch(e){ return {}; } }
@@ -266,7 +285,7 @@ function newRun(){
     spiess:[], rost:[], fry:[], aus:blank2(), queue:[], fire:null, fireAt:null, ask:null, revSum:0, revN:0,
     up:Object.assign(Object.fromEntries(Object.entries(UPG).map(([k,u])=>[k,u.start])),{fry:2}),
     upBought:blank3(),
-    rush:[], auto:false, aCd:3, salatPrep:0, kl:{x:1010,job:null,t:0}, jobs:[],
+    price:{...PRICE}, rush:[], auto:false, aCd:3, salatPrep:0, kl:{x:1010,job:null,t:0}, jobs:[],
     fuel:0, wt:0, streak:0,
     event:EVENTS[0], forecast:EVENTS[0],
     order:null, cheapNext:false, reheat:false,
@@ -281,7 +300,7 @@ function newRun(){
 function blank2(){ return Object.fromEntries(FOOD.map(p=>[p,[]])); }
 function blank3(){ return Object.fromEntries(Object.keys(UPG).map(k=>[k,0])); }
 
-function newDayStats(){ return {n:S.day, sold:blank(), waste:blank(), why:{verbrannt:0,lasch:0,verdorben:0,uebrig:0,gestohlen:0,kloska:0}, revenue:0, tips:0, served:0, lost:0, missed:0, reheatSold:0, perfect:0, complaints:0, partial:0, refused:0, fires:0, shouts:0, notfall:0, notfallN:0, cost:{}}; }
+function newDayStats(){ return {prices:Object.fromEntries(P.map(p=>[p,pr(p)])), n:S.day, sold:blank(), waste:blank(), why:{verbrannt:0,lasch:0,verdorben:0,uebrig:0,gestohlen:0,kloska:0}, revenue:0, tips:0, served:0, lost:0, missed:0, reheatSold:0, perfect:0, complaints:0, partial:0, refused:0, fires:0, shouts:0, notfall:0, notfallN:0, cost:{}}; }
 
 /* ===================== Lager ===================== */
 const stockCount = p => S.stock[p].reduce((a,b)=>a+b.q,0);
@@ -367,17 +386,17 @@ function recordBest(){
 
 /* ===================== Kundschaft ===================== */
 const CURVE=[0.6,0.9,1.7,1.5,0.8,0.7,1.0,1.4]; const CMEAN=CURVE.reduce((a,b)=>a+b)/CURVE.length;
-function custPerDay(){ return (16 + S.day*2.2) * S.event.cust * (0.5+S.ruf/100) * (1+S.up.schild*0.12); }
-function weightOf(p,base){ return base*(S.event.mult[p]??1); }
+function custPerDay(){ return (16 + S.day*2.2) * S.event.cust * (0.5+S.ruf/100) * (1+S.up.schild*0.12) * custMult(); }
+function weightOf(p,base){ return base*(S.event.mult[p]??1)*demandMult(p); }
 function makeOrder(){
   const o={};
   const mains=[['huhn',45],['wurst',30],['haxe',12],['salat',13]].map(([p,w])=>[p,weightOf(p,w)]);
   let tot=mains.reduce((a,b)=>a+b[1],0), r=Math.random()*tot, m='huhn';
   for(const [p,w] of mains){ if((r-=w)<=0){m=p;break;} }
   o[m]= (S.day>=5 && Math.random()<0.15) ? 2 : 1;
-  if (Math.random()<0.6*(S.event.mult.pommes??1) && m!=='salat') o.pommes=(o.pommes||0)+1;
-  else if (Math.random()<0.18*(S.event.mult.salat??1)) o.salat=(o.salat||0)+1;
-  if (S.day>=1){ const wm=0.17*(S.event.mult.monster??1), wf=0.17*(S.event.mult.faxe??1), q=Math.random(); if(q<wm) o.monster=1; else if(q<wm+wf) o.faxe=1; }
+  if (Math.random()<0.6*(S.event.mult.pommes??1)*demandMult('pommes') && m!=='salat') o.pommes=(o.pommes||0)+1;
+  else if (Math.random()<0.18*(S.event.mult.salat??1)*demandMult('salat')) o.salat=(o.salat||0)+1;
+  if (S.day>=1){ const wm=0.17*(S.event.mult.monster??1)*demandMult('monster'), wf=0.17*(S.event.mult.faxe??1)*demandMult('faxe'), q=Math.random(); if(q<wm) o.monster=1; else if(q<wm+wf) o.faxe=1; }
   return o;
 }
 function spawnCustomer(){
@@ -417,11 +436,12 @@ function sendAway(c){
 function finishSale(c){
   const i=S.queue.indexOf(c), x=i>=0?qx(i):S.kl.x;
   let sum=0, allPerf=true, cheap=0, re=0;
-  for(const [p,it] of c.items){ sum+=PRICE[p]; if(!it.perf) allPerf=false; if(it.cheap) cheap++; if(it.re) re++; S.day_.sold[p]++; }
+  let pRuf=0;
+  for(const [p,it] of c.items){ sum+=pr(p); pRuf+=priceRuf(p); if(!it.perf) allPerf=false; if(it.cheap) cheap++; if(it.re) re++; S.day_.sold[p]++; }
   const tip = allPerf && !c.partial ? sum*0.15 : 0;
   if (c.partial){ S.day_.partial++; }
   S.cash+=sum+tip; S.day_.revenue+=sum+tip; S.day_.tips+=tip; S.day_.served++; S.day_.reheatSold+=re;
-  S.ruf=clamp(S.ruf+(c.partial?-1:allPerf?1.2:0.4),0,100);
+  S.ruf=clamp(S.ruf+(c.partial?-1:allPerf?1.2:0.4)+pRuf,0,100);
   if (allPerf && !c.partial){ S.fuel=clamp(S.fuel+5,0,100); }
   if (cheap>0 && Math.random()<0.18*cheap){ S.ruf=clamp(S.ruf-3,0,100); S.day_.complaints++; float(x,480,'Schmeckt komisch…',C.ketchup); }
   float(x,500,'+'+eur(sum+tip)+(c.partial?' (Teil)':allPerf?' ★':''),c.partial?C.grill:allPerf?C.phos:C.mayo);
@@ -1052,6 +1072,12 @@ function genReviews(d){
   if (S.event.id==='regen') add(3,'Im Regen gewartet. Die Markise schützt den Wagen, nicht die Kundschaft.');
   if (S.event.id==='kirmes') add(4,'Nach drei Runden Breakdance genau das Richtige. Bratwurst blieb drin.');
   if (S.event.id==='schuetz') add(4,'Schützenkönig hier gegessen. Wurde danach nicht Schützenkönig. Liegt nicht am Hähnchen.');
+  { const pi=priceIndex(), top=P.reduce((a,p)=>pRatio(p)>pRatio(a)?p:a,P[0]);
+    if (pi>1.35) add(1,`${eur(pr(top))} für ${NAME[top]}?! Bin ich hier auf Sylt oder in Rhynern?`,3);
+    else if (pi>1.15) add(2,'Lecker, aber die Preise ziehen ganz schön an. Bald nur noch zum Geburtstag.',2);
+    if (pRatio(top)>1.5) add(1,`Habe gefragt, ob das Hähnchen vergoldet ist. Antwort: „${NAME[top]} kostet halt.“`,2);
+    if (pi<0.88) add(5,'Für den Preis kriegt man woanders nicht mal eine Serviette. Fünf Sterne, nehmt mehr Geld!',3);
+    if (pRatio('faxe')<0.85) add(5,'Faxe so günstig, wir sind direkt geblieben. Der Schützenverein kommt jetzt immer.',2); }
   add(4,'Ganz solide. Parkplatz schwierig, Hähnchen nicht.');
   add(3,'Ganz okay. Der Kaffeeautomat daneben ist das eigentliche Highlight.');
   add(5,'Wie früher bei Oma. Nur mit mehr Geschrei.');
@@ -1075,7 +1101,7 @@ function genReviews(d){
 const starsHtml = n => '★'.repeat(n)+'<i>'+'★'.repeat(5-n)+'</i>';
 
 function showBon(d){
-  const lines=P.filter(p=>d.sold[p]>0).map(p=>`<div class="l"><span>${d.sold[p]} × ${NAME[p]}</span><span>${eur(d.sold[p]*PRICE[p])}</span></div>`).join('');
+  const lines=P.filter(p=>d.sold[p]>0).map(p=>`<div class="l"><span>${d.sold[p]} × ${NAME[p]}</span><span>${eur(d.sold[p]*(d.prices?d.prices[p]:PRICE[p]))}</span></div>`).join('');
   const why=Object.entries(d.why).filter(([,n])=>n>0).map(([k,n])=>`<div class="l"><span>  ${n} × ${{verbrannt:'verbrannt',lasch:'lasch geworden',verdorben:'verdorben',uebrig:'übrig/weggeworfen',gestohlen:'von Max & Moritz geklaut',kloska:'von Kloska verwechselt',darius:'von Darius verwechselt'}[k]}</span><span></span></div>`).join('');
   const c=d.cost;
   const rv=d.reviews||[], avgD=rv.length?rv.reduce((a,b)=>a+b.st,0)/rv.length:0, avgAll=S.revN?S.revSum/S.revN:0;
@@ -1156,6 +1182,20 @@ function showEvening(){
       ${S.cash-tot<0?'<p style="color:var(--ketchup);font-size:13px">Peter liefert nicht auf Pump.</p>':''}
     </div>
     <div class="stack">
+      <h3>Verkaufspreise</h3>
+      <div class="tbl"><table class="ptbl"><thead><tr><th>Ware</th><th>Dein Preis</th><th>Marge</th><th>Kundschaft</th></tr></thead><tbody>
+      ${P.map(p=>{ const ratio=pRatio(p), f=priceFeel(ratio), m=pr(p)-buyPrice(p,true), dm=Math.round((demandMult(p)-1)*100);
+        return `<tr><td>${EMO[p]} ${SHORT[p]||NAME[p]}</td>
+        <td><div class="row" style="gap:3px;flex-wrap:nowrap;justify-content:flex-end"><button class="btn sm" data-pp="${p}" data-d="-0.5">−</button><input class="qty" style="width:64px" id="pp_${p}" data-p="${p}" inputmode="decimal" value="${pr(p).toFixed(2).replace('.',',')}"><button class="btn sm" data-pp="${p}" data-d="0.5">+</button></div></td>
+        <td style="color:${m<0?'var(--ketchup)':'var(--fg)'}" title="Verkaufspreis minus Einkauf (${eur(buyPrice(p,true))})">${eur(m)}</td>
+        <td title="Nachfrage nach diesem Produkt"><span class="chip" style="color:${f.c};border-color:${f.c}">${f.t}</span><div class="dim" style="font-size:11.5px;text-align:right">Nachfrage ${dm>0?'+':''}${dm} %</div></td></tr>`; }).join('')}
+      </tbody></table></div>
+      ${(()=>{ const ks=kundenScore(), cm=Math.round((custMult()-1)*100), col=ks>=70?'var(--phos)':ks>=45?'var(--grill)':'var(--ketchup)';
+        const verdict = ks>=85?'Die Würmer stehen Schlange. Marge eher dünn.':ks>=70?'Passt. Keiner meckert, alle zahlen.':ks>=45?'Einige murren an der Theke. Ruf sinkt leicht pro Verkauf.':ks>=25?'Abzocke-Alarm. Weniger Kundschaft, schlechtere Bewertungen.':'Die Würmer gehen lieber zum Döner.';
+        return `<div><div class="row" style="justify-content:space-between"><span><b>Kunden-Score</b> <span class="dim" style="font-size:12.5px">· wie die Preise ankommen</span></span><b style="color:${col}">${ks} / 100</b></div>
+        <div class="bar ${ks<45?'warn':''}"><i style="width:${ks}%;background:${col}"></i></div>
+        <p class="dim" style="font-size:12.5px;margin-top:4px">${verdict} Kundschaft morgen ${cm>0?'+':''}${cm} % durch die Preise.</p>
+        <div class="row" style="margin-top:6px"><button class="btn sm" id="bPriceStd">Standardpreise</button></div></div>`; })()}
       <h3>Wagen aufrüsten</h3>
       <div>${Object.keys(UPG).map(k=>{ const u=UPG[k], mx=upMaxed(k), pr=upPrice(k); const lvl=k==='kuehl'?`${S.up.kuehl} Einh.`:k==='schul'?`Stufe ${S.up.schul}`:k==='spiess'||k==='rost'?`${S.up[k]} Plätze`:k==='fry'?`${S.up.fry} Korb`:`Stufe ${S.up[k]}`;
           return `<div class="up"><div><b>${u.name}</b> <span class="dim" style="font-size:12.5px">· ${lvl}</span><small>${u.desc}</small></div><button class="btn sm" data-up="${k}" ${mx||S.cash<pr||(k==='schul'&&!S.auto)?'disabled':''}>${mx?'max':eur(pr)}</button></div>`; }).join('')}</div>
@@ -1176,6 +1216,10 @@ function showEvening(){
     $('ovEve').querySelectorAll('.qty').forEach(inp=>inp.onchange=()=>{ const v=parseInt(inp.value,10); S.order[inp.dataset.p]=Number.isFinite(v)&&v>0?v:0; draw(); });
     $('ovEve').querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>buyUp(b.dataset.up,draw));
     $('cbCheap').onchange=e=>{ S.cheapNext=e.target.checked; draw(); };
+    const setP=(p,v)=>{ S.price[p]=Math.round(clamp(v,PRICE[p]*0.5,PRICE[p]*2.5)*10)/10; };
+    $('ovEve').querySelectorAll('[data-pp]').forEach(b=>b.onclick=()=>{ const p=b.dataset.pp; setP(p,pr(p)+(+b.dataset.d)); draw(); });
+    $('ovEve').querySelectorAll('[id^="pp_"]').forEach(inp=>inp.onchange=()=>{ const v=parseFloat(String(inp.value).replace(',','.')); if(Number.isFinite(v)) setP(inp.dataset.p,v); draw(); });
+    $('bPriceStd').onclick=()=>{ S.price={...PRICE}; draw(); };
     $('cbAuto').onchange=e=>{ S.auto=e.target.checked; draw(); };
     $('cbReheat').onchange=e=>{ S.reheat=e.target.checked; };
     $('bStart').onclick=()=>{ const tot=P.reduce((a,p)=>a+S.order[p]*buyPrice(p),0); S.cash-=tot; STORE.run=null; saveStore(); startDay(false); };
