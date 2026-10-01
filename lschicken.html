@@ -1264,6 +1264,8 @@ function upMaxed(k){ const u=UPG[k]; return k==='kuehl'? S.up.kuehl>=u.max : S.u
 
 function showEvening(){
   S.phase='evening';
+  // auch alte Spielstände (vor dem Nachtschicht-Update gespeichert) bekommen die Ankündigung
+  if (isNightDay(S.day) && (!S.night || S.night.day!==S.day)){ S.forecast=NIGHT; S.night=makeContract(S.day); }
   if (!S.order) S.order=blank();
   const last7=S.hist.slice(-7);
   const avg=p=>last7.length?last7.reduce((a,h)=>a+h.sold[p],0)/last7.length:0;
