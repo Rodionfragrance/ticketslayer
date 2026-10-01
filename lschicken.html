@@ -112,33 +112,39 @@ for (const k in IMG_SRC) { const i = new Image(); i.src = IMG_SRC[k]; IMG[k] = i
 
 /* ===================== Konstanten ===================== */
 const W = 1280, H = 720;
-const P = ['huhn','haxe','wurst','pommes','salat'];
-const NAME = {huhn:'Hähnchen',haxe:'Grillhaxe',wurst:'Bratwurst',pommes:'Pommes',salat:'Salat'};
-const RAW  = {huhn:'Hühner',haxe:'Haxen',wurst:'Würste',pommes:'Portionen',salat:'Salate'};
-const EMO  = {huhn:'🍗',haxe:'🍖',wurst:'🌭',pommes:'🍟',salat:'🥗'};
-const PRICE= {huhn:8.5,haxe:12.9,wurst:3.5,pommes:3,salat:4.5};
-const BUY  = {huhn:3.4,haxe:5.6,wurst:0.95,pommes:0.45,salat:1.3};
-const SPOIL= {huhn:4,haxe:4,wurst:5,pommes:7,salat:2};          // Tage bis Rohware verdirbt
+const FOOD = ['huhn','haxe','wurst','pommes','salat'];
+const DRINKS = ['monster','faxe'];
+const P = [...FOOD, ...DRINKS];                                    // alles, was gelagert, bestellt und gezählt wird
+const isDrink = p => p==='monster'||p==='faxe';
+const NAME = {huhn:'Hähnchen',haxe:'Grillhaxe',wurst:'Bratwurst',pommes:'Pommes',salat:'Salat',monster:'Monster Ultra White',faxe:'Faxe Strong 10 %'};
+const RAW  = {huhn:'Hühner',haxe:'Haxen',wurst:'Würste',pommes:'Portionen',salat:'Salate',monster:'Dosen',faxe:'Dosen'};
+const EMO  = {huhn:'🍗',haxe:'🍖',wurst:'🌭',pommes:'🍟',salat:'🥗',monster:'🥤',faxe:'🍺'};
+const PRICE= {huhn:8.5,haxe:12.9,wurst:3.5,pommes:3,salat:4.5,monster:3.2,faxe:3.5};
+const BUY  = {huhn:3.4,haxe:5.6,wurst:0.95,pommes:0.45,salat:1.3,monster:1.25,faxe:1.1};
+const SPOIL= {huhn:4,haxe:4,wurst:5,pommes:7,salat:2,monster:999,faxe:999};   // Tage bis Rohware verdirbt
+const NOTPACK = {huhn:8,haxe:3,wurst:12,pommes:15,salat:5,monster:12,faxe:12};  // Notlieferung: feste Menge, doppelter Preis
+const NOT_ETA = 12;
+const SHORT = {monster:'Monster', faxe:'Faxe 10 %'};
 const COOK = {huhn:{done:20,perf:26,burn:34}, haxe:{done:45,perf:55,burn:68}, pommes:{done:5,perf:8,burn:11}};
 const WURST= {side:7, flipLate:11, perfFlip:9.5, perf:10, burn:13};
 const LASCH= {pommes:40, wurst:70};
-const DAYLEN = 240, QMAX = 6, POMMES_BATCH = 1, SALAT_PREP = 1.4, WT_DUR = 12;
+const DAYLEN = 240, QMAX = 6, POMMES_BATCH = 1, SALAT_PREP = 2.2, WT_DUR = 12;
 const C = {bg:'#121a1b',panel:'#1d2829',panel2:'#253334',line:'#36494a',fg:'#e9e3cf',dim:'#8ea19e',grill:'#f0a03a',ketchup:'#d9472f',phos:'#7fd6a6',mayo:'#f4ebc9',paper:'#f6f1e1',ink:'#2a2622',steel:'#5f6d6e',wood:'#7a4f2c'};
 const F = {disp:'"Silkscreen", ui-monospace, monospace', body:'"Chakra Petch", system-ui, sans-serif'};
 
 const EVENTS = [
   {id:'normal', name:'Normaler Markttag', cust:1,   mult:{}},
   {id:'sonne',  name:'Sonne',            cust:1.15, mult:{salat:1.5}},
-  {id:'hitze',  name:'Hitzewelle',       cust:0.9,  mult:{salat:2.2,haxe:0.4,pommes:0.9}},
-  {id:'regen',  name:'Dauerregen',       cust:0.7,  mult:{haxe:1.5,salat:0.6}},
-  {id:'kirmes', name:'Kirmes in Rhynern',   cust:1.6,  mult:{wurst:2,pommes:1.4}, minDay:4},
-  {id:'schuetz',name:'Schützenfest',     cust:1.8,  mult:{haxe:1.7,wurst:1.5,salat:0.6}, minDay:8},
+  {id:'hitze',  name:'Hitzewelle',       cust:0.9,  mult:{salat:2.2,haxe:0.4,pommes:0.9,monster:2,faxe:1.8}},
+  {id:'regen',  name:'Dauerregen',       cust:0.7,  mult:{haxe:1.5,salat:0.6,monster:0.7,faxe:0.7}},
+  {id:'kirmes', name:'Kirmes in Rhynern',   cust:1.6,  mult:{wurst:2,pommes:1.4,faxe:2.2}, minDay:4},
+  {id:'schuetz',name:'Schützenfest',     cust:1.8,  mult:{haxe:1.7,wurst:1.5,salat:0.6,faxe:2.8}, minDay:8},
 ];
 const UPG = {
   spiess:{name:'Spieß-Erweiterung', desc:'+1 Stange mit 4 Plätzen', base:300, max:12, step:4, start:4},
   rost:  {name:'Zweiter Grillrost', desc:'+2 Bratwurst-Plätze', base:180, max:8, step:2, start:4},
   lamp:  {name:'Wärmelampe', desc:'Pommes und Wurst bleiben 60 % länger knusprig', base:200, max:1, step:1, start:0},
-  kuehl: {name:'Kühlzelle', desc:'+60 Einheiten Lagerplatz', base:250, max:400, step:60, start:100},
+  kuehl: {name:'Kühlzelle', desc:'+60 Einheiten Lagerplatz', base:250, max:460, step:60, start:130},
   schild:{name:'Werbeschild', desc:'+12 % Kundschaft pro Stufe', base:220, max:3, step:1, start:0},
   schul: {name:'Kloska-Schulung', desc:'Kloska verwechselt im Autopilot seltener', base:150, max:3, step:1, start:0},
 };
@@ -235,11 +241,20 @@ function renderBoard(el){
 }
 
 /* ===================== Persistenz ===================== */
+function fillKeys(o){ if(o) for(const p of P) if(o[p]===undefined) o[p]=0; }
+function migrate(){
+  for(const p of P){ if(!S.stock[p]) S.stock[p]=[]; }
+  if (S.order) fillKeys(S.order);
+  fillKeys(S.run.sold); fillKeys(S.run.waste);
+  for(const h of S.hist){ fillKeys(h.sold); fillKeys(h.waste); }
+  S.rush=S.rush||[];
+}
 const SKEY='lschicken_v1';
 function loadStore(){ try{ return JSON.parse(localStorage.getItem(SKEY))||{}; }catch(e){ return {}; } }
 function saveStore(){ try{ localStorage.setItem(SKEY, JSON.stringify(STORE)); }catch(e){} }
 let STORE = loadStore();
 STORE.life = STORE.life || {sold:blank(), waste:blank(), revenue:0, days:0, runs:0, served:0, lost:0, stolen:0};
+fillKeys(STORE.life.sold); fillKeys(STORE.life.waste);
 STORE.best = STORE.best || [];   // [{days, revenue, date}]
 
 /* ===================== Spielzustand ===================== */
@@ -247,11 +262,11 @@ let S = null;
 function newRun(){
   S = {
     day:1, cash:400, ruf:60, time:0, phase:'day',
-    stock:{huhn:[{q:12,age:0,cheap:false}],haxe:[{q:3,age:0,cheap:false}],wurst:[{q:20,age:0,cheap:false}],pommes:[{q:30,age:0,cheap:false}],salat:[{q:6,age:0,cheap:false}]},
+    stock:{huhn:[{q:12,age:0,cheap:false}],haxe:[{q:3,age:0,cheap:false}],wurst:[{q:20,age:0,cheap:false}],pommes:[{q:30,age:0,cheap:false}],salat:[{q:6,age:0,cheap:false}],monster:[{q:12,age:0,cheap:false}],faxe:[{q:12,age:0,cheap:false}]},
     spiess:[], rost:[], fry:[], aus:blank2(), queue:[], fire:null, fireAt:null, ask:null, revSum:0, revN:0,
     up:Object.assign(Object.fromEntries(Object.entries(UPG).map(([k,u])=>[k,u.start])),{fry:2}),
     upBought:blank3(),
-    auto:false, aCd:3, salatPrep:0, kl:{x:1010,job:null,t:0}, jobs:[],
+    rush:[], auto:false, aCd:3, salatPrep:0, kl:{x:1010,job:null,t:0}, jobs:[],
     fuel:0, wt:0, streak:0,
     event:EVENTS[0], forecast:EVENTS[0],
     order:null, cheapNext:false, reheat:false,
@@ -263,10 +278,10 @@ function newRun(){
   STORE.life.runs++; saveStore(); fbRunStart();
   startDay(true);
 }
-function blank2(){ return Object.fromEntries(P.map(p=>[p,[]])); }
+function blank2(){ return Object.fromEntries(FOOD.map(p=>[p,[]])); }
 function blank3(){ return Object.fromEntries(Object.keys(UPG).map(k=>[k,0])); }
 
-function newDayStats(){ return {n:S.day, sold:blank(), waste:blank(), why:{verbrannt:0,lasch:0,verdorben:0,uebrig:0,gestohlen:0,kloska:0}, revenue:0, tips:0, served:0, lost:0, missed:0, reheatSold:0, perfect:0, complaints:0, partial:0, refused:0, fires:0, shouts:0, cost:{}}; }
+function newDayStats(){ return {n:S.day, sold:blank(), waste:blank(), why:{verbrannt:0,lasch:0,verdorben:0,uebrig:0,gestohlen:0,kloska:0}, revenue:0, tips:0, served:0, lost:0, missed:0, reheatSold:0, perfect:0, complaints:0, partial:0, refused:0, fires:0, shouts:0, notfall:0, notfallN:0, cost:{}}; }
 
 /* ===================== Lager ===================== */
 const stockCount = p => S.stock[p].reduce((a,b)=>a+b.q,0);
@@ -288,7 +303,7 @@ function startDay(first){
   // Max & Moritz
   S.raids=[];
   if (S.day>=3 && Math.random()< Math.min(0.85,0.45+S.day*0.03)){ const n = S.day>=10 && Math.random()<0.5 ? 2 : 1; for(let i=0;i<n;i++) S.raids.push(rnd(40,DAYLEN-30)); }
-  S.kl={x:1010,job:null,t:0}; S.jobs=[]; S.ask=null; S.fire=null;
+  S.kl={x:1010,job:null,t:0}; S.jobs=[]; S.ask=null; S.fire=null; S.rush=[];
   S.fireAt = S.day>=2 && Math.random()<Math.min(0.8,0.35+S.day*0.03) ? rnd(35,DAYLEN-40) : null;
   // Darius-Panne
   if (S.day>=3 && Math.random()<0.06){ const n=Math.floor(stockCount('huhn')*0.3); if(n>0){ takeStock('huhn',n); S.day_.waste.huhn+=n; S.day_.why.verdorben+=n; sayM('DARIUS hat die Kühlung ausgesteckt. Wieso darf der überhaupt ins Lager?'); log(`Darius hat die Kühlung ausgesteckt: ${n} Hühner verdorben.`);} }
@@ -300,6 +315,7 @@ function startDay(first){
 function endDay(reason){
   if (S.phase!=='day') return;
   S.phase='bon';
+  for(const x of (S.rush||[])) S.stock[x.p].push({q:x.q,age:0,cheap:false}); S.rush=[];
   if (S.kl.job){ finishSale(S.kl.job); S.kl.job=null; } S.jobs.splice(0).forEach(finishSale);
   const d=S.day_;
   const toss=(p,n,why)=>{ if(n>0){ d.waste[p]+=n; d.why[why]+=n; } };
@@ -361,6 +377,7 @@ function makeOrder(){
   o[m]= (S.day>=5 && Math.random()<0.15) ? 2 : 1;
   if (Math.random()<0.6*(S.event.mult.pommes??1) && m!=='salat') o.pommes=(o.pommes||0)+1;
   else if (Math.random()<0.18*(S.event.mult.salat??1)) o.salat=(o.salat||0)+1;
+  if (S.day>=1){ const wm=0.17*(S.event.mult.monster??1), wf=0.17*(S.event.mult.faxe??1), q=Math.random(); if(q<wm) o.monster=1; else if(q<wm+wf) o.faxe=1; }
   return o;
 }
 function spawnCustomer(){
@@ -368,10 +385,12 @@ function spawnCustomer(){
   const pat=Math.max(20,40-S.day*0.4);
   S.queue.push({o:makeOrder(), pat, max:pat, spr:Math.random()<0.35?'wBlue':'wHappy', bob:rnd(0,6), x:W+60});
 }
-const canServe = c => !c.res && Object.entries(c.o).every(([p,n])=>S.aus[p].length>=n);
+const avail = p => isDrink(p) ? stockCount(p) : S.aus[p].length;
+const takeReady = p => isDrink(p) ? (takeStock(p,1), {perf:true,age:0}) : S.aus[p].shift();
+const canServe = c => !c.res && Object.entries(c.o).every(([p,n])=>avail(p)>=n);
 function reserve(c){
   if(!c||!canServe(c)) return false;
-  c.items=[]; for(const [p,n] of Object.entries(c.o)) for(let k=0;k<n;k++) c.items.push([p,S.aus[p].shift()]);
+  c.items=[]; for(const [p,n] of Object.entries(c.o)) for(let k=0;k<n;k++) c.items.push([p,takeReady(p)]);
   c.res=true; S.jobs.push(c); return true;
 }
 function serve(i){ return reserve(S.queue[i]); }
@@ -382,11 +401,11 @@ function cookingCount(p){
   if (p==='pommes') return S.fry.filter(b=>b&&b.t<COOK.pommes.burn).length;
   return S.salatPrep>0?1:0;
 }
-const soldOut = p => stockCount(p)===0 && S.aus[p].length===0 && cookingCount(p)===0;
-const partialCount = c => Object.entries(c.o).reduce((a,[p,n])=>a+Math.min(n,S.aus[p].length),0);
+const soldOut = p => isDrink(p) ? stockCount(p)===0 : stockCount(p)===0 && S.aus[p].length===0 && cookingCount(p)===0;
+const partialCount = c => Object.entries(c.o).reduce((a,[p,n])=>a+Math.min(n,avail(p)),0);
 function servePartial(c){
   if(!c||c.res) return false;
-  c.items=[]; for(const [p,n] of Object.entries(c.o)) for(let k=0;k<Math.min(n,S.aus[p].length);k++) c.items.push([p,S.aus[p].shift()]);
+  c.items=[]; for(const [p,n] of Object.entries(c.o)){ const m=Math.min(n,avail(p)); for(let k=0;k<m;k++) c.items.push([p,takeReady(p)]); }
   if(!c.items.length) return false;
   c.res=true; c.partial=true; S.jobs.push(c); return true;
 }
@@ -428,8 +447,19 @@ function loadFry(){
 }
 function prepSalat(){
   if (S.salatPrep>0) return;
-  if(!takeStock('salat',1)){ float(745,370,'Kein Salat mehr!',C.ketchup); return; }
+  if(!takeStock('salat',1)){ float(777,312,'Kein Salat mehr!',C.ketchup); return; }
   S.salatPrep=SALAT_PREP;
+}
+function notPrice(p){ return Math.round(NOTPACK[p]*buyPrice(p,true)*2*100)/100; }
+function rushPending(p){ return S.rush.find(x=>x.p===p); }
+function emergency(p){
+  if (rushPending(p)){ float(640,640,'Peter ist schon unterwegs',C.mayo); return; }
+  const cost=notPrice(p);
+  if (S.cash<cost){ float(640,640,'Kein Geld für die Notlieferung',C.ketchup); return; }
+  S.cash-=cost; S.day_.notfall+=cost; S.day_.notfallN++;
+  S.rush.push({p,q:NOTPACK[p],t:NOT_ETA});
+  log(`Notlieferung: Peter bringt ${NOTPACK[p]} ${RAW[p]} ${isDrink(p)?NAME[p]:''} in ${NOT_ETA} s (${eur(cost)}, doppelter Preis).`);
+  sayM(pick(['Notlieferung?! Zum doppelten Preis? Planung ist für dich ein Fremdwort.','Peter freut sich. Ich nicht.','Wer hat bestellt? Du. Wer zahlt? Wir.']));
 }
 function firstFree(arr,n){ for(let i=0;i<n;i++) if(!arr[i]) return i; return -1; }
 
@@ -499,7 +529,7 @@ function update(dt){
     for(const it of S.aus[p]) it.age+=dt;
     const lim=LASCH[p]*lf, before=S.aus[p].length;
     S.aus[p]=S.aus[p].filter(it=>it.age<lim);
-    const n=before-S.aus[p].length; if(n>0){ d.waste[p]+=n; d.why.lasch+=n; { const ar=ausRect(P.indexOf(p)); float(ar.x+ar.w/2,ar.y-6,`${n}× lasch`,C.ketchup); }; }
+    const n=before-S.aus[p].length; if(n>0){ d.waste[p]+=n; d.why.lasch+=n; { const ar=ausRect(FOOD.indexOf(p)); float(ar.x+ar.w/2,ar.y-6,`${n}× lasch`,C.ketchup); }; }
   }
   // Schlange
   for(let i=0;i<S.queue.length;i++){
@@ -524,7 +554,7 @@ function update(dt){
       if (i>=0){
         if (Math.random() < 0.84+S.up.schul*0.04) reserve(S.queue[i]);
         else {
-          const p=pick(P.filter(p=>S.aus[p].length>0));
+          const p=pick(FOOD.filter(p=>S.aus[p].length>0));
           S.aus[p].shift(); d.waste[p]++; d.why.kloska++; S.ruf=clamp(S.ruf-2,0,100);
           say('d',pick(SAY_K)); float(qx(i),490,`Kloska: falsches ${NAME[p]}`,C.ketchup);
           if (Math.random()<0.5) setTimeout(()=>sayM(pick(SAY_M.kloska)),700);
@@ -532,6 +562,9 @@ function update(dt){
       }
     }
   }
+  // Notlieferungen kommen an
+  for(const x of S.rush){ x.t-=dt; if(x.t<=0){ S.stock[x.p].push({q:x.q,age:0,cheap:false}); float(isDrink(x.p)?995:118+FOOD.indexOf(x.p)*232+60,isDrink(x.p)?420:650,`+${x.q} ${RAW[x.p]}`,C.phos); log(`Peter ist da: ${x.q} ${RAW[x.p]} ${isDrink(x.p)?NAME[x.p]:''} geliefert.`); } }
+  S.rush=S.rush.filter(x=>x.t>0);
   // Gasflasche
   if (S.fireAt!=null && S.time>=S.fireAt && !S.fire){ S.fireAt=null; S.fire={hp:5,max:5,t:0}; d.fires++; sayM(pick(SAY_M.fire)); log('Die Gasflasche brennt! Anklicken zum Löschen, bis dahin brät nichts.'); }
   if (S.fire){ S.fire.t+=dt; if (S.fire.t>8) S.ruf=clamp(S.ruf-0.5*dt,0,100); if (say_m.t<=0 && Math.random()<dt*0.35) sayM(pick(SAY_M.fire)); }
@@ -570,6 +603,8 @@ function slotFry(i){ return {x:[640,681][i], y:290, w:37, h:38}; }
 function ausRect(k){ return {x:AUS_EDGES[k]+3, y:376, w:AUS_EDGES[k+1]-AUS_EDGES[k]-6, h:48}; }
 function lagerBtn(i){ return {x:118+i*232+92, y:672, w:128, h:40}; }
 const GAS={x:1016,y:430,w:64,h:132};
+const SALAD={x:742,y:316,w:70,h:44};                         // freie Arbeitsfläche hinter Kloska
+const CRATE={monster:{x:958,y:430,w:72,h:44}, faxe:{x:958,y:476,w:72,h:78}};
 const BTN={flip:{x:478,y:236,w:130,h:20}, pause:{x:1188,y:7,w:82,h:32}, wt:{x:520,y:6,w:220,h:34}, kaffee:{x:0,y:292,w:100,h:278}, raid:{x:215,y:132,w:215,h:78}};
 const custRect = i => ({x:qx(i)-44, y:500, w:88, h:158});
 
@@ -591,7 +626,17 @@ function icon(p,s){
   x.font=`${s}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; x.fillText(EMO[p],s*0.6,s*0.65);
   return iconCache[k]=c;
 }
+function drawCan(p,cx,cy,s){
+  const w=s*0.52, h=s*0.92, x=cx-w/2, y=cy-h/2;
+  ctx.fillStyle='rgba(0,0,0,.35)'; rr(x+2,y+2,w,h,3); ctx.fill();
+  if (p==='monster'){ ctx.fillStyle='#f4f4f0'; rr(x,y,w,h,3); ctx.fill(); ctx.fillStyle='#1d1d1d'; ctx.fillRect(x,y+h*0.12,w,h*0.1); ctx.fillRect(x,y+h*0.78,w,h*0.1);
+    ctx.strokeStyle='#9aa0a6'; ctx.lineWidth=Math.max(1,s/18); for(let k=-1;k<=1;k++){ ctx.beginPath(); ctx.moveTo(cx+k*w*0.2,y+h*0.3); ctx.lineTo(cx+k*w*0.2+w*0.06,y+h*0.68); ctx.stroke(); } ctx.lineWidth=1; }
+  else { ctx.fillStyle='#c9ced4'; rr(x,y,w,h,3); ctx.fill(); ctx.fillStyle='#1f4fa3'; ctx.fillRect(x,y+h*0.22,w,h*0.5); ctx.fillStyle='#d1342b'; ctx.fillRect(x,y+h*0.42,w,h*0.1);
+    ctx.fillStyle='#fff'; ctx.font=`700 ${Math.max(6,s*0.2)}px ${F.disp}`; ctx.textAlign='center'; ctx.fillText('10%',cx,y+h*0.38); }
+  ctx.fillStyle='#8d949b'; ctx.fillRect(x+w*0.1,y,w*0.8,Math.max(1.5,h*0.05));
+}
 function drawIcon(p,cx,cy,s,dark){
+  if (isDrink(p)) return drawCan(p,cx,cy,s);
   const c=icon(p,s), w=s*1.2;
   ctx.drawImage(c,cx-w/2,cy-w/2,w,w);
   if (dark>0){ ctx.globalAlpha=dark; ctx.fillStyle='#1a0d05'; ctx.beginPath(); ctx.arc(cx,cy,s*0.42,0,7); ctx.fill(); ctx.globalAlpha=1; }
@@ -675,7 +720,7 @@ function render(){
     if (hv) glow(r,C.mayo);
   }
   /* --- Auslage (Vitrine) --- */
-  P.forEach((p,k)=>{
+  FOOD.forEach((p,k)=>{
     const r=ausRect(k), a=S.aus[p], n=a.length, pf=a.filter(t=>t.perf).length;
     drawIcon(p,r.x+26,r.y+r.h/2,26,0);
     txtS(String(n),r.x+r.w-10,r.y+33,26,n===0?'#ff8a6e':C.mayo,'right',F.disp,700);
@@ -684,6 +729,23 @@ function render(){
     if (LASCH[p]&&n){ const f=1-a[0].age/(LASCH[p]*(S.up.lamp?1.6:1)); ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(r.x+6,r.y+r.h-6,r.w-12,4); ctx.fillStyle=f<0.3?C.ketchup:C.grill; ctx.fillRect(r.x+6,r.y+r.h-6,(r.w-12)*f,4); }
     if (p==='salat'&&S.salatPrep>0){ ctx.fillStyle=C.phos; ctx.fillRect(r.x+6,r.y+r.h-6,(r.w-12)*(1-S.salatPrep/SALAT_PREP),4); }
   });
+  /* --- Salat-Station auf der Arbeitsfläche hinter Kloska --- */
+  { const b=SALAD, on=hover===700, prep=S.salatPrep>0;
+    if (on||prep){ ctx.fillStyle=on?'rgba(244,235,201,.16)':'rgba(0,0,0,.18)'; rr(b.x,b.y,b.w,b.h,6); ctx.fill(); }
+    ctx.globalAlpha = prep||on ? 1 : .8; drawIcon('salat',b.x+24,b.y+22,24,0); ctx.globalAlpha=1;
+    if (prep){ ctx.fillStyle='rgba(0,0,0,.6)'; ctx.fillRect(b.x+6,b.y+b.h-6,b.w-12,4); ctx.fillStyle=C.phos; ctx.fillRect(b.x+6,b.y+b.h-6,(b.w-12)*(1-S.salatPrep/SALAT_PREP),4); }
+    else txtS(on?'+':'SALAT',b.x+52,b.y+(on?30:27),on?20:9,on?C.grill:C.mayo,'center',F.disp,700);
+    if (on) glow(b,C.mayo); }
+  /* --- Getränkekisten neben dem Wagen --- */
+  for(const p of DRINKS){
+    const b=CRATE[p], n=stockCount(p), on=hover===(p==='monster'?710:711), rush=rushPending(p);
+    ctx.fillStyle=on?'rgba(40,24,14,.88)':'rgba(20,12,8,.78)'; rr(b.x,b.y,b.w,b.h,5); ctx.fill(); ctx.strokeStyle=n===0?'#ff8a6e':on?C.grill:'rgba(240,160,58,.35)'; ctx.stroke();
+    drawCan(p,b.x+16,b.y+21,30);
+    txtS(String(n),b.x+b.w-8,b.y+28,20,n===0?'#ff8a6e':C.mayo,'right',F.disp,700);
+    if (p==='faxe') txtS('FAXE 10%',b.x+b.w/2,b.y+52,9,'#c9d6ff','center',F.disp,700); else txtS('',0,0,1,'#000');
+    if (rush) txtS(`kommt ${Math.ceil(rush.t)} s`,b.x+b.w/2,b.y+b.h-6,9,C.phos,'center',F.disp,700);
+    else if (n===0) txtS('NOTLIEF.',b.x+b.w/2,b.y+b.h-6,9,'#ff8a6e','center',F.disp,700);
+  }
   /* --- Kloska hinter dem Tresen (unterhalb der Theke abgeschnitten) --- */
   const k=S.kl, busy=!!k.job, serving=busy&&k.t>0.1&&k.t<0.6;
   const ki=serving?IMG.kloskaServe:IMG.kloska, breathe=serving?0:Math.sin(now/420)*1.2;
@@ -729,13 +791,13 @@ function render(){
   /* --- Kunden (Würmer) vor dem Wagen --- */
   S.queue.forEach((c,i)=>{
     const x=c.x, ok=canServe(c), f=c.pat/c.max, items=Object.entries(c.o);
-    const bw=18+items.length*40, bx=x-bw/2, by=500;
+    const bw=14+items.length*35, bx=x-bw/2, by=500;
     ctx.fillStyle=c.res?'#d6efdd':ok?'#effaf2':C.paper; rr(bx,by,bw,40,8); ctx.fill();
     ctx.lineWidth=ok?2.5:1; ctx.strokeStyle=ok?C.phos:'rgba(42,38,34,.45)'; ctx.stroke(); ctx.lineWidth=1;
     ctx.beginPath(); ctx.fillStyle=c.res?'#d6efdd':ok?'#effaf2':C.paper; ctx.moveTo(x-7,by+40); ctx.lineTo(x,by+50); ctx.lineTo(x+7,by+40); ctx.fill();
-    items.forEach(([p,n],j)=>{ const ix=bx+14+j*40; drawIcon(p,ix+8,by+20,20,0); ctx.font=`700 13px ${F.body}`; ctx.textAlign='left'; ctx.fillStyle=c.res||S.aus[p].length>=n?'#2c7a4e':'#9b2b1b'; ctx.fillText('×'+n,ix+20,by+26);
-      if(!c.res && soldOut(p) && S.aus[p].length<n){ ctx.strokeStyle='#c0261b'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(ix-2,by+8); ctx.lineTo(ix+34,by+32); ctx.moveTo(ix+34,by+8); ctx.lineTo(ix-2,by+32); ctx.stroke(); ctx.lineWidth=1; } });
-    if (!c.res && !ok && items.some(([p,n])=>soldOut(p)&&S.aus[p].length<n)) txtS('AUSVERKAUFT',x,by-6,9,'#ff8a6e','center',F.disp,700);
+    items.forEach(([p,n],j)=>{ const ix=bx+10+j*35; drawIcon(p,ix+8,by+20,20,0); ctx.font=`700 12px ${F.body}`; ctx.textAlign='left'; ctx.fillStyle=c.res||avail(p)>=n?'#2c7a4e':'#9b2b1b'; ctx.fillText('×'+n,ix+19,by+26);
+      if(!c.res && soldOut(p) && avail(p)<n){ ctx.strokeStyle='#c0261b'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(ix-2,by+8); ctx.lineTo(ix+30,by+32); ctx.moveTo(ix+30,by+8); ctx.lineTo(ix-2,by+32); ctx.stroke(); ctx.lineWidth=1; } });
+    if (!c.res && !ok && items.some(([p,n])=>soldOut(p)&&avail(p)<n)) txtS('AUSVERKAUFT',x,by-6,9,'#ff8a6e','center',F.disp,700);
     const img=IMG[c.res||f>=0.6?(c.spr==='wBlue'?'wBlue':'wHappy'):f>=0.3?'wWait':'wAngry'], bob=Math.sin(now/300+c.bob)*2, shake=f<0.3&&!c.res?(Math.random()-.5)*3:0;
     ctx.fillStyle='rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(x,652,34,7,0,0,7); ctx.fill();
     if (img.complete) ctx.drawImage(img,x-45+shake,560+bob,89,92);
@@ -770,14 +832,20 @@ function render(){
   ctx.fillStyle='rgba(20,12,8,.88)'; ctx.fillRect(0,664,W,56); ctx.fillStyle='rgba(240,160,58,.45)'; ctx.fillRect(0,664,W,1);
   txt('LAGER',16,686,11,'#c9a77a','left',F.disp,700); txt(`${stockTotal()}/${S.up.kuehl}`,16,708,15,C.mayo,'left',F.body,700);
   const lab=['auf den Spieß','auf den Spieß','auf den Rost','in die Fritteuse','anrichten'];
-  P.forEach((p,i)=>{
+  FOOD.forEach((p,i)=>{
     const x=118+i*232, n=stockCount(p), old=S.stock[p].length?S.stock[p][0].age:0, warn=n>0&&old>=SPOIL[p]-1;
     drawIcon(p,x+16,692,22,0);
     txt(String(n),x+34,700,20,n===0?'#ff8a6e':C.fg,'left',F.body,700);
     txt(RAW[p],x+34,714,10,warn?'#ff8a6e':'#a99478','left',F.body,600);
-    const r=lagerBtn(i), h=hover===100+i;
-    ctx.fillStyle=h?'#4a3322':'#2c1e14'; rr(r.x,r.y,r.w,r.h,5); ctx.fill(); ctx.strokeStyle=h?C.grill:'rgba(240,160,58,.35)'; ctx.stroke();
-    txt(lab[i],r.x+r.w/2,r.y+25,13,h?C.grill:C.mayo,'center');
+    const r=lagerBtn(i), h=hover===100+i, rush=rushPending(p);
+    if (n===0 || rush){
+      ctx.fillStyle=h?'#5a2318':'#3a1712'; rr(r.x,r.y,r.w,r.h,5); ctx.fill(); ctx.strokeStyle=rush?C.phos:'#ff8a6e'; ctx.stroke();
+      if (rush) txt(`Peter: ${Math.ceil(rush.t)} s`,r.x+r.w/2,r.y+25,13,C.phos,'center');
+      else { txt('NOTLIEFERUNG',r.x+r.w/2,r.y+17,11,'#ffd2c4','center',F.disp,700); txt(eur(notPrice(p)),r.x+r.w/2,r.y+33,11,'#ff8a6e','center'); }
+    } else {
+      ctx.fillStyle=h?'#4a3322':'#2c1e14'; rr(r.x,r.y,r.w,r.h,5); ctx.fill(); ctx.strokeStyle=h?C.grill:'rgba(240,160,58,.35)'; ctx.stroke();
+      txt(lab[i],r.x+r.w/2,r.y+25,13,h?C.grill:C.mayo,'center');
+    }
   });
 
   /* --- Floats & Tooltip --- */
@@ -809,6 +877,8 @@ function askBtns(){
 function hitTest(p){
   for(const b of askBtns()) if(inR(p,b)) return ['ask',b.i];
   if (S.fire && inR(p,GAS)) return ['gas'];
+  if (inR(p,SALAD)) return ['salad'];
+  for(const d of DRINKS) if(inR(p,CRATE[d])) return ['crate',d];
   if (inR(p,BTN.pause)) return ['pause'];
   if (inR(p,BTN.wt)) return ['wt'];
   if (S.raid && inR(p,BTN.raid)) return ['raid'];
@@ -832,7 +902,9 @@ function tipFor(h){
     case 'rost': { const w=S.rost[i]; return w.burnt?'Schwarz: anklicken zum Wegwerfen':w.side===1?(w.t>=WURST.side?'Jetzt wenden!':'Seite 1 brät'):(w.t>=WURST.side?'Runternehmen':'Seite 2 brät'); }
     case 'fry': { const b=S.fry[i]; if(!b) return 'Klick: 1 Portion Pommes rein'; return b.t>=COOK.pommes.burn?'Verbrannt: wegwerfen':b.t>=COOK.pommes.done?'Pommes raus!':`noch ${Math.ceil(COOK.pommes.done-b.t)} s`; }
     case 'locked': return `${h[2]}: abends bei den Upgrades freischalten`;
-    case 'lager': return ['Hähnchen auf den Spieß','Haxe auf den Spieß (45 s)','Bratwurst auf den Rost','Pommes in die Fritteuse','Salat anrichten'][i];
+    case 'lager': { const p=FOOD[i]; if(rushPending(p)) return `Peter ist unterwegs: ${Math.ceil(rushPending(p).t)} s`; if(stockCount(p)===0) return `Notlieferung: ${NOTPACK[p]} ${RAW[p]} für ${eur(notPrice(p))} (doppelter Preis), kommt in ${NOT_ETA} s`; return ['Hähnchen auf den Spieß','Haxe auf den Spieß (45 s)','Bratwurst auf den Rost','Pommes in die Fritteuse','Salat anrichten (hinter Kloska)'][i]; }
+    case 'salad': return S.salatPrep>0?'Salat wird angerichtet…':stockCount('salat')?'Klick: Salat anrichten':'Kein Salat mehr im Lager';
+    case 'crate': { const n=stockCount(i); if(rushPending(i)) return `Peter bringt ${NAME[i]}: ${Math.ceil(rushPending(i).t)} s`; return n?`${NAME[i]}: ${n} Dosen, Kloska nimmt sie direkt aus der Kiste`:`${NAME[i]} leer. Klick: Notlieferung ${NOTPACK[i]} Dosen für ${eur(notPrice(i))}`; }
     case 'cust': { const c=S.queue[i]; return c.res?'Kloska verkauft gerade':canServe(c)?'Klick: Kloska verkauft':'Unvollständig. Klick: Teillieferung oder wegschicken'; }
     case 'aus': return `${NAME[P[i]]} in der Auslage`;
     case 'kaffee': return S.fuel>=100?'Kaffee! Wartime zünden':`Wartime lädt: ${Math.round(S.fuel)} %`;
@@ -847,9 +919,9 @@ function tipFor(h){
 }
 function hoverCode(h){
   if(!h) return -1;
-  switch(h[0]){ case 'ask': return 600+h[1]; case 'flip': return 3; case 'lager': return 100+h[1]; case 'cust': return 200+h[1]; case 'spLoad': case 'spiess': return 300+h[1]; case 'rostLoad': case 'rost': return 400+h[1]; case 'fry': return 500+h[1]; case 'pause': return 2; default: return 1; }
+  switch(h[0]){ case 'salad': return 700; case 'crate': return h[1]==='monster'?710:711; case 'ask': return 600+h[1]; case 'flip': return 3; case 'lager': return 100+h[1]; case 'cust': return 200+h[1]; case 'spLoad': case 'spiess': return 300+h[1]; case 'rostLoad': case 'rost': return 400+h[1]; case 'fry': return 500+h[1]; case 'pause': return 2; default: return 1; }
 }
-cv.addEventListener('mousemove',e=>{ if(!S||S.phase!=='day'){ tip=''; return; } const p=toLocal(e); mouse=p; const h=hitTest(p); hover=hoverCode(h); tip=tipFor(h); cv.style.cursor=h&&h[0]!=='aus'&&h[0]!=='locked'?'pointer':'default'; });
+cv.addEventListener('mousemove',e=>{ if(!S||S.phase!=='day'){ tip=''; return; } const p=toLocal(e); mouse=p; const h=hitTest(p); hover=hoverCode(h); tip=tipFor(h); cv.style.cursor=h&&h[0]!=='aus'&&h[0]!=='locked'&&!(h[0]==='crate'&&stockCount(h[1])>0)?'pointer':'default'; });
 cv.addEventListener('mouseleave',()=>{ hover=-1; tip=''; mouse={x:-99,y:-99}; });
 cv.addEventListener('mousedown',e=>{
   if(!S||S.phase!=='day'||paused||e.button!==0) return; e.preventDefault();
@@ -862,7 +934,9 @@ cv.addEventListener('mousedown',e=>{
   else if(k==='rostLoad') loadRost(i);
   else if(k==='rost') clickRost(i);
   else if(k==='fry') clickFry(i);
-  else if(k==='lager') [()=>loadSpiess('huhn'),()=>loadSpiess('haxe'),()=>loadRost(),loadFry,prepSalat][i]();
+  else if(k==='lager'){ const p=FOOD[i]; if(stockCount(p)===0||rushPending(p)) emergency(p); else [()=>loadSpiess('huhn'),()=>loadSpiess('haxe'),()=>loadRost(),loadFry,prepSalat][i](); }
+  else if(k==='salad') prepSalat();
+  else if(k==='crate'){ if(stockCount(i)===0) emergency(i); }
   else if(k==='cust'){ const c=S.queue[i]; if(c.res) float(qx(i),490,'Kloska kommt',C.mayo); else if(!serve(i)) S.ask={c,t:4}; }
   else if(k==='ask'){ const c=S.ask&&S.ask.c; S.ask=null; if(i===0) servePartial(c); else sendAway(c); }
   else if(k==='gas'){ const f=S.fire; f.hp--; for(let n=0;n<6;n++) sprays.push({x:GAS.x+GAS.w+40,y:GAS.y+40+Math.random()*30,vx:-60-Math.random()*40,vy:-20+Math.random()*40,t:0});
@@ -927,15 +1001,17 @@ function showTitle(){
         <kbd>Spieß</kbd><span>Freien Platz im Ofen anklicken = Hähnchen (20 s). Haxe (45 s) über das Lager unten. Grün leuchtend = perfekt, jetzt runternehmen.</span>
         <kbd>Rost</kbd><span>Freien Platz = Bratwurst. Nach 7 s anklicken zum Wenden, dann nochmal zum Runternehmen.</span>
         <kbd>Fritteuse</kbd><span>Korb anklicken = 1 Portion rein, 1 Portion raus. Zwei Körbe parallel.</span>
-        <kbd>Lager</kbd><span>Buttons unten machen dasselbe, Salat wird nur dort angerichtet.</span>
+        <kbd>Lager</kbd><span>Buttons unten machen dasselbe. Leer? Dann wird der Button zur Notlieferung: Peter kommt in 12 s, zum doppelten Preis.</span>
+        <kbd>Salat</kbd><span>Auf der Arbeitsfläche hinter Kloska anklicken.</span>
+        <kbd>Getränke</kbd><span>Monster Ultra White und Faxe Strong 10 % stehen in den Kisten neben dem Wagen. Kloska nimmt sie direkt mit.</span>
         <kbd>Kunde</kbd><span>Grüne Bestellung anklicken: Kloska reicht die Ware über den Tresen.</span>
         <kbd>Wartime</kbd><span>Leiste oben voll? Kaffeeautomat oder Leiste anklicken: 12 s schneller garen, Kunden warten.</span>
         <kbd>Max & Moritz</kbd><span>Tauchen am Spieß auf. Anklicken, sonst sind zwei Hähnchen weg.</span>
       </div>
       <p class="dim" style="font-size:13px">Wer mag, kann zusätzlich Tasten nutzen: 1–5, F, M, Leertaste, P.</p>
-      <p class="dim" style="font-size:13px">Gesamt bisher: ${L.days} Tage · ${L.runs} Runs · ${P.map(p=>`${L.sold[p]} ${NAME[p]}`).join(' · ')}</p>
+      <p class="dim" style="font-size:13px">Gesamt bisher: ${L.days} Tage · ${L.runs} Runs · ${P.map(p=>`${L.sold[p]||0} ${NAME[p]}`).join(' · ')}</p>
     </div></div></div>`);
-  if (run) $('bCont').onclick=()=>{ S=run; S.up.fry=2; S.revSum=S.revSum||0; S.revN=S.revN||0; S.ask=null; S.fire=null; if(S.auto===undefined) S.auto=false; S.kl=S.kl||{x:1010,job:null,t:0}; S.jobs=S.jobs||[]; showEvening(); };
+  if (run) $('bCont').onclick=()=>{ S=run; migrate(); S.up.fry=2; S.revSum=S.revSum||0; S.revN=S.revN||0; S.ask=null; S.fire=null; if(S.auto===undefined) S.auto=false; S.kl=S.kl||{x:1010,job:null,t:0}; S.jobs=S.jobs||[]; showEvening(); };
   $('bNew').onclick=newRun;
   if (IN_TS) $('bBack').onclick=backToTS;
   $('inName').onchange=e=>{ PLAYER=cleanName(e.target.value); e.target.value=PLAYER; try{ localStorage.setItem('lsc_player',PLAYER); }catch(x){} fbLoadMine(); renderBoard($('lscBoard')); };
@@ -967,7 +1043,12 @@ function genReviews(d){
   if (d.tips>5) add(5,'Pommes so knusprig, ich hab Trinkgeld gegeben. Mach ich sonst nie.');
   if (d.sold.haxe>2) add(5,'Die Haxe! Ich sag nur: die Haxe. Danach Mittagsschlaf bis Schichtbeginn.');
   if (d.sold.salat>3) add(4,'Salat am Grillwagen bestellt. Wurde nicht ausgelacht. Vier Sterne.');
+  if (d.sold.faxe>4) add(5,'Faxe 10 % zum Hähnchen. Danach war mir alles egal. Beste Mittagspause seit Jahren.',2);
+  if (d.sold.faxe>8) add(3,'Nach dem dritten Faxe hab ich dem Mann im Radtrikot meine Lebensgeschichte erzählt. Er hat weiter Banane gegessen.');
+  if (d.sold.monster>4) add(4,'Monster Ultra White zur Haxe. Bin jetzt seit 14 Stunden wach und sehr zufrieden.',2);
+  if (d.notfallN>0) add(3,'Mitten im Andrang kam ein Lieferwagen und ein Mann mit Kochlöffel hat Kisten reingeworfen. Danach ging es weiter. Sehr spontan alles.');
   if (S.event.id==='hitze') add(3,'34 Grad und ich stehe vor einem Grill an. Warum mache ich das. Salat war gut.');
+  if (S.event.id==='hitze' && d.sold.monster+d.sold.faxe<3) add(2,'Bei der Hitze keine kalten Getränke mehr da. Ernsthaft?');
   if (S.event.id==='regen') add(3,'Im Regen gewartet. Die Markise schützt den Wagen, nicht die Kundschaft.');
   if (S.event.id==='kirmes') add(4,'Nach drei Runden Breakdance genau das Richtige. Bratwurst blieb drin.');
   if (S.event.id==='schuetz') add(4,'Schützenkönig hier gegessen. Wurde danach nicht Schützenkönig. Liegt nicht am Hähnchen.');
@@ -1014,8 +1095,9 @@ function showBon(d){
     <div class="l"><span>Gas & Strom</span><span class="neg">${eur(-c.energie)}</span></div>
     ${c.auto?`<div class="l"><span>Kloska Autopilot (Überstunden)</span><span class="neg">${eur(-c.auto)}</span></div>`:''}
     ${c.strafe?`<div class="l"><span>Bußgeld Lebensmittelkontrolle</span><span class="neg">${eur(-c.strafe)}</span></div>`:''}
+    ${d.notfall?`<div class="l"><span>${d.notfallN}× Notlieferung (2× Preis)</span><span class="neg">${eur(-d.notfall)}</span></div>`:''}
     <hr><div class="l big"><span>KASSE</span><span class="${d.cashEnd<0?'neg':''}">${eur(d.cashEnd)}</span></div>
-    <div class="l"><span>Tagesergebnis</span><span>${eur(d.revenue-d.costSum)}</span></div><hr>
+    <div class="l"><span>Tagesergebnis</span><span>${eur(d.revenue-d.costSum-d.notfall)}</span></div><hr>
     <div class="l"><span>Bedient</span><span>${d.served}</span></div>
     <div class="l"><span>Weggelaufen</span><span>${d.lost}</span></div>
     <div class="l"><span>Schlange voll, abgedreht</span><span>${d.missed}</span></div>
@@ -1036,8 +1118,8 @@ function showBon(d){
   $('bBon').focus();
 }
 
-function buyPrice(p){ return BUY[p]*Math.pow(1.012,S.day-1)*(p==='huhn'&&S.cheapNext?0.65:1); }
-function upPrice(k){ const u=UPG[k]; return Math.round(u.base*Math.pow(1.5,S.upBought[k])); }
+function buyPrice(p,plain){ return BUY[p]*Math.pow(1.012,S.day-1)*(!plain&&p==='huhn'&&S.cheapNext?0.65:1); }
+function upPrice(k){ const u=UPG[k]; return Math.round(u.base*0.5*Math.pow(1.5,S.upBought[k])); }  // 50 % günstiger
 function upMaxed(k){ const u=UPG[k]; return k==='kuehl'? S.up.kuehl>=u.max : S.up[k]>=u.max; }
 
 function showEvening(){
@@ -1058,7 +1140,7 @@ function showEvening(){
       <div class="tbl"><table>
         <thead><tr><th>Ware</th><th>Letzte 7 Tage</th><th>Ø/Tag</th><th>Lager</th><th>Bestellen</th><th>Preis</th></tr></thead>
         <tbody>${P.map(p=>`<tr>
-          <td>${EMO[p]} ${NAME[p]}</td>
+          <td>${EMO[p]} ${SHORT[p]||NAME[p]}</td>
           <td><div class="spark" title="Verkauft pro Tag">${sparkBars(p,last7)}</div></td>
           <td>${avg(p).toFixed(1)}</td>
           <td>${stockCount(p)}${S.stock[p].some(b=>b.age>=SPOIL[p]-1)?' <span style="color:var(--ketchup)">!</span>':''}</td>
@@ -1067,7 +1149,7 @@ function showEvening(){
       <label class="tog"><input type="checkbox" id="cbCheap" ${S.cheapNext?'checked':''}><span><b>Peters Sonderposten-Hühner</b> (−35 %). Manche Kunden merken es. Ruf leidet.</span></label>
       <div><div class="row" style="justify-content:space-between"><span class="dim">Kühlung nach Lieferung</span><span>${stockTotal()+ordered} / ${S.up.kuehl}</span></div>
         <div class="bar ${ordered>space?'warn':''}"><i style="width:${Math.min(100,(stockTotal()+ordered)/S.up.kuehl*100)}%"></i></div>
-        <p class="dim" style="font-size:12.5px;margin-top:4px">Haltbarkeit roh: Salat 2 Tage, Hühner und Haxen 4, Würste 5, Pommes 7.</p></div>
+        <p class="dim" style="font-size:12.5px;margin-top:4px">Haltbarkeit roh: Salat 2 Tage, Hühner und Haxen 4, Würste 5, Pommes 7. Getränke halten ewig.</p></div>
       <div class="row" style="justify-content:space-between"><span>Bestellung: <b>${eur(tot)}</b> · Kasse danach: <b style="color:${S.cash-tot<0?'var(--ketchup)':'var(--phos)'}">${eur(S.cash-tot)}</b></span>
         <button class="btn go" id="bStart" ${S.cash-tot<0||ordered>space?'disabled':''}>Tag ${S.day} starten</button></div>
       ${ordered>space?'<p style="color:var(--ketchup);font-size:13px">Zu viel für die Kühlung. Weniger bestellen oder Kühlzelle kaufen.</p>':''}
