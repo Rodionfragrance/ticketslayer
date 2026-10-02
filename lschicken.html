@@ -144,6 +144,10 @@ kbd{font-family:var(--f-disp);font-size:12px;background:var(--bg);border:1px sol
 @media (min-width:1500px) and (min-height:880px){.eve{gap:30px;padding:18px 24px}.eve .col{gap:12px}.eve th,.eve td{padding:5px 6px}.eve .peter img{height:150px}.eve .speech{font-size:14px;padding:10px 12px}.eve .loc{padding:7px 10px}.eve .up{padding:9px 0}.eve h2{font-size:22px}.eve h3{font-size:13px}}
 .tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
 .tabs .btn{padding:6px 6px;font-size:13px}
+.sabnews{font-size:12.5px;background:#2a1a12;border-left:3px solid var(--ketchup);padding:5px 8px;color:var(--mayo)}
+.sabt{border:1px solid var(--line);padding:6px 8px;background:var(--panel2)}
+.sabb{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:5px}
+.sabb .btn{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tabs .btn.on{border-color:var(--grill);background:#2a2216;color:var(--mayo)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -276,6 +280,7 @@ function delGo(){
   const dl=S.dl, V=VEH[S.lief.veh], D=DRV[S.lief.drv];
   if (dl.trip || !dl.bag.length) return;
   if (dl.charge>0){ float(1150,250,'Akku lädt…',C.mayo); return; }
+  if (S.zoll>0){ float(1150,250,'Zoll prüft den Fahrer',C.ketchup); return; }
   const km=Math.max(...dl.bag.map(o=>o.km));
   let spd=V.spd*D.spd; if (S.lief.veh==='rad' && S.event.id==='regen') spd*=0.7;
   let out=(5+km*4)/spd, lost=0;
@@ -309,7 +314,7 @@ function updateLief(dt){
   while(dl.next<dl.plan.length && dl.plan[dl.next].t<=S.time){ const o=dl.plan[dl.next++]; dl.orders.push(o); log(`📱 Lieferbestellung: ${o.addr} (${String(o.km).replace('.',',')} km)`); }
   for(let i=0;i<dl.orders.length;i++){ const o=dl.orders[i]; if(S.wt<=0) o.pat-=dt; if(o.pat<=0){ dl.orders.splice(i,1); i--; d.lief.cancel++; S.ruf=clamp(S.ruf-2,0,100); sfx('lost'); log(`Lieferbestellung ${o.addr} storniert. Zu lange gewartet.`); } }
   if (dl.charge>0) dl.charge-=dt;
-  if (!dl.trip && dl.charge<=0 && dl.bag.length>=V.cap) delGo();
+  if (!dl.trip && dl.charge<=0 && !(S.zoll>0) && dl.bag.length>=V.cap) delGo();
   if (dl.trip){ const T=dl.trip; T.t+=dt; if(!T.done && T.t>=T.out) delDeliver(T); if(T.t>=T.total){ dl.trip=null; dl.trips++; if(S.lief.veh==='roller' && dl.trips%3===0){ dl.charge=25; log('E-Roller-Akku leer. 25 Sekunden an die Steckdose.'); } } }
   if (S.auto){
     dl.aCd-=dt;
@@ -358,6 +363,8 @@ const UPG = {
   kuehl: {name:'Kühlzelle', desc:'+60 Einheiten Lagerplatz', base:250, max:460, step:60, start:130},
   schild:{name:'Werbeschild', desc:'+12 % Kundschaft pro Stufe', base:220, max:3, step:1, start:0},
   schul: {name:'Kloska-Schulung', desc:'Kloska verwechselt im Autopilot seltener', base:150, max:3, step:1, start:0},
+  ordner:{name:'Ordner mit Stundenzetteln', desc:'Zoll-Kontrolle dauert 10 statt 40 Sekunden', base:240, max:1, step:1, start:0},
+  stb:   {name:'Steuerberater', desc:'Betriebsprüfung vom Finanzamt endet ohne Befund', base:600, max:1, step:1, start:0},
 };
 
 const SAY_M = {
@@ -495,6 +502,91 @@ function fbDay(d){
   ref.set(payload,{merge:true}).catch(e=>console.warn('LSC save:',e));
 }
 let BOARD_TAB='alltime';
+/* ===================== Anonyme Hinweise (Sabotage) ===================== */
+const SAB = {
+  gesund:{name:'Gesundheitsamt', art:'das Gesundheitsamt', icon:'🧪', price:150, desc:'Kontrolle am nächsten Tag. Aufgewärmte Ware oder Sonderposten = Bußgeld und Ruf weg. Ist der Wagen sauber, zahlst du 100 € Strafe wegen Falschanzeige.'},
+  zoll:  {name:'Zoll (Kontrolle Schwarzarbeit)', art:'der Zoll', icon:'🛃', price:250, desc:'Prüft Kloska und den Fahrer: 40 s Stillstand am Tresen, Lieferdienst steht.'},
+  finanz:{name:'Finanzamt', art:'das Finanzamt', icon:'💼', price:400, desc:'Betriebsprüfung: 8 % der Kasse Nachzahlung, höchstens 500 €.'},
+  darius:{name:'Darius ausleihen', art:'Darius zum Aushelfen', icon:'🤷', price:100, desc:'Darius hilft einen Tag beim Gegner aus. Ware verschwindet, der Autopilot verwechselt dreimal so oft.'},
+};
+const SAB_REVEAL = 0.25, SAB_GRACE = 3, FALSCH_FINE = 100;
+let SAB_ROWS=null, EVE_REDRAW=null;
+const sabRef = n => fdb ? fdb.collection('playerProfiles').doc(n) : null;
+function fbSendSab(target, type, rev){
+  const ref=sabRef(target); if(!ref) return Promise.resolve(false);
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  return ref.set({lscSab:{[id]:{t:type, from:PLAYER, rev:!!rev, at:Date.now()}}},{merge:true}).then(()=>true).catch(e=>{ console.warn('LSC sab:',e); return false; });
+}
+// Post vom Amt abholen: höchstens ein Treffer pro Tag, danach Schonfrist. Falschanzeigen kommen immer an.
+async function fbInbox(){
+  const ref=profRef(); if(!ref || !S || S.challenge) return;
+  try{
+    const doc=await ref.get(); const box=(doc.exists&&doc.data().lscSab)||{};
+    const ids=Object.keys(box); if(!ids.length) return;
+    const list=ids.map(id=>({id,...box[id]})).sort((a,b)=>a.at-b.at);
+    const del={}; ids.forEach(id=>del[id]=firebase.firestore.FieldValue.delete());
+    await ref.set({lscSab:del},{merge:true});
+    S.sabNews=S.sabNews||[];
+    for(const e of list.filter(e=>e.t==='falsch')){ S.cash-=FALSCH_FINE; S.sabNews.push(`🧾 Das Gesundheitsamt hat bei ${e.from} nichts gefunden. Falschanzeige: ${eur(FALSCH_FINE)} Strafe.`); }
+    const atk=list.filter(e=>SAB[e.t]);
+    if (atk.length){
+      const blocked = S.sabNext || (S.sabLast!=null && S.day-S.sabLast<SAB_GRACE);
+      const take = blocked ? null : atk[0], dropped = atk.length-(take?1:0);
+      if (take){ S.sabNext=take; S.sabNews.push(`📨 Gerücht aus der Gerüchteküche: Morgen kommt ${SAB[take.t].art}.${take.rev?` Gesehen wurde: ${take.from}.`:' Wer dahintersteckt, weiß keiner.'}`); if(take.rev) S.sabRevenge=take.from; }
+      if (dropped>0) S.sabNews.push(`🗑 ${dropped} ${dropped===1?'weiterer Hinweis landet':'weitere Hinweise landen'} im Papierkorb des Amts.`);
+    }
+    if (EVE_REDRAW && S.phase==='evening') EVE_REDRAW();
+  }catch(e){ console.warn('LSC inbox:',e); }
+}
+function sabApply(){
+  const e=S.sabNext; if(!e) return; S.sabNext=null;
+  const d=S.day_; d.sab={t:e.t, from:e.rev?e.from:null};
+  if (e.t==='gesund'){
+    const dirty = S.reheat || S.stock.huhn.some(b=>b.cheap&&b.q>0) || Object.values(S.aus).some(a=>a.some(i=>i.re||i.cheap));
+    if (dirty){ const fine=200+S.day*10; S.cash-=fine; S.ruf=clamp(S.ruf-12,0,100); d.sab.amount=fine; d.sab.hit=true; S.sabLast=S.day; log(`Gesundheitsamt! Anonymer Hinweis. Aufgewärmtes und Sonderposten gefunden: ${eur(fine)} Bußgeld.`); }
+    else { d.sab.hit=false; unlock('weste'); log('Gesundheitsamt war da. Alles sauber. Der Hinweisgeber bekommt Post.'); fbSendSab(e.from,'falsch',false); }
+  } else if (e.t==='zoll'){ S.zollAt=rndR(Math.random,25,90); S.zollDur=S.up.ordner?10:40; d.sab.hit=true; S.sabLast=S.day; }
+  else if (e.t==='finanz'){
+    if (S.up.stb){ d.sab.hit=false; log('Betriebsprüfung vom Finanzamt. Der Steuerberater hat alles im Griff: ohne Befund.'); }
+    else { const amt=Math.min(500,Math.round(Math.max(0,S.cash)*0.08)); S.cash-=amt; d.sab.amount=amt; d.sab.hit=true; S.sabLast=S.day; log(`Betriebsprüfung! Das Finanzamt holt sich ${eur(amt)} Nachzahlung.`); }
+  } else if (e.t==='darius'){ S.dariusDay=true; S.dariusT=20; d.sab.hit=true; S.sabLast=S.day; sayM('Wer hat DARIUS an meinen Wagen gelassen?!'); log('Darius hilft heute aus. Irgendwer hat ihn geschickt.'); }
+}
+function sabSend(target,type){
+  if (!S || S.challenge || S.sabSentDay===S.day) return;
+  const free = S.sabRevenge===target, price = free?0:SAB[type].price;
+  if (S.cash<price) return;
+  const rev = Math.random()<SAB_REVEAL;
+  S.cash-=price; S.sabSentDay=S.day; if(free) S.sabRevenge=null;
+  bump('sabSent'); if (rev) bump('sabCaught');
+  S.sabMsg = `${SAB[type].icon} Hinweis an ${SAB[type].name.split(' (')[0]} über ${target} abgeschickt${free?' (Rache, gratis)':''}.${rev?' Mist: Du wurdest dabei gesehen. '+target+' erfährt es.':' Keiner hat dich gesehen.'}`;
+  fbSendSab(target,type,rev).then(ok=>{ if(!ok){ S.cash+=price; S.sabSentDay=null; S.sabMsg='Hinweis kam nicht an (offline). Geld zurück.'; } if(EVE_REDRAW) EVE_REDRAW(); });
+  if (EVE_REDRAW) EVE_REDRAW();
+}
+function sabTab(){
+  if (S.challenge) return '<p class="dim" style="font-size:13px">In der Wochen-Challenge gibt es keine Hinweise. Alle spielen denselben Run, fair bleibt fair.</p>';
+  if (!fdb || !PLAYER) return '<p class="dim" style="font-size:13px">Hinweise gehen nur online mit Namen (über Ticket Slayer).</p>';
+  return `<p class="dim" style="font-size:12.5px">Einen anonymen Hinweis pro Abend. Nur gegen Spieler, die in der Rangliste <b style="color:var(--mayo)">vor dir</b> stehen. Der Hinweis wirkt an ihrem nächsten Tag. Mit ${Math.round(SAB_REVEAL*100)} % Chance wirst du gesehen, dann darf das Opfer einmal gratis zurückschlagen.</p>
+    ${S.sabMsg?`<p style="font-size:13px;color:var(--mayo)">${esc(S.sabMsg)}</p>`:''}
+    ${S.sabSentDay===S.day?'<p style="font-size:13px;color:var(--grill)">Für heute hast du schon einen Hinweis gegeben.</p>':''}
+    ${S.sabRevenge?`<p style="font-size:13px;color:var(--phos)">Rache offen gegen <b>${esc(S.sabRevenge)}</b>: ein Hinweis gratis, egal wo er steht.</p>`:''}
+    <div id="sabList" class="stack" style="gap:8px"><p class="dim" style="font-size:13px">Lade Rangliste…</p></div>`;
+}
+function sabFill(){
+  const el=$('sabList'); if(!el) return;
+  const render=rows=>{
+    const mine=Math.max(CLOUD_BEST?CLOUD_BEST.score:0, runScore(S));
+    const tg=rows.filter(r=>r.name!==PLAYER && (r.score>mine || r.name===S.sabRevenge));
+    if (S.sabRevenge && !tg.some(r=>r.name===S.sabRevenge)) tg.unshift({name:S.sabRevenge, score:0});
+    const done=S.sabSentDay===S.day;
+    el.innerHTML = tg.length ? tg.map(r=>`<div class="sabt"><div class="row" style="justify-content:space-between"><b>${esc(r.name)}</b><span class="dim" style="font-size:12px">${r.score?'Score '+fmtN(r.score):'Rache'}</span></div>
+      <div class="sabb">${Object.keys(SAB).map(k=>{ const free=S.sabRevenge===r.name, pr=free?0:SAB[k].price; return `<button class="btn sm" data-sab="${k}" data-tg="${esc(r.name)}" title="${esc(SAB[k].desc)}" ${done||S.cash<pr?'disabled':''}>${SAB[k].icon} ${SAB[k].name.split(' (')[0]} · ${free?'gratis':eur(pr)}</button>`; }).join('')}</div></div>`).join('')
+      : '<p class="dim" style="font-size:13px">Niemand steht vor dir. Du bist ganz oben, jetzt jagen dich die anderen.</p>';
+    fixDigits(el);
+    el.querySelectorAll('[data-sab]').forEach(b=>b.onclick=()=>sabSend(b.dataset.tg,b.dataset.sab));
+  };
+  if (SAB_ROWS) return render(SAB_ROWS);
+  fbBoard('alltime').then(rows=>{ SAB_ROWS=rows||[]; if($('sabList')) render(SAB_ROWS); }).catch(()=>{ el.innerHTML='<p class="dim" style="font-size:13px">Rangliste nicht ladbar.</p>'; });
+}
 async function fbBoard(tab){
   if(!fdb) return null;
   const rows=[];
@@ -531,6 +623,7 @@ function migrate(){
   S.price=Object.assign({...PRICE}, S.price||{});
   for(const R of REGULARS) regState(R.id);
   S.lief=S.lief||{veh:null,navi:false,drv:null,on:true};
+  for(const k in UPG){ if(S.up[k]==null) S.up[k]=UPG[k].start; if(S.upBought[k]==null) S.upBought[k]=0; }
   if (S.loc==null){ S.loc=0; S.locMax=0; for(const p of P) S.price[p]=Math.round(S.price[p]*LOCS[0].tol*10)/10; }   // alte Spielstände starten im Industriegebiet
 }
 const SKEY='lschicken_v1';
@@ -605,11 +698,14 @@ function startDay(first){
   S.kl={x:1010,job:null,t:0}; S.jobs=[]; S.ask=null; S.fire=null; S.rush=[];
   { const rg=dayRng('fire'); S.fireAt = S.day>=2 && rg()<Math.min(0.8,0.35+S.day*0.03) ? rndR(rg,35,DAYLEN-40) : null; }
   S.plan=makePlan(); S.planNext=0; planRegulars();
+  S.zollAt=null; S.zollDur=0; S.zoll=0; S.dariusDay=false;
   S.dl={plan:makeDelPlan(), next:0, orders:[], bag:[], trip:null, trips:0, charge:0, aCd:2}; DLRG=dayRng('liefx');
   // Darius-Panne
   if (S.day>=3 && dayRng('panne')()<0.06){ const n=Math.floor(stockCount('huhn')*0.3); if(n>0){ takeStock('huhn',n); S.day_.waste.huhn+=n; S.day_.why.verdorben+=n; sayM('DARIUS hat die Kühlung ausgesteckt. Wieso darf der überhaupt ins Lager?'); log(`Darius hat die Kühlung ausgesteckt: ${n} Hühner verdorben.`);} }
   sayM(first?'Willkommen bei LS-Chicken. Ich bin Maddin. Hier wird geliefert.':isNight()?pick(SAY_M.night):pick(SAY_M.start));
+  const sabLog = S.sabNext ? true : false;
   log(isNight()?`Nachtschicht Lagerhalle: ${S.night.workers} Leute, ${S.night.portions} Portionen bestellt und bezahlt. Pausen um 00:00 und 03:00.`:`Tag ${S.day} · ${LOC().name}: ${S.event.name}`);
+  if (sabLog && !S.challenge) sabApply();
   hideAll(); paused=false;
 }
 
@@ -970,6 +1066,9 @@ function update(dt){
   if (isNight()) spawnNight();
   else { spawnPlanned(); spawnRegulars(); }
   updateLief(dt);
+  if (S.zollAt!=null && S.time>=S.zollAt){ S.zollAt=null; S.zoll=S.zollDur; sfx('horn'); sayM('ZOLL?! Kloska, wo sind die Stundenzettel?'); log('Zoll, Kontrolle Schwarzarbeit: Kloska und der Fahrer zeigen Papiere. Der Tresen steht.'); }
+  if (S.zoll>0){ S.zoll-=dt; if(S.zoll<=0){ S.zoll=0; log('Zoll ist weg. Alles in Ordnung. Weiter geht es.'); } }
+  if (S.dariusDay){ S.dariusT-=dt; if(S.dariusT<=0){ S.dariusT=18+Math.random()*14; const ps=FOOD.filter(p=>S.aus[p].length>0); if(ps.length){ const p=pick(ps); S.aus[p].shift(); d.waste[p]++; d.why.darius++; say('d',pick(['Isch helf ma eben…','Wo kommt das hin? Egal.','Hab isch fallen lassen, glaub isch.'])); const ar=ausRect(FOOD.indexOf(p)); float(ar.x+ar.w/2,ar.y-6,'Darius!',C.ketchup); } } }
   // Garen
   for(const it of S.spiess) if(it) it.t+=dt*csp;
   for(const w of S.rost) if(w&&!w.burnt){ w.t+=dt*csp; if(w.side===1&&w.t>=WURST.flipLate) w.burnt=true; if(w.side===2&&w.t>=WURST.burn) w.burnt=true; }
@@ -998,13 +1097,13 @@ function update(dt){
     if (k.t>=0.3 && !k.thrown){ k.thrown=true; const i=S.queue.indexOf(k.job); for(const [p] of k.job.items) flies.push({p,x0:KLOSKA_X,y0:COUNTER_Y-30,x1:i>=0?qx(i):KLOSKA_X,y1:590,t:0}); }
     if (k.t>=0.65){ finishSale(k.job); k.job=null; k.thrown=false; if(Math.random()<0.12) say('d',pick(SAY_K_OK)); }
   }
-  if (S.auto){
+  if (S.auto && !(S.zoll>0)){
     S.aCd-=dt;
     if (S.aCd<=0){
       S.aCd=3.2;
       const i=S.queue.findIndex(canServe);
       if (i>=0){
-        if (Math.random() < 0.84+S.up.schul*0.04) reserve(S.queue[i]);
+        if (Math.random() < 1-(0.16-S.up.schul*0.04)*(S.dariusDay?3:1)) reserve(S.queue[i]);
         else {
           const p=pick(FOOD.filter(p=>S.aus[p].length>0));
           S.aus[p].shift(); d.waste[p]++; d.why.kloska++; bump('kloska'); S.ruf=clamp(S.ruf-2,0,100);
@@ -1282,6 +1381,9 @@ function render(){
   if (say_m.t>0) bubble(940,318,262,70,say_m.txt,'down');
   if (say_d.t>0) bubble(892,240,220,62,say_d.txt,'left');
 
+  if (S.zoll>0){ ctx.fillStyle='rgba(20,30,60,.88)'; rr(380,236,520,44,6); ctx.fill(); ctx.strokeStyle='#9fb6ff'; ctx.stroke();
+    txt('🛃 ZOLL · KONTROLLE SCHWARZARBEIT',640,256,13,'#cfe0ff','center',F.disp,700); txt(`Kloska sucht die Stundenzettel · noch ${Math.ceil(S.zoll)} s`,640,273,13,C.mayo,'center',F.body,700); }
+  if (S.dariusDay) txtS('DARIUS HILFT AUS',KLOSKA_X,COUNTER_Y-138,9,C.ketchup,'center',F.disp,700);
   /* --- Lieferdienst oben rechts --- */
   if (liefActive() && S.dl){
     const dl=S.dl, X=DPANEL.x, Y=DPANEL.y, V=VEH[S.lief.veh], D=DRV[S.lief.drv], PH=22+LIEF_SHOW*46+50;
@@ -1450,6 +1552,7 @@ cv.addEventListener('mousedown',e=>{
   else if(k==='delT') delPack(i,false);
   else if(k==='delGo') delGo();
   else if(k==='crate'){ if(stockCount(i)===0) emergency(i); }
+  else if(k==='cust' && S.zoll>0){ float(qx(i),490,'Zoll prüft noch',C.ketchup); }
   else if(k==='cust'){ const c=S.queue[i]; if(c.res) float(qx(i),490,'Kloska kommt',C.mayo); else if(!serve(i)) S.ask={c,t:4}; }
   else if(k==='ask'){ const c=S.ask&&S.ask.c; S.ask=null; if(i===0) servePartial(c); else sendAway(c); }
   else if(k==='gas'){ const f=S.fire; f.hp--; sfx('spray'); for(let n=0;n<6;n++) sprays.push({x:GAS.x+GAS.w+40,y:GAS.y+40+Math.random()*30,vx:-60-Math.random()*40,vy:-20+Math.random()*40,t:0});
@@ -1651,6 +1754,9 @@ const TROPHIES = [
   {id:'lieferheld', icon:'📦', name:'Lieferheld',         desc:'100 Lieferungen ausgefahren.', ctr:'deliveries', goal:100},
   {id:'transporter',icon:'🕶️', name:'Transporter',        desc:'Jason Starkman liefert 25 Bestellungen warm aus.', ctr:'jasonWarm', goal:25},
   {id:'stadtplan',  icon:'🗺️', name:'Stadtplan von 1998', desc:'Wlodzimierz hat sich 10-mal verfahren.', ctr:'wlodLost', goal:10, anti:true},
+  {id:'steuerfahndung', icon:'🕵️', name:'Steuerfahndung', desc:'5 anonyme Hinweise gegeben.', ctr:'sabSent', goal:5},
+  {id:'weste',      icon:'🧼', name:'Weiße Weste',        desc:'Das Gesundheitsamt kam auf Hinweis und fand nichts.'},
+  {id:'denunziant', icon:'👀', name:'Denunziant',         desc:'3-mal beim Hinweisgeben gesehen worden.', ctr:'sabCaught', goal:3, anti:true},
   {id:'peter',      icon:'🚚', name:'Peters Liebling',    desc:'10 Notlieferungen bestellt.', ctr:'notfall', goal:10, anti:true},
   {id:'isaus',      icon:'🚫', name:'Is aus',             desc:'20 Kunden weggeschickt.', ctr:'refused', goal:20, anti:true},
   {id:'glaubisch',  icon:'🤷', name:'Glaub isch',         desc:'Kloska hat 50 Bestellungen verwechselt.', ctr:'kloska', goal:50, anti:true, hidden:true},
@@ -1882,6 +1988,7 @@ function showBon(d){
     ${c.auto?`<div class="l"><span>Kloska Autopilot (Überstunden)</span><span class="neg">${eur(-c.auto)}</span></div>`:''}
     ${c.lohn?`<div class="l"><span>Fahrer (Mindestlohn ${LIEF_STD} h)</span><span class="neg">${eur(-c.lohn)}</span></div>`:''}
     ${c.sprit?`<div class="l"><span>Sprit</span><span class="neg">${eur(-c.sprit)}</span></div>`:''}
+    ${d.sab&&d.sab.amount?`<div class="l"><span>${d.sab.t==='finanz'?'Nachzahlung Finanzamt':'Bußgeld Gesundheitsamt'} (Hinweis)</span><span class="neg">${eur(-d.sab.amount)}</span></div>`:''}
     ${c.strafe?`<div class="l"><span>Bußgeld Lebensmittelkontrolle</span><span class="neg">${eur(-c.strafe)}</span></div>`:''}
     ${d.notfall?`<div class="l"><span>${d.notfallN}× Notlieferung (2× Preis)</span><span class="neg">${eur(-d.notfall)}</span></div>`:''}
     <hr><div class="l big"><span>KASSE</span><span class="${d.cashEnd<0?'neg':''}">${eur(d.cashEnd)}</span></div>
@@ -1905,6 +2012,7 @@ function showBon(d){
     ${(d.locNews||[]).map(x=>`<hr><div class="c"><b>${x.bad?'KÜNDIGUNG!':'NEUER STANDPLATZ!'}</b><br>${esc(x.txt)}</div>`).join('')}
     ${(d.regNews||[]).map(t=>`<hr><div class="c">${esc(t)}</div>`).join('')}
     ${d.abandoned?'<hr><div class="c"><b>TAG ABGEBROCHEN!</b><br>Der Wagen blieb zu, die Kundschaft stand vor der Klappe. Ruf −10.</div>':''}
+    ${d.sab?`<hr><div class="c"><b>ANONYMER HINWEIS: ${SAB[d.sab.t].icon} ${esc(SAB[d.sab.t].name.split(' (')[0]).toUpperCase()}</b><br>${d.sab.t==='gesund'?(d.sab.hit?'Aufgewärmtes und Sonderposten gefunden. Ruf −12.':'Alles sauber. Der Hinweisgeber zahlt die Falschanzeige.'):d.sab.t==='finanz'?(d.sab.hit?'Betriebsprüfung mit Nachzahlung.':'Betriebsprüfung ohne Befund. Danke, Steuerberater.'):d.sab.t==='zoll'?'Zoll-Kontrolle, der Tresen stand still.':'Darius hat ausgeholfen. Leider.'}<br>${d.sab.from?`Gesehen wurde: <b>${esc(d.sab.from)}</b>. Rache ist gratis.`:'Absender unbekannt.'}</div>`:''}
     ${d.kontrolle?'<hr><div class="c"><b>KONTROLLE!</b> Aufgewärmte Ware gefunden. Ruf −15.</div>':''}
     <hr><div class="l big"><span>SCORE</span><span>${fmtN(d.score||0)}</span></div>
     <div class="l"><span>Gewinn inkl. Einkauf bei Peter</span><span class="${(d.profit||0)<0?'neg':''}">${eur(d.profit||0)}</span></div>
@@ -1937,11 +2045,12 @@ function showEvening(){
         <p style="font-size:13px">Die Firma hat für ${S.night.workers} Leute bestellt, alles bezahlt. Pausen um 00:00 und 03:00. Pauschale inkl. Nachtzulage <b style="color:var(--phos)">${eur(S.night.value)}</b>, fehlende Portion = Vertragsstrafe, alles geliefert = +10 %. Kein Faxe.</p>
         <p class="dim" style="font-size:12.5px;margin-top:3px">Sammelbestellung: ${P.filter(p=>S.night.tot[p]>0).map(p=>`<b style="color:var(--mayo)">${S.night.tot[p]}</b> ${EMO[p]}`).join(' · ')}</p></div>`
       :`<div class="fcrow"><h3>Prognose Tag ${S.day}</h3><span class="fc">${S.forecast.name}</span><span class="dim" style="font-size:12.5px">Darius' Wetter-App, ~80 %.${fcHint()}${isNightDay(S.day+1)?' Übermorgen Nachtschicht.':''}</span></div>`;
-    const tabs=[['up','🛠 Wagen'],['lief','🛵 Liefern'],['reg','❤ Stamm'],['staff','👷 Personal'],['hist','📈 Verlauf']];
+    const tabs=[['up','🛠 Wagen'],['lief','🛵 Liefern'],['sab','🕵 Hinweis'],['reg','❤ Stamm'],['staff','👷 Personal'],['hist','📈 Verlauf']];
     let tab='';
     if (EVE_TAB==='up') tab=`${Object.keys(UPG).map(k=>{ const u=UPG[k], mx=upMaxed(k), pr=upPrice(k); const lvl=k==='kuehl'?`${S.up.kuehl} Einh.`:k==='schul'?`Stufe ${S.up.schul}`:k==='spiess'||k==='rost'?`${S.up[k]} Plätze`:k==='fry'?`${S.up.fry} Korb`:`Stufe ${S.up[k]}`;
         return `<div class="up"><div><b>${u.name}</b> <span class="dim" style="font-size:12px">· ${lvl}</span><small>${u.desc}</small></div><button class="btn sm" data-up="${k}" ${mx||S.cash<pr||(k==='schul'&&!S.auto)?'disabled':''}>${mx?'max':eur(pr)}</button></div>`; }).join('')}
         <p class="dim" style="font-size:12px">Kasse: <b style="color:var(--phos)">${eur(S.cash)}</b></p>`;
+    else if (EVE_TAB==='sab') tab=sabTab();
     else if (EVE_TAB==='lief'){ const Lf=S.lief, cur=Lf.veh?VEH_ORDER.indexOf(Lf.veh):-1, lf=LOC().lief, lvl=lf>=0.8?'hoch':lf>=0.3?'mittel':'kaum';
       tab=`<p class="dim" style="font-size:12.5px">Bestellungen kommen als Zettel oben rechts. Klick packt aus der Auslage in die Tüte, „LOS“ schickt den Fahrer. Lange Fahrt = kaltes Essen = schlechte Sterne.${S.auto?' <b style="color:var(--grill)">Kloska-Autopilot packt automatisch.</b>':''}</p>
       ${Lf.veh?`<label class="tog"><input type="checkbox" id="cbLief" ${Lf.on?'checked':''}><span><b>Lieferdienst morgen aktiv</b> · Aufkommen am Standplatz: <b style="color:var(--mayo)">${lvl}</b>${S.forecast.id==='nacht'?' · Nachtschicht: kein Lieferdienst':''}. Kostet ${eur(LIEF_LOHN)} Lohn${VEH[Lf.veh].fuel?` + ${eur(VEH[Lf.veh].fuel)} Sprit`:''}.</span></label>`:'<p style="font-size:13px;color:var(--mayo)">Kauf den E-Roller, dann geht der Lieferdienst los. Wlodzimierz fährt gratis mit.</p>'}
@@ -1969,6 +2078,7 @@ function showEvening(){
     <section class="col">
       <div class="row" style="justify-content:space-between;gap:8px"><h2>FEIERABEND · TAG ${S.day-1}</h2>${INFO_BTN}</div>
       ${statLine()}
+      ${(S.sabNews||[]).map(t=>`<p class="sabnews">${esc(t)}</p>`).join('')}
       <div class="peter"><img src="${IMG_SRC.peter}" alt="Peter vom Großmarkt"><div class="speech"><b>Peter vom Großmarkt:</b> ${peterSays}</div></div>
       ${fcBox}
       <h3>Bestellung bei Peter · Lieferung morgen früh</h3>
@@ -2038,9 +2148,11 @@ function showEvening(){
     if($('cbAuto')) $('cbAuto').onchange=e=>{ S.auto=e.target.checked; draw(); };
     if($('cbReheat')) $('cbReheat').onchange=e=>{ S.reheat=e.target.checked; };
     $('bStart').onclick=()=>{ const tot=P.reduce((a,p)=>a+S.order[p]*buyPrice(p),0); S.cash-=tot; S.lastBuy=tot; startDay(false); saveDayStart(); };
+    if (EVE_TAB==='sab') sabFill();
     if (focus&&$(focus)) $(focus).focus();
   };
-  draw();
+  EVE_REDRAW=draw; SAB_ROWS=null; S.sabMsg=null; S.sabNews=[];
+  draw(); fbInbox();
 }
 function fcHint(){ if(!S.forecast.mult) return ''; const m=S.forecast.mult, parts=Object.entries(m).map(([p,v])=>`${NAME[p]} ${v>1?'↑':'↓'}`); const cu=S.forecast.cust; return (cu!==1?` Kundschaft ${cu>1?'↑':'↓'}.`:'')+(parts.length?' '+parts.join(', ')+'.':''); }
 function sparkBars(p,h){ const mx=Math.max(1,...h.map(d=>d.sold[p])); return h.map(d=>`<i style="height:${Math.max(4,d.sold[p]/mx*100)}%"></i>`).join('')||'<span class="dim">–</span>'; }
