@@ -163,8 +163,8 @@ const SPOIL= {huhn:4,haxe:4,wurst:5,pommes:7,salat:2,monster:999,faxe:999};   //
 const NOTPACK = {huhn:8,haxe:3,wurst:12,pommes:15,salat:5,monster:12,faxe:12};  // Notlieferung: feste Menge, doppelter Preis
 const NOT_ETA = 12;
 const SHORT = {monster:'Monster', faxe:'Faxe 10 %'};
-const COOK = {huhn:{done:20,perf:26,burn:34}, haxe:{done:45,perf:55,burn:68}, pommes:{done:5,perf:8,burn:11}};
-const WURST= {side:7, flipLate:11, perfFlip:9.5, perf:10, burn:13};
+const COOK = {huhn:{done:20,perf:30,burn:46}, haxe:{done:45,perf:62,burn:85}, pommes:{done:6,perf:11,burn:19}};
+const WURST= {side:7, flipLate:17, perfFlip:11.5, perf:12, burn:18};
 const LASCH= {pommes:40, wurst:70};
 const DAYLEN = 240, QMAX = 6, POMMES_BATCH = 1, SALAT_PREP = 2.2, WT_DUR = 12;
 const C = {bg:'#121a1b',panel:'#1d2829',panel2:'#253334',line:'#36494a',fg:'#e9e3cf',dim:'#8ea19e',grill:'#f0a03a',ketchup:'#d9472f',phos:'#7fd6a6',mayo:'#f4ebc9',paper:'#f6f1e1',ink:'#2a2622',steel:'#5f6d6e',wood:'#7a4f2c'};
@@ -181,11 +181,11 @@ const LOCS = [
    desc:'Billiger Schotterplatz zwischen Containern. Arbeiter in der Mittagspause, knapp bei Kasse. Faxe ist verboten.'},
   {id:'markt', town:'Rhynern', open:10, short:'WOCHENMARKT',     name:'Wochenmarkt Hamm-Rhynern',     place:'Markt Hamm-Rhynern',     req:3.5, days:3,  fee:d=>50+d*4,  tol:1.0,  cust:1.0,  mult:{},
    desc:'Der Klassiker. Gemischte Kundschaft, faire Preise, Max und Moritz inklusive.'},
-  {id:'stadtfest', town:'Hamm', open:10, short:'STADTFEST HAMM',  name:'Stadtfest Hamm-Innenstadt',    place:'Stadtfest Hamm-Innenstadt', req:4.0, days:14, fee:d=>95+d*5,  tol:1.2,  cust:1.3,  mult:{salat:1.5,monster:1.3,faxe:1.2},
+  {id:'stadtfest', town:'Hamm', open:10, short:'STADTFEST HAMM',  name:'Stadtfest Hamm-Innenstadt',    place:'Stadtfest Hamm-Innenstadt', req:4.0, days:14, fee:d=>95+d*5,  tol:1.2,  cust:1.15,  mult:{salat:1.5,monster:1.3,faxe:1.2},
    desc:'Viel Laufkundschaft, Familien, Salat und Monster gehen gut. 20 % über Standard gilt noch als fair.'},
-  {id:'kirmes', town:'Soest', open:16, curve:[0.6,0.9,1.3,1.6,1.7,1.4,1.0,0.7], short:'KIRMES SOEST',    name:'Allerheiligenkirmes Soest',    place:'Allerheiligenkirmes Soest', req:4.3, days:21, fee:d=>160+d*6, tol:1.5,  cust:1.6,  mult:{faxe:2.2,wurst:1.8,haxe:1.3,pommes:1.4},
+  {id:'kirmes', town:'Soest', open:16, curve:[0.6,0.9,1.3,1.6,1.7,1.4,1.0,0.7], short:'KIRMES SOEST',    name:'Allerheiligenkirmes Soest',    place:'Allerheiligenkirmes Soest', req:4.3, days:21, fee:d=>160+d*6, tol:1.5,  cust:1.3,  mult:{faxe:2.2,wurst:1.8,haxe:1.3,pommes:1.4},
    desc:'Massen zwischen Riesenrad und Autoscooter. Faxe ohne Ende. 50 % über Standard zahlen die gerne.'},
-  {id:'wiesn', town:'München', open:12, curve:[1.3,1.2,1.0,1.1,1.3,1.5,1.6,1.4], short:'OKTOBERFEST',     name:'Oktoberfest München',          place:'Oktoberfest München',    req:4.5, days:28, fee:d=>260+d*8, tol:1.8,  cust:1.9,  mult:{haxe:2.5,faxe:3,huhn:1.3,salat:0.4},
+  {id:'wiesn', town:'München', open:12, curve:[1.3,1.2,1.0,1.1,1.3,1.5,1.6,1.4], short:'OKTOBERFEST',     name:'Oktoberfest München',          place:'Oktoberfest München',    req:4.5, days:28, fee:d=>260+d*8, tol:1.8,  cust:1.45,  mult:{haxe:2.5,faxe:3,huhn:1.3,salat:0.4},
    desc:'Die Wiesn. Haxe, Hendl und Bier, Touristen mit dicker Brieftasche. Die Standgebühr ist brutal.'},
 ];
 const LOC = () => LOCS[(S&&S.loc)||0];
@@ -560,7 +560,8 @@ function recordBest(){
 
 /* ===================== Kundschaft ===================== */
 const CURVE=[0.6,0.9,1.7,1.5,0.8,0.7,1.0,1.4]; const CMEAN=CURVE.reduce((a,b)=>a+b)/CURVE.length;
-function custPerDay(){ return (16 + S.day*2.2) * S.event.cust * LOC().cust * (0.5+S.ruf/100) * (1+S.up.schild*0.12) * custMult(); }
+const baseCust = d => 10 + Math.min(d,20)*1.2 + Math.max(0,d-20)*0.5;   // Grundmenge Kunden pro Tag
+function custPerDay(){ return baseCust(S.day) * S.event.cust * LOC().cust * (0.5+S.ruf/100) * (1+S.up.schild*0.12) * custMult(); }
 function weightOf(p,base){ return base*locMult(p)*demandMult(p); }
 function makeOrder(rg=Math.random){
   const o={};
@@ -658,13 +659,13 @@ function endDayRegulars(d){
 const PLAN_X = 5;   // Kandidaten-Überschuss: angenommen wird je nach Ruf, Preisen, Event, Werbeschild
 function makePlan(){
   if (isNight()) return [];
-  const cv=locCurve(), cm=cv.reduce((a,b)=>a+b)/cv.length, rg=dayRng('cust'), lam=(16+S.day*2.2)*PLAN_X*LOC().cust/DAYLEN, out=[];
+  const cv=locCurve(), cm=cv.reduce((a,b)=>a+b)/cv.length, rg=dayRng('cust'), lam=baseCust(S.day)*PLAN_X*LOC().cust/DAYLEN, out=[];
   for(let t=0;t<DAYLEN;t+=0.25){ const h=Math.min(7,Math.floor(t/(DAYLEN/8))); if(rg()<lam*0.25*cv[h]/cm) out.push({t,u:rg(),seed:Math.floor(rg()*4294967296)}); }
   return out;
 }
 function spawnPlanned(){
   if (!S.plan) return;
-  const cap=(16+S.day*2.2)*PLAN_X*LOC().cust;
+  const cap=baseCust(S.day)*PLAN_X*LOC().cust;
   while(S.planNext<S.plan.length && S.plan[S.planNext].t<=S.time){ const c=S.plan[S.planNext++]; if (c.u < custPerDay()/cap) spawnCustomer(c.seed); }
 }
 function spawnCustomer(seed){
