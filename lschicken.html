@@ -416,14 +416,45 @@ function tsAccess(){
 }
 let PLAYER=''; try{ PLAYER=String(localStorage.getItem('lsc_player')||'').toUpperCase().trim().slice(0,10); }catch(e){}
 function backToTS(){ if (window.opener && !window.opener.closed){ try{ window.opener.focus(); }catch(e){} window.close(); } location.href='index.html'; }
-function showGate(){
-  show('ovTitle',`<div class="card" style="max-width:520px"><div class="stack">
-    <h2>NUR ÜBER TICKET SLAYER</h2>
-    <p>LS-Chicken startet über den Button im Hauptmenü von Ticket Slayer. Erst einloggen, dann im Menü auf LS-CHICKEN klicken.</p>
-    <div class="row"><a class="btn go" href="index.html" style="text-decoration:none">Zu Ticket Slayer</a></div>
+// Eigener Login: gleiches Passwort wie Ticket Slayer, Name wird in Firebase gesucht oder neu angelegt.
+const GAME_PASSWORD = 'Vollzeit2025';
+let GATE_OPEN=false;
+function showGate(msg){
+  GATE_OPEN=true;
+  show('ovTitle',`<div class="card" style="max-width:480px"><div class="stack">
+    <div class="cartbox" style="max-width:420px"><img src="${IMG_SRC.cart}" alt="Der LS-Chicken Grillwagen"><b style="font-size:22px;white-space:nowrap">LS-CHICKEN</b></div>
+    <h2>SCHICHTBEGINN</h2>
+    <p class="dim" style="font-size:14px">Passwort wie bei Ticket Slayer. Dein Name ist dein Spielerprofil: gibt es ihn schon, geht es dort weiter, sonst wird er neu angelegt.</p>
+    <label class="dim" style="font-size:13px" for="gPw">Passwort</label>
+    <input id="gPw" class="qty" type="password" autocomplete="current-password" style="width:100%;text-align:left">
+    <label class="dim" style="font-size:13px" for="gName">Spielername (max. 10 Zeichen)</label>
+    <input id="gName" class="qty" maxlength="10" autocomplete="username" style="width:100%;text-align:left;text-transform:uppercase" value="${esc(PLAYER)}">
+    <p id="gMsg" style="font-size:13px;min-height:18px;color:var(--ketchup)">${msg?esc(msg):''}</p>
+    <div class="row" style="justify-content:space-between"><button class="btn go" id="gGo">Einstempeln</button>${IN_TS?'<a class="btn" href="index.html" style="text-decoration:none">Zu Ticket Slayer</a>':''}</div>
   </div></div>`);
+  const go=async()=>{
+    const pw=$('gPw').value, name=cleanName($('gName').value), m=$('gMsg');
+    if (pw!==GAME_PASSWORD){ m.textContent='ZUGANG VERWEIGERT'; $('gPw').value=''; $('gPw').focus(); return; }
+    if (name.length<2){ m.textContent='Bitte einen Namen mit mindestens 2 Zeichen.'; $('gName').focus(); return; }
+    $('gGo').disabled=true; m.style.color='var(--mayo)'; m.textContent='Suche Profil…';
+    let txt='Offline: Du spielst nur lokal in diesem Browser.';
+    if (fdb){
+      try{
+        const ref=fdb.collection('playerProfiles').doc(name), doc=await ref.get();
+        if (doc.exists){ const d=doc.data(); txt=`Willkommen zurück, ${name}!${d.lsc&&d.lsc.days?` ${d.lsc.days} Schichten bisher.`:' Profil aus Ticket Slayer gefunden.'}`; }
+        else { await ref.set({lsc:{name, created:new Date().toISOString()}},{merge:true}); txt=`Neues Profil ${name} angelegt. Viel Glück am Grill!`; }
+      }catch(e){ console.warn('LSC login:',e); txt='Firebase nicht erreichbar, du spielst erstmal lokal.'; }
+    }
+    PLAYER=name;
+    try{ localStorage.setItem('lsc_player',name); localStorage.setItem('lsc_ticket',String(Date.now())); sessionStorage.setItem('ts_auth',JSON.stringify({expires:Date.now()+8*3600e3})); }catch(e){}
+    m.textContent=txt;
+    await fbLoadMine();
+    setTimeout(()=>{ GATE_OPEN=false; showTitle(); },1100);
+  };
+  $('gGo').onclick=go;
+  ['gPw','gName'].forEach(id=>$(id).onkeydown=e=>{ if(e.key==='Enter') go(); });
+  setTimeout(()=>($('gPw')).focus(),50);
 }
-
 /* ===================== Firebase (gleiches Projekt wie Ticket Slayer) ===================== */
 // Identität = Spielername wie in Ticket Slayer: playerProfiles/{NAME}, LS-Chicken-Daten im Feld "lsc" (merge, berührt TS-Felder nicht).
 const FB_CFG = {
@@ -464,7 +495,7 @@ async function fbLoadMine(){
     if (l && l.tc) for(const k in l.tc) STORE.tc[k]=Math.max(STORE.tc[k]||0, l.tc[k]||0);
     if (l && l.bestScore && !STORE.best.length) STORE.best.push({score:l.bestScore, days:l.bestDays||0, revenue:Math.round(l.bestRevenue||0), date:l.bestDate?new Date(l.bestDate).toLocaleDateString('de-DE'):'–'});
     saveStore();
-    if (!$('ovTitle').hidden) showTitle(true);                  // Titel mit Cloud-Spielstand neu zeichnen
+    if (!$('ovTitle').hidden && !GATE_OPEN) showTitle(true);                  // Titel mit Cloud-Spielstand neu zeichnen
   }catch(e){ console.warn('LSC load:',e); }
 }
 // Sperre gegen Neustart eines schlechten Tages: Stand zu Tagesbeginn sichern (phase 'day').
@@ -2230,7 +2261,7 @@ window.claude?.hot?.snapshot?.(()=>({S, phase:S&&S.phase}));
 function boot(data){
   fit(); fbLoadMine();
   if (data && data.S){ S=data.S; if(S.phase==='day'){ hideAll(); togglePause(true); } else if(S.phase==='evening') showEvening(); else showTitle(); }
-  else if (!tsAccess()) showGate();
+  else if (IN_TS && (!tsAccess() || !PLAYER)) showGate();
   else showTitle();
   requestAnimationFrame(frame);
 }
