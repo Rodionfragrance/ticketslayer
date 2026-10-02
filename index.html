@@ -1409,29 +1409,45 @@ function getWeeklyResetDate() {
     if(lastSun > d) lastSun.setDate(lastSun.getDate() - 7);
     return lastSun;
 }
-// CHANGE 01.10.: Rangliste für LS-Chicken. Daten liegen in playerProfiles/{NAME}.lsc (geschrieben von lschicken.html).
+// CHANGE 01.10.: Rangliste für LS-Chicken. Daten liegen in playerProfiles/{NAME}.lsc und .lscWeek (geschrieben von lschicken.html).
+// Score = überlebte Tage × Durchschnittssterne × 100 + Gewinn des Runs.
+function lscWeekId() {
+    let t = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Berlin'})); t.setHours(12,0,0,0);
+    let thu = new Date(t); thu.setDate(t.getDate() - ((t.getDay()+6)%7) + 3);
+    let j4 = new Date(thu.getFullYear(),0,4,12); let j4thu = new Date(j4); j4thu.setDate(j4.getDate() - ((j4.getDay()+6)%7) + 3);
+    return thu.getFullYear() + '-W' + String(1 + Math.round((thu - j4thu) / (7*864e5))).padStart(2,'0');
+}
+function lscRows(rows, title, sub) {
+    let html = `<div style="margin-bottom:16px;"><div style="color:#f0a03a;font-size:14px;font-weight:bold;letter-spacing:2px;margin-bottom:6px;border-bottom:1px solid #f0a03a33;padding-bottom:4px;">${title}</div><div style="color:#555;font-size:11px;margin-bottom:6px;">${sub}</div>`;
+    if (!rows.length) return html + '<div style="color:#555;padding:6px 0;">Noch keine Einträge.</div></div>';
+    rows.forEach((d,i) => {
+        let rank = i+1;
+        let c = rank===1?'gold':(rank===2?'silver':(rank===3?'#cd7f32':'#777'));
+        let medal = rank<=3?['🥇','🥈','🥉'][rank-1]:(rank+'.');
+        let nm = String(d.name).substring(0,10).replace(/[<>&"]/g,'');
+        html += `<div style="color:${c};font-size:12px;padding:3px 0;display:flex;align-items:center;gap:8px;">
+            <span style="width:28px;text-align:right;">${medal}</span>
+            <span style="flex:1;">${nm}</span>
+            <span style="color:#fff;font-weight:bold;">${Math.round(d.score).toLocaleString('de-DE')}</span>
+            <span style="color:#f0a03a;width:70px;text-align:right;">${d.days} Tage</span>
+            <span style="color:#555;font-size:10px;width:120px;text-align:right;">⌀ ${(d.stars||0).toFixed(1)} ★ · ${Math.round(d.profit||0)} €</span>
+        </div>`;
+    });
+    return html + '</div>';
+}
 function renderLscBoard(cont) {
-    db.collection('playerProfiles').orderBy('lsc.bestDays','desc').limit(25).get().then(snap => {
-        let rows = [];
-        snap.forEach(doc => { let l = doc.data().lsc; if(l && l.bestDays > 0) rows.push({ name: doc.id, days: l.bestDays, rev: l.bestRevenue || 0, huhn: (l.sold && l.sold.huhn) || 0, runs: l.runs || 0 }); });
-        rows.sort((a,b) => b.days - a.days || b.rev - a.rev);
-        rows = rows.slice(0, 10);
-        if(!rows.length) { cont.innerHTML = '<div style="text-align:center;color:#555;padding:20px;">Noch keine Einträge am Grillwagen.</div>'; return; }
-        let html = '<div style="text-align:center;color:#555;font-size:11px;margin-bottom:12px;">Längster Run am Grillwagen · Tage überlebt</div>';
-        rows.forEach((d,i) => {
-            let rank = i+1;
-            let c = rank===1?'gold':(rank===2?'silver':(rank===3?'#cd7f32':'#777'));
-            let medal = rank<=3?['🥇','🥈','🥉'][rank-1]:(rank+'.');
-            let nm = String(d.name).substring(0,10).replace(/[<>&"]/g,'');
-            html += `<div style="color:${c};font-size:12px;padding:3px 0;display:flex;align-items:center;gap:8px;">
-                <span style="width:28px;text-align:right;">${medal}</span>
-                <span style="flex:1;">${nm}</span>
-                <span style="color:#fff;font-weight:bold;">${d.days} Tage</span>
-                <span style="color:#f0a03a;width:90px;text-align:right;">${Math.round(d.rev)} €</span>
-                <span style="color:#555;font-size:10px;width:110px;text-align:right;">🍗 ${d.huhn} · ${d.runs} Runs</span>
-            </div>`;
-        });
-        cont.innerHTML = html;
+    let wk = lscWeekId();
+    Promise.all([
+        db.collection('playerProfiles').orderBy('lsc.bestScore','desc').limit(25).get(),
+        db.collection('playerProfiles').where('lscWeek.week','==',wk).get()
+    ]).then(([all, week]) => {
+        let a = [], w = [];
+        all.forEach(doc => { let l = doc.data().lsc; if(l && l.bestScore) a.push({ name: doc.id, score: l.bestScore, days: l.bestDays||0, stars: l.bestStars||0, profit: l.bestProfit||0 }); });
+        week.forEach(doc => { let x = doc.data().lscWeek; if(x) w.push({ name: doc.id, score: x.score||0, days: x.days||0, stars: x.stars||0, profit: x.profit||0 }); });
+        a.sort((p,q) => q.score - p.score); w.sort((p,q) => q.score - p.score);
+        cont.innerHTML = '<div style="text-align:center;color:#555;font-size:11px;margin-bottom:12px;">Score = Tage × ⌀ Sterne × 100 + Gewinn</div>'
+            + lscRows(w.slice(0,10), '🗓 WOCHEN-CHALLENGE KW ' + wk.split('-W')[1], 'Alle spielen denselben Run. Bester Versuch zählt.')
+            + lscRows(a.slice(0,10), '🍗 ALLZEIT', 'Bester normaler Run');
     }).catch(e => { cont.innerHTML = '<div style="text-align:center;color:#f00;padding:20px;">Fehler: '+e.message+'</div>'; });
 }
 
