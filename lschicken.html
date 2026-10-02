@@ -1786,7 +1786,10 @@ function showEvening(){
   };
   const draw=()=>{
     const focus=document.activeElement&&document.activeElement.id;
+    // Scrollposition merken, sonst springt das Menü bei jedem Kauf nach oben
+    const ov=$('ovEve'), was=!ov.hidden, sc=was?[...ov.querySelectorAll('*')].map((e,i)=>[i,e.scrollTop,e.scrollLeft]).filter(x=>x[1]||x[2]):[], ovT=ov.scrollTop, winY=window.scrollY;
     show('ovEve',html());
+    if (was){ ov.scrollTop=ovT; const all=ov.querySelectorAll('*'); for(const [i,t,l] of sc) if(all[i]){ all[i].scrollTop=t; all[i].scrollLeft=l; } window.scrollTo(0,winY); }
     $('ovEve').querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{ const p=b.dataset.q; S.order[p]=Math.max(0,S.order[p]+(+b.dataset.d)); draw(); });
     $('ovEve').querySelectorAll('.qty').forEach(inp=>inp.onchange=()=>{ const v=parseInt(inp.value,10); S.order[inp.dataset.p]=Number.isFinite(v)&&v>0?v:0; draw(); });
     $('ovEve').querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>buyUp(b.dataset.up,draw));
