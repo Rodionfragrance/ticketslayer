@@ -204,7 +204,7 @@ const SPOIL= {huhn:4,haxe:4,wurst:5,pommes:7,salat:2,monster:999,faxe:999};   //
 const NOTPACK = {huhn:8,haxe:3,wurst:12,pommes:15,salat:5,monster:12,faxe:12};  // Notlieferung: feste Menge, doppelter Preis
 const NOT_ETA = 12;
 const SHORT = {monster:'Monster', faxe:'Faxe 10 %'};
-const COOK = {huhn:{done:20,perf:30,burn:46}, haxe:{done:45,perf:62,burn:85}, pommes:{done:6,perf:11,burn:19}};
+const COOK = {huhn:{done:20,perf:30,burn:46}, haxe:{done:40,perf:57,burn:80}, pommes:{done:6,perf:11,burn:19}};
 const WURST= {side:7, flipLate:17, perfFlip:11.5, perf:12, burn:18};
 const LASCH= {pommes:40, wurst:70};
 const DAYLEN = 240, QMAX = 6, POMMES_BATCH = 1, SALAT_PREP = 2.2, WT_DUR = 12;
@@ -364,6 +364,7 @@ const UPG = {
   kuehl: {name:'Kühlzelle', desc:'+60 Einheiten Lagerplatz', base:250, max:460, step:60, start:130},
   schild:{name:'Werbeschild', desc:'+12 % Kundschaft pro Stufe', base:220, max:3, step:1, start:0},
   schul: {name:'Kloska-Schulung', desc:'Kloska verwechselt im Autopilot seltener', base:150, max:3, step:1, start:0},
+  fry:   {name:'Fritteusen-Einsatz', desc:'+1 Pommes-Platz (bis zu 4)', base:200, max:4, step:1, start:2},
   ordner:{name:'Ordner mit Stundenzetteln', desc:'Zoll-Kontrolle dauert 10 statt 40 Sekunden', base:240, max:1, step:1, start:0},
   stb:   {name:'Steuerberater', desc:'Betriebsprüfung vom Finanzamt endet ohne Befund', base:600, max:1, step:1, start:0},
 };
@@ -681,7 +682,7 @@ function newRun(mode){
     day:1, cash:400, ruf:60, time:0, phase:'day',
     stock:{huhn:[{q:12,age:0,cheap:false}],haxe:[{q:3,age:0,cheap:false}],wurst:[{q:20,age:0,cheap:false}],pommes:[{q:30,age:0,cheap:false}],salat:[{q:6,age:0,cheap:false}],monster:[{q:12,age:0,cheap:false}],faxe:[{q:12,age:0,cheap:false}]},
     spiess:[], rost:[], fry:[], aus:blank2(), queue:[], fire:null, fireAt:null, ask:null, revSum:0, revN:0,
-    up:Object.assign(Object.fromEntries(Object.entries(UPG).map(([k,u])=>[k,u.start])),{fry:2}),
+    up:Object.fromEntries(Object.entries(UPG).map(([k,u])=>[k,u.start])),
     upBought:blank3(),
     price:Object.fromEntries(P.map(p=>[p,locPrice(p,0)])), rush:[], auto:false, aCd:3, salatPrep:0, kl:{x:1010,job:null,t:0}, jobs:[],
     fuel:0, wt:0, streak:0,
@@ -728,7 +729,7 @@ function startDay(first){
   // Max & Moritz
   S.raids=[];
   { const rg=dayRng('raid'); if (!isNight() && S.day>=3 && rg()< Math.min(0.85,0.45+S.day*0.03)){ const n = S.day>=10 && rg()<0.5 ? 2 : 1; for(let i=0;i<n;i++) S.raids.push(rndR(rg,40,DAYLEN-30)); } S.raids.sort((a,b)=>a-b); }
-  S.teases=[]; S.tease=null; S.mmRun=null;
+  S.teases=[]; S.tease=null; S.mmRun=null; S.mmFree=0;
   { const rg=dayRng('tease'); if (!isNight() && S.day>=4 && rg()<0.6){ S.teases.push(rndR(rg,30,DAYLEN-30)); if(S.day>=12&&rg()<0.4) S.teases.push(rndR(rg,30,DAYLEN-30)); } S.teases.sort((a,b)=>a-b); }
   S.kl={x:1010,job:null,t:0}; S.jobs=[]; S.ask=null; S.fire=null; S.rush=[];
   { const rg=dayRng('fire'); S.fireAt = S.day>=2 && rg()<Math.min(0.8,0.35+S.day*0.03) ? rndR(rg,35,DAYLEN-40) : null; }
@@ -1035,15 +1036,19 @@ function prepSalat(){
   if(!takeStock('salat',1)){ float(777,312,'Kein Salat mehr!',C.ketchup); return; }
   S.salatPrep=SALAT_PREP;
 }
-function notPrice(p){ return Math.round(NOTPACK[p]*buyPrice(p,true)*2*100)/100; }
+const NOT_RANGE = {salat:[7,13]};   // Salat: Menge wird beim Klick zufällig gewürfelt
+function notQty(p){ const r=NOT_RANGE[p]; return r ? r[0]+Math.floor(Math.random()*(r[1]-r[0]+1)) : NOTPACK[p]; }
+function notPrice(p,q){ return Math.round((q??NOTPACK[p])*buyPrice(p,true)*2*100)/100; }
+const notLabel = p => NOT_RANGE[p] ? `${NOT_RANGE[p][0]}–${NOT_RANGE[p][1]}` : NOTPACK[p];
+const notPriceTxt = p => NOT_RANGE[p] ? `${eur(notPrice(p,NOT_RANGE[p][0]))}–${eur(notPrice(p,NOT_RANGE[p][1]))}` : eur(notPrice(p));
 function rushPending(p){ return S.rush.find(x=>x.p===p); }
 function emergency(p){
   if (rushPending(p)){ float(640,640,'Peter ist schon unterwegs',C.mayo); return; }
-  const cost=notPrice(p);
+  const q=notQty(p), cost=notPrice(p,q);
   if (S.cash<cost){ float(640,640,'Kein Geld für die Notlieferung',C.ketchup); return; }
   S.cash-=cost; S.day_.notfall+=cost; S.day_.notfallN++; bump('notfall');
-  S.rush.push({p,q:NOTPACK[p],t:NOT_ETA}); sfx('horn');
-  log(`Notlieferung: Peter bringt ${NOTPACK[p]} ${RAW[p]} ${isDrink(p)?NAME[p]:''} in ${NOT_ETA} s (${eur(cost)}, doppelter Preis).`);
+  S.rush.push({p,q,t:NOT_ETA}); sfx('horn');
+  log(`Notlieferung: Peter bringt ${q} ${RAW[p]} ${isDrink(p)?NAME[p]:''} in ${NOT_ETA} s (${eur(cost)}, doppelter Preis).`);
   sayM(pick(['Notlieferung?! Zum doppelten Preis? Planung ist für dich ein Fremdwort.','Peter freut sich. Ich nicht.','Wer hat bestellt? Du. Wer zahlt? Wir.']));
 }
 function firstFree(arr,n){ for(let i=0;i<n;i++) if(!arr[i]) return i; return -1; }
@@ -1066,6 +1071,7 @@ function clickRost(i){
   S.rost[i]=null; const perf=w.pf && w.t<=WURST.perf;
   S.aus.wurst.push({perf,age:0}); goodTake(perf,r.x+r.w/2,r.y-4);
 }
+function fryAll(){ let n=0; S.fry.forEach((b,i)=>{ if(b&&b.t>=COOK.pommes.done&&i<S.up.fry){ clickFry(i); n++; } }); if(!n) float(682,250,'noch nichts fertig',C.dim); }
 function flipAll(){ S.rost.forEach((w,i)=>{ if(w&&w.side===1&&!w.burnt&&w.t>=WURST.side) clickRost(i); }); }
 function clickFry(i){
   const b=S.fry[i], r=slotFry(i);
@@ -1160,7 +1166,10 @@ function update(dt){
   if (S.fire){ S.fire.t+=dt; if (S.fire.t>8) S.ruf=clamp(S.ruf-0.5*dt,0,100); if (say_m.t<=0 && Math.random()<dt*0.35) sayM(pick(SAY_M.fire)); }
   for(const p of sprays) p.t+=dt; sprays=sprays.filter(p=>p.t<0.6);
   if (S.ask){ S.ask.t-=dt; if(S.ask.t<=0||!S.queue.includes(S.ask.c)||S.ask.c.res) S.ask=null; }
-  // Max & Moritz
+  // Max & Moritz: nie gleichzeitig, nach jedem Auftritt 5 s Ruhe
+  { const block = (S.raid||S.tease) ? S.time+5 : (S.mmFree||0);
+    if (S.raids.length && S.raids[0]<block) S.raids[0]=block;
+    if (S.teases && S.teases.length && S.teases[0]<block) S.teases[0]=block; }
   if (S.raids.length && S.time>=S.raids[0] && !S.raid){ S.raids.shift(); S.raid={t:5}; sayM(pick(SAY_M.raid)); voice('maxmoritz'); log('Max und Moritz klettern auf den Wagen! Anklicken!'); }
   if (S.raid){
     S.raid.t-=dt;
@@ -1170,7 +1179,7 @@ function update(dt){
         if (S.aus.huhn.length){ S.aus.huhn.pop(); stolen++; continue; }
         const j=S.spiess.findIndex(it=>it&&it.p==='huhn'); if(j>=0){ S.spiess[j]=null; stolen++; }
       }
-      d.waste.huhn+=stolen; d.why.gestohlen+=stolen; S.raid=null; if(stolen) S.mmRun={t:0};
+      d.waste.huhn+=stolen; d.why.gestohlen+=stolen; S.raid=null; S.mmFree=S.time+5; if(stolen) S.mmRun={t:0};
       float(320,150,stolen?`${stolen} Hähnchen geklaut!`:'Nichts zu holen',C.ketchup); log(stolen?`Max und Moritz haben ${stolen} Hähnchen erbeutet.`:'Max und Moritz ziehen leer ab.');
     }
   }
@@ -1178,7 +1187,7 @@ function update(dt){
   if (S.teases && S.teases.length && S.time>=S.teases[0] && !S.tease && !S.raid){ S.teases.shift(); S.tease={t:12, fuel0:S.fuel, say:0}; sayM(pick(SAY_M.tease)); log('Max und Moritz ärgern Maddin! Anklicken, sonst lädt kein Wartime.'); }
   if (S.tease){ const T=S.tease; T.t-=dt; T.say-=dt; if(S.wt<=0) S.fuel=Math.min(S.fuel,T.fuel0);
     if (T.say<=0 && say_m.t<=0){ T.say=3.5; sayM(pick(SAY_M.tease)); }
-    if (T.t<=0){ S.tease=null; S.fuel=Math.max(0,S.fuel-25); S.ruf=clamp(S.ruf-2,0,100); d.mmTease=(d.mmTease||0)+1; log('Max und Moritz haben Maddin den letzten Nerv geraubt. Wartime −25, Ruf −2.'); } }
+    if (T.t<=0){ S.tease=null; S.mmFree=S.time+5; S.fuel=Math.max(0,S.fuel-25); S.ruf=clamp(S.ruf-2,0,100); d.mmTease=(d.mmTease||0)+1; log('Max und Moritz haben Maddin den letzten Nerv geraubt. Wartime −25, Ruf −2.'); } }
   if (S.mmRun){ S.mmRun.t+=dt; if(S.mmRun.t>2.6) S.mmRun=null; }
   // Sprech-Timer, Floats
   say_m.t-=dt; say_d.t-=dt;
@@ -1199,14 +1208,15 @@ function slotSpiess(i){ const c=i%4, r=Math.floor(i/4); return {x:219+c*50, y:[2
 function slotRost(i){ const c=i%4, r=Math.floor(i/4); return {x:465+c*39, y:272+r*37, w:38, h:33}; }
 // Klickfläche pro Wurst deutlich größer als das Feld im Bild: nach oben bis zur Rückwand, nach unten bis zur Vitrine
 function hitRost(i){ const c=i%4, r=Math.floor(i/4); return {x:463+c*39, y:r?306:256, w:39, h:r?46:50}; }
-function slotFry(i){ return {x:[640,681][i], y:290, w:37, h:38}; }
+const FRY_N = () => S&&S.up.fry>2 ? 4 : 2;
+function slotFry(i){ return FRY_N()===2 ? {x:[640,681][i], y:290, w:37, h:38} : {x:[640,660,683,703][i], y:290, w:19, h:38}; }
 function ausRect(k){ return {x:AUS_EDGES[k]+3, y:376, w:AUS_EDGES[k+1]-AUS_EDGES[k]-6, h:48}; }
 function lagerBtn(i){ return {x:118+i*232+92, y:672, w:128, h:40}; }
 const GAS={x:1016,y:430,w:64,h:132};
 const SALAD={x:742,y:316,w:70,h:44};                         // freie Arbeitsfläche hinter Kloska
 const FRIDGE={monster:{x:654,y:481,w:99,h:56}, faxe:{x:654,y:540,w:99,h:50}};   // Getränkekühlschrank vor dem Wagen
 const MUSIC_SRC='lschicken.mp3';   // Titelmusik liegt neben lschicken.html im Repo
-const BTN={music:{x:796,y:9,w:66,h:28}, sfx:{x:868,y:9,w:66,h:28}, flip:{x:478,y:236,w:130,h:20}, pause:{x:1188,y:7,w:82,h:32}, wt:{x:520,y:6,w:220,h:34}, kaffee:{x:0,y:292,w:100,h:278}, raid:{x:215,y:132,w:215,h:78}};
+const BTN={music:{x:796,y:9,w:66,h:28}, sfx:{x:868,y:9,w:66,h:28}, flip:{x:478,y:236,w:130,h:20}, pause:{x:1188,y:7,w:82,h:32}, fryAll:{x:636,y:236,w:92,h:20}, wt:{x:520,y:6,w:220,h:34}, kaffee:{x:0,y:292,w:100,h:278}, raid:{x:215,y:132,w:215,h:78}};
 const custRect = i => ({x:qx(i)-44, y:500, w:88, h:158});
 
 /* ===================== Rendering ===================== */
@@ -1328,12 +1338,16 @@ function render(){
     if (hv) glow(hr,C.mayo);
   }
   /* --- Fritteuse --- */
-  for(let i=0;i<2;i++){
+  { const ready=S.fry.some(b=>b&&b.t>=COOK.pommes.done&&b.t<COOK.pommes.burn), b=BTN.fryAll, on=hover===6;
+    ctx.globalAlpha = ready ? .8+.2*Math.sin(now/120) : .55;
+    ctx.fillStyle=on?'#4a3322':'rgba(20,12,8,.85)'; rr(b.x,b.y,b.w,b.h,11); ctx.fill(); ctx.strokeStyle=ready?C.phos:'rgba(240,160,58,.45)'; ctx.stroke();
+    txt('ALLE RAUS',b.x+b.w/2,b.y+14,10,ready?C.phos:C.mayo,'center',F.disp,700); ctx.globalAlpha=1; }
+  for(let i=0;i<FRY_N();i++){
     const r=slotFry(i), locked=i>=S.up.fry, b=S.fry[i], hv=hover===500+i;
     if (locked){ ctx.fillStyle='rgba(10,6,4,.6)'; ctx.fillRect(r.x,r.y,r.w,r.h); continue; }
-    if (!b){ if(hv){ ctx.globalAlpha=.5; drawIcon('pommes',r.x+r.w/2,r.y+r.h/2,22,0); ctx.globalAlpha=1; glow(r,C.mayo);} continue; }
+    if (!b){ if(hv){ ctx.globalAlpha=.5; drawIcon('pommes',r.x+r.w/2,r.y+r.h/2,r.w<30?17:22,0); ctx.globalAlpha=1; glow(r,C.mayo);} continue; }
     const c=COOK.pommes, burnt=b.t>=c.burn;
-    drawIcon('pommes',r.x+r.w/2,r.y+r.h/2-3,22,burnt?0.85:0);
+    drawIcon('pommes',r.x+r.w/2,r.y+r.h/2-3,r.w<30?17:22,burnt?0.85:0);
     cookBar(r.x+3,r.y+r.h-5,r.w-6,b.t,c.done,c.perf,c.burn,3);
     if (burnt) glow(r,C.ketchup,true); else if (b.t>=c.done) glow(r,b.t<=c.perf?C.phos:C.grill,b.t<=c.perf);
     if (hv) glow(r,C.mayo);
@@ -1503,7 +1517,7 @@ function render(){
     if (n===0 || rush){
       ctx.fillStyle=h?'#5a2318':'#3a1712'; rr(r.x,r.y,r.w,r.h,5); ctx.fill(); ctx.strokeStyle=rush?C.phos:'#ff8a6e'; ctx.stroke();
       if (rush) txt(`Peter: ${Math.ceil(rush.t)} s`,r.x+r.w/2,r.y+25,13,C.phos,'center');
-      else { txt('NOTLIEFERUNG',r.x+r.w/2,r.y+17,11,'#ffd2c4','center',F.disp,700); txt(eur(notPrice(p)),r.x+r.w/2,r.y+33,11,'#ff8a6e','center'); }
+      else { txt('NOTLIEFERUNG',r.x+r.w/2,r.y+17,11,'#ffd2c4','center',F.disp,700); txt(NOT_RANGE[p]?'ab '+eur(notPrice(p,NOT_RANGE[p][0])):eur(notPrice(p)),r.x+r.w/2,r.y+33,11,'#ff8a6e','center'); }
     } else {
       ctx.fillStyle=h?'#4a3322':'#2c1e14'; rr(r.x,r.y,r.w,r.h,5); ctx.fill(); ctx.strokeStyle=h?C.grill:'rgba(240,160,58,.35)'; ctx.stroke();
       txt(lab[i],r.x+r.w/2,r.y+25,13,h?C.grill:C.mayo,'center');
@@ -1558,7 +1572,8 @@ function hitTest(p){
   for(let i=0;i<12;i++) if(inR(p,slotSpiess(i))) return i<S.up.spiess ? [S.spiess[i]?'spiess':'spLoad',i] : ['locked',i,'Spieß'];
   if (inR(p,BTN.flip)) return ['flip'];
   for(let i=0;i<8;i++) if(inR(p,hitRost(i))) return i<S.up.rost ? [S.rost[i]?'rost':'rostLoad',i] : ['locked',i,'Grillrost'];
-  for(let i=0;i<2;i++) if(inR(p,slotFry(i))) return i<S.up.fry ? ['fry',i] : ['locked',i,'Fritteuse'];
+  if (inR(p,BTN.fryAll)) return ['fryAll'];
+  for(let i=0;i<FRY_N();i++) if(inR(p,slotFry(i))) return i<S.up.fry ? ['fry',i] : ['locked',i,'Fritteuse'];
   for(let i=0;i<5;i++) if(inR(p,lagerBtn(i))) return ['lager',i];
   for(let i=0;i<S.queue.length;i++) if(inR(p,custRect(i))) return ['cust',i];
   for(let k=0;k<5;k++) if(inR(p,ausRect(k))) return ['aus',k];
@@ -1574,7 +1589,7 @@ function tipFor(h){
     case 'rost': { const w=S.rost[i]; return w.burnt?'Schwarz: anklicken zum Wegwerfen':w.side===1?(w.t>=WURST.side?'Jetzt wenden!':'Seite 1 brät'):(w.t>=WURST.side?'Runternehmen':'Seite 2 brät'); }
     case 'fry': { const b=S.fry[i]; if(!b) return 'Klick: 1 Portion Pommes rein'; return b.t>=COOK.pommes.burn?'Verbrannt: wegwerfen':b.t>=COOK.pommes.done?'Pommes raus!':`noch ${Math.ceil(COOK.pommes.done-b.t)} s`; }
     case 'locked': return `${h[2]}: abends bei den Upgrades freischalten`;
-    case 'lager': { const p=FOOD[i]; if(rushPending(p)) return `Peter ist unterwegs: ${Math.ceil(rushPending(p).t)} s`; if(stockCount(p)===0) return `Notlieferung: ${NOTPACK[p]} ${RAW[p]} für ${eur(notPrice(p))} (doppelter Preis), kommt in ${NOT_ETA} s`; return ['Hähnchen auf den Spieß','Haxe auf den Spieß (45 s)','Bratwurst auf den Rost','Pommes in die Fritteuse','Salat anrichten (hinter Kloska)'][i]; }
+    case 'lager': { const p=FOOD[i]; if(rushPending(p)) return `Peter ist unterwegs: ${Math.ceil(rushPending(p).t)} s`; if(stockCount(p)===0) return `Notlieferung: ${notLabel(p)} ${RAW[p]} für ${notPriceTxt(p)} (doppelter Preis), kommt in ${NOT_ETA} s`; return ['Hähnchen auf den Spieß','Haxe auf den Spieß (40 s)','Bratwurst auf den Rost','Pommes in die Fritteuse','Salat anrichten (hinter Kloska)'][i]; }
     case 'salad': return S.salatPrep>0?'Salat wird angerichtet…':stockCount('salat')?'Klick: Salat anrichten':'Kein Salat mehr im Lager';
     case 'crate': { const n=stockCount(i); if(rushPending(i)) return `Peter bringt ${NAME[i]}: ${Math.ceil(rushPending(i).t)} s`; return n?`${NAME[i]}: ${n} Dosen im Kühlschrank, Kloska nimmt sie direkt mit`:`${NAME[i]} leer. Klick: Notlieferung ${NOTPACK[i]} Dosen für ${eur(notPrice(i))}`; }
     case 'cust': { const c=S.queue[i]; return c.res?'Kloska verkauft gerade':canServe(c)?'Klick: Kloska verkauft':'Unvollständig. Klick: Teillieferung oder wegschicken'; }
@@ -1589,6 +1604,7 @@ function tipFor(h){
     case 'gas': return `Feuer löschen (${S.fire.hp}× klicken)`;
     case 'ask': return i===0?'Teillieferung: nur was da ist, ohne Trinkgeld, Ruf −1':'Nichts verkaufen und wegschicken, Ruf −1,5';
     case 'flip': return 'Alle wendebereiten Würste wenden';
+    case 'fryAll': return 'Alle fertigen Pommes auf einmal rausholen';
     case 'delT': { const o=S.dl.orders[i]; return delCanPack(o)?`Klick: Bestellung packen (${o.addr})`:'Ware fehlt noch in der Auslage'; }
     case 'delGo': return S.dl.trip?'Fahrer ist unterwegs':S.dl.charge>0?'Akku lädt':S.dl.bag.length?'Fahrer losschicken':'Erst eine Bestellung packen';
   }
@@ -1596,7 +1612,7 @@ function tipFor(h){
 }
 function hoverCode(h){
   if(!h) return -1;
-  switch(h[0]){ case 'sfx': return 5; case 'music': return 4; case 'salad': return 700; case 'crate': return h[1]==='monster'?710:711; case 'ask': return 600+h[1]; case 'flip': return 3; case 'lager': return 100+h[1]; case 'cust': return 200+h[1]; case 'spLoad': case 'spiess': return 300+h[1]; case 'rostLoad': case 'rost': return 400+h[1]; case 'fry': return 500+h[1]; case 'pause': return 2; case 'delT': return 800+h[1]; case 'delGo': return 820; default: return 1; }
+  switch(h[0]){ case 'sfx': return 5; case 'music': return 4; case 'salad': return 700; case 'crate': return h[1]==='monster'?710:711; case 'ask': return 600+h[1]; case 'flip': return 3; case 'fryAll': return 6; case 'lager': return 100+h[1]; case 'cust': return 200+h[1]; case 'spLoad': case 'spiess': return 300+h[1]; case 'rostLoad': case 'rost': return 400+h[1]; case 'fry': return 500+h[1]; case 'pause': return 2; case 'delT': return 800+h[1]; case 'delGo': return 820; default: return 1; }
 }
 cv.addEventListener('mousemove',e=>{ if(!S||S.phase!=='day'){ tip=''; return; } const p=toLocal(e); mouse=p; const h=hitTest(p); hover=hoverCode(h); tip=tipFor(h); cv.style.cursor=h&&h[0]!=='aus'&&h[0]!=='locked'&&!(h[0]==='crate'&&stockCount(h[1])>0)?'pointer':'default'; });
 cv.addEventListener('mouseleave',()=>{ hover=-1; tip=''; mouse={x:-99,y:-99}; });
@@ -1610,6 +1626,7 @@ cv.addEventListener('mousedown',e=>{
   else if(k==='spLoad') loadSpiess('huhn',i);
   else if(k==='spiess') takeSpiess(i);
   else if(k==='flip') flipAll();
+  else if(k==='fryAll') fryAll();
   else if(k==='rostLoad') loadRost(i);
   else if(k==='rost') clickRost(i);
   else if(k==='fry') clickFry(i);
@@ -1623,8 +1640,8 @@ cv.addEventListener('mousedown',e=>{
   else if(k==='ask'){ const c=S.ask&&S.ask.c; S.ask=null; if(i===0) servePartial(c); else sendAway(c); }
   else if(k==='gas'){ const f=S.fire; f.hp--; sfx('spray'); for(let n=0;n<6;n++) sprays.push({x:GAS.x+GAS.w+40,y:GAS.y+40+Math.random()*30,vx:-60-Math.random()*40,vy:-20+Math.random()*40,t:0});
     if(f.hp<=0){ bump('fires'); S.fire=null; S.fuel=clamp(S.fuel+10,0,100); float(GAS.x+GAS.w/2,GAS.y-10,'GELÖSCHT!',C.phos); sayM(pick(SAY_M.fireOut)); log('Gasflasche gelöscht. Es wird wieder gebraten.'); } }
-  else if(k==='tease'){ bump('raids'); S.tease=null; S.fuel=clamp(S.fuel+15,0,100); sayM('Und bleibt weg! Danke, Chef.'); float(TEASE_R.x+TEASE_R.w/2,TEASE_R.y,'VERJAGT!',C.phos); log('Max und Moritz vom Chef weggescheucht.'); }
-  else if(k==='raid'){ bump('raids'); S.raid=null; S.fuel=clamp(S.fuel+15,0,100); sayM(pick(SAY_M.raid)); float(320,150,'VERJAGT!',C.phos); log('Max und Moritz verjagt.'); }
+  else if(k==='tease'){ bump('raids'); S.tease=null; S.mmFree=S.time+5; S.fuel=clamp(S.fuel+15,0,100); sayM('Und bleibt weg! Danke, Chef.'); float(TEASE_R.x+TEASE_R.w/2,TEASE_R.y,'VERJAGT!',C.phos); log('Max und Moritz vom Chef weggescheucht.'); }
+  else if(k==='raid'){ bump('raids'); S.raid=null; S.mmFree=S.time+5; S.fuel=clamp(S.fuel+15,0,100); sayM(pick(SAY_M.raid)); float(320,150,'VERJAGT!',C.phos); log('Max und Moritz verjagt.'); }
   else if(k==='wt'||k==='kaffee'){ if(S.fuel>=100) wartime(); else float(k==='kaffee'?50:630,k==='kaffee'?280:70,'lädt noch…',C.mayo); }
   tip=tipFor(hitTest(toLocal(e)));
 });
@@ -1728,7 +1745,8 @@ function togglePause(force){
   if (paused){ o.innerHTML=`<div class="card" style="max-width:420px"><div class="stack"><h2>PAUSE</h2><p class="dim">Der Spieß dreht sich nicht weiter. Maddin wartet.</p><div class="row"><button class="btn go" id="bResume">Weiter</button>${INFO_BTN}</div></div></div>`; o.hidden=false; $('bResume').onclick=()=>togglePause(false); $('bResume').focus(); }
   else o.hidden=true;
 }
-addEventListener('blur',()=>{ if(S&&S.phase==='day') togglePause(true); });
+// Nur pausieren, wenn der Tab verdeckt/minimiert wird. 'blur' feuerte auch bei Teams-/Outlook-Popups und pausierte scheinbar grundlos.
+document.addEventListener('visibilitychange',()=>{ if(document.hidden && S && S.phase==='day') togglePause(true); });
 
 /* ===================== Overlays ===================== */
 const $=id=>document.getElementById(id);
@@ -1775,7 +1793,7 @@ function pickRun(slot){
   return best;
 }
 function resumeRun(run){
-  S=JSON.parse(JSON.stringify(run)); migrate(); S.up.fry=2; S.revSum=S.revSum||0; S.revN=S.revN||0; S.ask=null; S.fire=null;
+  S=JSON.parse(JSON.stringify(run)); migrate(); S.revSum=S.revSum||0; S.revN=S.revN||0; S.ask=null; S.fire=null;
   if(S.auto===undefined) S.auto=false; S.kl=S.kl||{x:1010,job:null,t:0}; S.jobs=S.jobs||[];
   if (S.phase==='day' && S.day_) abandonDay(); else showEvening();
 }
@@ -1804,7 +1822,7 @@ function showTitle(fromCloud){
       ${trophyGrid()}
       <h3>Steuerung: nur Maus</h3>
       <div class="keys">
-        <kbd>Spieß</kbd><span>Freien Platz im Ofen anklicken = Hähnchen (20 s). Haxe (45 s) über das Lager unten. Grün leuchtend = perfekt, jetzt runternehmen.</span>
+        <kbd>Spieß</kbd><span>Freien Platz im Ofen anklicken = Hähnchen (20 s). Haxe (40 s) über das Lager unten. Grün leuchtend = perfekt, jetzt runternehmen.</span>
         <kbd>Rost</kbd><span>Freien Platz = Bratwurst. Nach 7 s anklicken zum Wenden, dann nochmal zum Runternehmen.</span>
         <kbd>Fritteuse</kbd><span>Korb anklicken = 1 Portion rein, 1 Portion raus. Zwei Körbe parallel.</span>
         <kbd>Lager</kbd><span>Buttons unten machen dasselbe. Leer? Dann wird der Button zur Notlieferung: Peter kommt in 12 s, zum doppelten Preis.</span>
@@ -2140,7 +2158,7 @@ function showEvening(){
       :`<div class="fcrow"><h3>Prognose Tag ${S.day}</h3><span class="fc">${S.forecast.name}</span><span class="dim" style="font-size:12.5px">Darius' Wetter-App, ~80 %.${fcHint()}${isNightDay(S.day+1)?' Übermorgen Nachtschicht.':''}</span></div>`;
     const tabs=[['up','🛠 Wagen'],['lief','🛵 Liefern'],['sab','🕵 Hinweis'],['reg','❤ Stamm'],['staff','👷 Personal'],['hist','📈 Verlauf']];
     let tab='';
-    if (EVE_TAB==='up') tab=`${Object.keys(UPG).map(k=>{ const u=UPG[k], mx=upMaxed(k), pr=upPrice(k); const lvl=k==='kuehl'?`${S.up.kuehl} Einh.`:k==='schul'?`Stufe ${S.up.schul}`:k==='spiess'||k==='rost'?`${S.up[k]} Plätze`:k==='fry'?`${S.up.fry} Korb`:`Stufe ${S.up[k]}`;
+    if (EVE_TAB==='up') tab=`${Object.keys(UPG).map(k=>{ const u=UPG[k], mx=upMaxed(k), pr=upPrice(k); const lvl=k==='kuehl'?`${S.up.kuehl} Einh.`:k==='schul'?`Stufe ${S.up.schul}`:k==='spiess'||k==='rost'?`${S.up[k]} Plätze`:k==='fry'?`${S.up.fry} Plätze`:`Stufe ${S.up[k]}`;
         return `<div class="up"><div><b>${u.name}</b> <span class="dim" style="font-size:12px">· ${lvl}</span><small>${u.desc}</small></div><button class="btn sm" data-up="${k}" ${mx||S.cash<pr||(k==='schul'&&!S.auto)?'disabled':''}>${mx?'max':eur(pr)}</button></div>`; }).join('')}
         <p class="dim" style="font-size:12px">Kasse: <b style="color:var(--phos)">${eur(S.cash)}</b></p>`;
     else if (EVE_TAB==='sab') tab=sabTab();
