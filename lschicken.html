@@ -677,15 +677,15 @@ STORE.tc = STORE.tc || {};         // Zähler für Trophäen
 // Maddins Spardose: Münzen aus Runs und Tagesaufträgen, dauerhaft ausgegeben für Startvorteile
 STORE.meta = STORE.meta || {coins:0, earned:0, perks:{}};
 const PERKS = {
-  kapital:{name:'Startkapital',        icon:'💶', max:5, base:15, desc:l=>`+${l*100} € Kasse beim Start`},
-  ruf:    {name:'Guter Ruf',           icon:'⭐', max:4, base:20, desc:l=>`+${l*5} Ruf beim Start`},
-  lager:  {name:'Volles Startlager',   icon:'📦', max:3, base:15, desc:l=>`+${l*4} Hühner und +${l} Haxe(n) im Startlager`},
-  fry:    {name:'Fritteusen-Einsatz',  icon:'🍟', max:2, base:30, desc:l=>`Fritteuse startet mit ${2+l} Plätzen`},
-  schul:  {name:'Kloska vorgeschult',  icon:'👓', max:2, base:25, desc:l=>`Kloska startet mit Schulung Stufe ${l}`},
-  peter:  {name:'Peters Stammkunde',   icon:'🤝', max:3, base:25, desc:l=>`${l*4} % Rabatt beim Einkauf`},
+  kapital:{name:'Startkapital',        icon:'💶', max:5, cost:[40,70,120,200,320], desc:l=>`+${l*100} € Kasse beim Start`},
+  ruf:    {name:'Guter Ruf',           icon:'⭐', max:4, cost:[50,90,150,250], desc:l=>`+${l*5} Ruf beim Start`},
+  lager:  {name:'Volles Startlager',   icon:'📦', max:3, cost:[40,80,140], desc:l=>`+${l*4} Hühner und +${l} Haxe(n) im Startlager`},
+  fry:    {name:'Fritteusen-Einsatz',  icon:'🍟', max:2, cost:[120,250], desc:l=>`Fritteuse startet mit ${2+l} Plätzen`},
+  schul:  {name:'Kloska vorgeschult',  icon:'👓', max:2, cost:[80,160], desc:l=>`Kloska startet mit Schulung Stufe ${l}`},
+  peter:  {name:'Peters Stammkunde',   icon:'🤝', max:3, cost:[80,150,260], desc:l=>`${l*4} % Rabatt beim Einkauf`},
 };
 const perkLvl = k => (STORE.meta.perks||{})[k]||0;
-const perkCost = k => PERKS[k].base*(perkLvl(k)+1);
+const perkCost = k => PERKS[k].cost[Math.min(perkLvl(k),PERKS[k].cost.length-1)];
 const perkOn = k => S && !S.challenge ? perkLvl(k) : 0;   // in der Wochen-Challenge zählt nur Können
 function addCoins(n,why){ n=Math.round(n); if(n<=0) return; STORE.meta.coins+=n; STORE.meta.earned+=n; saveStore(); if(S&&S.day_) S.day_.coins=(S.day_.coins||0)+n; }
 function buyPerk(k){ const P_=PERKS[k], l=perkLvl(k); if(l>=P_.max||STORE.meta.coins<perkCost(k)) return false; STORE.meta.coins-=perkCost(k); STORE.meta.perks[k]=l+1; saveStore(); fbMeta(); sfx('fanfare'); return true; }
@@ -701,7 +701,7 @@ const TASKS = {
   noburn: {n:()=>0, end:true,                  txt:()=>`Nichts verbrennen lassen`,           val:d=>d.why.verbrannt, ok:(v)=>v===0},
   nolost: {n:()=>0, end:true,                  txt:()=>`Keinen Kunden verlieren`,            val:d=>d.lost, ok:(v)=>v===0},
 };
-const TASK_COINS = 5, TASK_BONUS = 5;
+const TASK_COINS = 3, TASK_BONUS = 3, TASK_CAP = 150;   // max. 150 Auftragsmünzen pro Run
 function makeTasks(){
   if (isNight()) return [];
   const rg=dayRng('tasks'), keys=Object.keys(TASKS).filter(k=>!TASKS[k].need||TASKS[k].need()), out=[];
@@ -709,16 +709,17 @@ function makeTasks(){
   return out;
 }
 const taskOk = t => { const T=TASKS[t.k], v=T.val(S.day_); return T.ok ? T.ok(v) : v>=t.n; };
+function addTaskCoins(n){ const left=Math.max(0,TASK_CAP-(S.taskCoins||0)); n=Math.min(n,left); S.taskCoins=(S.taskCoins||0)+n; addCoins(n); return n; }
 function taskTick(final){
   const d=S.day_; if(!d||!d.tasks||d.abandoned) return;
   for(const t of d.tasks){ if(t.done||t.failed) continue; const T=TASKS[t.k];
     if (T.end){ if(T.ok&&!T.ok(T.val(d))) t.failed=true; else if(final) t.done=true; }
     else if (taskOk(t)) t.done=true;
-    if (t.done){ addCoins(TASK_COINS); sfx('fanfare'); float(140,196,`+${TASK_COINS} 🪙 Auftrag erledigt`,C.mayo); bump('tasks'); } }
-  if (!d.taskBonus && d.tasks.length && d.tasks.every(t=>t.done)){ d.taskBonus=true; addCoins(TASK_BONUS); float(140,216,`+${TASK_BONUS} 🪙 Alle drei!`,C.phos); sayM('Alle Aufträge erledigt. So stelle ich mir das vor!'); }
+    if (t.done){ const got=addTaskCoins(TASK_COINS); sfx('fanfare'); float(140,196,got?`+${got} 🪙 Auftrag erledigt`:'Auftrag erledigt (Spardose für diesen Run voll)',C.mayo); bump('tasks'); } }
+  if (!d.taskBonus && d.tasks.length && d.tasks.every(t=>t.done)){ d.taskBonus=true; addTaskCoins(TASK_BONUS); float(140,216,`+${TASK_BONUS} 🪙 Alle drei!`,C.phos); sayM('Alle Aufträge erledigt. So stelle ich mir das vor!'); }
 }
 const comboMult = () => 1+Math.min(S&&S.combo||0,20)*0.05;   // bis ×2 Trinkgeld
-const runCoins = s => Math.max(0,Math.floor(runScore(s)/150));
+const runCoins = s => Math.max(0,Math.floor(Math.sqrt(Math.max(0,runScore(s)))));   // Wurzel: lange Runs lohnen, aber nicht explosionsartig
 
 /* ===================== Spielzustand ===================== */
 let S = null;
@@ -2354,7 +2355,7 @@ function buyUp(k,redraw){
 
 function perkShop(){
   return `<div class="week" id="perkBox"><div class="row" style="justify-content:space-between"><h3>🪙 Maddins Spardose</h3><b style="color:var(--mayo)">${STORE.meta.coins} Münzen</b></div>
-    <p class="dim" style="font-size:12.5px;margin:4px 0 8px">Münzen gibt es für Maddins Tagesaufträge und am Ende jedes Runs (Score ÷ 150). Vorteile gelten dauerhaft für jeden neuen Run, nicht in der Wochen-Challenge.</p>
+    <p class="dim" style="font-size:12.5px;margin:4px 0 8px">Münzen gibt es für Maddins Tagesaufträge (max. 150 pro Run) und am Ende jedes Runs (Wurzel aus dem Score). Vorteile gelten dauerhaft für jeden neuen Run, nicht in der Wochen-Challenge.</p>
     <div class="perks">${Object.keys(PERKS).map(k=>{ const P_=PERKS[k], l=perkLvl(k), mx=l>=P_.max, c=perkCost(k);
       return `<div class="perk"><div><b>${P_.icon} ${P_.name}</b> <span class="dim" style="font-size:12px">Stufe ${l}/${P_.max}</span><small>${l?P_.desc(l):'noch nicht gekauft'}${mx?'':` → ${P_.desc(l+1)}`}</small></div><button class="btn sm" data-perk="${k}" ${mx||STORE.meta.coins<c?'disabled':''}>${mx?'max':c+' 🪙'}</button></div>`; }).join('')}</div></div>`;
 }
