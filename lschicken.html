@@ -148,6 +148,7 @@ kbd{font-family:var(--f-disp);font-size:12px;background:var(--bg);border:1px sol
 .sabt{border:1px solid var(--line);padding:6px 8px;background:var(--panel2)}
 .sabb{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:5px}
 .sabb .btn{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.perks{display:grid;gap:6px}.perk{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;border-top:1px solid #4a3a1e;padding-top:6px}.perk small{display:block;color:var(--dim);font-size:12px}
 .tabs .btn.on{border-color:var(--grill);background:#2a2216;color:var(--mayo)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -492,6 +493,7 @@ async function fbLoadMine(){
       STORE.life.days=l.days||0; STORE.life.runs=Math.max(STORE.life.runs,l.runs||0); STORE.life.served=l.served||0; STORE.life.revenue=l.revenue||0;
       for(const p of P){ STORE.life.sold[p]=(l.sold&&l.sold[p])||0; STORE.life.waste[p]=(l.waste&&l.waste[p])||0; }
     }
+    if (l && l.meta && (l.meta.earned||0) > (STORE.meta.earned||0)) STORE.meta=JSON.parse(JSON.stringify(l.meta));
     if (l && l.troph) for(const k in l.troph) if(!STORE.troph[k]) STORE.troph[k]=l.troph[k];
     if (l && l.tc) for(const k in l.tc) STORE.tc[k]=Math.max(STORE.tc[k]||0, l.tc[k]||0);
     if (l && l.bestScore && !STORE.best.length) STORE.best.push({score:l.bestScore, days:l.bestDays||0, revenue:Math.round(l.bestRevenue||0), date:l.bestDate?new Date(l.bestDate).toLocaleDateString('de-DE'):'–'});
@@ -517,9 +519,10 @@ function abandonDay(){
 let RUN_SAVE;   // undefined = nichts ändern, null = löschen, Objekt = speichern
 function runVal(snap){ return snap ? {savedAt:Date.now(), day:snap.day, data:JSON.stringify(snap)} : null; }
 function fbRunStart(slot){ const ref=profRef(); if(!ref) return; ref.set({[CLOUD_FIELD[slot]]:null, lsc:{name:PLAYER, runs:inc(1), lastSeen:new Date().toISOString()}},{merge:true}).catch(e=>console.warn('LSC run:',e)); }
+function fbMeta(){ const ref=profRef(); if(ref) ref.set({lsc:{meta:STORE.meta}},{merge:true}).catch(e=>console.warn('LSC meta:',e)); }
 function fbDay(d){
   const ref=profRef(); if(!ref) return;
-  const lsc={name:PLAYER, days:inc(1), revenue:inc(Math.round(d.revenue*100)/100), served:inc(d.served), lastSeen:new Date().toISOString(), troph:{...STORE.troph}, tc:{...STORE.tc}};
+  const lsc={meta:STORE.meta,name:PLAYER, days:inc(1), revenue:inc(Math.round(d.revenue*100)/100), served:inc(d.served), lastSeen:new Date().toISOString(), troph:{...STORE.troph}, tc:{...STORE.tc}};
   const sold={}, waste={}; P.forEach(p=>{ if(d.sold[p]>0) sold[p]=inc(d.sold[p]); if(d.waste[p]>0) waste[p]=inc(d.waste[p]); });
   if (Object.keys(sold).length) lsc.sold=sold;
   if (Object.keys(waste).length) lsc.waste=waste;
@@ -671,6 +674,51 @@ STORE.runs = STORE.runs || {};
 if (STORE.run){ STORE.runs.normal={S:STORE.run, at:STORE.runAt||0, name:STORE.runName||''}; delete STORE.run; delete STORE.runAt; delete STORE.runName; }
 STORE.troph = STORE.troph || {};   // freigeschaltete Trophäen {id: Datum}
 STORE.tc = STORE.tc || {};         // Zähler für Trophäen
+// Maddins Spardose: Münzen aus Runs und Tagesaufträgen, dauerhaft ausgegeben für Startvorteile
+STORE.meta = STORE.meta || {coins:0, earned:0, perks:{}};
+const PERKS = {
+  kapital:{name:'Startkapital',        icon:'💶', max:5, base:15, desc:l=>`+${l*100} € Kasse beim Start`},
+  ruf:    {name:'Guter Ruf',           icon:'⭐', max:4, base:20, desc:l=>`+${l*5} Ruf beim Start`},
+  lager:  {name:'Volles Startlager',   icon:'📦', max:3, base:15, desc:l=>`+${l*4} Hühner und +${l} Haxe(n) im Startlager`},
+  fry:    {name:'Fritteusen-Einsatz',  icon:'🍟', max:2, base:30, desc:l=>`Fritteuse startet mit ${2+l} Plätzen`},
+  schul:  {name:'Kloska vorgeschult',  icon:'👓', max:2, base:25, desc:l=>`Kloska startet mit Schulung Stufe ${l}`},
+  peter:  {name:'Peters Stammkunde',   icon:'🤝', max:3, base:25, desc:l=>`${l*4} % Rabatt beim Einkauf`},
+};
+const perkLvl = k => (STORE.meta.perks||{})[k]||0;
+const perkCost = k => PERKS[k].base*(perkLvl(k)+1);
+const perkOn = k => S && !S.challenge ? perkLvl(k) : 0;   // in der Wochen-Challenge zählt nur Können
+function addCoins(n,why){ n=Math.round(n); if(n<=0) return; STORE.meta.coins+=n; STORE.meta.earned+=n; saveStore(); if(S&&S.day_) S.day_.coins=(S.day_.coins||0)+n; }
+function buyPerk(k){ const P_=PERKS[k], l=perkLvl(k); if(l>=P_.max||STORE.meta.coins<perkCost(k)) return false; STORE.meta.coins-=perkCost(k); STORE.meta.perks[k]=l+1; saveStore(); fbMeta(); sfx('fanfare'); return true; }
+const TASKS = {
+  perfect:{n:d=>6+Math.min(9,Math.floor(d/3)), txt:n=>`${n} Teile perfekt garen`,        val:d=>d.perfect},
+  served: {n:d=>8+Math.min(14,d),             txt:n=>`${n} Kunden bedienen`,              val:d=>d.served},
+  combo:  {n:d=>4+Math.min(6,Math.floor(d/4)), txt:n=>`Combo ×${n} erreichen`,             val:d=>d.comboMax||0},
+  haxe:   {n:d=>2+Math.min(3,Math.floor(d/6)), txt:n=>`${n} Haxen verkaufen`,               val:d=>d.sold.haxe},
+  drinks: {n:d=>4+Math.min(6,Math.floor(d/3)), txt:n=>`${n} Getränke verkaufen`,            val:d=>d.sold.monster+d.sold.faxe},
+  wt:     {n:()=>1,                            txt:()=>`Wartime zünden`,                    val:d=>d.wtN||0},
+  mm:     {n:()=>1,                            txt:()=>`Max & Moritz verjagen`,             val:d=>d.mmChased||0, need:()=>S.raids.length+S.teases.length>0},
+  lief:   {n:d=>2+Math.min(4,Math.floor(d/5)), txt:n=>`${n} Lieferungen warm ausliefern`,   val:d=>d.lief?d.lief.warm:0, need:()=>liefActive()&&S.dl&&S.dl.plan.length>=3},
+  noburn: {n:()=>0, end:true,                  txt:()=>`Nichts verbrennen lassen`,           val:d=>d.why.verbrannt, ok:(v)=>v===0},
+  nolost: {n:()=>0, end:true,                  txt:()=>`Keinen Kunden verlieren`,            val:d=>d.lost, ok:(v)=>v===0},
+};
+const TASK_COINS = 5, TASK_BONUS = 5;
+function makeTasks(){
+  if (isNight()) return [];
+  const rg=dayRng('tasks'), keys=Object.keys(TASKS).filter(k=>!TASKS[k].need||TASKS[k].need()), out=[];
+  while(out.length<3 && keys.length){ const k=keys.splice(Math.floor(rg()*keys.length),1)[0]; out.push({k, n:TASKS[k].n(S.day), done:false}); }
+  return out;
+}
+const taskOk = t => { const T=TASKS[t.k], v=T.val(S.day_); return T.ok ? T.ok(v) : v>=t.n; };
+function taskTick(final){
+  const d=S.day_; if(!d||!d.tasks||d.abandoned) return;
+  for(const t of d.tasks){ if(t.done||t.failed) continue; const T=TASKS[t.k];
+    if (T.end){ if(T.ok&&!T.ok(T.val(d))) t.failed=true; else if(final) t.done=true; }
+    else if (taskOk(t)) t.done=true;
+    if (t.done){ addCoins(TASK_COINS); sfx('fanfare'); float(140,196,`+${TASK_COINS} 🪙 Auftrag erledigt`,C.mayo); bump('tasks'); } }
+  if (!d.taskBonus && d.tasks.length && d.tasks.every(t=>t.done)){ d.taskBonus=true; addCoins(TASK_BONUS); float(140,216,`+${TASK_BONUS} 🪙 Alle drei!`,C.phos); sayM('Alle Aufträge erledigt. So stelle ich mir das vor!'); }
+}
+const comboMult = () => 1+Math.min(S&&S.combo||0,20)*0.05;   // bis ×2 Trinkgeld
+const runCoins = s => Math.max(0,Math.floor(runScore(s)/150));
 
 /* ===================== Spielzustand ===================== */
 let S = null;
@@ -679,7 +727,7 @@ function newRun(mode){
   S = {
     challenge: mode==='week' ? {week:wk, seed:'LSC-'+wk} : null,
     loc:0, locMax:0, lief:{veh:null,navi:false,drv:null,on:true},
-    day:1, cash:400, ruf:60, time:0, phase:'day',
+    day:1, cash:400, ruf:60, time:0, phase:'day', combo:0,
     stock:{huhn:[{q:12,age:0,cheap:false}],haxe:[{q:3,age:0,cheap:false}],wurst:[{q:20,age:0,cheap:false}],pommes:[{q:30,age:0,cheap:false}],salat:[{q:6,age:0,cheap:false}],monster:[{q:12,age:0,cheap:false}],faxe:[{q:12,age:0,cheap:false}]},
     spiess:[], rost:[], fry:[], aus:blank2(), queue:[], fire:null, fireAt:null, ask:null, revSum:0, revN:0,
     up:Object.fromEntries(Object.entries(UPG).map(([k,u])=>[k,u.start])),
@@ -693,6 +741,7 @@ function newRun(mode){
     hist:[],
     day_:null,
   };
+  if (!S.challenge){ S.cash+=perkLvl('kapital')*100; S.ruf=Math.min(100,S.ruf+perkLvl('ruf')*5); S.stock.huhn[0].q+=perkLvl('lager')*4; S.stock.haxe[0].q+=perkLvl('lager'); S.up.fry=2+perkLvl('fry'); S.up.schul=perkLvl('schul'); }
   STORE.life.runs++; setLocalRun(slotOf(S),null); fbRunStart(slotOf(S));
   startDay(true); saveDayStart();
 }
@@ -734,6 +783,7 @@ function startDay(first){
   S.kl={x:1010,job:null,t:0}; S.jobs=[]; S.ask=null; S.fire=null; S.rush=[];
   { const rg=dayRng('fire'); S.fireAt = S.day>=2 && rg()<Math.min(0.8,0.35+S.day*0.03) ? rndR(rg,35,DAYLEN-40) : null; }
   S.plan=makePlan(); S.planNext=0; planRegulars();
+  S.combo=0;
   S.zollAt=null; S.zollDur=0; S.zoll=0; S.dariusDay=false;
   S.dl={plan:makeDelPlan(), next:0, orders:[], bag:[], trip:null, trips:0, charge:0, aCd:2}; DLRG=dayRng('liefx');
   // Darius-Panne
@@ -742,6 +792,7 @@ function startDay(first){
   const sabLog = S.sabNext ? true : false;
   log(isNight()?`Nachtschicht Lagerhalle: ${S.night.workers} Leute, ${S.night.portions} Portionen bestellt und bezahlt. Pausen um 00:00 und 03:00.`:`Tag ${S.day} · ${LOC().name}: ${S.event.name}`);
   if (sabLog && !S.challenge) sabApply();
+  S.day_.tasks=makeTasks(); S.day_.comboMax=0;
   setTimeout(()=>voice(isNight()?'nacht':'start'),600);
   hideAll(); paused=false;
 }
@@ -753,6 +804,7 @@ function endDay(reason){
   for(const x of (S.rush||[])) S.stock[x.p].push({q:x.q,age:0,cheap:false}); S.rush=[];
   if (S.kl.job){ finishSale(S.kl.job); S.kl.job=null; } S.jobs.splice(0).forEach(finishSale);
   const d=S.day_;
+  taskTick(true);
   if (S.dl){ if (S.dl.trip && !S.dl.trip.done) delDeliver(S.dl.trip); for(const o of S.dl.bag) for(const [p] of o.items){ d.waste[p]++; d.why.uebrig++; } S.dl.trip=null; S.dl.bag=[]; S.dl.orders=[]; d.lief.active=liefActive(); }
   const toss=(p,n,why)=>{ if(n>0){ d.waste[p]+=n; d.why[why]+=n; } };
   // Spieß: gare Ware wandert in die Auslage-Reste
@@ -820,7 +872,7 @@ function endDay(reason){
   if (d.revenue-d.costSum-(d.notfall||0)>=1000) unlock('kasse');   // Tagesergebnis wie auf dem Bon
   if (d.ratingN>=5 && d.rating>=4.5) unlock('fuenf');
   if (d.abandoned) unlock('zu');
-  if (S.over){ recordBest(); setLocalRun(slotOf(S),null); RUN_SAVE=null; }
+  if (S.over){ recordBest(); S.runCoins=runCoins(S); addCoins(S.runCoins); setLocalRun(slotOf(S),null); RUN_SAVE=null; }
   else { const snap=JSON.parse(JSON.stringify(S)); setLocalRun(slotOf(S),snap); RUN_SAVE=runVal(snap); }
   saveStore();
   fbDay(d);
@@ -994,7 +1046,11 @@ function finishSale(c){
   let sum=0, allPerf=true, cheap=0, re=0;
   let pRuf=0;
   for(const [p,it] of c.items){ sum+=pr(p); pRuf+=priceRuf(p); if(!it.perf) allPerf=false; if(it.cheap) cheap++; if(it.re) re++; S.day_.sold[p]++; }
-  let tip = allPerf && !c.partial ? sum*0.15 : 0;
+  const comboHit = allPerf && !c.partial && !cheap && !re;
+  if (comboHit){ S.combo=(S.combo||0)+1; S.day_.comboMax=Math.max(S.day_.comboMax||0,S.combo); if(S.combo>=15) unlock('fliessband'); if(S.combo%5===0) sayM(pick(['COMBO! So läuft das hier!','Fließband! Weiter so!','Das ist Wartime-Niveau!'])); }
+  else S.combo=0;
+  const cMult = comboMult();
+  let tip = allPerf && !c.partial ? sum*0.15*cMult : 0;
   if (c.reg){
     const st=regState(c.reg), avgR=c.items.reduce((a,[p])=>a+pRatio(p),0)/Math.max(1,c.items.length);
     if (re>0) regMood(c.reg,-25,'aufgewaermt');
@@ -1087,8 +1143,8 @@ function goodTake(perf,x,y){
   if (perf){ sfx('ping'); bump('perfect'); S.fuel=clamp(S.fuel+8,0,100); S.day_.perfect++; S.streak++; float(x,y,'PERFEKT',C.phos); if(S.streak%5===0){ sayM(pick(SAY_M.praise)); voice('perfekt'); } }
   else { S.streak=0; float(x,y,'ok',C.mayo); }
 }
-function burnt(p,n,x,y){ sfx('buzz'); voice('brennt'); S.day_.waste[p]+=n; S.day_.why.verbrannt+=n; S.streak=0; float(x,y,'VERBRANNT',C.ketchup); S.ruf=clamp(S.ruf-0.5,0,100); sayM(pick(SAY_M.burn)); }
-function wartime(){ if(S.fuel>=100 && S.wt<=0){ sfx('horn'); voice('wartime'); bump('wartime'); S.fuel=0; S.wt=WT_DUR; sayM(pick(SAY_M.wt)); } }
+function burnt(p,n,x,y){ S.combo=0; sfx('buzz'); voice('brennt'); S.day_.waste[p]+=n; S.day_.why.verbrannt+=n; S.streak=0; float(x,y,'VERBRANNT',C.ketchup); S.ruf=clamp(S.ruf-0.5,0,100); sayM(pick(SAY_M.burn)); }
+function wartime(){ if(S.fuel>=100 && S.wt<=0){ if(S.day_) S.day_.wtN=(S.day_.wtN||0)+1; sfx('horn'); voice('wartime'); bump('wartime'); S.fuel=0; S.wt=WT_DUR; sayM(pick(SAY_M.wt)); } }
 
 /* ===================== Update ===================== */
 let sprays=[];
@@ -1110,6 +1166,7 @@ function update(dt){
   if (isNight()) spawnNight();
   else { spawnPlanned(); spawnRegulars(); }
   updateLief(dt);
+  S.taskT=(S.taskT||0)-dt; if(S.taskT<=0){ S.taskT=0.5; taskTick(false); }
   if (S.hilfe && !(S.zoll>0)) S.rost.forEach((w,i)=>{ if(!w||w.burnt||w.side!==1||w.t<WURST.side) return; if(w.hd==null) w.hd=0.4+Math.random()*1.2; if(w.t>=WURST.side+w.hd){ clickRost(i); S.hilfeT=S.time; const r=slotRost(i); float(r.x+r.w/2,r.y-8,'gewendet',C.phos); } });
   if (S.zollAt!=null && S.time>=S.zollAt){ S.zollAt=null; S.zoll=S.zollDur; sfx('horn'); sayM('ZOLL?! Kloska, wo sind die Stundenzettel?'); voice('zoll'); log('Zoll, Kontrolle Schwarzarbeit: Kloska und der Fahrer zeigen Papiere. Der Tresen steht.'); }
   if (S.zoll>0){ S.zoll-=dt; if(S.zoll<=0){ S.zoll=0; log('Zoll ist weg. Alles in Ordnung. Weiter geht es.'); } }
@@ -1131,7 +1188,7 @@ function update(dt){
   for(let i=0;i<S.queue.length;i++){
     const c=S.queue[i]; const tx=qx(i); c.x += (tx-c.x)*Math.min(1,dt*6);
     if (S.wt<=0 && !c.res) c.pat-=dt;
-    if (c.pat<=0){ sfx('lost'); voice('kundeweg'); if(c.reg) regMood(c.reg,-20,'warten'); S.queue.splice(i,1); i--; d.lost++; if(!isNight()) S.ruf=clamp(S.ruf-4,0,100); S.streak=0; sayM(pick(SAY_M.lost)); float(tx,560,'WEG!',C.ketchup); }
+    if (c.pat<=0){ S.combo=0; sfx('lost'); voice('kundeweg'); if(c.reg) regMood(c.reg,-20,'warten'); S.queue.splice(i,1); i--; d.lost++; if(!isNight()) S.ruf=clamp(S.ruf-4,0,100); S.streak=0; sayM(pick(SAY_M.lost)); float(tx,560,'WEG!',C.ketchup); }
   }
   if (S.queue.length>=5 && say_m.t<=0 && Math.random()<dt*0.4) sayM(pick(SAY_M.queue));
   // Kloska am Tresen
@@ -1488,6 +1545,18 @@ function render(){
     const gb=delGoBtn(), can=!dl.trip&&dl.bag.length&&dl.charge<=0;
     ctx.globalAlpha=can?1:0.45; btnDraw(gb,'LOS ▸',hover===820&&can); ctx.globalAlpha=1;
   }
+  /* --- Tagesaufträge (oben links) + Combo --- */
+  if (S.day_ && S.day_.tasks && S.day_.tasks.length){ const x=12,y=56,w=230,h=20+S.day_.tasks.length*19;
+    ctx.fillStyle='rgba(16,12,9,.82)'; rr(x,y,w,h,6); ctx.fill(); ctx.strokeStyle='rgba(240,160,58,.45)'; ctx.stroke();
+    txt(`MADDINS AUFTRÄGE · 🪙 ${STORE.meta.coins}`,x+8,y+14,9.5,C.grill,'left',F.disp,700);
+    S.day_.tasks.forEach((t,i)=>{ const T=TASKS[t.k], v=T.val(S.day_), yy=y+31+i*19;
+      const mark = t.done?'✔':t.failed?'✘':'·', col = t.done?C.phos:t.failed?'#ff8a6e':C.fg;
+      txt(`${mark} ${T.txt(t.n)}`,x+8,yy,12,col,'left',F.body,600);
+      if(!t.done&&!t.failed&&!T.end) txt(`${Math.min(v,t.n)}/${t.n}`,x+w-8,yy,11,'#d9c7a8','right',F.body,600); }); }
+  if ((S.combo||0)>=3){ const pulse=1+0.06*Math.sin(now/90), cx=640, cy=640;
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(pulse,pulse);
+    txtS(`COMBO ×${S.combo}`,0,0,22,S.combo>=15?'#ff5ad1':S.combo>=10?C.grill:C.phos,'center',F.disp,700);
+    txtS(`Trinkgeld ×${comboMult().toFixed(2).replace('.',',')}`,0,16,11,C.mayo,'center',F.body,700); ctx.restore(); }
   /* --- HUD oben --- */
   ctx.fillStyle='rgba(20,12,8,.84)'; ctx.fillRect(0,0,W,46); ctx.fillStyle='rgba(240,160,58,.45)'; ctx.fillRect(0,46,W,1);
   const mins=Math.floor(S.time/DAYLEN*480), hh=((isNight()?22:LOC().open)+Math.floor(mins/60))%24, mm=mins%60;
@@ -1640,8 +1709,8 @@ cv.addEventListener('mousedown',e=>{
   else if(k==='ask'){ const c=S.ask&&S.ask.c; S.ask=null; if(i===0) servePartial(c); else sendAway(c); }
   else if(k==='gas'){ const f=S.fire; f.hp--; sfx('spray'); for(let n=0;n<6;n++) sprays.push({x:GAS.x+GAS.w+40,y:GAS.y+40+Math.random()*30,vx:-60-Math.random()*40,vy:-20+Math.random()*40,t:0});
     if(f.hp<=0){ bump('fires'); S.fire=null; S.fuel=clamp(S.fuel+10,0,100); float(GAS.x+GAS.w/2,GAS.y-10,'GELÖSCHT!',C.phos); sayM(pick(SAY_M.fireOut)); log('Gasflasche gelöscht. Es wird wieder gebraten.'); } }
-  else if(k==='tease'){ bump('raids'); S.tease=null; S.mmFree=S.time+5; S.fuel=clamp(S.fuel+15,0,100); sayM('Und bleibt weg! Danke, Chef.'); float(TEASE_R.x+TEASE_R.w/2,TEASE_R.y,'VERJAGT!',C.phos); log('Max und Moritz vom Chef weggescheucht.'); }
-  else if(k==='raid'){ bump('raids'); S.raid=null; S.mmFree=S.time+5; S.fuel=clamp(S.fuel+15,0,100); sayM(pick(SAY_M.raid)); float(320,150,'VERJAGT!',C.phos); log('Max und Moritz verjagt.'); }
+  else if(k==='tease'){ S.day_.mmChased=(S.day_.mmChased||0)+1; bump('raids'); S.tease=null; S.mmFree=S.time+5; S.fuel=clamp(S.fuel+15,0,100); sayM('Und bleibt weg! Danke, Chef.'); float(TEASE_R.x+TEASE_R.w/2,TEASE_R.y,'VERJAGT!',C.phos); log('Max und Moritz vom Chef weggescheucht.'); }
+  else if(k==='raid'){ S.day_.mmChased=(S.day_.mmChased||0)+1; bump('raids'); S.raid=null; S.mmFree=S.time+5; S.fuel=clamp(S.fuel+15,0,100); sayM(pick(SAY_M.raid)); float(320,150,'VERJAGT!',C.phos); log('Max und Moritz verjagt.'); }
   else if(k==='wt'||k==='kaffee'){ if(S.fuel>=100) wartime(); else float(k==='kaffee'?50:630,k==='kaffee'?280:70,'lädt noch…',C.mayo); }
   tip=tipFor(hitTest(toLocal(e)));
 });
@@ -1819,12 +1888,15 @@ function showTitle(fromCloud){
         <p class="dim" style="font-size:13px;margin-top:4px">Alle spielen diese Woche denselben Run: gleiche Kunden, Events, Brände und Nachtschichten. Dein bester Versuch zählt. Neue Woche ab Montag.${CLOUD_WEEK?` Dein Bestwert: <b style="color:var(--mayo)">${fmtN(CLOUD_WEEK.score)}</b>.`:''}</p></div>
       <div class="row"><label for="inName" class="dim" style="font-size:13px">Name für die Rangliste</label><input id="inName" class="qty" style="width:150px;text-align:left;text-transform:uppercase" maxlength="10" placeholder="NAME" value="${esc(PLAYER)}"><span class="dim" style="font-size:12.5px">${fdb?'gleicher Name wie in Ticket Slayer':'nur lokal'}</span></div>
       ${run?`<p class="dim" style="font-size:13px">${pr0.src==='cloud'?'Spielstand aus deinem Profil geladen. ':''}${run.phase==='day'?`<b style="color:var(--ketchup)">Tag ${run.day} wurde abgebrochen.</b> Er wird ohne Verkäufe abgerechnet, Ruf −10. `:''}Ein neuer Run überschreibt den gespeicherten.</p>`:''}
+      ${perkShop()}
       ${trophyGrid()}
       <h3>Steuerung: nur Maus</h3>
       <div class="keys">
         <kbd>Spieß</kbd><span>Freien Platz im Ofen anklicken = Hähnchen (20 s). Haxe (40 s) über das Lager unten. Grün leuchtend = perfekt, jetzt runternehmen.</span>
         <kbd>Rost</kbd><span>Freien Platz = Bratwurst. Nach 7 s anklicken zum Wenden, dann nochmal zum Runternehmen.</span>
-        <kbd>Fritteuse</kbd><span>Korb anklicken = 1 Portion rein, 1 Portion raus. Zwei Körbe parallel.</span>
+        <kbd>Fritteuse</kbd><span>Korb anklicken = 1 Portion rein, 1 Portion raus. „Alle raus“ holt alles Fertige auf einmal. Mit Upgrade bis zu 4 Plätze.</span>
+        <kbd>Combo</kbd><span>Perfekte Bestellungen hintereinander erhöhen das Trinkgeld bis ×2. Verlorener Kunde oder Verbranntes setzt zurück.</span>
+        <kbd>Aufträge</kbd><span>Maddin gibt jeden Tag drei Aufträge (oben links). Jeder bringt Münzen für die Spardose.</span>
         <kbd>Lager</kbd><span>Buttons unten machen dasselbe. Leer? Dann wird der Button zur Notlieferung: Peter kommt in 12 s, zum doppelten Preis.</span>
         <kbd>Salat</kbd><span>Auf der Arbeitsfläche hinter Kloska anklicken.</span>
         <kbd>Getränke</kbd><span>Monster Ultra White und Faxe Strong 10 % stehen im Kühlschrank vor dem Wagen. Kloska nimmt sie direkt mit. Leer? Anklicken für die Notlieferung.</span>
@@ -1841,6 +1913,7 @@ function showTitle(fromCloud){
   $('bNew').onclick=()=>newRun('normal');
   if (IN_TS) $('bBack').onclick=backToTS;
   $('inName').onchange=e=>{ PLAYER=cleanName(e.target.value); e.target.value=PLAYER; try{ localStorage.setItem('lsc_player',PLAYER); }catch(x){} fbLoadMine(); renderBoard($('lscBoard')); };
+  wirePerks(()=>{ const y=$('ovTitle').scrollTop; showTitle(true); $('ovTitle').scrollTop=y; });
   if (!fromCloud){ fbLoadMine(); }
   renderBoard($('lscBoard'));
 }
@@ -1866,6 +1939,8 @@ const TROPHIES = [
   {id:'steuerfahndung', icon:'🕵️', name:'Steuerfahndung', desc:'5 anonyme Hinweise gegeben.', ctr:'sabSent', goal:5},
   {id:'weste',      icon:'🧼', name:'Weiße Weste',        desc:'Das Gesundheitsamt kam auf Hinweis und fand nichts.'},
   {id:'denunziant', icon:'👀', name:'Denunziant',         desc:'3-mal beim Hinweisgeben gesehen worden.', ctr:'sabCaught', goal:3, anti:true},
+  {id:'fliessband', icon:'⚙️', name:'Fließband',         desc:'Combo ×15 an der Theke.'},
+  {id:'auftrag',    icon:'📋', name:'Maddins Liebling',   desc:'50 Tagesaufträge erledigt.', ctr:'tasks', goal:50},
   {id:'peter',      icon:'🚚', name:'Peters Liebling',    desc:'10 Notlieferungen bestellt.', ctr:'notfall', goal:10, anti:true},
   {id:'isaus',      icon:'🚫', name:'Is aus',             desc:'20 Kunden weggeschickt.', ctr:'refused', goal:20, anti:true},
   {id:'glaubisch',  icon:'🤷', name:'Glaub isch',         desc:'Kloska hat 50 Bestellungen verwechselt.', ctr:'kloska', goal:50, anti:true, hidden:true},
@@ -2125,6 +2200,8 @@ function showBon(d){
     ${d.abandoned?'<hr><div class="c"><b>TAG ABGEBROCHEN!</b><br>Der Wagen blieb zu, die Kundschaft stand vor der Klappe. Ruf −10.</div>':''}
     ${d.sab?`<hr><div class="c"><b>ANONYMER HINWEIS: ${SAB[d.sab.t].icon} ${esc(SAB[d.sab.t].name.split(' (')[0]).toUpperCase()}</b><br>${d.sab.t==='gesund'?(d.sab.hit?'Aufgewärmtes und Sonderposten gefunden. Ruf −12.':'Alles sauber. Der Hinweisgeber zahlt die Falschanzeige.'):d.sab.t==='finanz'?(d.sab.hit?'Betriebsprüfung mit Nachzahlung.':'Betriebsprüfung ohne Befund. Danke, Steuerberater.'):d.sab.t==='zoll'?'Zoll-Kontrolle, der Tresen stand still.':'Darius hat ausgeholfen. Leider.'}<br>${d.sab.from?`Gesehen wurde: <b>${esc(d.sab.from)}</b>. Rache ist gratis.`:'Absender unbekannt.'}</div>`:''}
     ${d.kontrolle?'<hr><div class="c"><b>KONTROLLE!</b> Aufgewärmte Ware gefunden. Ruf −15.</div>':''}
+    ${d.tasks&&d.tasks.length?`<hr><div class="c"><b>MADDINS AUFTRÄGE</b></div>${d.tasks.map(t=>`<div class="l"><span>${t.done?'✔':'✘'} ${TASKS[t.k].txt(t.n)}</span><span>${t.done?'+'+TASK_COINS+' 🪙':''}</span></div>`).join('')}${d.taskBonus?`<div class="l"><span>Alle drei erledigt</span><span>+${TASK_BONUS} 🪙</span></div>`:''}`:''}
+    ${d.comboMax>=3?`<div class="l"><span>Beste Combo</span><span>×${d.comboMax}</span></div>`:''}
     <hr><div class="l big"><span>SCORE</span><span>${fmtN(d.score||0)}</span></div>
     <div class="l"><span>Gewinn inkl. Einkauf bei Peter</span><span class="${(d.profit||0)<0?'neg':''}">${eur(d.profit||0)}</span></div>
     ${S.challenge?`<div class="c">Wochen-Challenge ${weekLabel(S.challenge.week)}</div>`:''}
@@ -2136,7 +2213,7 @@ function showBon(d){
   $('bBon').focus();
 }
 
-function buyPrice(p,plain){ return BUY[p]*Math.pow(1.012,S.day-1)*(!plain&&p==='huhn'&&S.cheapNext?0.65:1); }
+function buyPrice(p,plain){ return BUY[p]*Math.pow(1.012,S.day-1)*(1-perkOn('peter')*0.04)*(!plain&&p==='huhn'&&S.cheapNext?0.65:1); }
 function upPrice(k){ const u=UPG[k]; return Math.round(u.base*0.5*Math.pow(1.5,S.upBought[k])); }  // 50 % günstiger
 function upMaxed(k){ const u=UPG[k]; return k==='kuehl'? S.up.kuehl>=u.max : S.up[k]>=u.max; }
 
@@ -2275,6 +2352,13 @@ function buyUp(k,redraw){
   S.cash-=pr; S.upBought[k]++; S.up[k]+=UPG[k].step; redraw();
 }
 
+function perkShop(){
+  return `<div class="week" id="perkBox"><div class="row" style="justify-content:space-between"><h3>🪙 Maddins Spardose</h3><b style="color:var(--mayo)">${STORE.meta.coins} Münzen</b></div>
+    <p class="dim" style="font-size:12.5px;margin:4px 0 8px">Münzen gibt es für Maddins Tagesaufträge und am Ende jedes Runs (Score ÷ 150). Vorteile gelten dauerhaft für jeden neuen Run, nicht in der Wochen-Challenge.</p>
+    <div class="perks">${Object.keys(PERKS).map(k=>{ const P_=PERKS[k], l=perkLvl(k), mx=l>=P_.max, c=perkCost(k);
+      return `<div class="perk"><div><b>${P_.icon} ${P_.name}</b> <span class="dim" style="font-size:12px">Stufe ${l}/${P_.max}</span><small>${l?P_.desc(l):'noch nicht gekauft'}${mx?'':` → ${P_.desc(l+1)}`}</small></div><button class="btn sm" data-perk="${k}" ${mx||STORE.meta.coins<c?'disabled':''}>${mx?'max':c+' 🪙'}</button></div>`; }).join('')}</div></div>`;
+}
+function wirePerks(redraw){ document.querySelectorAll('[data-perk]').forEach(b=>b.onclick=()=>{ if(buyPerk(b.dataset.perk)) redraw(); }); }
 function showOver(){
   recordBestSafe();
   const L=STORE.life, r=S.run;
@@ -2283,7 +2367,8 @@ function showOver(){
     <div class="peter"><img src="${IMG_SRC.maddinPoint}" alt="Maddin" style="height:160px"><div class="speech"><b>Maddin:</b> ${S.over==='ruf'?'Den Ruf kriegst du nicht mit Rabatt zurück.':'Pleite. In meiner Schicht. Unfassbar.'}</div></div>
     <h2>AUS NACH ${S.day-1} ${S.day-1===1?'TAG':'TAGEN'}${S.challenge?' · '+weekLabel(S.challenge.week):''}</h2>
     <p>${reason}</p>
-    <p class="fc">Score: ${fmtN(runScore(S))}</p>
+    <p class="fc">Score: ${fmtN(runScore(S))}${S.runCoins?` · +${S.runCoins} 🪙`:''}</p>
+    ${perkShop()}
     <p class="dim" style="font-size:13px">${S.day-1} Tage × ⌀ ${runStars(S).toFixed(1).replace('.',',')} ★ × 100 + Gewinn ${eur(S.run.profit||0)}${S.challenge?' · zählt für die Wochen-Challenge':''}</p>
     <div class="tbl"><table><thead><tr><th></th>${P.map(p=>`<th>${EMO[p]} ${NAME[p]}</th>`).join('')}</tr></thead><tbody>
       <tr><td>Verkauft (Run)</td>${P.map(p=>`<td>${r.sold[p]}</td>`).join('')}</tr>
@@ -2300,6 +2385,7 @@ function showOver(){
     ${STORE.best.map((b,i)=>`<tr><td>${i+1}</td><td>${b.score!=null?fmtN(b.score):'–'}${b.week?' 🗓':''}</td><td>${b.days}</td><td>${eur(b.revenue)}</td><td>${b.date}</td></tr>`).join('')}</tbody></table></div>
     <div class="row"><button class="btn go" id="bAgain">Neuer Run</button><button class="btn" id="bMenu">Titel</button>${IN_TS?'<button class="btn" id="bBack2">Zurück zu Ticket Slayer</button>':''}</div>
   </div></div>`);
+  wirePerks(()=>{ const y=$('ovOver').scrollTop; showOver(); $('ovOver').scrollTop=y; });
   BOARD_TAB=S.challenge?'week':'alltime'; renderBoard($('lscBoard2')); const again=S.challenge?'week':'normal'; $('bAgain').onclick=()=>newRun(again); $('bMenu').onclick=showTitle; if(IN_TS) $('bBack2').onclick=backToTS;
 }
 function recordBestSafe(){ /* bereits in endDay erfasst */ }
