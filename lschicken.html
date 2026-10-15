@@ -149,6 +149,7 @@ kbd{font-family:var(--f-disp);font-size:12px;background:var(--bg);border:1px sol
 .sabb{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:5px}
 .sabb .btn{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .perks{display:grid;gap:6px}.perk{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;border-top:1px solid #4a3a1e;padding-top:6px}.perk small{display:block;color:var(--dim);font-size:12px}
+.rezp{border-top:1px solid var(--line);padding-top:6px;margin-top:4px}.rezo{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px}.rezo .btn{text-align:left;display:flex;flex-direction:column;gap:1px}.rezo .btn small{color:var(--dim);font-size:11px}.rezo .btn.on{border-color:var(--grill);background:#2a2216;color:var(--mayo)}
 .tabs .btn.on{border-color:var(--grill);background:#2a2216;color:var(--mayo)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -185,7 +186,42 @@ const EMO  = {huhn:'🍗',haxe:'🍖',wurst:'🌭',pommes:'🍟',salat:'🥗',mo
 const PRICE= {huhn:10.9,haxe:15.9,wurst:4.5,pommes:3.9,salat:5.9,monster:3.9,faxe:3.9};   // Standardpreis = das, was die Kundschaft als fair empfindet
 const PSHARE = {huhn:.30,haxe:.08,wurst:.20,pommes:.17,salat:.09,monster:.08,faxe:.08};   // Gewicht fürs Gesamt-Preisgefühl
 const pr = p => (S&&S.price&&S.price[p]!=null) ? S.price[p] : PRICE[p];
-const pRatio = p => pr(p)/(PRICE[p]*((S&&S.loc!=null)?LOCS[S.loc].tol:1));   // Kirmes-Publikum zahlt mehr
+/* ===================== Rezeptküche (à la Pizza Connection) ===================== */
+// cost = Mehrkosten pro Einheit beim Einkauf, prem = Aufpreis, den die Kundschaft als fair empfindet
+const RECIPES = {
+  huhn:  [{id:'klassik', name:'Klassik',            cost:0,   prem:0,   d:'Salz, Pfeffer, Paprika edelsüß'},
+          {id:'paprika', name:'Paprika-Feuer',      cost:0.2, prem:0.5, d:'Rauchpaprika und Chili'},
+          {id:'knobi',   name:'Knoblauch-Kräuter',  cost:0.25,prem:0.6, d:'Viel Knoblauch, Rosmarin, Thymian'},
+          {id:'curry',   name:'Curry-Honig',        cost:0.3, prem:0.8, d:'Gelbes Curry, Honig, Limette'},
+          {id:'bier',    name:'Bier-Marinade',      cost:0.4, prem:1.0, d:'Dunkles Bier, Senf, Malz'}],
+  haxe:  [{id:'klassik', name:'Klassik',            cost:0,   prem:0,   d:'Kümmel und Salz'},
+          {id:'kruste',  name:'Bierkruste',         cost:0.5, prem:1.5, d:'Mit Bier abgelöscht, extra Kruste'}],
+  wurst: [{id:'klassik', name:'Mit Senf',           cost:0,   prem:0,   d:'Mittelscharfer Senf, Brötchen'},
+          {id:'curry',   name:'Currywurst',         cost:0.2, prem:1.0, d:'Geschnitten, Currysauce, Currypulver'},
+          {id:'zwiebel', name:'Röstzwiebeln',       cost:0.2, prem:0.6, d:'Karamellisierte Zwiebeln, Senf'},
+          {id:'rache',   name:'Maddins Rache',      cost:0.3, prem:1.2, d:'Habanero-Sauce. Unterschrift auf eigene Gefahr'}],
+  pommes:[{id:'klassik', name:'Rot-Weiß',           cost:0,   prem:0,   d:'Ketchup und Mayo'},
+          {id:'loaded',  name:'Loaded Fries',       cost:1.1, prem:3.0, d:'Cheddar-Sauce, Bacon, Jalapeños, Röstzwiebeln'},
+          {id:'trueffel',name:'Trüffel-Parmesan',   cost:0.7, prem:2.0, d:'Trüffel-Mayo, Parmesan, Petersilie'}],
+  salat: [{id:'klassik', name:'Gemischter Salat',   cost:0,   prem:0,   d:'Eisberg, Tomate, Gurke, Joghurtdressing'},
+          {id:'bowl',    name:'Fancy Bowl',         cost:1.8, prem:4.5, d:'Quinoa, Avocado, Edamame, Hähnchenstreifen, Sesam'},
+          {id:'feta',    name:'Bauernsalat',        cost:0.5, prem:1.2, d:'Feta, Oliven, rote Zwiebeln'}],
+};
+// Geschmack je Standplatz: 1 = beliebt, -1 = unbeliebt, fehlend = egal. Muss man über Verkäufe herausfinden.
+const LOC_TASTE = {
+  industrie:{'huhn:knobi':1,'huhn:curry':1,'huhn:bier':-1,'wurst:rache':1,'wurst:curry':1,'pommes:loaded':1,'pommes:trueffel':-1,'salat:bowl':-1,'haxe:kruste':1},
+  markt:    {'huhn:klassik':1,'huhn:paprika':1,'huhn:curry':-1,'wurst:zwiebel':1,'wurst:rache':-1,'pommes:trueffel':-1,'salat:bowl':1,'salat:feta':1},
+  stadtfest:{'huhn:paprika':1,'huhn:knobi':-1,'wurst:curry':1,'pommes:loaded':1,'pommes:trueffel':1,'salat:bowl':1,'haxe:kruste':-1},
+  kirmes:   {'huhn:curry':1,'wurst:curry':1,'wurst:rache':1,'pommes:loaded':1,'pommes:trueffel':-1,'salat:bowl':-1,'salat:feta':-1},
+  wiesn:    {'huhn:bier':1,'huhn:curry':-1,'haxe:kruste':1,'wurst:zwiebel':1,'wurst:curry':-1,'pommes:trueffel':1,'salat:bowl':-1},
+};
+const REVEAL_N = 8;   // so viele Verkäufe, bis man weiß, wie ein Rezept am Standplatz ankommt
+const recOf = p => { const L=RECIPES[p]; if(!L) return null; const id=S&&S.recipe&&S.recipe[p]; return L.find(r=>r.id===id)||L[0]; };
+const recPrem = p => { const r=recOf(p); return r?r.prem:0; };
+const recKey = p => p+':'+(recOf(p)?recOf(p).id:'klassik');
+const taste = (p,locId) => !RECIPES[p]||isNight() ? 0 : ((LOC_TASTE[locId||LOC().id]||{})[recKey(p)]||0);
+const tasteKnown = (key,locId) => ((S.recSeen||{})[locId+'|'+key]||0) >= REVEAL_N;
+const pRatio = p => pr(p)/((PRICE[p]+recPrem(p))*((S&&S.loc!=null)?LOCS[S.loc].tol:1));   // Kirmes-Publikum zahlt mehr, Rezepte haben Aufpreis
 // Nachfrage je Produkt: teurer = seltener bestellt, günstiger = öfter
 const demandMult = p => clamp(1-(pRatio(p)-1)*1.6, 0.15, 1.5);
 function priceIndex(){ let a=0; for(const p of P) a+=PSHARE[p]*pRatio(p); return a; }
@@ -338,7 +374,7 @@ const LOC_ICON={industrie:'🏭',markt:'🧺',stadtfest:'🎪',kirmes:'🎡',wie
 function statLine(){ const g=avg7(), all=S.revN?S.revSum/S.revN:null;
   return `<p class="stat">Ruf <b>${Math.round(S.ruf)}</b> / 100 · Google gesamt <b>${all!=null?all.toFixed(1).replace('.',','):'–'} ★</b> · letzte 7 Tage <b>${g.n?g.avg.toFixed(1).replace('.',','):'–'} ★</b> · ${fmtN(S.revN)} Rezensionen · Standplatz <b>${esc(LOC().name)}</b></p>`; }
 function avg7(){ const h=S.hist.filter(x=>x.stars!=null).slice(-7); return {n:h.length, avg:h.length?h.reduce((a,x)=>a+x.stars,0)/h.length:0}; }
-const locPrice = (p,i) => Math.round(PRICE[p]*LOCS[i].tol*10)/10;
+const locPrice = (p,i) => Math.round((PRICE[p]+(S&&S.recipe?recPrem(p):0))*LOCS[i].tol*10)/10;
 // Standortwechsel: Preise relativ mitnehmen, sonst ist jeder Wechsel eine Preisfalle
 function setLoc(i){ if(i===S.loc) return; const f=LOCS[i].tol/LOCS[S.loc].tol; for(const p of P) S.price[p]=Math.round(clamp(pr(p)*f,PRICE[p]*0.5,PRICE[p]*2.5)*10)/10; S.loc=i; }
 function locCheck(d){
@@ -658,6 +694,7 @@ function migrate(){
   for(const h of S.hist){ fillKeys(h.sold); fillKeys(h.waste); }
   S.rush=S.rush||[];
   S.price=Object.assign({...PRICE}, S.price||{});
+  S.recipe=S.recipe||{}; S.recSeen=S.recSeen||{};
   for(const R of REGULARS) regState(R.id);
   S.lief=S.lief||{veh:null,navi:false,drv:null,on:true}; S.hilfe=!!S.hilfe;
   for(const k in UPG){ if(S.up[k]==null) S.up[k]=UPG[k].start; if(S.upBought[k]==null) S.upBought[k]=0; }
@@ -689,6 +726,20 @@ const perkCost = k => PERKS[k].cost[Math.min(perkLvl(k),PERKS[k].cost.length-1)]
 const perkOn = k => S && !S.challenge ? perkLvl(k) : 0;   // in der Wochen-Challenge zählt nur Können
 function addCoins(n,why){ n=Math.round(n); if(n<=0) return; STORE.meta.coins+=n; STORE.meta.earned+=n; saveStore(); if(S&&S.day_) S.day_.coins=(S.day_.coins||0)+n; }
 function buyPerk(k){ const P_=PERKS[k], l=perkLvl(k); if(l>=P_.max||STORE.meta.coins<perkCost(k)) return false; STORE.meta.coins-=perkCost(k); STORE.meta.perks[k]=l+1; saveStore(); fbMeta(); sfx('fanfare'); return true; }
+const REC_REV = {
+  'huhn:paprika': ['Das Paprika-Hähnchen hat Feuer. Ich auch jetzt. Fünf Sterne.','Paprika-Hähnchen, ordentlich gewürzt.','Paprika-Hähnchen war mir zu scharf. Ich bin aber auch aus Ostwestfalen.'],
+  'huhn:knobi':   ['Knoblauch-Hähnchen! Meine Kollegen meiden mich seitdem. Hat sich gelohnt.','Knoblauch-Kräuter, kann man machen.','Nach dem Knoblauch-Hähnchen hat meine Frau im Gästezimmer geschlafen. Ich auch.'],
+  'huhn:curry':   ['Curry-Honig-Hähnchen. Hätte ich nicht gedacht. Grandios.','Curry-Honig ist mal was anderes.','Curry an einem Hähnchen? Was kommt als Nächstes, Ananas auf Pizza?'],
+  'huhn:bier':    ['Bier-Marinade! Ein Hendl, das schmeckt wie Feierabend.','Bier-Hähnchen, solide.','Bier-Hähnchen während der Schicht? Der Sicherheitsbeauftragte war nicht begeistert.'],
+  'haxe:kruste':  ['Die Kruste der Bierkruste-Haxe kracht lauter als der Autoscooter.','Bierkruste, gute Haxe.','Bierkruste? Hab mir fast einen Zahn ausgebissen.'],
+  'wurst:curry':  ['Currywurst wie im Ruhrpott. Hier wird geliefert, wirklich.','Currywurst geht immer.','Currywurst hier? Wir sind doch nicht im Pott.'],
+  'wurst:zwiebel':['Bratwurst mit Röstzwiebeln, ich hab geweint vor Glück.','Röstzwiebeln drauf, passt.','Zu viele Zwiebeln. Ich hab den ganzen Nachmittag gerochen wie ein Döner.'],
+  'wurst:rache':  ['Maddins Rache. Ich hab unterschrieben. Ich habe überlebt. Legende.','Maddins Rache ist scharf. Sehr scharf.','Maddins Rache hat mir die Geschmacksnerven gekündigt. Fristlos.'],
+  'pommes:loaded':['Loaded Fries mit Bacon und Cheddar! Endlich ist der Wagen im Jahr 2026 angekommen.','Loaded Fries, sättigt ordentlich.','Loaded Fries? Ich wollte Pommes, keine Baustelle.'],
+  'pommes:trueffel':['Trüffel-Pommes am Grillwagen. Fühle mich wie in München-Schwabing.','Trüffel-Parmesan, mal was anderes.','Trüffel-Pommes zum Preis eines Mittagessens. Hier ist Industriegebiet, Leute.'],
+  'salat:bowl':   ['Die Fancy Bowl ist ein Gedicht. Avocado, Quinoa, alles da. Instagram-tauglich!','Bowl war okay, etwas teuer.','Fancy Bowl? Ich wollte Salat, keine Hipster-Schale mit Körnern.'],
+  'salat:feta':   ['Bauernsalat mit richtig Feta. Wie im Griechenland-Urlaub.','Bauernsalat, gute Portion.','Feta hier ist aus der Dose. Das schmeckt man.'],
+};
 const TASKS = {
   perfect:{n:d=>6+Math.min(9,Math.floor(d/3)), txt:n=>`${n} Teile perfekt garen`,        val:d=>d.perfect},
   served: {n:d=>8+Math.min(14,d),             txt:n=>`${n} Kunden bedienen`,              val:d=>d.served},
@@ -728,7 +779,7 @@ function newRun(mode){
   S = {
     challenge: mode==='week' ? {week:wk, seed:'LSC-'+wk} : null,
     loc:0, locMax:0, lief:{veh:null,navi:false,drv:null,on:true},
-    day:1, cash:400, ruf:60, time:0, phase:'day', combo:0,
+    day:1, cash:400, ruf:60, time:0, phase:'day', combo:0, recipe:{}, recSeen:{},
     stock:{huhn:[{q:12,age:0,cheap:false}],haxe:[{q:3,age:0,cheap:false}],wurst:[{q:20,age:0,cheap:false}],pommes:[{q:30,age:0,cheap:false}],salat:[{q:6,age:0,cheap:false}],monster:[{q:12,age:0,cheap:false}],faxe:[{q:12,age:0,cheap:false}]},
     spiess:[], rost:[], fry:[], aus:blank2(), queue:[], fire:null, fireAt:null, ask:null, revSum:0, revN:0,
     up:Object.fromEntries(Object.entries(UPG).map(([k,u])=>[k,u.start])),
@@ -889,7 +940,7 @@ function recordBest(){
 const CURVE=[0.6,0.9,1.7,1.5,0.8,0.7,1.0,1.4]; const CMEAN=CURVE.reduce((a,b)=>a+b)/CURVE.length;
 const baseCust = d => 10 + Math.min(d,20)*1.2 + Math.max(0,d-20)*0.5;   // Grundmenge Kunden pro Tag
 function custPerDay(){ return baseCust(S.day) * S.event.cust * LOC().cust * (0.5+S.ruf/100) * (1+S.up.schild*0.12) * custMult(); }
-function weightOf(p,base){ return base*locMult(p)*demandMult(p); }
+function weightOf(p,base){ const t=taste(p); return base*locMult(p)*demandMult(p)*(t>0?1.35:t<0?0.7:1); }
 function makeOrder(rg=Math.random){
   const o={};
   const mains=[['huhn',45],['wurst',30],['haxe',12],['salat',13]].map(([p,w])=>[p,weightOf(p,w)]);
@@ -1046,12 +1097,17 @@ function finishSale(c){
   const i=S.queue.indexOf(c), x=i>=0?qx(i):S.kl.x;
   let sum=0, allPerf=true, cheap=0, re=0;
   let pRuf=0;
-  for(const [p,it] of c.items){ sum+=pr(p); pRuf+=priceRuf(p); if(!it.perf) allPerf=false; if(it.cheap) cheap++; if(it.re) re++; S.day_.sold[p]++; }
+  let liked=0, hated=0;
+  for(const [p,it] of c.items){ sum+=pr(p); pRuf+=priceRuf(p); if(!it.perf) allPerf=false; if(it.cheap) cheap++; if(it.re) re++; S.day_.sold[p]++;
+    if (RECIPES[p]){ const k=recKey(p), sk=LOC().id+'|'+k, t=taste(p); S.recSeen[sk]=(S.recSeen[sk]||0)+1; S.day_.rec=S.day_.rec||{}; S.day_.rec[k]=(S.day_.rec[k]||0)+1;
+      if (S.recSeen[sk]===REVEAL_N){ float(x,450,`${recOf(p).name}: ${t>0?'Hit hier! 👍':t<0?'kommt hier nicht an 👎':'ganz okay 😐'}`,t>0?C.phos:t<0?C.ketchup:C.mayo); log(`Rezept-Erkenntnis: ${recOf(p).name} kommt in ${LOC().town} ${t>0?'richtig gut':t<0?'schlecht':'ganz normal'} an.`); }
+      if (t>0){ liked++; pRuf+=0.3; if(it.perf&&recOf(p).id!=='klassik') bump('liked'); } else if (t<0){ hated++; pRuf-=0.6; } } }
   const comboHit = allPerf && !c.partial && !cheap && !re;
   if (comboHit){ S.combo=(S.combo||0)+1; S.day_.comboMax=Math.max(S.day_.comboMax||0,S.combo); if(S.combo>=15) unlock('fliessband'); if(S.combo%5===0) sayM(pick(['COMBO! So läuft das hier!','Fließband! Weiter so!','Das ist Wartime-Niveau!'])); }
   else S.combo=0;
   const cMult = comboMult();
-  let tip = allPerf && !c.partial ? sum*0.15*cMult : 0;
+  let tip = allPerf && !c.partial ? sum*(0.15+liked*0.05)*cMult : 0;
+  if (hated) float(x,465,'Schmeckt mir nicht…',C.ketchup); else if (liked) float(x,465,'Lecker! 😋',C.phos);
   if (c.reg){
     const st=regState(c.reg), avgR=c.items.reduce((a,[p])=>a+pRatio(p),0)/Math.max(1,c.items.length);
     if (re>0) regMood(c.reg,-25,'aufgewaermt');
@@ -1416,6 +1472,7 @@ function render(){
     drawIcon(p,r.x+26,r.y+r.h/2,26,0);
     txtS(String(n),r.x+r.w-10,r.y+33,26,n===0?'#ff8a6e':C.mayo,'right',F.disp,700);
     if (pf) txtS('★'+pf,r.x+r.w-8,r.y+13,11,C.phos,'right');
+    { const rc=recOf(p); if(rc&&rc.id!=='klassik'&&!isNight()){ const t=taste(p), kn=tasteKnown(recKey(p),LOC().id); txtS(rc.name.length>13?rc.name.slice(0,12)+'.':rc.name,r.x+r.w/2,r.y-3,10,kn?(t>0?C.phos:t<0?'#ff8a6e':C.mayo):C.mayo,'center',F.body,700); } }
     const re=a.filter(t=>t.re).length; if(re) txtS('↻'+re,r.x+8,r.y+13,11,'#ff8a6e');
     if (LASCH[p]&&n){ const f=1-a[0].age/(LASCH[p]*(S.up.lamp?1.6:1)); ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(r.x+6,r.y+r.h-6,r.w-12,4); ctx.fillStyle=f<0.3?C.ketchup:C.grill; ctx.fillRect(r.x+6,r.y+r.h-6,(r.w-12)*f,4); }
     if (p==='salat'&&S.salatPrep>0){ ctx.fillStyle=C.phos; ctx.fillRect(r.x+6,r.y+r.h-6,(r.w-12)*(1-S.salatPrep/SALAT_PREP),4); }
@@ -1940,6 +1997,7 @@ const TROPHIES = [
   {id:'steuerfahndung', icon:'🕵️', name:'Steuerfahndung', desc:'5 anonyme Hinweise gegeben.', ctr:'sabSent', goal:5},
   {id:'weste',      icon:'🧼', name:'Weiße Weste',        desc:'Das Gesundheitsamt kam auf Hinweis und fand nichts.'},
   {id:'denunziant', icon:'👀', name:'Denunziant',         desc:'3-mal beim Hinweisgeben gesehen worden.', ctr:'sabCaught', goal:3, anti:true},
+  {id:'kultrezept', icon:'👨‍🍳', name:'Kultrezept',         desc:'100 perfekte Verkäufe eines Spezialrezepts an einem Standplatz, wo es beliebt ist.', ctr:'liked', goal:100},
   {id:'fliessband', icon:'⚙️', name:'Fließband',         desc:'Combo ×15 an der Theke.'},
   {id:'auftrag',    icon:'📋', name:'Maddins Liebling',   desc:'50 Tagesaufträge erledigt.', ctr:'tasks', goal:50},
   {id:'peter',      icon:'🚚', name:'Peters Liebling',    desc:'10 Notlieferungen bestellt.', ctr:'notfall', goal:10, anti:true},
@@ -2108,6 +2166,8 @@ function genReviews(d){
     if (pi<0.88) add(5,'Für den Preis kriegt man woanders nicht mal eine Serviette. Fünf Sterne, nehmt mehr Geld!',3);
     if (pRatio('faxe')<0.85) add(5,'Faxe so günstig, wir sind direkt geblieben. Der Schützenverein kommt jetzt immer.',2); }
   for(const [st,t] of (REV_LOC[LOC().id]||[])) add(st,t,1.5);
+  if (d.rec) for(const k in d.rec){ const [p,id]=k.split(':'), r=(RECIPES[p]||[]).find(x=>x.id===id); if(!r||id==='klassik') continue; const t=(LOC_TASTE[LOC().id]||{})[k]||0, w=Math.min(3,1+d.rec[k]/5);
+    const T=REC_REV[k]; if(!T) continue; add(t>0?5:t<0?2:4, T[t>0?0:t<0?2:1], w); }
   if (S.event.id==='sonne') add(4,'Sonne, Salat, Monster. Bin jetzt Influencer.');
   if (S.event.id==='regen') add(4,'Der Regen kam waagerecht, das Hähnchen trotzdem heiß. Respekt.');
   for(const st in REV_GEN) for(const t of REV_GEN[st]) add(+st,t,0.6);
@@ -2214,7 +2274,7 @@ function showBon(d){
   $('bBon').focus();
 }
 
-function buyPrice(p,plain){ return BUY[p]*Math.pow(1.012,S.day-1)*(1-perkOn('peter')*0.04)*(!plain&&p==='huhn'&&S.cheapNext?0.65:1); }
+function buyPrice(p,plain){ const r=recOf(p); return (BUY[p]*Math.pow(1.012,S.day-1)*(!plain&&p==='huhn'&&S.cheapNext?0.65:1)+(r?r.cost:0))*(1-perkOn('peter')*0.04); }
 function upPrice(k){ const u=UPG[k]; return Math.round(u.base*0.5*Math.pow(1.5,S.upBought[k])); }  // 50 % günstiger
 function upMaxed(k){ const u=UPG[k]; return k==='kuehl'? S.up.kuehl>=u.max : S.up[k]>=u.max; }
 
@@ -2234,11 +2294,16 @@ function showEvening(){
         <p style="font-size:13px">Die Firma hat für ${S.night.workers} Leute bestellt, alles bezahlt. Pausen um 00:00 und 03:00. Pauschale inkl. Nachtzulage <b style="color:var(--phos)">${eur(S.night.value)}</b>, fehlende Portion = Vertragsstrafe, alles geliefert = +10 %. Kein Faxe.</p>
         <p class="dim" style="font-size:12.5px;margin-top:3px">Sammelbestellung: ${P.filter(p=>S.night.tot[p]>0).map(p=>`<b style="color:var(--mayo)">${S.night.tot[p]}</b> ${EMO[p]}`).join(' · ')}</p></div>`
       :`<div class="fcrow"><h3>Prognose Tag ${S.day}</h3><span class="fc">${S.forecast.name}</span><span class="dim" style="font-size:12.5px">Darius' Wetter-App, ~80 %.${fcHint()}${isNightDay(S.day+1)?' Übermorgen Nachtschicht.':''}</span></div>`;
-    const tabs=[['up','🛠 Wagen'],['lief','🛵 Liefern'],['sab','🕵 Hinweis'],['reg','❤ Stamm'],['staff','👷 Personal'],['hist','📈 Verlauf']];
+    const tabs=[['up','🛠 Wagen'],['rez','🧪 Rezepte'],['lief','🛵 Liefern'],['sab','🕵 Hinweis'],['reg','❤ Stamm'],['staff','👷 Personal'],['hist','📈 Verlauf']];
     let tab='';
     if (EVE_TAB==='up') tab=`${Object.keys(UPG).map(k=>{ const u=UPG[k], mx=upMaxed(k), pr=upPrice(k); const lvl=k==='kuehl'?`${S.up.kuehl} Einh.`:k==='schul'?`Stufe ${S.up.schul}`:k==='spiess'||k==='rost'?`${S.up[k]} Plätze`:k==='fry'?`${S.up.fry} Plätze`:`Stufe ${S.up[k]}`;
         return `<div class="up"><div><b>${u.name}</b> <span class="dim" style="font-size:12px">· ${lvl}</span><small>${u.desc}</small></div><button class="btn sm" data-up="${k}" ${mx||S.cash<pr||(k==='schul'&&!S.auto)?'disabled':''}>${mx?'max':eur(pr)}</button></div>`; }).join('')}
         <p class="dim" style="font-size:12px">Kasse: <b style="color:var(--phos)">${eur(S.cash)}</b></p>`;
+    else if (EVE_TAB==='rez'){ const L=LOC(), night=S.forecast.id==='nacht';
+      tab=`<p class="dim" style="font-size:12.5px">Wie in Pizza Connection: Jeder Standplatz hat seinen eigenen Geschmack. Nach ${REVEAL_N} Verkäufen eines Rezepts weißt du, wie es dort ankommt. Beliebt = mehr Nachfrage, Trinkgeld und Ruf. Unbeliebt = Ruf sinkt. Der Aufpreis wird beim Wechsel automatisch auf deinen Verkaufspreis gelegt.${night?' <b style="color:#9fb6ff">Nachtschicht: Rezepte zählen erst wieder am Standplatz.</b>':''}</p>
+      <p style="font-size:12.5px">Geschmack in <b style="color:var(--mayo)">${esc(L.name)}</b>:</p>
+      ${Object.keys(RECIPES).map(p=>`<div class="rezp"><b>${EMO[p]} ${NAME[p]}</b><div class="rezo">${RECIPES[p].map(r=>{ const k=p+':'+r.id, known=tasteKnown(k,L.id), t=(LOC_TASTE[L.id]||{})[k]||0, n=(S.recSeen||{})[L.id+'|'+k]||0, on=recOf(p).id===r.id;
+          return `<button class="btn sm ${on?'on':''}" data-rez="${p}" data-rid="${r.id}" title="${esc(r.d)}"><span>${esc(r.name)}</span><small>${r.prem?`+${eur(r.prem)} · EK +${eur(r.cost)}`:'Standard'} · ${known?(t>0?'👍':t<0?'👎':'😐'):`❓ ${n}/${REVEAL_N}`}</small></button>`; }).join('')}</div></div>`).join('')}`; }
     else if (EVE_TAB==='sab') tab=sabTab();
     else if (EVE_TAB==='lief'){ const Lf=S.lief, cur=Lf.veh?VEH_ORDER.indexOf(Lf.veh):-1, lf=LOC().lief, lvl=lf>=0.8?'hoch':lf>=0.3?'mittel':'kaum';
       tab=`<p class="dim" style="font-size:12.5px">Bestellungen kommen als Zettel oben rechts. Klick packt aus der Auslage in die Tüte, „LOS“ schickt den Fahrer. Lange Fahrt = kaltes Essen = schlechte Sterne.${S.auto?' <b style="color:var(--grill)">Kloska-Autopilot packt automatisch.</b>':''}</p>
@@ -2332,6 +2397,7 @@ function showEvening(){
     $('ovEve').querySelectorAll('[id^="pp_"]').forEach(inp=>inp.onchange=()=>{ const v=parseFloat(String(inp.value).replace(',','.')); if(Number.isFinite(v)) setP(inp.dataset.p,v); draw(); });
     $('bPriceStd').onclick=()=>{ S.price=Object.fromEntries(P.map(p=>[p,locPrice(p,S.loc)])); draw(); };
     $('ovEve').querySelectorAll('[data-etab]').forEach(b=>b.onclick=()=>{ EVE_TAB=b.dataset.etab; draw(); });
+    $('ovEve').querySelectorAll('[data-rez]').forEach(b=>b.onclick=()=>{ const p=b.dataset.rez, old=recPrem(p); S.recipe[p]=b.dataset.rid; const nw=recPrem(p); S.price[p]=Math.round(clamp(pr(p)+(nw-old)*LOC().tol,PRICE[p]*0.5,PRICE[p]*2.5)*10)/10; sfx('ping'); draw(); });
     $('ovEve').querySelectorAll('[data-veh]').forEach(b=>b.onclick=()=>{ const k=b.dataset.veh, V=VEH[k]; if(S.cash<V.price) return; S.cash-=V.price; S.lief.veh=k; if(!S.lief.drv) S.lief.drv='wlod'; sfx('fanfare'); draw(); });
     $('ovEve').querySelectorAll('[data-navi]').forEach(b=>b.onclick=()=>{ if(S.cash<NAVI_PRICE) return; S.cash-=NAVI_PRICE; S.lief.navi=true; draw(); });
     $('ovEve').querySelectorAll('[data-drv]').forEach(b=>b.onclick=()=>{ const k=b.dataset.drv, D=DRV[k]; if(S.cash<D.hand) return; S.cash-=D.hand; S.lief.drv=k; draw(); });
