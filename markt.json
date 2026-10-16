@@ -1,29 +1,29 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
- "period": "2026-06",
+ "period": "2026-09",
  "fetched": "2026-10-16",
  "week": "2026-W42",
  "yoy": {
-  "food": 0.6,
-  "poultry": 5.0,
-  "pork": 1.1,
-  "beef": 7.4,
-  "meatprep": 0.8,
-  "oils": -14.1,
-  "veg": 2.5,
-  "bread": 2.1,
-  "soft": 1.9,
-  "beer": 3.6,
-  "coffee": 5.7,
-  "fuel": 11.1,
-  "diesel": 15.8,
-  "elec": -5.2,
-  "gas": -2.2
+  "food": 0.5,
+  "poultry": 3.6,
+  "pork": -3.2,
+  "beef": 3.7,
+  "meatprep": -0.4,
+  "oils": -14.5,
+  "veg": 9.0,
+  "bread": 1.9,
+  "soft": 2.0,
+  "beer": 2.8,
+  "coffee": -4.2,
+  "fuel": 36.8,
+  "diesel": 47.7,
+  "elec": -5.5,
+  "gas": -3.4
  },
  "welt": {
   "kaub": {
-   "cm": 10,
-   "ts": "2026-10-16T06:45",
+   "cm": 8,
+   "ts": "2026-10-16T11:15",
    "state": "low"
   },
   "brent": {
@@ -32,35 +32,35 @@
    "yoy": null
   },
   "suez": {
-   "avg7": 41.6,
+   "avg7": 41.7,
    "base": 72,
    "date": "2026-10-11"
   }
  },
  "hist": {
   "2026-W42": {
-   "period": "2026-06",
+   "period": "2026-09",
    "yoy": {
-    "food": 0.6,
-    "poultry": 5.0,
-    "pork": 1.1,
-    "beef": 7.4,
-    "meatprep": 0.8,
-    "oils": -14.1,
-    "veg": 2.5,
-    "bread": 2.1,
-    "soft": 1.9,
-    "beer": 3.6,
-    "coffee": 5.7,
-    "fuel": 11.1,
-    "diesel": 15.8,
-    "elec": -5.2,
-    "gas": -2.2
+    "food": 0.5,
+    "poultry": 3.6,
+    "pork": -3.2,
+    "beef": 3.7,
+    "meatprep": -0.4,
+    "oils": -14.5,
+    "veg": 9.0,
+    "bread": 1.9,
+    "soft": 2.0,
+    "beer": 2.8,
+    "coffee": -4.2,
+    "fuel": 36.8,
+    "diesel": 47.7,
+    "elec": -5.5,
+    "gas": -3.4
    },
    "welt": {
     "kaub": {
-     "cm": 10,
-     "ts": "2026-10-16T06:45",
+     "cm": 8,
+     "ts": "2026-10-16T11:15",
      "state": "low"
     },
     "brent": {
@@ -69,7 +69,7 @@
      "yoy": null
     },
     "suez": {
-     "avg7": 41.6,
+     "avg7": 41.7,
      "base": 72,
      "date": "2026-10-11"
     }
