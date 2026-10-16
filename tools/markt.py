@@ -113,7 +113,9 @@ def autobahn():
         k = (i["ab"], i["titel"], i["ort"])
         if k not in seen:
             seen.add(k); uniq.append(i)
-    return {"n": len(uniq), "voll": sum(1 for i in uniq if i["voll"]), "liste": uniq[:6]}
+    sp = [i for i in uniq if i["typ"] == "closure"]
+    return {"n": len(uniq), "baustellen": len(uniq) - len(sp), "sperrungen": len(sp),
+            "voll": sum(1 for i in uniq if i["voll"]), "liste": (sp + [i for i in uniq if i["typ"] != "closure"])[:6]}
 
 def kal():
     today = datetime.date.today()

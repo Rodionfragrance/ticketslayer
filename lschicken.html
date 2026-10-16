@@ -125,8 +125,10 @@ kbd{font-family:var(--f-disp);font-size:12px;background:var(--bg);border:1px sol
 .eve .peter{align-items:center}
 .eve .peter img{height:96px}
 .eve .speech{padding:7px 10px;font-size:13px}
-.wlg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-@media (max-width:900px){.wlg{grid-template-columns:1fr 1fr}}
+.wlg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.ek{font-size:10.5px;font-weight:700;margin-left:4px;white-space:nowrap}.ek.ekup{color:var(--ketchup,#e0533d)}.ek.ekdn{color:var(--phos)}
+#wBan{position:fixed;top:max(76px,11vh);left:50%;transform:translateX(-50%);z-index:8;max-width:min(760px,94vw);background:rgba(16,20,24,.94);border:2px solid var(--grill);padding:9px 14px;font-size:13.5px;line-height:1.5;display:flex;gap:12px;align-items:center;box-shadow:0 6px 24px rgba(0,0,0,.5);transition:opacity .4s}
+#wBan[hidden]{display:none}#wBan.out{opacity:0}
 .wl{border:1px solid #3a3a3a;padding:8px 10px;background:rgba(0,0,0,.25);font-size:12.5px;line-height:1.4}
 .wl.hot{border-color:var(--grill)}
 .wl h3{margin:0 0 4px}.wl p{margin:2px 0}.wv{color:var(--mayo)}.ws{font-size:11px}
@@ -170,6 +172,7 @@ kbd{font-family:var(--f-disp);font-size:12px;background:var(--bg);border:1px sol
 <div class="ov" id="ovOver" hidden></div>
 <div class="ov" id="ovPause" hidden></div>
 <div class="ov" id="ovInfo" hidden style="z-index:9"></div>
+<div id="wBan" hidden></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
@@ -326,7 +329,7 @@ function delGo(){
   if (dl.charge>0){ float(1150,250,'Akku lädt…',C.mayo); return; }
   if (S.zoll>0){ float(1150,250,'Zoll prüft den Fahrer',C.ketchup); return; }
   const km=Math.max(...dl.bag.map(o=>o.km));
-  let spd=V.spd*D.spd; if (S.lief.veh==='rad' && S.event.id==='regen') spd*=0.7;
+  let spd=V.spd*D.spd; if (S.lief.veh==='rad' && S.event.id==='regen') spd*=0.7; if (S.lief.veh!=='rad' && S.mkt && S.mkt.abLvl) spd*=1-S.mkt.abLvl*0.06;
   let out=(5+km*4)/spd, lost=0;
   if (DLRG() < (S.lief.navi?D.lostNavi:D.lost)){ lost=12+DLRG()*20; out+=lost; S.day_.lief.lost++; if(S.lief.drv==='wlod') bump('wlodLost');
     log(S.lief.drv==='wlod'?pick(['Wlodzimierz ruft an: Er steht vor einem Kreisverkehr. Welcher, weiß er nicht.','Wlodzimierz hat den Stadtplan falsch rum gehalten.','Wlodzimierz ist in der Sackgasse. Schon wieder.']):'Der Fahrer sucht die Adresse. Ohne Navi dauert es.'); }
@@ -375,7 +378,7 @@ const delTicket = i => ({x:DPANEL.x+6, y:DPANEL.y+22+i*46, w:DPANEL.w-12, h:42})
 const delGoBtn = () => ({x:DPANEL.x+DPANEL.w-92, y:DPANEL.y+22+LIEF_SHOW*46+12, w:86, h:30});
 const locCurve = () => LOC().curve || CURVE;
 const hoursTxt = L => `${L.open}–${(L.open+8)%24||24} Uhr`;
-const locMult = p => (S.event.mult[p]??1)*(LOC().mult[p]??1);
+const locMult = p => (S.event.mult[p]??1)*(LOC().mult[p]??1)*((S.cal&&S.cal.mult[p])||1);
 const LOC_ICON={industrie:'🏭',markt:'🧺',stadtfest:'🎪',kirmes:'🎡',wiesn:'🥨',nacht:'🌙'};
 function statLine(){ const g=avg7(), all=S.revN?S.revSum/S.revN:null;
   return `<p class="stat">Ruf <b>${Math.round(S.ruf)}</b> / 100 · Google gesamt <b>${all!=null?all.toFixed(1).replace('.',','):'–'} ★</b> · letzte 7 Tage <b>${g.n?g.avg.toFixed(1).replace('.',','):'–'} ★</b> · ${fmtN(S.revN)} Rezensionen · Standplatz <b>${esc(LOC().name)}</b></p>`; }
@@ -449,6 +452,8 @@ const weekLabel = w => 'KW '+String(w||weekId()).split('-W')[1];
 // markt.json liegt neben dem Spiel und wird wöchentlich von einer GitHub Action erneuert.
 const MKT_FALLBACK={src:'Eurostat HICP Deutschland',period:'2026-06',yoy:{food:0.6,poultry:5.0,pork:1.1,beef:7.4,meatprep:0.8,oils:-14.1,veg:2.5,bread:2.1,soft:1.9,beer:3.6,coffee:5.7,fuel:11.1,diesel:15.8,elec:-5.2,gas:-2.2},
   welt:{kaub:{cm:10,ts:'2026-10-16T06:45',state:'low'},brent:{usd:125.44,date:'2026-10-06',yoy:null},suez:{avg7:41.6,base:72,date:'2026-10-11'}}};
+const KAL_FALLBACK={feiertage:[{d:'2026-11-01',name:'Allerheiligen'},{d:'2026-12-25',name:'Erster Weihnachtstag'},{d:'2026-12-26',name:'Zweiter Weihnachtstag'},{d:'2027-01-01',name:'Neujahr'},{d:'2027-03-26',name:'Karfreitag'},{d:'2027-03-29',name:'Ostermontag'},{d:'2027-05-01',name:'Tag der Arbeit'}],
+  ferien:[{s:'2026-10-17',e:'2026-10-31',name:'Herbstferien'},{s:'2026-12-23',e:'2027-01-06',name:'Weihnachtsferien'},{s:'2027-03-22',e:'2027-04-03',name:'Osterferien'}],bl:[],autobahn:null};
 const RHEIN_P=['monster','faxe','pommes'];                                  // kommt per Binnenschiff
 const SUEZ_REC=['huhn:curry','wurst:curry','wurst:rache','salat:bowl'];     // Gewürze & Exoten aus Asien/Übersee
 const MKT_MAP={huhn:{poultry:1},haxe:{pork:1},wurst:{meatprep:1},pommes:{veg:0.6,oils:0.4},salat:{veg:1},monster:{soft:1},faxe:{beer:1}};
@@ -458,8 +463,8 @@ const MONATE=['Januar','Februar','März','April','Mai','Juni','Juli','August','S
 let MARKT=null;
 function loadMarkt(){ if(!/^https?:/.test(location.protocol)) return; fetch('markt.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{ if(j&&j.yoy) MARKT=j; }).catch(()=>{}); }
 function mktFor(week){ const M=MARKT||MKT_FALLBACK;
-  if (week && M.hist){ const ks=Object.keys(M.hist).filter(k=>k<=week).sort(); if(ks.length){ const h=M.hist[ks[ks.length-1]]; return {src:M.src,period:h.period,yoy:h.yoy,welt:h.welt||M.welt||{}}; } }
-  return {src:M.src,period:M.period,yoy:M.yoy,welt:M.welt||{}}; }
+  if (week && M.hist){ const ks=Object.keys(M.hist).filter(k=>k<=week).sort(); if(ks.length){ const h=M.hist[ks[ks.length-1]]; return {src:M.src,period:h.period,yoy:h.yoy,welt:h.welt||M.welt||{},kal:h.kal||M.kal||KAL_FALLBACK}; } }
+  return {src:M.src,period:M.period,yoy:M.yoy,welt:M.welt||{},kal:M.kal||KAL_FALLBACK}; }
 const clampN=(v,a,b)=>Math.min(b,Math.max(a,v)), r3=v=>Math.round(v*1000)/1000;
 function rheinPct(cm){ if(cm==null) return 0; if(cm>=640) return 25; if(cm<135) return Math.round(Math.min(30,(135-cm)/135*30)); return 0; }   // Kleinwasser-/Hochwasserzuschlag in %
 function mktSnap(week){ const m=mktFor(week), Y=m.yoy, W=m.welt||{}, f={}, food={}, y={}, krise=[], news=[];
@@ -478,29 +483,69 @@ function mktSnap(week){ const m=mktFor(week), Y=m.yoy, W=m.welt||{}, f={}, food=
   if (rhein) welt.push(kaub>=640?`Rhein-Hochwasser (Kaub ${kaub} cm): Schifffahrt gesperrt`:`Rhein-Niedrigwasser (Kaub ${kaub} cm): Kleinwasserzuschlag +${rhein} %`);
   if (oelkrise) welt.push(`Ölkrise: Brent ${String(brent.usd).replace('.',',')} $`);
   if (suez>1) welt.push(`Suezkanal: nur ${Math.round(W.suez.avg7)} statt ${W.suez.base} Schiffe am Tag`);
-  return {v:2,f,food,y,krise,news,welt,fracht:Math.round(fracht*10)/10,rhein,kaub,suez,energie,sprit,diesel,oelkrise,W,Y,period:m.period,src:m.src,live:!!MARKT}; }
-const mkt = () => { if (S && (!S.mkt || S.mkt.v!==2)) S.mkt=mktSnap(S.challenge?S.challenge.week:null); return S?S.mkt:mktSnap(null); };
+  const K=m.kal||KAL_FALLBACK, st=(S&&S.realStart)||todayIso(), lo=isoAdd(st,-10), hi=isoAdd(st,150);
+  const kal={feiertage:(K.feiertage||[]).filter(h=>h.d>=lo&&h.d<=hi), ferien:(K.ferien||[]).filter(f=>f.e>=lo&&f.s<=hi), bl:(K.bl||[]).filter(b=>b.d>=lo&&b.d<=hi)};
+  const A=K.autobahn||null, abN=A?(A.sperrungen??0)*3+(A.baustellen??A.n??0):0, abLvl=A?Math.min(3,Math.floor(abN/20)):0;
+  if (abLvl>=2) welt.push(`Autobahn-Chaos rund um Hamm: ${A.baustellen??A.n} Baustellen${A.sperrungen?', '+A.sperrungen+' Sperrungen':''}`);
+  return {v:3,kal,ab:A,abLvl,f,food,y,krise,news,welt,fracht:Math.round(fracht*10)/10,rhein,kaub,suez,energie,sprit,diesel,oelkrise,W,Y,period:m.period,src:m.src,live:!!MARKT}; }
+const mkt = () => { if (S && (!S.mkt || S.mkt.v!==3)) S.mkt=mktSnap(S.challenge?S.challenge.week:null); return S?S.mkt:mktSnap(null); };
 const recMkt = (p,id) => SUEZ_REC.includes(p+':'+id) ? ((S&&S.mkt&&S.mkt.suez)||1) : 1;
-const mktF = p => (S&&S.mkt&&S.mkt.v===2&&S.mkt.f[p]) || 1;
+const mktF = p => (S&&S.mkt&&S.mkt.v>=2&&S.mkt.f[p]) || 1;
 const mktPeriod = per => { const [y,mo]=String(per||'').split('-'); return mo?MONATE[+mo-1]+' '+y:String(per||''); };
 const pct = v => (v>0?'+':v<0?'−':'±')+Math.abs(v).toFixed(1).replace('.',',')+' %';
+function ekTag(p){ const M=S.mkt; if(!M||M.v<2) return ''; const f=M.f[p]||1, r=recOf(p), sz=r&&SUEZ_REC.includes(p+':'+r.id)&&M.suez>1;
+  if (Math.abs(f-1)<0.03 && !sz) return '';
+  const parts=[`Markt ${pct((M.food[p]-1)*100)}`]; if(M.fracht) parts.push(`Fracht ${pct(M.fracht)}`); if(RHEIN_P.includes(p)&&M.rhein) parts.push(`Rhein +${M.rhein} %`); if(sz) parts.push(`Suez: ${r.name}-Zutaten ×${M.suez.toFixed(2).replace('.',',')}`);
+  return ` <span class="ek ${f>=1?'ekup':'ekdn'}" title="${esc(parts.join(' · '))}">${f>=1?'▲':'▼'}${Math.round(Math.abs(f-1)*100)}%</span>`; }
 function mktBox(){ const M=S.mkt; if(!M) return '';
   const rows=P.map(p=>({p,d:M.f[p]-1})).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,4);
-  const nws=M.news.map(n=>n.v>0?`<b style="color:var(--grill)">KRISE ${MKT_LBL[n.k]||n.k} ${pct(n.v)}</b>`:`<b style="color:var(--phos)">Preissturz ${MKT_LBL[n.k]||n.k} ${pct(n.v)}</b>`).join(' · ');
+  const W=M.W||{}, tags=M.news.map(n=>n.v>0?`<b style="color:var(--grill)">${MKT_LBL[n.k]||n.k} ${pct(n.v)}</b>`:`<b style="color:var(--phos)">${MKT_LBL[n.k]||n.k} ${pct(n.v)}</b>`);
+  if (M.rhein) tags.push(`<b style="color:var(--grill)">Rhein ${W.kaub?W.kaub.cm+' cm':''}</b>`); if (M.oelkrise) tags.push(`<b style="color:var(--grill)">Öl ${Math.round(W.brent.usd)} $</b>`);
+  if (M.suez>1) tags.push(`<b style="color:var(--grill)">Suez</b>`); if (M.abLvl>=2) tags.push(`<b style="color:var(--grill)">A1/A2 Stau</b>`);
+  const nws=tags.join(' · ');
   return `<div class="mkt"><b>📈 Peters Marktbericht</b> <span class="dim">· echte Preise ${mktPeriod(M.period)}, Eurostat${M.live?'':' (gespeichert)'}${S.challenge?' · gilt für alle in '+weekLabel(S.challenge.week):''}</span><br>
-    ${rows.map(r=>`${EMO[r.p]} ${pct(r.d*100)}`).join(' · ')}${nws?'<br>'+nws:''}
-    ${M.welt&&M.welt.length?'<br><b style="color:var(--grill)">'+M.welt.map(esc).join(' · ')+'</b>':''}
-    <br><button class="btn sm" data-welt style="margin-top:4px">🌍 Weltlage & Quellen</button></div>`; }
+    ${rows.map(r=>`${EMO[r.p]} ${pct(r.d*100)}`).join(' · ')} <button class="btn sm" data-welt style="padding:1px 7px;font-size:11px">🌍 Details</button>${nws?'<br>'+nws:''}</div>`; }
+
+// ===== Echtdatum: Tag 1 = heute (Challenge: Montag der KW), Tag 2 = morgen … =====
+const todayIso = () => new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Berlin'});
+function isoAdd(iso,n){ const d=new Date(iso+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); }
+function mondayOf(iso){ const d=new Date(iso+'T12:00:00Z'); return isoAdd(iso,-((d.getUTCDay()+6)%7)); }
+const realDate = day => isoAdd((S&&S.realStart)||todayIso(), (day??S.day)-1);
+const isoDE = iso => { const d=new Date(iso+'T12:00:00Z'); return ['So','Mo','Di','Mi','Do','Fr','Sa'][d.getUTCDay()]+' '+d.getUTCDate()+'.'+(d.getUTCMonth()+1)+'.'; };
+const CLUB_N={BVB:'BVB',S04:'Schalke'};
+// DWD-Warnungen für Hamm (Bright Sky), nur im normalen Modus
+let WARN=null;
+function loadWarn(){ if(!/^https?:/.test(location.protocol)) return;
+  fetch('https://api.brightsky.dev/alerts?lat=51.68&lon=7.82').then(r=>r.ok?r.json():null).then(j=>{ if(j&&Array.isArray(j.alerts)) WARN=j.alerts.map(a=>({ev:a.event_de||a.event_en||'Warnung',sev:a.severity||'minor',on:(a.onset||'').slice(0,10),ex:(a.expires||a.onset||'').slice(0,10),head:a.headline_de||''})); }).catch(()=>{}); }
+const WARN_F={minor:1,moderate:0.85,severe:0.7,extreme:0.5};
+function calDay(day){
+  const M=mkt(), K=M.kal||KAL_FALLBACK, iso=realDate(day), L=LOC(), c={iso,cust:1,mult:{},lines:[],tags:[],short:[],ferien:null,feiertag:null,spiele:[],letzte:[],warn:null};
+  const ft=(K.feiertage||[]).find(h=>h.d===iso); if (ft){ c.feiertag=ft.name; c.cust*=L.id==='industrie'?0.45:1.3; c.short.push('🎌 '+ft.name); c.lines.push(`🎌 Feiertag: ${ft.name}${L.id==='industrie'?' · Industriegebiet wie ausgestorben':' · alle haben frei und Hunger'}`); }
+  const fe=(K.ferien||[]).find(f=>iso>=f.s&&iso<=f.e); if (fe){ c.ferien=fe.name; c.cust*=L.id==='industrie'?0.92:1.1; c.short.push('🎒 '+fe.name); c.lines.push(`🎒 ${fe.name} NRW · Max & Moritz haben Zeit`); }
+  for(const b of (K.bl||[]).filter(b=>b.d===iso)){ c.spiele.push(b); if (b.heim){ c.cust*=1.2; c.mult.faxe=(c.mult.faxe||1)*1.6; c.mult.wurst=(c.mult.wurst||1)*1.2; } else c.mult.faxe=(c.mult.faxe||1)*1.3;
+    c.short.push(`⚽ ${CLUB_N[b.club]} ${b.heim?'Heimspiel':'auswärts'} ${b.t}`); c.lines.push(`⚽ ${CLUB_N[b.club]} ${b.heim?'Heimspiel gegen':'auswärts bei'} ${b.gegner} · ${b.t} Uhr${b.heim?' · Trikots, Durst, Bratwurst':' · Public Viewing, Faxe läuft'}`); }
+  for(const cl of ['BVB','S04']){ const last=(K.bl||[]).filter(b=>b.club===cl&&b.done&&b.d<iso&&b.d>=isoAdd(iso,-3)).pop(); if(!last) continue;
+    const [a,g]=last.tore, r=a>g?'sieg':a<g?'niederlage':'remis'; c.letzte.push({...last,r});
+    if (r!=='remis'){ c.short.push(`${r==='sieg'?'😃':'😤'} ${CLUB_N[cl]} ${a}:${g}`); } if (r!=='remis') c.lines.push(`${r==='sieg'?'😃':'😤'} ${CLUB_N[cl]} hat ${a}:${g} ${r==='sieg'?'gewonnen':'verloren'} (${last.gegner})${r==='sieg'?' · gute Laune, mehr Trinkgeld':' · die Kundschaft ist gereizt'}`); }
+  if (WARN && !(S&&S.challenge)){ const ws=WARN.filter(w=>w.on<=iso&&w.ex>=iso&&WARN_F[w.sev]<1); if (ws.length){ const w=ws.sort((a,b)=>WARN_F[a.sev]-WARN_F[b.sev])[0]; c.warn=w; c.cust*=WARN_F[w.sev]; c.short.push('⚠ '+w.ev); c.lines.push(`⚠ DWD-Warnung Hamm: ${w.ev} · Kundschaft bleibt zuhause`); } }
+  c.cust=Math.round(c.cust*100)/100; return c; }
+const n0 = b => CLUB_N[b.club];
+const calMood = () => { const c=S&&S.cal; if(!c) return 0; return c.letzte.reduce((a,l)=>a+(l.r==='sieg'?1:l.r==='niederlage'?-1:0),0); };
 
 // ===== Darius' Wetter-App: echtes Wetter in Hamm (Open-Meteo, ohne Schlüssel) =====
 let WETTER=null;
 function loadWetter(){ if(!/^https?:/.test(location.protocol)) return;
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=51.68&longitude=7.82&daily=temperature_2m_max,precipitation_sum,weather_code&timezone=Europe%2FBerlin&forecast_days=7')
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=51.68&longitude=7.82&daily=temperature_2m_max,precipitation_sum,weather_code,sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=7')
     .then(r=>r.ok?r.json():null).then(j=>{ const d=j&&j.daily; if(!d||!d.time||!d.time.length) return;
-      WETTER=d.time.map((t,i)=>({d:t,t:d.temperature_2m_max[i],r:d.precipitation_sum[i]||0,c:d.weather_code[i]||0})); }).catch(()=>{}); }
+      WETTER=d.time.map((t,i)=>({d:t,t:d.temperature_2m_max[i],r:d.precipitation_sum[i]||0,c:d.weather_code[i]||0,sr:(d.sunrise||[])[i]||null,ss:(d.sunset||[])[i]||null})); }).catch(()=>{}); }
+const hm = s => { if(!s) return null; const t=String(s).slice(11,16).split(':'); return +t[0]*60+ +t[1]; };
+function darkness(){ if(!S||isNight()||!WETTER) return 0; const w=WETTER.find(x=>x.d===realDate(S.day)); if(!w||!w.sr||!w.ss) return 0;
+  const clock=LOC().open*60+S.time/DAYLEN*480, sr=hm(w.sr), ss=hm(w.ss);
+  return clock<sr ? clampN((sr-clock)/40,0,1) : clock>ss ? clampN((clock-ss)/40,0,1) : 0; }
 function wxEvent(w){ const id = w.r>=3||(w.c>=61&&w.r>=1) ? 'regen' : w.t>=29 ? 'hitze' : (w.t>=20&&w.c<=2) ? 'sonne' : 'normal'; return EVENTS.find(e=>e.id===id)||EVENTS[0]; }
 function realForecast(){ if(!WETTER||!S||S.challenge) return null;            // Wochen-Challenge bleibt deterministisch
-  const w=WETTER[(S.day-1)%WETTER.length]; return {...wxEvent(w), wx:{d:w.d,t:Math.round(w.t),r:Math.round(w.r*10)/10,c:w.c}}; }
+  const w=WETTER.find(x=>x.d===realDate(S.day))||WETTER[(S.day-1)%WETTER.length]; return {...wxEvent(w), wx:{d:w.d,t:Math.round(w.t),r:Math.round(w.r*10)/10,c:w.c}}; }
+function calHint(){ if(!S||S.forecast.id==='nacht') return ''; const c=calDay(S.day); return c.short.length?'<br>'+c.short.map(esc).join(' · ')+(c.cust!==1?` · Kundschaft ×${c.cust.toFixed(2).replace('.',',')}`:''):''; }
 function wxTxt(){ const x=S.forecast.wx; if(!x) return "Darius' Wetter-App, ~80 %.";
   const dt=new Date(x.d+'T12:00:00'), tag=['So','Mo','Di','Mi','Do','Fr','Sa'][dt.getDay()]+' '+dt.getDate()+'.'+(dt.getMonth()+1)+'.';
   const far=LOC().id==='wiesn'?' Darius hat die App nie auf München umgestellt.':'';
@@ -845,6 +890,7 @@ function newRun(mode){
   const wk=weekId();
   S = {
     challenge: mode==='week' ? {week:wk, seed:'LSC-'+wk} : null,
+    realStart: mode==='week' ? mondayOf(todayIso()) : todayIso(),
     loc:0, locMax:0, lief:{veh:null,navi:false,drv:null,on:true},
     day:1, cash:400, ruf:60, time:0, phase:'day', combo:0, recipe:{}, recSeen:{},
     stock:{huhn:[{q:12,age:0,cheap:false}],haxe:[{q:3,age:0,cheap:false}],wurst:[{q:20,age:0,cheap:false}],pommes:[{q:30,age:0,cheap:false}],salat:[{q:6,age:0,cheap:false}],monster:[{q:12,age:0,cheap:false}],faxe:[{q:12,age:0,cheap:false}]},
@@ -862,7 +908,6 @@ function newRun(mode){
   };
   if (!S.challenge){ S.cash+=perkLvl('kapital')*100; S.ruf=Math.min(100,S.ruf+perkLvl('ruf')*5); S.stock.huhn[0].q+=perkLvl('lager')*4; S.stock.haxe[0].q+=perkLvl('lager'); S.up.fry=2+perkLvl('fry'); S.up.schul=perkLvl('schul'); }
   S.mkt=mktSnap(S.challenge?S.challenge.week:null);
-  for(const t of S.mkt.welt) log('🌍 Weltlage: '+t+'.');
   STORE.life.runs++; setLocalRun(slotOf(S),null); fbRunStart(slotOf(S));
   startDay(true); saveDayStart();
 }
@@ -889,7 +934,10 @@ function takeStock(p,n){
 function startDay(first){
   S.phase='day'; S.time=0; S.queue=[]; S.spawnAcc=0; S.raid=null;
   S.day_ = newDayStats();
-  if (S.order){ for(const p of P){ if(S.order[p]>0) S.stock[p].push({q:S.order[p],age:0,cheap:p==='huhn'&&S.cheapNext}); } }
+  S.cal = isNight() ? null : calDay(S.day); S.lateOrder=null;
+  const lateF = (S.mkt&&S.mkt.abLvl>=2) ? (S.mkt.abLvl>=3?0.35:0.2) : 0;
+  if (S.order){ const late={}; for(const p of P){ if(S.order[p]>0){ const lq=Math.floor(S.order[p]*lateF); if(lq>0) late[p]=lq; S.stock[p].push({q:S.order[p]-lq,age:0,cheap:p==='huhn'&&S.cheapNext}); } }
+    if (Object.keys(late).length) S.lateOrder={t:DAYLEN*0.3, items:late, cheap:!!S.cheapNext}; }
   S.order=null;
   if (isNightDay(S.day)){
     S.event = NIGHT;
@@ -900,6 +948,7 @@ function startDay(first){
   S.raids=[];
   { const rg=dayRng('raid'); if (!isNight() && S.day>=3 && rg()< Math.min(0.85,0.45+S.day*0.03)){ const n = S.day>=10 && rg()<0.5 ? 2 : 1; for(let i=0;i<n;i++) S.raids.push(rndR(rg,40,DAYLEN-30)); } S.raids.sort((a,b)=>a-b); }
   S.teases=[]; S.tease=null; S.mmRun=null; S.mmFree=0;
+  if (S.cal && S.cal.ferien && S.day>=2){ const rg=dayRng('ferien'); if (rg()<0.6){ S.raids.push(rndR(rg,40,DAYLEN-30)); S.raids.sort((a,b)=>a-b); } }   // Schulferien: die Bengel haben Zeit
   { const rg=dayRng('tease'); if (!isNight() && S.day>=4 && rg()<0.6){ S.teases.push(rndR(rg,30,DAYLEN-30)); if(S.day>=12&&rg()<0.4) S.teases.push(rndR(rg,30,DAYLEN-30)); } S.teases.sort((a,b)=>a-b); }
   S.kl={x:1010,job:null,t:0}; S.jobs=[]; S.ask=null; S.fire=null; S.rush=[];
   { const rg=dayRng('fire'); S.fireAt = S.day>=2 && rg()<Math.min(0.8,0.35+S.day*0.03) ? rndR(rg,35,DAYLEN-40) : null; }
@@ -913,6 +962,7 @@ function startDay(first){
   const sabLog = S.sabNext ? true : false;
   log(isNight()?`Nachtschicht Lagerhalle: ${S.night.workers} Leute, ${S.night.portions} Portionen bestellt und bezahlt. Pausen um 00:00 und 03:00.`:`Tag ${S.day} · ${LOC().name}: ${S.event.name}`);
   if (sabLog && !S.challenge) sabApply();
+  showBanner(first);
   S.day_.tasks=makeTasks(); S.day_.comboMax=0;
   setTimeout(()=>voice(isNight()?'nacht':'start'),600);
   hideAll(); paused=false;
@@ -1009,7 +1059,7 @@ function recordBest(){
 /* ===================== Kundschaft ===================== */
 const CURVE=[0.6,0.9,1.7,1.5,0.8,0.7,1.0,1.4]; const CMEAN=CURVE.reduce((a,b)=>a+b)/CURVE.length;
 const baseCust = d => 10 + Math.min(d,20)*1.2 + Math.max(0,d-20)*0.5;   // Grundmenge Kunden pro Tag
-function custPerDay(){ return baseCust(S.day) * S.event.cust * LOC().cust * (0.5+S.ruf/100) * (1+S.up.schild*0.12) * custMult(); }
+function custPerDay(){ return baseCust(S.day) * S.event.cust * ((S.cal&&S.cal.cust)||1) * LOC().cust * (0.5+S.ruf/100) * (1+S.up.schild*0.12) * custMult(); }
 function weightOf(p,base){ const t=taste(p); return base*locMult(p)*demandMult(p)*(t>0?1.35:t<0?0.7:1); }
 function makeOrder(rg=Math.random){
   const o={};
@@ -1293,6 +1343,7 @@ function update(dt){
   if (isNight()) spawnNight();
   else { spawnPlanned(); spawnRegulars(); }
   updateLief(dt);
+  if (S.lateOrder && S.time>=S.lateOrder.t){ const L=S.lateOrder; S.lateOrder=null; for(const p in L.items) S.stock[p].push({q:L.items[p],age:0,cheap:p==='huhn'&&L.cheap}); log(`🚚 Peter ist aus dem Stau auf der A2 raus: Rest der Lieferung ist da (${Object.entries(L.items).map(([p,q])=>q+' '+EMO[p]).join(' ')}).`); sayM('PETER! Wo warst du?! Ah. Autobahn. Natürlich.'); }
   S.taskT=(S.taskT||0)-dt; if(S.taskT<=0){ S.taskT=0.5; taskTick(false); }
   if (S.hilfe && !(S.zoll>0)) S.rost.forEach((w,i)=>{ if(!w||w.burnt||w.side!==1||w.t<WURST.side) return; if(w.hd==null) w.hd=0.4+Math.random()*1.2; if(w.t>=WURST.side+w.hd){ clickRost(i); S.hilfeT=S.time; const r=slotRost(i); float(r.x+r.w/2,r.y-8,'gewendet',C.phos); } });
   if (S.zollAt!=null && S.time>=S.zollAt){ S.zollAt=null; S.zoll=S.zollDur; sfx('horn'); sayM('ZOLL?! Kloska, wo sind die Stundenzettel?'); voice('zoll'); log('Zoll, Kontrolle Schwarzarbeit: Kloska und der Fahrer zeigen Papiere. Der Tresen steht.'); }
@@ -1479,6 +1530,7 @@ function render(){
       ctx.save(); ctx.globalCompositeOperation='lighter';
       for(const [lx,ly] of [[1180,90],[60,80]]){ const g=ctx.createRadialGradient(lx,ly,0,lx,ly+260,360); g.addColorStop(0,'rgba(255,150,50,.22)'); g.addColorStop(1,'rgba(255,150,50,0)'); ctx.fillStyle=g; ctx.fillRect(lx-360,0,720,720); }
       ctx.restore(); } }
+  { const dk=darkness(); if (dk>0){ ctx.fillStyle=`rgba(8,12,40,${(0.5*dk).toFixed(3)})`; ctx.fillRect(0,0,W,H); } }   // echte Dämmerung in Hamm
   // Kundenstopper (Deko) unten links vor dem Kaffeeautomaten
   { const ai=IMG.aufsteller; if (ai&&ai.complete&&ai.naturalWidth){ const h=96, w=ai.naturalWidth*h/ai.naturalHeight, x=8, y=658-h;
       ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(x+w/2,656,w*0.48,5,0,0,7); ctx.fill();
@@ -1949,15 +2001,27 @@ document.addEventListener('visibilitychange',()=>{ if(document.hidden && S && S.
 const $=id=>document.getElementById(id);
 /* ===== Info-Fenster: Rangliste, Trophäen, Statistik jederzeit ===== */
 const INFO_BTN='<button class="btn sm" data-info title="Rangliste, Trophäen und Statistik">📊 Rangliste & Trophäen</button><button class="btn sm" data-welt title="Echte Preise, Rhein, Öl, Suez, Wetter">🌍 Weltlage</button>';
+let BAN_T=null;
+function showBanner(first){
+  const b=$('wBan'); if(!b||!S) return; const M=mkt(), lines=[];
+  if (first){ const W=M.W||{}; const bits=[];
+    if (W.kaub) bits.push(`🚢 Rhein ${W.kaub.cm} cm`); if (W.brent) bits.push(`🛢 Brent ${Math.round(W.brent.usd)} $`); if (M.diesel) bits.push(`⛽ Diesel ${pct(M.diesel)}`); if (M.abLvl) bits.push(`🚧 ${M.ab.baustellen??M.ab.n} Baustellen`);
+    if (bits.length) lines.push(bits.join(' · ')+(M.welt.length||M.fracht>5?' · Peter wird teuer':'')); }
+  if (S.cal) for(const l of S.cal.lines) lines.push(l);
+  if (S.lateOrder) lines.push(`🚚 Peter steckt im Stau: ${Math.round(Object.values(S.lateOrder.items).reduce((a,b)=>a+b,0))} Teile kommen später`);
+  if (!lines.length) return;
+  b.innerHTML=`<div>${lines.map(esc).join('<br>')}</div><button class="btn sm" data-welt>🌍 Weltlage</button>`;
+  b.hidden=false; b.classList.remove('out'); clearTimeout(BAN_T); BAN_T=setTimeout(()=>{ b.classList.add('out'); setTimeout(()=>{ b.hidden=true; },400); }, 3800+lines.length*900);
+}
 function showWelt(){
   const o=$('ovInfo'), M=mkt(), W=M.W||{}, Y=M.Y||{}, x=v=>'×'+v.toFixed(2).replace('.',','), d=s=>{ if(!s) return '–'; const [Y_,m,dd]=String(s).slice(0,10).split('-'); return `${+dd}.${+m}.${Y_}`; };
   const card=(ico,title,real,eff,src,hot)=>`<div class="wl${hot?' hot':''}"><h3>${ico} ${title}</h3><p class="wv">${real}</p><p class="we">${eff}</p><p class="ws dim">${src}</p></div>`;
   const prod=P.map(p=>`<tr><td>${EMO[p]} ${NAME[p]}</td><td>${pct(M.y[p]||0)}</td><td>${x(M.food[p]||1)}</td><td><b>${x(M.f[p]||1)}</b></td></tr>`).join('');
   const k=W.kaub, b=W.brent, z=W.suez;
-  const wx=WETTER&&!(S&&S.challenge)?WETTER.map(w=>{ const e=wxEvent(w), dt=new Date(w.d+'T12:00:00'); return `<tr><td>${['So','Mo','Di','Mi','Do','Fr','Sa'][dt.getDay()]} ${dt.getDate()}.${dt.getMonth()+1}.</td><td>${Math.round(w.t)}°</td><td>${String(Math.round(w.r*10)/10).replace('.',',')} mm</td><td>${e.name}</td></tr>`; }).join(''):'';
+  const wx=WETTER&&!(S&&S.challenge)?WETTER.map(w=>{ const e=wxEvent(w); return `<tr><td>${isoDE(w.d)}</td><td>${Math.round(w.t)}°</td><td>${String(Math.round(w.r*10)/10).replace('.',',')} mm</td><td>${w.sr?String(w.sr).slice(11,16)+'–'+String(w.ss).slice(11,16):''}</td><td>${e.name}</td></tr>`; }).join(''):'';
   o.innerHTML=`<div class="card" style="max-width:1100px"><div class="stack">
     <div class="row" style="justify-content:space-between;align-items:center"><h2>🌍 WELTLAGE · ECHTE DATEN</h2><button class="btn go sm" id="bWeltX">Schließen ✕</button></div>
-    <p class="dim" style="font-size:12.5px">Alles hier ist echt und wird jede Woche neu geholt. Peter rechnet die echte Teuerung ×${String(MKT_AMP).replace('.',',')} hoch, damit man sie spürt.${S&&S.challenge?` <b style="color:var(--mayo)">Wochen-Challenge: Alle spielen mit den Werten aus ${weekLabel(S.challenge.week)}, Wetter bleibt Zufall.</b>`:S?' Dein Run behält die Werte vom Start.':' Gilt für den nächsten Run.'}${M.live?'':' (Gespeicherte Werte, aktuelle Datei nicht erreichbar.)'}</p>
+    <p class="dim" style="font-size:12.5px">Alles hier ist echt und wird jeden Tag neu geholt. Peter rechnet die echte Teuerung ×${String(MKT_AMP).replace('.',',')} hoch, damit man sie spürt.${S&&S.challenge?` <b style="color:var(--mayo)">Wochen-Challenge: Alle spielen mit den Werten aus ${weekLabel(S.challenge.week)}, Wetter bleibt Zufall.</b>`:S?' Dein Run behält die Werte vom Start.':' Gilt für den nächsten Run.'}${M.live?'':' (Gespeicherte Werte, aktuelle Datei nicht erreichbar.)'}</p>
     <div class="wlg">
       ${card('⛽','Diesel & Öl',`Diesel ${pct(M.diesel)} zum Vorjahr${b?` · Brent ${String(b.usd).replace('.',',')} $/Barrel (${d(b.date)})${b.yoy!=null?' '+pct(b.yoy):''}`:''}`,
         `Peters Frachtzuschlag ${pct(M.fracht)} auf alles · Sprit Lieferdienst ${x(M.sprit)}${M.oelkrise?' · <b>Ölkrise</b> ab 100 $':''}`,'Eurostat HICP · FRED/EIA',M.oelkrise)}
@@ -1965,16 +2029,23 @@ function showWelt(){
         M.rhein?`Kleinwasserzuschlag +${M.rhein} % auf ${RHEIN_P.map(p=>EMO[p]).join(' ')} (Getränke, Kartoffeln & Öl kommen per Schiff)`:'Kein Zuschlag. Unter 135 cm wird es teuer.','Pegelonline · Wasserstraßen- und Schifffahrtsverwaltung',!!M.rhein)}
       ${card('🌊','Suezkanal',z?`⌀ ${String(z.avg7).replace('.',',')} Schiffe pro Tag (bis ${d(z.date)}) · normal ~${z.base}`:'keine Daten',
         M.suez>1?`Container fahren ums Kap: Curry, Habanero und Bowl-Zutaten ${x(M.suez)} im Einkauf`:'Gewürze normal.','IMF PortWatch',M.suez>1)}
+      ${(()=>{ const A=M.ab; return card('🚧','Autobahn A1 · A2 · A44 · A445',A?`${A.baustellen??A.n} Baustellen${A.sperrungen?', '+A.sperrungen+' Sperrungen':''} rund um Hamm, Unna, Werl`:'keine Daten',
+        M.abLvl>=2?`Peter steckt im Stau: ${M.abLvl>=3?35:20} % der Bestellung kommt erst mittags · Lieferdienst ${M.abLvl*6} % langsamer`:M.abLvl?`Lieferdienst ${M.abLvl*6} % langsamer`:'Freie Fahrt.',
+        'Autobahn GmbH des Bundes'+(A&&A.liste&&A.liste[0]?' · z. B. '+esc(A.liste[0].titel):''),M.abLvl>=2); })()}
+      ${(()=>{ const w=WARN&&WARN.filter(x=>WARN_F[x.sev]<1); return card('⚠','DWD-Warnungen Hamm',w&&w.length?w.map(x=>esc(x.ev)+' ('+d(x.on)+')').join(' · '):WARN?'Keine Warnung.':'nicht erreichbar',
+        w&&w.length?'Kundschaft bleibt zuhause: −15 % bis −50 % am betroffenen Tag':'Bei Sturm, Gewitter, Glätte bleiben die Kunden weg.','Deutscher Wetterdienst über Bright Sky',!!(w&&w.length)); })()}
       ${card('🔥','Gas & Strom',`Gas ${pct(Y.gas??0)} · Strom ${pct(Y.elec??0)} zum Vorjahr`,`„Gas & Strom“ am Wagen ${x(M.energie)}`,'Eurostat HICP',M.energie>1.1)}
     </div>
+    ${(()=>{ if(!S) return ''; const rows=[]; for(let i=0;i<7;i++){ const day=S.day+i, c=calDay(day); rows.push(`<tr><td>Tag ${day}</td><td>${isoDE(c.iso)}</td><td style="text-align:left">${c.lines.length?c.lines.map(esc).join('<br>'):'<span class="dim">nichts Besonderes</span>'}</td><td>${c.cust!==1?'×'+c.cust.toFixed(2).replace('.',','):''}</td></tr>`); }
+      return `<h3>📅 Kalender · Feiertage, Schulferien NRW, BVB & Schalke</h3><div class="tbl"><table><thead><tr><th>Spiel</th><th>echt</th><th style="text-align:left">Was ist los</th><th>Kunden</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`; })()}
     <div class="grid2">
       <div class="stack"><h3>Lebensmittel · ${mktPeriod(M.period)}</h3>
         <div class="tbl"><table><thead><tr><th>Ware</th><th>echt</th><th>Markt</th><th>EK gesamt</th></tr></thead><tbody>${prod}</tbody></table></div>
         <p class="dim" style="font-size:12px">„EK gesamt“ = Markt × Frachtzuschlag × Rhein. ${M.news.map(n=>`${MKT_LBL[n.k]||n.k} ${pct(n.v)}`).join(' · ')}</p></div>
       <div class="stack"><h3>Darius' Wetter-App · Hamm</h3>
-        ${wx?`<div class="tbl"><table><thead><tr><th>Tag</th><th>max</th><th>Regen</th><th>im Spiel</th></tr></thead><tbody>${wx}</tbody></table></div><p class="dim" style="font-size:12px">Tag 2 im Spiel ist morgen, Tag 3 übermorgen, nach 7 Tagen von vorn.</p>`
+        ${wx?`<div class="tbl"><table><thead><tr><th>Tag</th><th>max</th><th>Regen</th><th>Sonne</th><th>im Spiel</th></tr></thead><tbody>${wx}</tbody></table></div><p class="dim" style="font-size:12px">Tag 2 im Spiel ist morgen, Tag 3 übermorgen. Nach Sonnenuntergang wird es am Wagen dunkel.</p>`
           :`<p class="dim" style="font-size:13px">${S&&S.challenge?'In der Wochen-Challenge würfelt Darius. Fair bleibt fair.':'Wetterdaten nicht erreichbar. Darius rät.'}</p>`}
-        <p class="dim" style="font-size:11.5px">Quellen: Eurostat (HICP Deutschland, Veränderung zum Vorjahresmonat), Pegelonline WSV, FRED/EIA (Brent), IMF PortWatch (Suez), Open-Meteo (Wetter). Stand Datei: ${esc((MARKT&&MARKT.fetched)||'eingebaut')}.</p></div>
+        <p class="dim" style="font-size:11.5px">Quellen: Eurostat (HICP Deutschland), Pegelonline WSV, FRED/EIA (Brent), IMF PortWatch (Suez), Autobahn GmbH, Nager.Date (Feiertage), OpenHolidays (Schulferien), OpenLigaDB (Bundesliga), DWD über Bright Sky, Open-Meteo (Wetter, Sonne). Stand Datei: ${esc((MARKT&&MARKT.fetched)||'eingebaut')}.</p></div>
     </div></div></div>`;
   fixDigits(o); o.hidden=false; o.scrollTop=0;
   $('bWeltX').onclick=()=>{ o.hidden=true; };
@@ -2268,6 +2339,14 @@ function genReviews(d){
     if (pi<0.88) add(5,'Für den Preis kriegt man woanders nicht mal eine Serviette. Fünf Sterne, nehmt mehr Geld!',3);
     if (pRatio('faxe')<0.85) add(5,'Faxe so günstig, wir sind direkt geblieben. Der Schützenverein kommt jetzt immer.',2); }
   for(const [st,t] of (REV_LOC[LOC().id]||[])) add(st,t,1.5);
+  if (S.cal){ const C=S.cal;
+    for(const l of C.letzte){ const n=CLUB_N[l.club], sc=l.tore.join(':');
+      if (l.r==='niederlage'){ add(1,`${n} verliert ${sc} und die Pommes sind lauwarm. Schlimmstes Wochenende des Jahres.`,3); add(2,`Nach dem ${sc} gegen ${l.gegner} schmeckt nichts. Auch nicht das Hähnchen. Liegt aber nicht am Hähnchen.`,2); }
+      if (l.r==='sieg'){ add(5,`${n} gewinnt ${sc}, ich geb einen aus. Maddin hat sogar gelächelt. Fast.`,3); add(5,`Nach dem ${sc} gegen ${l.gegner}: Bratwurst schmeckt nach Champions League.`,2); } }
+    for(const b of C.spiele) add(b.heim?4:5, b.heim?`Vor dem ${n0(b)}-Spiel schnell noch eine Wurst. Schlange war lang, aber es hat sich gelohnt.`:`Auswärtsspiel auf dem Handy, Faxe in der Hand, Hähnchen auf dem Schoß. Perfekter Samstag.`,2);
+    if (C.feiertag) add(4,`${C.feiertag} und der Wagen hat auf. Ehrenmann, Maddin.`,2);
+    if (C.ferien) add(3,`${C.ferien}. Zwei Jungs haben die Ketchupflasche erobert. Personal war machtlos.`,2);
+    if (C.warn) add(4,`${C.warn.ev} und trotzdem gegrillt. Die Markise hat gekämpft wie ein Löwe.`,2); }
   if (d.rec) for(const k in d.rec){ const [p,id]=k.split(':'), r=(RECIPES[p]||[]).find(x=>x.id===id); if(!r||id==='klassik') continue; const t=(LOC_TASTE[LOC().id]||{})[k]||0, w=Math.min(3,1+d.rec[k]/5);
     const T=REC_REV[k]; if(!T) continue; add(t>0?5:t<0?2:4, T[t>0?0:t<0?2:1], w); }
   if (S.event.id==='sonne') add(4,'Sonne, Salat, Monster. Bin jetzt Influencer.');
@@ -2397,7 +2476,7 @@ function showEvening(){
     const fcBox = S.forecast.id==='nacht'&&S.night?`<div class="night"><h3>Morgen: Nachtschicht Lagerhalle</h3>
         <p style="font-size:13px">Die Firma hat für ${S.night.workers} Leute bestellt, alles bezahlt. Pausen um 00:00 und 03:00. Pauschale inkl. Nachtzulage <b style="color:var(--phos)">${eur(S.night.value)}</b>, fehlende Portion = Vertragsstrafe, alles geliefert = +10 %. Kein Faxe.</p>
         <p class="dim" style="font-size:12.5px;margin-top:3px">Sammelbestellung: ${P.filter(p=>S.night.tot[p]>0).map(p=>`<b style="color:var(--mayo)">${S.night.tot[p]}</b> ${EMO[p]}`).join(' · ')}</p></div>`
-      :`<div class="fcrow"><h3>Prognose Tag ${S.day}</h3><span class="fc">${S.forecast.name}</span><span class="dim" style="font-size:12.5px">${wxTxt()}${fcHint()}${isNightDay(S.day+1)?' Übermorgen Nachtschicht.':''}</span></div>`;
+      :`<div class="fcrow"><h3>Prognose Tag ${S.day}</h3><span class="fc">${S.forecast.name}</span><span class="dim" style="font-size:12.5px">${wxTxt()}${fcHint()}${calHint()}${isNightDay(S.day+1)?' Übermorgen Nachtschicht.':''}</span></div>`;
     const tabs=[['up','🛠 Wagen'],['rez','🧪 Rezepte'],['lief','🛵 Liefern'],['sab','🕵 Hinweis'],['reg','❤ Stamm'],['staff','👷 Personal'],['hist','📈 Verlauf']];
     let tab='';
     if (EVE_TAB==='up') tab=`${Object.keys(UPG).map(k=>{ const u=UPG[k], mx=upMaxed(k), pr=upPrice(k); const lvl=k==='kuehl'?`${S.up.kuehl} Einh.`:k==='schul'?`Stufe ${S.up.schul}`:k==='spiess'||k==='rost'?`${S.up[k]} Plätze`:k==='fry'?`${S.up.fry} Plätze`:`Stufe ${S.up[k]}`;
@@ -2451,7 +2530,7 @@ function showEvening(){
           <td>${avg(p).toFixed(1)}</td>
           <td>${stockCount(p)}${S.stock[p].some(b=>b.age>=SPOIL[p]-1)?' <span style="color:var(--ketchup)" title="Läuft bald ab">!</span>':''}</td>
           <td><div class="row" style="gap:3px;flex-wrap:nowrap;justify-content:flex-end"><button class="btn sm" data-q="${p}" data-d="-5">−5</button><button class="btn sm" data-q="${p}" data-d="-1">−</button><input class="qty" id="q_${p}" data-p="${p}" inputmode="numeric" value="${S.order[p]}"><button class="btn sm" data-q="${p}" data-d="1">+</button><button class="btn sm" data-q="${p}" data-d="5">+5</button></div></td>
-          <td>${eur(buyPrice(p))}</td></tr>`).join('')}</tbody></table></div>
+          <td style="white-space:nowrap">${eur(buyPrice(p))}${ekTag(p)}</td></tr>`).join('')}</tbody></table></div>
       <label class="tog"><input type="checkbox" id="cbCheap" ${S.cheapNext?'checked':''}><span><b>Peters Sonderposten-Hühner</b> (−35 %). Manche Kunden merken es. Ruf leidet.</span></label>
       <div title="Haltbarkeit roh: Salat 2 Tage, Hühner und Haxen 4, Würste 5, Pommes 7. Getränke halten ewig."><div class="row" style="justify-content:space-between"><span class="dim" style="font-size:13px">Kühlung nach Lieferung <span style="cursor:help">ⓘ</span></span><span style="font-size:13px">${stockTotal()+ordered} / ${S.up.kuehl}</span></div>
         <div class="bar ${ordered>space?'warn':''}"><i style="width:${Math.min(100,(stockTotal()+ordered)/S.up.kuehl*100)}%"></i></div></div>
@@ -2565,7 +2644,7 @@ function recordBestSafe(){ /* bereits in endDay erfasst */ }
 /* ===================== Hot reload & Start ===================== */
 window.claude?.hot?.snapshot?.(()=>({S, phase:S&&S.phase}));
 function boot(data){
-  fit(); fbLoadMine(); loadMarkt(); loadWetter();
+  fit(); fbLoadMine(); loadMarkt(); loadWetter(); loadWarn();
   if (data && data.S){ S=data.S; if(S.phase==='day'){ hideAll(); togglePause(true); } else if(S.phase==='evening') showEvening(); else showTitle(); }
   else if (IN_TS && (!tsAccess() || !PLAYER)) showGate();
   else showTitle();
