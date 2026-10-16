@@ -125,6 +125,11 @@ kbd{font-family:var(--f-disp);font-size:12px;background:var(--bg);border:1px sol
 .eve .peter{align-items:center}
 .eve .peter img{height:96px}
 .eve .speech{padding:7px 10px;font-size:13px}
+.wlg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:900px){.wlg{grid-template-columns:1fr 1fr}}
+.wl{border:1px solid #3a3a3a;padding:8px 10px;background:rgba(0,0,0,.25);font-size:12.5px;line-height:1.4}
+.wl.hot{border-color:var(--grill)}
+.wl h3{margin:0 0 4px}.wl p{margin:2px 0}.wv{color:var(--mayo)}.ws{font-size:11px}
 .mkt{font-size:12px;line-height:1.45;border:1px solid #3a3a3a;padding:5px 8px;background:rgba(0,0,0,.25)}
 .eve .fcrow{display:flex;gap:4px 12px;align-items:baseline;flex-wrap:wrap}
 .eve .fc{font-size:15px}
@@ -442,30 +447,50 @@ const weekLabel = w => 'KW '+String(w||weekId()).split('-W')[1];
 
 // ===== Peters Marktbericht: echte Preisentwicklung (Eurostat HICP, DE) =====
 // markt.json liegt neben dem Spiel und wird wöchentlich von einer GitHub Action erneuert.
-const MKT_FALLBACK={src:'Eurostat HICP Deutschland',period:'2026-06',yoy:{food:0.6,poultry:5.0,pork:1.1,beef:7.4,meatprep:0.8,oils:-14.1,veg:2.5,bread:2.1,soft:1.9,beer:3.6,coffee:5.7}};
+const MKT_FALLBACK={src:'Eurostat HICP Deutschland',period:'2026-06',yoy:{food:0.6,poultry:5.0,pork:1.1,beef:7.4,meatprep:0.8,oils:-14.1,veg:2.5,bread:2.1,soft:1.9,beer:3.6,coffee:5.7,fuel:11.1,diesel:15.8,elec:-5.2,gas:-2.2},
+  welt:{kaub:{cm:10,ts:'2026-10-16T06:45',state:'low'},brent:{usd:125.44,date:'2026-10-06',yoy:null},suez:{avg7:41.6,base:72,date:'2026-10-11'}}};
+const RHEIN_P=['monster','faxe','pommes'];                                  // kommt per Binnenschiff
+const SUEZ_REC=['huhn:curry','wurst:curry','wurst:rache','salat:bowl'];     // Gewürze & Exoten aus Asien/Übersee
 const MKT_MAP={huhn:{poultry:1},haxe:{pork:1},wurst:{meatprep:1},pommes:{veg:0.6,oils:0.4},salat:{veg:1},monster:{soft:1},faxe:{beer:1}};
-const MKT_LBL={food:'Lebensmittel',poultry:'Geflügel',pork:'Schweinefleisch',beef:'Rindfleisch',meatprep:'Wurstwaren',oils:'Speiseöl',veg:'Gemüse',bread:'Brot',soft:'Softdrinks',beer:'Bier',coffee:'Kaffee'};
+const MKT_LBL={fuel:'Kraftstoff',diesel:'Diesel',elec:'Strom',gas:'Gas',food:'Lebensmittel',poultry:'Geflügel',pork:'Schweinefleisch',beef:'Rindfleisch',meatprep:'Wurstwaren',oils:'Speiseöl',veg:'Gemüse',bread:'Brot',soft:'Softdrinks',beer:'Bier',coffee:'Kaffee'};
 const MKT_AMP=2.5, MKT_KRISE=8;          // Peter schlägt echte Teuerung ×2,5 drauf. Ab ±8 % ist Krise.
 const MONATE=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 let MARKT=null;
 function loadMarkt(){ if(!/^https?:/.test(location.protocol)) return; fetch('markt.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{ if(j&&j.yoy) MARKT=j; }).catch(()=>{}); }
 function mktFor(week){ const M=MARKT||MKT_FALLBACK;
-  if (week && M.hist){ const ks=Object.keys(M.hist).filter(k=>k<=week).sort(); if(ks.length){ const h=M.hist[ks[ks.length-1]]; return {src:M.src,period:h.period,yoy:h.yoy}; } }
-  return {src:M.src,period:M.period,yoy:M.yoy}; }
-function mktSnap(week){ const m=mktFor(week), f={}, y={}, krise=[], news=[];
-  for(const p of P){ const mp=MKT_MAP[p]||{}; let v=0,w=0; for(const k in mp) if(m.yoy[k]!=null){ v+=m.yoy[k]*mp[k]; w+=mp[k]; }
-    v=w?v/w:0; let x=1+v/100*MKT_AMP; if(Object.keys(mp).some(k=>(m.yoy[k]||0)>=MKT_KRISE)){ x*=1.15; krise.push(p); }
-    y[p]=Math.round(v*10)/10; f[p]=Math.round(Math.min(1.5,Math.max(0.7,x))*1000)/1000; }
-  for(const k in m.yoy) if(Math.abs(m.yoy[k])>=MKT_KRISE) news.push({k,v:m.yoy[k]});
-  return {f,y,krise,news,period:m.period,src:m.src,live:!!MARKT}; }
-const mktF = p => (S&&S.mkt&&S.mkt.f[p]) || 1;
+  if (week && M.hist){ const ks=Object.keys(M.hist).filter(k=>k<=week).sort(); if(ks.length){ const h=M.hist[ks[ks.length-1]]; return {src:M.src,period:h.period,yoy:h.yoy,welt:h.welt||M.welt||{}}; } }
+  return {src:M.src,period:M.period,yoy:M.yoy,welt:M.welt||{}}; }
+const clampN=(v,a,b)=>Math.min(b,Math.max(a,v)), r3=v=>Math.round(v*1000)/1000;
+function rheinPct(cm){ if(cm==null) return 0; if(cm>=640) return 25; if(cm<135) return Math.round(Math.min(30,(135-cm)/135*30)); return 0; }   // Kleinwasser-/Hochwasserzuschlag in %
+function mktSnap(week){ const m=mktFor(week), Y=m.yoy, W=m.welt||{}, f={}, food={}, y={}, krise=[], news=[];
+  const diesel=Y.diesel??Y.fuel??0, brent=W.brent||null, oelkrise=!!(brent&&brent.usd>=100);
+  const fracht=clampN(diesel*0.4+(oelkrise?3:0),-5,12);                       // Peters Frachtzuschlag in %
+  const kaub=W.kaub?W.kaub.cm:null, rhein=rheinPct(kaub);
+  const suezR=W.suez&&W.suez.base?W.suez.avg7/W.suez.base:1, suez=r3(suezR<0.85?1+Math.min(0.6,(0.85-suezR)*1.5):1);
+  const energie=r3(clampN(1+((Y.gas??0)*0.6+(Y.elec??0)*0.4)/100*MKT_AMP,0.7,1.5));
+  const sprit=r3(clampN(1+diesel/100*MKT_AMP,0.7,1.8));
+  for(const p of P){ const mp=MKT_MAP[p]||{}; let v=0,w=0; for(const k in mp) if(Y[k]!=null){ v+=Y[k]*mp[k]; w+=mp[k]; }
+    v=w?v/w:0; let x=1+v/100*MKT_AMP; if(Object.keys(mp).some(k=>(Y[k]||0)>=MKT_KRISE)){ x*=1.15; krise.push(p); }
+    y[p]=Math.round(v*10)/10; food[p]=r3(clampN(x,0.7,1.5));
+    f[p]=r3(clampN(food[p]*(1+fracht/100)*(1+(RHEIN_P.includes(p)?rhein:0)/100),0.7,1.8)); }
+  for(const k in Y) if(Math.abs(Y[k])>=MKT_KRISE && MKT_MAP && !['fuel'].includes(k)) news.push({k,v:Y[k]});
+  const welt=[];
+  if (rhein) welt.push(kaub>=640?`Rhein-Hochwasser (Kaub ${kaub} cm): Schifffahrt gesperrt`:`Rhein-Niedrigwasser (Kaub ${kaub} cm): Kleinwasserzuschlag +${rhein} %`);
+  if (oelkrise) welt.push(`Ölkrise: Brent ${String(brent.usd).replace('.',',')} $`);
+  if (suez>1) welt.push(`Suezkanal: nur ${Math.round(W.suez.avg7)} statt ${W.suez.base} Schiffe am Tag`);
+  return {v:2,f,food,y,krise,news,welt,fracht:Math.round(fracht*10)/10,rhein,kaub,suez,energie,sprit,diesel,oelkrise,W,Y,period:m.period,src:m.src,live:!!MARKT}; }
+const mkt = () => { if (S && (!S.mkt || S.mkt.v!==2)) S.mkt=mktSnap(S.challenge?S.challenge.week:null); return S?S.mkt:mktSnap(null); };
+const recMkt = (p,id) => SUEZ_REC.includes(p+':'+id) ? ((S&&S.mkt&&S.mkt.suez)||1) : 1;
+const mktF = p => (S&&S.mkt&&S.mkt.v===2&&S.mkt.f[p]) || 1;
 const mktPeriod = per => { const [y,mo]=String(per||'').split('-'); return mo?MONATE[+mo-1]+' '+y:String(per||''); };
 const pct = v => (v>0?'+':v<0?'−':'±')+Math.abs(v).toFixed(1).replace('.',',')+' %';
 function mktBox(){ const M=S.mkt; if(!M) return '';
   const rows=P.map(p=>({p,d:M.f[p]-1})).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,4);
   const nws=M.news.map(n=>n.v>0?`<b style="color:var(--grill)">KRISE ${MKT_LBL[n.k]||n.k} ${pct(n.v)}</b>`:`<b style="color:var(--phos)">Preissturz ${MKT_LBL[n.k]||n.k} ${pct(n.v)}</b>`).join(' · ');
   return `<div class="mkt"><b>📈 Peters Marktbericht</b> <span class="dim">· echte Preise ${mktPeriod(M.period)}, Eurostat${M.live?'':' (gespeichert)'}${S.challenge?' · gilt für alle in '+weekLabel(S.challenge.week):''}</span><br>
-    ${rows.map(r=>`${EMO[r.p]} ${pct(r.d*100)}`).join(' · ')}${nws?'<br>'+nws:''}</div>`; }
+    ${rows.map(r=>`${EMO[r.p]} ${pct(r.d*100)}`).join(' · ')}${nws?'<br>'+nws:''}
+    ${M.welt&&M.welt.length?'<br><b style="color:var(--grill)">'+M.welt.map(esc).join(' · ')+'</b>':''}
+    <br><button class="btn sm" data-welt style="margin-top:4px">🌍 Weltlage & Quellen</button></div>`; }
 
 // ===== Darius' Wetter-App: echtes Wetter in Hamm (Open-Meteo, ohne Schlüssel) =====
 let WETTER=null;
@@ -837,6 +862,7 @@ function newRun(mode){
   };
   if (!S.challenge){ S.cash+=perkLvl('kapital')*100; S.ruf=Math.min(100,S.ruf+perkLvl('ruf')*5); S.stock.huhn[0].q+=perkLvl('lager')*4; S.stock.haxe[0].q+=perkLvl('lager'); S.up.fry=2+perkLvl('fry'); S.up.schul=perkLvl('schul'); }
   S.mkt=mktSnap(S.challenge?S.challenge.week:null);
+  for(const t of S.mkt.welt) log('🌍 Weltlage: '+t+'.');
   STORE.life.runs++; setLocalRun(slotOf(S),null); fbRunStart(slotOf(S));
   startDay(true); saveDayStart();
 }
@@ -928,10 +954,10 @@ function endDay(reason){
   // Kosten
   const c=d.cost;
   c.stand = isNight() ? 0 : Math.round(LOC().fee(S.day));   // nachts stellt die Firma den Platz
-  c.energie = 15 + (S.up.spiess+S.up.rost)*2 + S.up.fry*8;
+  c.energie = Math.round((15 + (S.up.spiess+S.up.rost)*2 + S.up.fry*8)*((S.mkt&&S.mkt.energie)||1));
   c.auto = S.auto ? 60 : 0;
   c.hilfe = S.hilfe ? LIEF_LOHN : 0;
-  c.lohn = d.lief&&d.lief.active ? LIEF_LOHN : 0; c.sprit = d.lief&&d.lief.active ? VEH[S.lief.veh].fuel : 0;
+  c.lohn = d.lief&&d.lief.active ? LIEF_LOHN : 0; c.sprit = d.lief&&d.lief.active ? Math.round(VEH[S.lief.veh].fuel*((S.mkt&&S.mkt.sprit)||1)*100)/100 : 0;
   c.strafe = 0;
   if (d.reheatSold>0 && Math.random()<Math.min(0.85,0.12*d.reheatSold)){ c.strafe = 120+S.day*10; S.ruf=clamp(S.ruf-15,0,100); d.kontrolle=true; }
   const sum = c.stand+c.energie+c.auto+c.strafe+(c.lohn||0)+(c.sprit||0)+(c.hilfe||0);
@@ -1922,7 +1948,37 @@ document.addEventListener('visibilitychange',()=>{ if(document.hidden && S && S.
 /* ===================== Overlays ===================== */
 const $=id=>document.getElementById(id);
 /* ===== Info-Fenster: Rangliste, Trophäen, Statistik jederzeit ===== */
-const INFO_BTN='<button class="btn sm" data-info title="Rangliste, Trophäen und Statistik">📊 Rangliste & Trophäen</button>';
+const INFO_BTN='<button class="btn sm" data-info title="Rangliste, Trophäen und Statistik">📊 Rangliste & Trophäen</button><button class="btn sm" data-welt title="Echte Preise, Rhein, Öl, Suez, Wetter">🌍 Weltlage</button>';
+function showWelt(){
+  const o=$('ovInfo'), M=mkt(), W=M.W||{}, Y=M.Y||{}, x=v=>'×'+v.toFixed(2).replace('.',','), d=s=>{ if(!s) return '–'; const [Y_,m,dd]=String(s).slice(0,10).split('-'); return `${+dd}.${+m}.${Y_}`; };
+  const card=(ico,title,real,eff,src,hot)=>`<div class="wl${hot?' hot':''}"><h3>${ico} ${title}</h3><p class="wv">${real}</p><p class="we">${eff}</p><p class="ws dim">${src}</p></div>`;
+  const prod=P.map(p=>`<tr><td>${EMO[p]} ${NAME[p]}</td><td>${pct(M.y[p]||0)}</td><td>${x(M.food[p]||1)}</td><td><b>${x(M.f[p]||1)}</b></td></tr>`).join('');
+  const k=W.kaub, b=W.brent, z=W.suez;
+  const wx=WETTER&&!(S&&S.challenge)?WETTER.map(w=>{ const e=wxEvent(w), dt=new Date(w.d+'T12:00:00'); return `<tr><td>${['So','Mo','Di','Mi','Do','Fr','Sa'][dt.getDay()]} ${dt.getDate()}.${dt.getMonth()+1}.</td><td>${Math.round(w.t)}°</td><td>${String(Math.round(w.r*10)/10).replace('.',',')} mm</td><td>${e.name}</td></tr>`; }).join(''):'';
+  o.innerHTML=`<div class="card" style="max-width:1100px"><div class="stack">
+    <div class="row" style="justify-content:space-between;align-items:center"><h2>🌍 WELTLAGE · ECHTE DATEN</h2><button class="btn go sm" id="bWeltX">Schließen ✕</button></div>
+    <p class="dim" style="font-size:12.5px">Alles hier ist echt und wird jede Woche neu geholt. Peter rechnet die echte Teuerung ×${String(MKT_AMP).replace('.',',')} hoch, damit man sie spürt.${S&&S.challenge?` <b style="color:var(--mayo)">Wochen-Challenge: Alle spielen mit den Werten aus ${weekLabel(S.challenge.week)}, Wetter bleibt Zufall.</b>`:S?' Dein Run behält die Werte vom Start.':' Gilt für den nächsten Run.'}${M.live?'':' (Gespeicherte Werte, aktuelle Datei nicht erreichbar.)'}</p>
+    <div class="wlg">
+      ${card('⛽','Diesel & Öl',`Diesel ${pct(M.diesel)} zum Vorjahr${b?` · Brent ${String(b.usd).replace('.',',')} $/Barrel (${d(b.date)})${b.yoy!=null?' '+pct(b.yoy):''}`:''}`,
+        `Peters Frachtzuschlag ${pct(M.fracht)} auf alles · Sprit Lieferdienst ${x(M.sprit)}${M.oelkrise?' · <b>Ölkrise</b> ab 100 $':''}`,'Eurostat HICP · FRED/EIA',M.oelkrise)}
+      ${card('🚢','Rhein · Pegel Kaub',k?`${k.cm} cm (${d(k.ts)})${k.cm<78?' · Binnenschiffe fahren fast leer':k.cm<135?' · Niedrigwasser':k.cm>=640?' · Hochwasser, Schifffahrt gesperrt':' · normal'}`:'keine Daten',
+        M.rhein?`Kleinwasserzuschlag +${M.rhein} % auf ${RHEIN_P.map(p=>EMO[p]).join(' ')} (Getränke, Kartoffeln & Öl kommen per Schiff)`:'Kein Zuschlag. Unter 135 cm wird es teuer.','Pegelonline · Wasserstraßen- und Schifffahrtsverwaltung',!!M.rhein)}
+      ${card('🌊','Suezkanal',z?`⌀ ${String(z.avg7).replace('.',',')} Schiffe pro Tag (bis ${d(z.date)}) · normal ~${z.base}`:'keine Daten',
+        M.suez>1?`Container fahren ums Kap: Curry, Habanero und Bowl-Zutaten ${x(M.suez)} im Einkauf`:'Gewürze normal.','IMF PortWatch',M.suez>1)}
+      ${card('🔥','Gas & Strom',`Gas ${pct(Y.gas??0)} · Strom ${pct(Y.elec??0)} zum Vorjahr`,`„Gas & Strom“ am Wagen ${x(M.energie)}`,'Eurostat HICP',M.energie>1.1)}
+    </div>
+    <div class="grid2">
+      <div class="stack"><h3>Lebensmittel · ${mktPeriod(M.period)}</h3>
+        <div class="tbl"><table><thead><tr><th>Ware</th><th>echt</th><th>Markt</th><th>EK gesamt</th></tr></thead><tbody>${prod}</tbody></table></div>
+        <p class="dim" style="font-size:12px">„EK gesamt“ = Markt × Frachtzuschlag × Rhein. ${M.news.map(n=>`${MKT_LBL[n.k]||n.k} ${pct(n.v)}`).join(' · ')}</p></div>
+      <div class="stack"><h3>Darius' Wetter-App · Hamm</h3>
+        ${wx?`<div class="tbl"><table><thead><tr><th>Tag</th><th>max</th><th>Regen</th><th>im Spiel</th></tr></thead><tbody>${wx}</tbody></table></div><p class="dim" style="font-size:12px">Tag 2 im Spiel ist morgen, Tag 3 übermorgen, nach 7 Tagen von vorn.</p>`
+          :`<p class="dim" style="font-size:13px">${S&&S.challenge?'In der Wochen-Challenge würfelt Darius. Fair bleibt fair.':'Wetterdaten nicht erreichbar. Darius rät.'}</p>`}
+        <p class="dim" style="font-size:11.5px">Quellen: Eurostat (HICP Deutschland, Veränderung zum Vorjahresmonat), Pegelonline WSV, FRED/EIA (Brent), IMF PortWatch (Suez), Open-Meteo (Wetter). Stand Datei: ${esc((MARKT&&MARKT.fetched)||'eingebaut')}.</p></div>
+    </div></div></div>`;
+  fixDigits(o); o.hidden=false; o.scrollTop=0;
+  $('bWeltX').onclick=()=>{ o.hidden=true; };
+}
 function showInfo(){
   const o=$('ovInfo'), L=STORE.life, avgAll=S&&S.revN?S.revSum/S.revN:null;
   o.innerHTML=`<div class="card" style="max-width:900px"><div class="stack">
@@ -1946,6 +2002,7 @@ function showInfo(){
   $('bInfoX').onclick=()=>{ o.hidden=true; };
 }
 document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-info]'); if(b){ e.preventDefault(); showInfo(); return; }
+  if (e.target.closest&&e.target.closest('[data-welt]')){ e.preventDefault(); showWelt(); return; }
   if(e.target.id==='ovInfo') $('ovInfo').hidden=true; });
 function hideAll(){ for(const id of ['ovTitle','ovBon','ovEve','ovOver','ovPause']) $(id).hidden=true; }
 // Silkscreen macht die 4 unleserlich: Ziffern in Überschriften bekommen die Fließtext-Schrift
@@ -1983,6 +2040,7 @@ function showTitle(fromCloud){
       <div class="row">
         ${run?`<button class="btn go" id="bCont">${contLabel(pr0)}</button>`:''}
         <button class="btn ${run?'':'go'}" id="bNew">Neuer Run</button>
+        <button class="btn" data-welt title="Echte Preise, Rhein, Öl, Suez, Wetter">🌍 Weltlage</button>
         ${IN_TS?'<button class="btn" id="bBack">Zurück zu Ticket Slayer</button>':''}
       </div>
       <div class="week"><div class="row" style="justify-content:space-between"><h3>Wochen-Challenge ${weekLabel(wk)}</h3>
@@ -2318,7 +2376,7 @@ function showBon(d){
   $('bBon').focus();
 }
 
-function buyPrice(p,plain){ const r=recOf(p); return (BUY[p]*mktF(p)*Math.pow(1.012,S.day-1)*(!plain&&p==='huhn'&&S.cheapNext?0.65:1)+(r?r.cost:0))*(1-perkOn('peter')*0.04); }
+function buyPrice(p,plain){ const r=recOf(p); return (BUY[p]*mktF(p)*Math.pow(1.012,S.day-1)*(!plain&&p==='huhn'&&S.cheapNext?0.65:1)+(r?r.cost*recMkt(p,r.id):0))*(1-perkOn('peter')*0.04); }
 function upPrice(k){ const u=UPG[k]; return Math.round(u.base*0.5*Math.pow(1.5,S.upBought[k])); }  // 50 % günstiger
 function upMaxed(k){ const u=UPG[k]; return k==='kuehl'? S.up.kuehl>=u.max : S.up[k]>=u.max; }
 
@@ -2330,7 +2388,7 @@ function showEvening(){
   if (!S.order) S.order=blank();
   const last7=S.hist.slice(-7);
   const avg=p=>last7.length?last7.reduce((a,h)=>a+h.sold[p],0)/last7.length:0;
-  if (!S.mkt) S.mkt=mktSnap(S.challenge?S.challenge.week:null);   // alte Spielstände
+  mkt();   // alte Spielstände bekommen den aktuellen Bericht
   const peterKrise = S.mkt.krise.length ? pick([`${NAME[S.mkt.krise[0]]} ist gerade Gold. Ich verkauf dir trotzdem welche. Teuer.`,`Hast du die Preise gesehen? Ich hab sie gemacht. Spaß. Der Markt.`]) : null;
   const peterSays = peterKrise || pick(['Na, Junge. Was brauchst du für morgen?','Frische Ware, ehrliche Preise. Meistens.','Ich hab noch Sonderposten Hühner. Frag nicht, woher.','Bestell lieber zu viel als zu wenig. Sagt Maddin. Ich sag nichts.']);
   const html=()=>{
