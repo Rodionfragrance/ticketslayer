@@ -1,0 +1,8 @@
+{
+ "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
+ "period": "2026-06",
+ "fetched": "2026-10-16",
+ "week": "2026-W42",
+ "yoy": {"food": 0.6, "poultry": 5.0, "pork": 1.1, "beef": 7.4, "meatprep": 0.8, "oils": -14.1, "veg": 2.5, "bread": 2.1, "soft": 1.9, "beer": 3.6, "coffee": 5.7},
+ "hist": {"2026-W42": {"period": "2026-06", "yoy": {"food": 0.6, "poultry": 5.0, "pork": 1.1, "beef": 7.4, "meatprep": 0.8, "oils": -14.1, "veg": 2.5, "bread": 2.1, "soft": 1.9, "beer": 3.6, "coffee": 5.7}}}
+}

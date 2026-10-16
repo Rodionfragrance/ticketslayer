@@ -1,0 +1,23 @@
+name: Peters Marktbericht
+on:
+  schedule:
+    - cron: "15 0 * * 1"     # montags 00:15 UTC, vor Beginn der Wochen-Challenge-Woche in DE wirksam
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  markt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python tools/markt.py
+      - name: Commit markt.json
+        run: |
+          git config user.name "markt-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add markt.json
+          git diff --cached --quiet || git commit -m "Marktbericht $(date +%G-W%V)"
+          git push

@@ -125,6 +125,7 @@ kbd{font-family:var(--f-disp);font-size:12px;background:var(--bg);border:1px sol
 .eve .peter{align-items:center}
 .eve .peter img{height:96px}
 .eve .speech{padding:7px 10px;font-size:13px}
+.mkt{font-size:12px;line-height:1.45;border:1px solid #3a3a3a;padding:5px 8px;background:rgba(0,0,0,.25)}
 .eve .fcrow{display:flex;gap:4px 12px;align-items:baseline;flex-wrap:wrap}
 .eve .fc{font-size:15px}
 .eve .night{padding:8px 10px}
@@ -438,6 +439,47 @@ function weekId(d=new Date()){
   return thu.getFullYear()+'-W'+String(1+Math.round((thu-j4thu)/(7*864e5))).padStart(2,'0');
 }
 const weekLabel = w => 'KW '+String(w||weekId()).split('-W')[1];
+
+// ===== Peters Marktbericht: echte Preisentwicklung (Eurostat HICP, DE) =====
+// markt.json liegt neben dem Spiel und wird wöchentlich von einer GitHub Action erneuert.
+const MKT_FALLBACK={src:'Eurostat HICP Deutschland',period:'2026-06',yoy:{food:0.6,poultry:5.0,pork:1.1,beef:7.4,meatprep:0.8,oils:-14.1,veg:2.5,bread:2.1,soft:1.9,beer:3.6,coffee:5.7}};
+const MKT_MAP={huhn:{poultry:1},haxe:{pork:1},wurst:{meatprep:1},pommes:{veg:0.6,oils:0.4},salat:{veg:1},monster:{soft:1},faxe:{beer:1}};
+const MKT_LBL={food:'Lebensmittel',poultry:'Geflügel',pork:'Schweinefleisch',beef:'Rindfleisch',meatprep:'Wurstwaren',oils:'Speiseöl',veg:'Gemüse',bread:'Brot',soft:'Softdrinks',beer:'Bier',coffee:'Kaffee'};
+const MKT_AMP=2.5, MKT_KRISE=8;          // Peter schlägt echte Teuerung ×2,5 drauf. Ab ±8 % ist Krise.
+const MONATE=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+let MARKT=null;
+function loadMarkt(){ if(!/^https?:/.test(location.protocol)) return; fetch('markt.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{ if(j&&j.yoy) MARKT=j; }).catch(()=>{}); }
+function mktFor(week){ const M=MARKT||MKT_FALLBACK;
+  if (week && M.hist){ const ks=Object.keys(M.hist).filter(k=>k<=week).sort(); if(ks.length){ const h=M.hist[ks[ks.length-1]]; return {src:M.src,period:h.period,yoy:h.yoy}; } }
+  return {src:M.src,period:M.period,yoy:M.yoy}; }
+function mktSnap(week){ const m=mktFor(week), f={}, y={}, krise=[], news=[];
+  for(const p of P){ const mp=MKT_MAP[p]||{}; let v=0,w=0; for(const k in mp) if(m.yoy[k]!=null){ v+=m.yoy[k]*mp[k]; w+=mp[k]; }
+    v=w?v/w:0; let x=1+v/100*MKT_AMP; if(Object.keys(mp).some(k=>(m.yoy[k]||0)>=MKT_KRISE)){ x*=1.15; krise.push(p); }
+    y[p]=Math.round(v*10)/10; f[p]=Math.round(Math.min(1.5,Math.max(0.7,x))*1000)/1000; }
+  for(const k in m.yoy) if(Math.abs(m.yoy[k])>=MKT_KRISE) news.push({k,v:m.yoy[k]});
+  return {f,y,krise,news,period:m.period,src:m.src,live:!!MARKT}; }
+const mktF = p => (S&&S.mkt&&S.mkt.f[p]) || 1;
+const mktPeriod = per => { const [y,mo]=String(per||'').split('-'); return mo?MONATE[+mo-1]+' '+y:String(per||''); };
+const pct = v => (v>0?'+':v<0?'−':'±')+Math.abs(v).toFixed(1).replace('.',',')+' %';
+function mktBox(){ const M=S.mkt; if(!M) return '';
+  const rows=P.map(p=>({p,d:M.f[p]-1})).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,4);
+  const nws=M.news.map(n=>n.v>0?`<b style="color:var(--grill)">KRISE ${MKT_LBL[n.k]||n.k} ${pct(n.v)}</b>`:`<b style="color:var(--phos)">Preissturz ${MKT_LBL[n.k]||n.k} ${pct(n.v)}</b>`).join(' · ');
+  return `<div class="mkt"><b>📈 Peters Marktbericht</b> <span class="dim">· echte Preise ${mktPeriod(M.period)}, Eurostat${M.live?'':' (gespeichert)'}${S.challenge?' · gilt für alle in '+weekLabel(S.challenge.week):''}</span><br>
+    ${rows.map(r=>`${EMO[r.p]} ${pct(r.d*100)}`).join(' · ')}${nws?'<br>'+nws:''}</div>`; }
+
+// ===== Darius' Wetter-App: echtes Wetter in Hamm (Open-Meteo, ohne Schlüssel) =====
+let WETTER=null;
+function loadWetter(){ if(!/^https?:/.test(location.protocol)) return;
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=51.68&longitude=7.82&daily=temperature_2m_max,precipitation_sum,weather_code&timezone=Europe%2FBerlin&forecast_days=7')
+    .then(r=>r.ok?r.json():null).then(j=>{ const d=j&&j.daily; if(!d||!d.time||!d.time.length) return;
+      WETTER=d.time.map((t,i)=>({d:t,t:d.temperature_2m_max[i],r:d.precipitation_sum[i]||0,c:d.weather_code[i]||0})); }).catch(()=>{}); }
+function wxEvent(w){ const id = w.r>=3||(w.c>=61&&w.r>=1) ? 'regen' : w.t>=29 ? 'hitze' : (w.t>=20&&w.c<=2) ? 'sonne' : 'normal'; return EVENTS.find(e=>e.id===id)||EVENTS[0]; }
+function realForecast(){ if(!WETTER||!S||S.challenge) return null;            // Wochen-Challenge bleibt deterministisch
+  const w=WETTER[(S.day-1)%WETTER.length]; return {...wxEvent(w), wx:{d:w.d,t:Math.round(w.t),r:Math.round(w.r*10)/10,c:w.c}}; }
+function wxTxt(){ const x=S.forecast.wx; if(!x) return "Darius' Wetter-App, ~80 %.";
+  const dt=new Date(x.d+'T12:00:00'), tag=['So','Mo','Di','Mi','Do','Fr','Sa'][dt.getDay()]+' '+dt.getDate()+'.'+(dt.getMonth()+1)+'.';
+  const far=LOC().id==='wiesn'?' Darius hat die App nie auf München umgestellt.':'';
+  return `Darius' Wetter-App, echtes Wetter Hamm ${tag}: ${x.t}°${x.r>0?', '+String(x.r).replace('.',',')+' mm':''}. ~80 %.${far}`; }
 const pick = a=>a[Math.floor(Math.random()*a.length)];
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const eur = v=>(v<0?'−':'')+Math.abs(v).toFixed(2).replace('.',',')+' €';
@@ -794,6 +836,7 @@ function newRun(mode){
     day_:null,
   };
   if (!S.challenge){ S.cash+=perkLvl('kapital')*100; S.ruf=Math.min(100,S.ruf+perkLvl('ruf')*5); S.stock.huhn[0].q+=perkLvl('lager')*4; S.stock.haxe[0].q+=perkLvl('lager'); S.up.fry=2+perkLvl('fry'); S.up.schul=perkLvl('schul'); }
+  S.mkt=mktSnap(S.challenge?S.challenge.week:null);
   STORE.life.runs++; setLocalRun(slotOf(S),null); fbRunStart(slotOf(S));
   startDay(true); saveDayStart();
 }
@@ -908,6 +951,7 @@ function endDay(reason){
   S.day++;
   const pool=EVENTS.filter(e=>!e.minDay||e.minDay<=S.day);
   { const rg=dayRng('fc'); S.forecast = rg()<0.45 ? EVENTS[0] : pickR(rg,pool); }
+  { const rf=realForecast(); if (rf) S.forecast=rf; }
   if (isNightDay(S.day)){ S.forecast = NIGHT; S.night = makeContract(S.day); }
   d.reviews=genReviews(d); S.revSum+=d.rating*d.ratingN; S.revN+=d.ratingN;
   endDayRegulars(d);
@@ -2274,7 +2318,7 @@ function showBon(d){
   $('bBon').focus();
 }
 
-function buyPrice(p,plain){ const r=recOf(p); return (BUY[p]*Math.pow(1.012,S.day-1)*(!plain&&p==='huhn'&&S.cheapNext?0.65:1)+(r?r.cost:0))*(1-perkOn('peter')*0.04); }
+function buyPrice(p,plain){ const r=recOf(p); return (BUY[p]*mktF(p)*Math.pow(1.012,S.day-1)*(!plain&&p==='huhn'&&S.cheapNext?0.65:1)+(r?r.cost:0))*(1-perkOn('peter')*0.04); }
 function upPrice(k){ const u=UPG[k]; return Math.round(u.base*0.5*Math.pow(1.5,S.upBought[k])); }  // 50 % günstiger
 function upMaxed(k){ const u=UPG[k]; return k==='kuehl'? S.up.kuehl>=u.max : S.up[k]>=u.max; }
 
@@ -2286,14 +2330,16 @@ function showEvening(){
   if (!S.order) S.order=blank();
   const last7=S.hist.slice(-7);
   const avg=p=>last7.length?last7.reduce((a,h)=>a+h.sold[p],0)/last7.length:0;
-  const peterSays = pick(['Na, Junge. Was brauchst du für morgen?','Frische Ware, ehrliche Preise. Meistens.','Ich hab noch Sonderposten Hühner. Frag nicht, woher.','Bestell lieber zu viel als zu wenig. Sagt Maddin. Ich sag nichts.']);
+  if (!S.mkt) S.mkt=mktSnap(S.challenge?S.challenge.week:null);   // alte Spielstände
+  const peterKrise = S.mkt.krise.length ? pick([`${NAME[S.mkt.krise[0]]} ist gerade Gold. Ich verkauf dir trotzdem welche. Teuer.`,`Hast du die Preise gesehen? Ich hab sie gemacht. Spaß. Der Markt.`]) : null;
+  const peterSays = peterKrise || pick(['Na, Junge. Was brauchst du für morgen?','Frische Ware, ehrliche Preise. Meistens.','Ich hab noch Sonderposten Hühner. Frag nicht, woher.','Bestell lieber zu viel als zu wenig. Sagt Maddin. Ich sag nichts.']);
   const html=()=>{
     const tot=P.reduce((a,p)=>a+S.order[p]*buyPrice(p),0);
     const space=S.up.kuehl-stockTotal(), ordered=P.reduce((a,p)=>a+S.order[p],0);
     const fcBox = S.forecast.id==='nacht'&&S.night?`<div class="night"><h3>Morgen: Nachtschicht Lagerhalle</h3>
         <p style="font-size:13px">Die Firma hat für ${S.night.workers} Leute bestellt, alles bezahlt. Pausen um 00:00 und 03:00. Pauschale inkl. Nachtzulage <b style="color:var(--phos)">${eur(S.night.value)}</b>, fehlende Portion = Vertragsstrafe, alles geliefert = +10 %. Kein Faxe.</p>
         <p class="dim" style="font-size:12.5px;margin-top:3px">Sammelbestellung: ${P.filter(p=>S.night.tot[p]>0).map(p=>`<b style="color:var(--mayo)">${S.night.tot[p]}</b> ${EMO[p]}`).join(' · ')}</p></div>`
-      :`<div class="fcrow"><h3>Prognose Tag ${S.day}</h3><span class="fc">${S.forecast.name}</span><span class="dim" style="font-size:12.5px">Darius' Wetter-App, ~80 %.${fcHint()}${isNightDay(S.day+1)?' Übermorgen Nachtschicht.':''}</span></div>`;
+      :`<div class="fcrow"><h3>Prognose Tag ${S.day}</h3><span class="fc">${S.forecast.name}</span><span class="dim" style="font-size:12.5px">${wxTxt()}${fcHint()}${isNightDay(S.day+1)?' Übermorgen Nachtschicht.':''}</span></div>`;
     const tabs=[['up','🛠 Wagen'],['rez','🧪 Rezepte'],['lief','🛵 Liefern'],['sab','🕵 Hinweis'],['reg','❤ Stamm'],['staff','👷 Personal'],['hist','📈 Verlauf']];
     let tab='';
     if (EVE_TAB==='up') tab=`${Object.keys(UPG).map(k=>{ const u=UPG[k], mx=upMaxed(k), pr=upPrice(k); const lvl=k==='kuehl'?`${S.up.kuehl} Einh.`:k==='schul'?`Stufe ${S.up.schul}`:k==='spiess'||k==='rost'?`${S.up[k]} Plätze`:k==='fry'?`${S.up.fry} Plätze`:`Stufe ${S.up[k]}`;
@@ -2336,6 +2382,7 @@ function showEvening(){
       ${statLine()}
       ${(S.sabNews||[]).map(t=>`<p class="sabnews">${esc(t)}</p>`).join('')}
       <div class="peter"><img src="${IMG_SRC.peter}" alt="Peter vom Großmarkt"><div class="speech"><b>Peter vom Großmarkt:</b> ${peterSays}</div></div>
+      ${mktBox()}
       ${fcBox}
       <h3>Bestellung bei Peter · Lieferung morgen früh</h3>
       <div class="tbl"><table>
@@ -2460,7 +2507,7 @@ function recordBestSafe(){ /* bereits in endDay erfasst */ }
 /* ===================== Hot reload & Start ===================== */
 window.claude?.hot?.snapshot?.(()=>({S, phase:S&&S.phase}));
 function boot(data){
-  fit(); fbLoadMine();
+  fit(); fbLoadMine(); loadMarkt(); loadWetter();
   if (data && data.S){ S=data.S; if(S.phase==='day'){ hideAll(); togglePause(true); } else if(S.phase==='evening') showEvening(); else showTitle(); }
   else if (IN_TS && (!tsAccess() || !PLAYER)) showGate();
   else showTitle();
