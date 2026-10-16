@@ -33,6 +33,91 @@ def brent_yahoo():
     old = [x for x in pts if x[0] <= ago]
     return {"usd": round(v, 2), "date": d, "yoy": round((v / old[-1][1] - 1) * 100, 1) if old else None, "src": "Yahoo BZ=F"}
 
+# ---------- Kalender & Verkehr ----------
+NAGER = "https://date.nager.at/api/v3/PublicHolidays/{y}/DE"
+FERIEN = "https://ferien-api.de/api/v1/holidays/NW/{y}"
+OLDB = "https://api.openligadb.de/getmatchdata/{liga}/{saison}"
+AUTOBAHN = "https://verkehr.autobahn.de/o/autobahn/{ab}/services/{svc}"
+AB_BOX = (51.40, 51.80, 7.45, 8.20)       # Raum Hamm/Unna/Werl/Soest: lat_min, lat_max, lon_min, lon_max
+CLUBS = {"Dortmund": "BVB", "Schalke": "S04"}
+
+def feiertage(today):
+    out = []
+    for y in (today.year, today.year + 1):
+        for h in json.loads(get(NAGER.format(y=y))):
+            if h.get("global") or "DE-NW" in (h.get("counties") or []):
+                out.append({"d": h["date"], "name": h["localName"]})
+    return sorted({h["d"]: h for h in out}.values(), key=lambda h: h["d"])
+
+def ferien(today):
+    out = []
+    for y in (today.year, today.year + 1):
+        try:
+            for f in json.loads(get(FERIEN.format(y=y))):
+                n = f.get("name", "Ferien")
+                out.append({"s": f["start"][:10], "e": f["end"][:10], "name": n[:1].upper() + n[1:]})
+        except Exception as e:
+            ERR.append("Ferien %s: %s" % (y, e))
+    if not out:
+        raise RuntimeError("keine Ferientermine")
+    return sorted({f["s"]: f for f in out}.values(), key=lambda f: f["s"])
+
+def bundesliga(today):
+    saison = today.year if today.month >= 7 else today.year - 1
+    out = []
+    for liga in ("bl1", "bl2"):
+        try:
+            ms = json.loads(get(OLDB.format(liga=liga, saison=saison)))
+        except Exception as e:
+            ERR.append("OpenLigaDB %s: %s" % (liga, e)); continue
+        for m in ms:
+            t1, t2 = m["team1"]["teamName"], m["team2"]["teamName"]
+            for key, club in CLUBS.items():
+                if key in t1 or key in t2:
+                    res = [r for r in m.get("matchResults") or [] if r.get("resultTypeID") == 2]
+                    heim = key in t1
+                    g = (res[0]["pointsTeam1"], res[0]["pointsTeam2"]) if res else None
+                    out.append({"d": m["matchDateTime"][:10], "t": m["matchDateTime"][11:16], "club": club, "heim": heim,
+                                "gegner": (t2 if heim else t1), "done": bool(m.get("matchIsFinished")) and g is not None,
+                                "tore": ([g[0], g[1]] if heim else [g[1], g[0]]) if g else None, "liga": liga})
+    out.sort(key=lambda x: (x["d"], x["t"]))
+    return out
+
+def autobahn():
+    items = []
+    for ab in ("A1", "A2", "A44", "A445"):
+        for svc in ("roadworks", "closure"):
+            try:
+                j = json.loads(get(AUTOBAHN.format(ab=ab, svc=svc)))
+            except Exception as e:
+                ERR.append("Autobahn %s %s: %s" % (ab, svc, e)); continue
+            for it in j.get(svc, []):
+                c = it.get("coordinate") or {}
+                try:
+                    lat, lon = float(c["lat"]), float(c["long"])
+                except Exception:
+                    continue
+                if AB_BOX[0] <= lat <= AB_BOX[1] and AB_BOX[2] <= lon <= AB_BOX[3]:
+                    items.append({"ab": ab, "typ": svc, "titel": (it.get("title") or "")[:80],
+                                  "ort": (it.get("subtitle") or "")[:80], "voll": str(it.get("isBlocked")).lower() == "true"})
+    seen, uniq = set(), []
+    for i in items:
+        k = (i["ab"], i["titel"], i["ort"])
+        if k not in seen:
+            seen.add(k); uniq.append(i)
+    return {"n": len(uniq), "voll": sum(1 for i in uniq if i["voll"]), "liste": uniq[:6]}
+
+def kal():
+    today = datetime.date.today()
+    k = {}
+    for key, fn in (("feiertage", lambda: feiertage(today)), ("ferien", lambda: ferien(today)),
+                    ("bl", lambda: bundesliga(today)), ("autobahn", autobahn)):
+        try:
+            k[key] = fn()
+        except Exception as e:
+            ERR.append("%s: %s" % (key, e))
+    return k
+
 def welt():
     """Rhein, Öl, Suez. Jede Quelle für sich, ein Ausfall stoppt nichts."""
     w = {}
@@ -103,6 +188,7 @@ def main():
     except Exception:
         pass
     w = {**old.get("welt", {}), **welt()}           # was nicht kommt, bleibt alt
+    k = {**old.get("kal", {}), **kal()}
     try:
         period, yoy = parse(fetch())
     except Exception as e:
@@ -118,12 +204,13 @@ def main():
     today = datetime.date.today()
     wk = week_id(today)
     hist = old.get("hist", {})
-    hist[wk] = {"period": period, "yoy": yoy, "welt": w}
+    if wk not in hist:                                # erster Lauf der Woche friert die Challenge-Werte ein
+        hist[wk] = {"period": period, "yoy": yoy, "welt": w, "kal": k}
     hist = dict(sorted(hist.items())[-26:])          # ein halbes Jahr reicht
     data = {"src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
-            "period": period, "fetched": today.isoformat(), "week": wk, "yoy": yoy, "welt": w, "errors": ERR, "hist": hist}
+            "period": period, "fetched": today.isoformat(), "week": wk, "yoy": yoy, "welt": w, "kal": k, "errors": ERR, "hist": hist}
     json.dump(data, open(OUT, "w"), ensure_ascii=False, indent=1)
-    print(wk, period, yoy, w)
+    print(wk, period, yoy, w, {x: (len(v) if isinstance(v, list) else v) for x, v in k.items()}, ERR)
     return 0
 
 if __name__ == "__main__":
