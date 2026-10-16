@@ -842,59 +842,112 @@
    }
   ],
   "autobahn": {
-   "n": 61,
+   "n": 49,
    "voll": 0,
    "liste": [
-    {
-     "ab": "A1",
-     "typ": "roadworks",
-     "titel": "A1 | Lennhof - Schwerte",
-     "ort": " Köln -> Dortmund",
-     "voll": false
-    },
-    {
-     "ab": "A1",
-     "typ": "roadworks",
-     "titel": "A1 | Lennhof - Westhofener Kreuz",
-     "ort": " Köln -> Dortmund",
-     "voll": false
-    },
-    {
-     "ab": "A1",
-     "typ": "roadworks",
-     "titel": "A1 | Westhofener Kreuz - Lennhof",
-     "ort": " Dortmund -> Köln",
-     "voll": false
-    },
-    {
-     "ab": "A1",
-     "typ": "roadworks",
-     "titel": "A1 | Schwerte - Lennhof",
-     "ort": " Dortmund -> Köln",
-     "voll": false
-    },
-    {
-     "ab": "A1",
-     "typ": "roadworks",
-     "titel": "A1 | Schwerte - Westhofener Kreuz",
-     "ort": " Dortmund -> Köln",
-     "voll": false
-    },
     {
      "ab": "A1",
      "typ": "roadworks",
      "titel": "A1 | Lichtendorf - Dortmund/Unna",
      "ort": " Köln -> Münster",
      "voll": false
+    },
+    {
+     "ab": "A1",
+     "typ": "roadworks",
+     "titel": "A1 | Lichtendorf - Unna",
+     "ort": " Köln -> Münster",
+     "voll": false
+    },
+    {
+     "ab": "A1",
+     "typ": "roadworks",
+     "titel": "A1 | Lichtendorf - Kamen-Zentrum",
+     "ort": " Köln -> Münster",
+     "voll": false
+    },
+    {
+     "ab": "A1",
+     "typ": "roadworks",
+     "titel": "A1 | Dortmund/Unna - Lichtendorf",
+     "ort": " Münster -> Köln",
+     "voll": false
+    },
+    {
+     "ab": "A1",
+     "typ": "roadworks",
+     "titel": "A1 | Dortmund/Unna - Kamen-Zentrum",
+     "ort": " Dortmund -> Münster",
+     "voll": false
+    },
+    {
+     "ab": "A1",
+     "typ": "roadworks",
+     "titel": "A1 | Unna - Kamen-Zentrum",
+     "ort": " Dortmund -> Münster",
+     "voll": false
     }
    ]
-  }
+  },
+  "ferien": [
+   {
+    "s": "2025-12-22",
+    "e": "2026-01-06",
+    "name": "Weihnachtsferien"
+   },
+   {
+    "s": "2026-03-30",
+    "e": "2026-04-11",
+    "name": "Osterferien"
+   },
+   {
+    "s": "2026-05-26",
+    "e": "2026-05-26",
+    "name": "Pfingstferien"
+   },
+   {
+    "s": "2026-07-20",
+    "e": "2026-09-01",
+    "name": "Sommerferien"
+   },
+   {
+    "s": "2026-10-17",
+    "e": "2026-10-31",
+    "name": "Herbstferien"
+   },
+   {
+    "s": "2026-12-23",
+    "e": "2027-01-06",
+    "name": "Weihnachtsferien"
+   },
+   {
+    "s": "2027-03-22",
+    "e": "2027-04-03",
+    "name": "Osterferien"
+   },
+   {
+    "s": "2027-05-18",
+    "e": "2027-05-18",
+    "name": "Pfingstferien"
+   },
+   {
+    "s": "2027-07-19",
+    "e": "2027-08-31",
+    "name": "Sommerferien"
+   },
+   {
+    "s": "2027-10-23",
+    "e": "2027-11-06",
+    "name": "Herbstferien"
+   },
+   {
+    "s": "2027-12-24",
+    "e": "2028-01-08",
+    "name": "Weihnachtsferien"
+   }
+  ]
  },
- "errors": [
-  "Ferien 2026: HTTP Error 429: Too Many Requests",
-  "Ferien 2027: HTTP Error 429: Too Many Requests",
-  "ferien: keine Ferientermine"
- ],
+ "errors": [],
  "hist": {
   "2026-W42": {
    "period": "2026-09",
