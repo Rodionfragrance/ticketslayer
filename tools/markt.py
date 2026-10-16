@@ -36,9 +36,11 @@ def brent_yahoo():
 # ---------- Kalender & Verkehr ----------
 NAGER = "https://date.nager.at/api/v3/PublicHolidays/{y}/DE"
 FERIEN = "https://ferien-api.de/api/v1/holidays/NW/{y}"
+OPENHOL = ("https://openholidaysapi.org/SchoolHolidays?countryIsoCode=DE&subdivisionCode=DE-NW&languageIsoCode=DE"
+           "&validFrom={a}-01-01&validTo={b}-12-31")
 OLDB = "https://api.openligadb.de/getmatchdata/{liga}/{saison}"
 AUTOBAHN = "https://verkehr.autobahn.de/o/autobahn/{ab}/services/{svc}"
-AB_BOX = (51.40, 51.80, 7.45, 8.20)       # Raum Hamm/Unna/Werl/Soest: lat_min, lat_max, lon_min, lon_max
+AB_BOX = (51.50, 51.76, 7.60, 8.15)       # Raum Kamen/Hamm/Unna/Werl/Soest: lat_min, lat_max, lon_min, lon_max
 CLUBS = {"Dortmund": "BVB", "Schalke": "S04"}
 
 def feiertage(today):
@@ -51,7 +53,13 @@ def feiertage(today):
 
 def ferien(today):
     out = []
-    for y in (today.year, today.year + 1):
+    try:                                            # OpenHolidays (EU-gefördert), sonst ferien-api.de
+        for f in json.loads(get(OPENHOL.format(a=today.year, b=today.year + 1))):
+            n = next((x["text"] for x in f.get("name", []) if x.get("language") == "DE"), "Ferien")
+            out.append({"s": f["startDate"][:10], "e": f["endDate"][:10], "name": n})
+    except Exception as e:
+        ERR.append("OpenHolidays: %s" % e)
+    for y in (() if out else (today.year, today.year + 1)):
         try:
             for f in json.loads(get(FERIEN.format(y=y))):
                 n = f.get("name", "Ferien")
