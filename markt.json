@@ -22,8 +22,8 @@
  },
  "welt": {
   "kaub": {
-   "cm": 8,
-   "ts": "2026-10-16T11:30",
+   "cm": 7,
+   "ts": "2026-10-16T11:45",
    "state": "low"
   },
   "brent": {
@@ -842,7 +842,9 @@
    }
   ],
   "autobahn": {
-   "n": 49,
+   "n": 51,
+   "baustellen": 51,
+   "sperrungen": 0,
    "voll": 0,
    "liste": [
     {
