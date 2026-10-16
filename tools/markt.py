@@ -17,9 +17,21 @@ SUEZ = ("https://services9.arcgis.com/weJ1QsnbMYJlCHdG/ArcGIS/rest/services/Dail
 SUEZ_BASE = 72          # Schiffe pro Tag im Normalbetrieb (2023, vor den Umleitungen ums Kap)
 
 def get(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "ls-chicken-marktbericht"})
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) ls-chicken-marktbericht", "Accept": "*/*"})
     with urllib.request.urlopen(req, timeout=60) as r:
         return r.read().decode("utf-8")
+
+YAHOO = "https://query1.finance.yahoo.com/v8/finance/chart/BZ%3DF?range=13mo&interval=1d"
+ERR = []
+
+def brent_yahoo():
+    r = json.loads(get(YAHOO))["chart"]["result"][0]
+    pts = [(datetime.datetime.fromtimestamp(t, datetime.timezone.utc).date().isoformat(), c)
+           for t, c in zip(r["timestamp"], r["indicators"]["quote"][0]["close"]) if c]
+    d, v = pts[-1]
+    ago = (datetime.date.fromisoformat(d) - datetime.timedelta(days=365)).isoformat()
+    old = [x for x in pts if x[0] <= ago]
+    return {"usd": round(v, 2), "date": d, "yoy": round((v / old[-1][1] - 1) * 100, 1) if old else None, "src": "Yahoo BZ=F"}
 
 def welt():
     """Rhein, Öl, Suez. Jede Quelle für sich, ein Ausfall stoppt nichts."""
@@ -28,16 +40,20 @@ def welt():
         j = json.loads(get(PEGEL))
         w["kaub"] = {"cm": round(float(j["value"])), "ts": j["timestamp"][:16], "state": j.get("stateMnwMhw", "")}
     except Exception as e:
-        print("Pegel:", e, file=sys.stderr)
+        ERR.append("Pegel: %s" % e)
     try:
         rows = [l.split(",") for l in get(BRENT).strip().splitlines()[1:]]
         rows = [(d, float(v)) for d, v in rows if v not in (".", "")]
         d, v = rows[-1]
         ago = datetime.date.fromisoformat(d) - datetime.timedelta(days=365)
         old = [x for x in rows if x[0] <= ago.isoformat()]
-        w["brent"] = {"usd": round(v, 2), "date": d, "yoy": round((v / old[-1][1] - 1) * 100, 1) if old else None}
+        w["brent"] = {"usd": round(v, 2), "date": d, "yoy": round((v / old[-1][1] - 1) * 100, 1) if old else None, "src": "FRED"}
     except Exception as e:
-        print("Brent:", e, file=sys.stderr)
+        ERR.append("Brent FRED: %s" % e)
+        try:
+            w["brent"] = brent_yahoo()
+        except Exception as e2:
+            ERR.append("Brent Yahoo: %s" % e2)
     try:
         feats = json.loads(get(SUEZ))["features"]
         n = [f["attributes"]["n_total"] for f in feats]
@@ -46,7 +62,7 @@ def welt():
             dt = datetime.datetime.fromtimestamp(dt / 1000, datetime.timezone.utc).date().isoformat()
         w["suez"] = {"avg7": round(sum(n) / len(n), 1), "base": SUEZ_BASE, "date": str(dt)[:10]}
     except Exception as e:
-        print("Suez:", e, file=sys.stderr)
+        ERR.append("Suez: %s" % e)
     return w
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "markt.json")
 
@@ -90,7 +106,7 @@ def main():
     try:
         period, yoy = parse(fetch())
     except Exception as e:
-        print("Eurostat nicht erreichbar:", e, file=sys.stderr)
+        ERR.append("Eurostat: %s" % e)
         if not old:
             raise
         period, yoy = old["period"], old["yoy"]      # Preise bleiben alt, Welt wird trotzdem frisch
@@ -105,7 +121,7 @@ def main():
     hist[wk] = {"period": period, "yoy": yoy, "welt": w}
     hist = dict(sorted(hist.items())[-26:])          # ein halbes Jahr reicht
     data = {"src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
-            "period": period, "fetched": today.isoformat(), "week": wk, "yoy": yoy, "welt": w, "hist": hist}
+            "period": period, "fetched": today.isoformat(), "week": wk, "yoy": yoy, "welt": w, "errors": ERR, "hist": hist}
     json.dump(data, open(OUT, "w"), ensure_ascii=False, indent=1)
     print(wk, period, yoy, w)
     return 0
