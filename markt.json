@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-09",
- "fetched": "2026-10-16",
+ "fetched": "2026-10-17",
  "week": "2026-W42",
  "yoy": {
   "food": 0.5,
@@ -22,8 +22,8 @@
  },
  "welt": {
   "kaub": {
-   "cm": 7,
-   "ts": "2026-10-16T11:45",
+   "cm": 11,
+   "ts": "2026-10-17T09:45",
    "state": "low"
   },
   "brent": {
@@ -842,8 +842,8 @@
    }
   ],
   "autobahn": {
-   "n": 51,
-   "baustellen": 51,
+   "n": 44,
+   "baustellen": 44,
    "sperrungen": 0,
    "voll": 0,
    "liste": [
@@ -858,13 +858,6 @@
      "ab": "A1",
      "typ": "roadworks",
      "titel": "A1 | Lichtendorf - Unna",
-     "ort": " Köln -> Münster",
-     "voll": false
-    },
-    {
-     "ab": "A1",
-     "typ": "roadworks",
-     "titel": "A1 | Lichtendorf - Kamen-Zentrum",
      "ort": " Köln -> Münster",
      "voll": false
     },
@@ -887,6 +880,13 @@
      "typ": "roadworks",
      "titel": "A1 | Unna - Kamen-Zentrum",
      "ort": " Dortmund -> Münster",
+     "voll": false
+    },
+    {
+     "ab": "A1",
+     "typ": "roadworks",
+     "titel": "A1 | Kamen-Zentrum - Unna",
+     "ort": " Münster -> Dortmund",
      "voll": false
     }
    ]
