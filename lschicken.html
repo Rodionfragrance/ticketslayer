@@ -382,7 +382,55 @@ const locMult = p => (S.event.mult[p]??1)*(LOC().mult[p]??1)*((S.cal&&S.cal.mult
 const LOC_ICON={industrie:'🏭',markt:'🧺',stadtfest:'🎪',kirmes:'🎡',wiesn:'🥨',nacht:'🌙'};
 function statLine(){ const g=avg7(), all=S.revN?S.revSum/S.revN:null;
   return `<p class="stat">Ruf <b>${Math.round(S.ruf)}</b> / 100 · Google gesamt <b>${all!=null?all.toFixed(1).replace('.',','):'–'} ★</b> · letzte 7 Tage <b>${g.n?g.avg.toFixed(1).replace('.',','):'–'} ★</b> · ${fmtN(S.revN)} Rezensionen · Standplatz <b>${esc(LOC().name)}</b></p>`; }
-function avg7(){ const h=S.hist.filter(x=>x.stars!=null).slice(-7); return {n:h.length, avg:h.length?h.reduce((a,x)=>a+x.stars,0)/h.length:0}; }
+function avg7(){ const h=S.hist.filter(x=>x.stars!=null).slice(-7); let avg=h.length?h.reduce((a,x)=>a+x.stars,0)/h.length:0;
+  const fl=fakeFlag(); if (fl && h.length) avg=Math.max(1,avg-0.5);
+  return {n:h.length, avg, flag:!!fl}; }
+// ===== Gekaufte Google-Bewertungen =====
+const FAKE_N=5, FAKE_BASE=120, FAKE_GROW=1.5, FAKE_P0=0.15, FAKE_PSTEP=0.15, FAKE_RUF=15, FAKE_FLAG_DAYS=7;
+const FAKE_TXT=['Super Laden!!! Sehr empfehlenswert!!!','Bester Imbiss der Welt. Fünf Sterne. Top.','Sehr gutes Essen, sehr guter Service, sehr gut.','Ich komme jeden Tag. Wirklich jeden. Top Hähnchen!!','Perfekt in allem. Empfehle ich allen Freunden und Familie.','Wow. Einfach wow. Bester Grillwagen in ganz Deutschland.'];
+const FAKE_NAMES=()=>'Kunde_'+(1000+Math.floor(Math.random()*9000));
+const fakeSt = () => (S.fake=S.fake||{count:0,buys:[],flag:null});
+const fakeFlag = () => S && S.fake && S.fake.flag && S.day<=S.fake.flag.until ? S.fake.flag : null;
+const fakePrice = () => Math.round(FAKE_BASE*Math.pow(FAKE_GROW,fakeSt().count));
+const fakeActive = () => !!(S && S.fake && S.fake.buys.some(b=>!b.caught && S.day-b.day<=FAKE_FLAG_DAYS));
+function fakeOdds(){ const F=fakeSt(), recent=F.buys.filter(b=>!b.caught && S.day-b.day<=FAKE_FLAG_DAYS).length; return Math.min(0.9, FAKE_P0+FAKE_PSTEP*recent); }
+function fakeBuy(){
+  if (!S || S.challenge || S.phase!=='evening') return;
+  const F=fakeSt(), pr=fakePrice(); if (S.cash<pr) return;
+  const h=S.hist[S.hist.length-1]; if(!h) return;
+  if (h.real===undefined){ h.real=h.stars??null; h.rn=h.rn||0; }
+  h.fake=(h.fake||0)+FAKE_N;
+  h.stars = h.real==null||!h.rn ? 5 : (h.real*h.rn+5*h.fake)/(h.rn+h.fake);
+  S.revSum+=5*FAKE_N; S.revN+=FAKE_N; S.cash-=pr; F.count++;
+  F.buys.push({day:S.day-1, n:FAKE_N, odds:fakeOdds(), checked:false, caught:false});
+  F.msg=`🤖 ${FAKE_N} Bewertungen gekauft. „${pick(FAKE_TXT)}“ (${FAKE_NAMES()}) Google prüft heute Nacht, Risiko ${Math.round(F.buys[F.buys.length-1].odds*100)} %.`;
+  bump('fakeBuy'); sfx('ping');
+}
+// Nach jedem Tag: Google prüft ungeprüfte Käufe
+function fakeCheck(d){
+  const F=S.fake; if(!F) return;
+  for(const b of F.buys.filter(b=>!b.checked)){ b.checked=true;
+    if (Math.random()<b.odds){
+      let removed=0;
+      for(const h of S.hist){ if(h.fake){ removed+=h.fake; h.stars=h.real; h.fake=0; } }
+      for(const x of F.buys){ x.checked=true; if(!x.caught && S.day-x.day<=FAKE_FLAG_DAYS+1) x.caught=true; }
+      S.revSum-=5*removed; S.revN=Math.max(0,S.revN-removed);
+      S.ruf=clamp(S.ruf-FAKE_RUF,0,100); F.flag={until:S.day+FAKE_FLAG_DAYS};
+      d.fake={caught:true, removed}; unlock('botfarm'); sayM('GOOGLE?! Wer hat Google erzählt, dass wir Bewertungen kaufen?! KLOSKA!');
+      return;
+    }
+    d.fake={caught:false, n:b.n};
+  }
+}
+function fakeCard(){
+  if (S.challenge) return '<p class="dim" style="font-size:13px">In der Wochen-Challenge gibt es kein Hinterzimmer. Fair bleibt fair.</p>';
+  const F=fakeSt(), pr=fakePrice(), fl=fakeFlag(), odds=fakeOdds();
+  return `<div class="sabt"><div class="row" style="justify-content:space-between"><b>🤖 Google-Bewertungen kaufen</b><span class="dim" style="font-size:12px">${F.count}× gekauft</span></div>
+    <p class="dim" style="font-size:12.5px">${FAKE_N} × ★★★★★ von „Kunden“ ohne Profilbild, sofort im 7-Tage-Schnitt. Google prüft über Nacht: Risiko jetzt <b style="color:${odds>0.3?'var(--grill)':'var(--mayo)'}">${Math.round(odds*100)} %</b>. Erwischt = alle gekauften Sterne weg, Ruf −${FAKE_RUF}, ${FAKE_FLAG_DAYS} Tage Warnhinweis (−0,5 ★ im Schnitt). Das kann den Standplatz kosten.</p>
+    ${fl?`<p style="font-size:13px;color:var(--ketchup)">⚠ Google-Warnhinweis „Bewertungen manipuliert“ bis Tag ${fl.until}.</p>`:''}
+    ${F.msg?`<p style="font-size:13px;color:var(--mayo)">${esc(F.msg)}</p>`:''}
+    <button class="btn sm" id="bFake" ${S.cash<pr?'disabled':''}>🤖 ${FAKE_N} Bewertungen kaufen · ${eur(pr)}</button></div>`;
+}
 const locPrice = (p,i) => Math.round((PRICE[p]+(S&&S.recipe?recPrem(p):0))*LOCS[i].tol*10)/10;
 // Standortwechsel: Preise relativ mitnehmen, sonst ist jeder Wechsel eine Preisfalle
 function setLoc(i){ if(i===S.loc) return; const f=LOCS[i].tol/LOCS[S.loc].tol; for(const p of P) S.price[p]=Math.round(clamp(pr(p)*f,PRICE[p]*0.5,PRICE[p]*2.5)*10)/10; S.loc=i; }
@@ -673,7 +721,7 @@ function fbRunStart(slot){ const ref=profRef(); if(!ref) return; ref.set({[CLOUD
 function fbMeta(){ const ref=profRef(); if(ref) ref.set({lsc:{meta:STORE.meta}},{merge:true}).catch(e=>console.warn('LSC meta:',e)); }
 function fbDay(d){
   const ref=profRef(); if(!ref) return;
-  const lsc={meta:STORE.meta,name:PLAYER, days:inc(1), revenue:inc(Math.round(d.revenue*100)/100), served:inc(d.served), lastSeen:new Date().toISOString(), troph:{...STORE.troph}, tc:{...STORE.tc}};
+  const lsc={meta:STORE.meta,name:PLAYER, fake:!S.over&&fakeActive(), days:inc(1), revenue:inc(Math.round(d.revenue*100)/100), served:inc(d.served), lastSeen:new Date().toISOString(), troph:{...STORE.troph}, tc:{...STORE.tc}};
   const sold={}, waste={}; P.forEach(p=>{ if(d.sold[p]>0) sold[p]=inc(d.sold[p]); if(d.waste[p]>0) waste[p]=inc(d.waste[p]); });
   if (Object.keys(sold).length) lsc.sold=sold;
   if (Object.keys(waste).length) lsc.waste=waste;
@@ -696,6 +744,7 @@ const SAB = {
   gesund:{name:'Gesundheitsamt', art:'das Gesundheitsamt', icon:'🧪', price:150, desc:'Kontrolle am nächsten Tag. Aufgewärmte Ware oder Sonderposten = Bußgeld und Ruf weg. Ist der Wagen sauber, zahlst du 100 € Strafe wegen Falschanzeige.'},
   zoll:  {name:'Zoll (Kontrolle Schwarzarbeit)', art:'der Zoll', icon:'🛃', price:250, desc:'Prüft Kloska und den Fahrer: 40 s Stillstand am Tresen, Lieferdienst steht.'},
   finanz:{name:'Finanzamt', art:'das Finanzamt', icon:'💼', price:400, desc:'Betriebsprüfung: 8 % der Kasse Nachzahlung, höchstens 500 €.'},
+  bomb:  {name:'1-Stern-Welle', art:'eine 1-Stern-Welle bei Google', icon:'💣', price:200, desc:'4 Fake-Bewertungen mit einem Stern an ihrem nächsten Tag. Hat das Opfer selbst ⌀ 4,0 oder besser, löscht Google die Hälfte.'},
   darius:{name:'Darius ausleihen', art:'Darius zum Aushelfen', icon:'🤷', price:100, desc:'Darius hilft einen Tag beim Gegner aus. Ware verschwindet, der Autopilot verwechselt dreimal so oft.'},
 };
 const SAB_REVEAL = 0.25, SAB_GRACE = 3, FALSCH_FINE = 100;
@@ -738,7 +787,8 @@ function sabApply(){
   else if (e.t==='finanz'){
     if (S.up.stb){ d.sab.hit=false; log('Betriebsprüfung vom Finanzamt. Der Steuerberater hat alles im Griff: ohne Befund.'); }
     else { const amt=Math.min(500,Math.round(Math.max(0,S.cash)*0.08)); S.cash-=amt; d.sab.amount=amt; d.sab.hit=true; S.sabLast=S.day; log(`Betriebsprüfung! Das Finanzamt holt sich ${eur(amt)} Nachzahlung.`); }
-  } else if (e.t==='darius'){ S.dariusDay=true; S.dariusT=20; d.sab.hit=true; S.sabLast=S.day; sayM('Wer hat DARIUS an meinen Wagen gelassen?!'); log('Darius hilft heute aus. Irgendwer hat ihn geschickt.'); }
+  } else if (e.t==='bomb'){ d.bomb=4; d.sab.hit=true; S.sabLast=S.day; log('Komisch: Auf Google tauchen heute Bewertungen von Leuten auf, die nie hier waren.'); }
+  else if (e.t==='darius'){ S.dariusDay=true; S.dariusT=20; d.sab.hit=true; S.sabLast=S.day; sayM('Wer hat DARIUS an meinen Wagen gelassen?!'); log('Darius hilft heute aus. Irgendwer hat ihn geschickt.'); }
 }
 function sabSend(target,type){
   if (!S || S.challenge || S.sabSentDay===S.day) return;
@@ -752,9 +802,9 @@ function sabSend(target,type){
   if (EVE_REDRAW) EVE_REDRAW();
 }
 function sabTab(){
-  if (S.challenge) return '<p class="dim" style="font-size:13px">In der Wochen-Challenge gibt es keine Hinweise. Alle spielen denselben Run, fair bleibt fair.</p>';
-  if (!fdb || !PLAYER) return '<p class="dim" style="font-size:13px">Hinweise gehen nur online mit Namen (über Ticket Slayer).</p>';
-  return `<p class="dim" style="font-size:12.5px">Einen anonymen Hinweis pro Abend. Nur gegen Spieler, die in der Rangliste <b style="color:var(--mayo)">vor dir</b> stehen. Der Hinweis wirkt an ihrem nächsten Tag. Mit ${Math.round(SAB_REVEAL*100)} % Chance wirst du gesehen, dann darf das Opfer einmal gratis zurückschlagen.</p>
+  if (S.challenge) return '<p class="dim" style="font-size:13px">In der Wochen-Challenge gibt es kein Hinterzimmer: keine Hinweise, keine gekauften Bewertungen. Fair bleibt fair.</p>';
+  if (!fdb || !PLAYER) return fakeCard()+'<p class="dim" style="font-size:13px;margin-top:8px">Hinweise gegen Kollegen gehen nur online mit Namen (über Ticket Slayer).</p>';
+  return fakeCard()+`<h3 style="margin-top:10px">🕵 Anonyme Hinweise</h3><p class="dim" style="font-size:12.5px">Einen anonymen Hinweis pro Abend. Nur gegen Spieler, die in der Rangliste <b style="color:var(--mayo)">vor dir</b> stehen. Der Hinweis wirkt an ihrem nächsten Tag. Mit ${Math.round(SAB_REVEAL*100)} % Chance wirst du gesehen, dann darf das Opfer einmal gratis zurückschlagen.</p>
     ${S.sabMsg?`<p style="font-size:13px;color:var(--mayo)">${esc(S.sabMsg)}</p>`:''}
     ${S.sabSentDay===S.day?'<p style="font-size:13px;color:var(--grill)">Für heute hast du schon einen Hinweis gegeben.</p>':''}
     ${S.sabRevenge?`<p style="font-size:13px;color:var(--phos)">Rache offen gegen <b>${esc(S.sabRevenge)}</b>: ein Hinweis gratis, egal wo er steht.</p>`:''}
@@ -784,7 +834,7 @@ async function fbBoard(tab){
     snap.forEach(doc=>{ const w=doc.data().lscWeek; if(w) rows.push({name:doc.id, score:w.score||0, days:w.days||0, stars:w.stars||0, profit:w.profit||0}); });
   } else {
     const snap=await fdb.collection('playerProfiles').orderBy('lsc.bestScore','desc').limit(25).get();
-    snap.forEach(doc=>{ const l=doc.data().lsc; if(l&&l.bestScore) rows.push({name:doc.id, score:l.bestScore, days:l.bestDays||0, stars:l.bestStars||0, profit:l.bestProfit||0}); });
+    snap.forEach(doc=>{ const l=doc.data().lsc; if(l&&l.bestScore) rows.push({name:doc.id, score:l.bestScore, days:l.bestDays||0, stars:l.bestStars||0, profit:l.bestProfit||0, fake:!!l.fake}); });
   }
   rows.sort((a,b)=>b.score-a.score); return rows.slice(0,10);
 }
@@ -797,7 +847,7 @@ function renderBoard(el,tab){
   fbBoard(tab).then(rows=>{
     const info='<p class="dim" style="font-size:12px;margin-top:6px">Score = Tage × ⌀ Sterne × 100 + Gewinn</p>';
     if(!rows||!rows.length){ el.innerHTML=tabs+`<p class="dim" style="font-size:13px">${tab==='week'?'Diese Woche hat noch keiner gespielt.':'Noch keine Einträge. Überlebe einen Tag und du stehst drin.'}</p>`+info; wire(); return; }
-    el.innerHTML=tabs+`<div class="tbl"><table><thead><tr><th>#</th><th>Name</th><th>Score</th><th>Tage</th><th>⌀ ★</th><th>Gewinn</th></tr></thead><tbody>${rows.map((x,i)=>`<tr${x.name===PLAYER?' style="color:var(--grill)"':''}><td>${['🥇','🥈','🥉'][i]||i+1}</td><td>${esc(x.name)}</td><td><b>${fmtN(x.score)}</b></td><td>${x.days}</td><td>${(x.stars||0).toFixed(1).replace('.',',')}</td><td>${eur(x.profit)}</td></tr>`).join('')}</tbody></table></div>`+info; wire();
+    el.innerHTML=tabs+`<div class="tbl"><table><thead><tr><th>#</th><th>Name</th><th>Score</th><th>Tage</th><th>⌀ ★</th><th>Gewinn</th></tr></thead><tbody>${rows.map((x,i)=>`<tr${x.name===PLAYER?' style="color:var(--grill)"':''}><td>${['🥇','🥈','🥉'][i]||i+1}</td><td>${esc(x.name)}${x.fake?' <span title="hat gerade gekaufte Google-Bewertungen">🤖</span>':''}</td><td><b>${fmtN(x.score)}</b></td><td>${x.days}</td><td>${(x.stars||0).toFixed(1).replace('.',',')}</td><td>${eur(x.profit)}</td></tr>`).join('')}</tbody></table></div>`+info; wire();
   }).catch(e=>{ el.innerHTML=tabs+`<p style="color:var(--ketchup);font-size:13px">Rangliste nicht ladbar: ${esc(e.message||e)}</p>`; wire(); });
 }
 
@@ -1046,9 +1096,15 @@ function endDay(reason){
   { const rg=dayRng('fc'); S.forecast = rg()<0.45 ? EVENTS[0] : pickR(rg,pool); }
   { const rf=realForecast(); if (rf) S.forecast=rf; }
   if (isNightDay(S.day)){ S.forecast = NIGHT; S.night = makeContract(S.day); }
-  d.reviews=genReviews(d); S.revSum+=d.rating*d.ratingN; S.revN+=d.ratingN;
+  d.reviews=genReviews(d);
+  if (d.bomb){ const n=d.rating>=4 ? Math.ceil(d.bomb/2) : d.bomb; d.bombN=n; d.bombCut=d.bomb-n;
+    d.rating=(d.rating*d.ratingN+1*n)/(d.ratingN+n); d.ratingN+=n;
+    const BT=['Hähnchen roh, Personal unfreundlich, nie wieder.','War nie hier, aber hab gehört, es ist schlimm. Ein Stern.','Mein Cousin hat hier gegessen. Seitdem redet er nicht mehr mit mir.','Katastrophe. Zu teuer, zu kalt, zu Maddin.'];
+    d.reviews.unshift({name:FAKE_NAMES(), col:'#777', st:1, ago:'vor 3 Std.', txt:pick(BT), meta:'1 Rezension · kein Profilbild'}); }
+  S.revSum+=d.rating*d.ratingN; S.revN+=d.ratingN;
   endDayRegulars(d);
-  { const h=S.hist[S.hist.length-1]; if (d.ratingN) h.stars=d.rating; h.ruf=Math.round(S.ruf); }
+  { const h=S.hist[S.hist.length-1]; if (d.ratingN){ h.stars=d.rating; h.real=d.rating; h.rn=d.ratingN; } h.ruf=Math.round(S.ruf); }
+  fakeCheck(d);
   d.locName=isNight()?'Lagerhalle Hamm-Rhynern':LOC().place;
   locCheck(d);
   d.score=runScore(S);
@@ -2186,6 +2242,7 @@ const TROPHIES = [
   {id:'stadtplan',  icon:'🗺️', name:'Stadtplan von 1998', desc:'Wlodzimierz hat sich 10-mal verfahren.', ctr:'wlodLost', goal:10, anti:true},
   {id:'steuerfahndung', icon:'🕵️', name:'Steuerfahndung', desc:'5 anonyme Hinweise gegeben.', ctr:'sabSent', goal:5},
   {id:'weste',      icon:'🧼', name:'Weiße Weste',        desc:'Das Gesundheitsamt kam auf Hinweis und fand nichts.'},
+  {id:'botfarm',    icon:'🤖', name:'Bot-Farm',            desc:'Von Google beim Bewertungskauf erwischt.', anti:true},
   {id:'denunziant', icon:'👀', name:'Denunziant',         desc:'3-mal beim Hinweisgeben gesehen worden.', ctr:'sabCaught', goal:3, anti:true},
   {id:'kultrezept', icon:'👨‍🍳', name:'Kultrezept',         desc:'100 perfekte Verkäufe eines Spezialrezepts an einem Standplatz, wo es beliebt ist.', ctr:'liked', goal:100},
   {id:'fliessband', icon:'⚙️', name:'Fließband',         desc:'Combo ×15 an der Theke.'},
@@ -2457,7 +2514,9 @@ function showBon(d){
     ${(d.locNews||[]).map(x=>`<hr><div class="c"><b>${x.bad?'KÜNDIGUNG!':'NEUER STANDPLATZ!'}</b><br>${esc(x.txt)}</div>`).join('')}
     ${(d.regNews||[]).map(t=>`<hr><div class="c">${esc(t)}</div>`).join('')}
     ${d.abandoned?'<hr><div class="c"><b>TAG ABGEBROCHEN!</b><br>Der Wagen blieb zu, die Kundschaft stand vor der Klappe. Ruf −10.</div>':''}
-    ${d.sab?`<hr><div class="c"><b>ANONYMER HINWEIS: ${SAB[d.sab.t].icon} ${esc(SAB[d.sab.t].name.split(' (')[0]).toUpperCase()}</b><br>${d.sab.t==='gesund'?(d.sab.hit?'Aufgewärmtes und Sonderposten gefunden. Ruf −12.':'Alles sauber. Der Hinweisgeber zahlt die Falschanzeige.'):d.sab.t==='finanz'?(d.sab.hit?'Betriebsprüfung mit Nachzahlung.':'Betriebsprüfung ohne Befund. Danke, Steuerberater.'):d.sab.t==='zoll'?'Zoll-Kontrolle, der Tresen stand still.':'Darius hat ausgeholfen. Leider.'}<br>${d.sab.from?`Gesehen wurde: <b>${esc(d.sab.from)}</b>. Rache ist gratis.`:'Absender unbekannt.'}</div>`:''}
+    ${d.fake?`<hr><div class="c"><b>${d.fake.caught?'🤖 GOOGLE HAT DICH ERWISCHT':'🤖 GOOGLE HAT GEPRÜFT'}</b><br>${d.fake.caught?`${d.fake.removed} gekaufte Bewertungen gelöscht. Ruf −${FAKE_RUF}. Warnhinweis „Bewertungen manipuliert“ für ${FAKE_FLAG_DAYS} Tage.`:`${d.fake.n} gekaufte Bewertungen sind durchgekommen. Diesmal.`}</div>`:''}
+    ${d.bombN?`<hr><div class="c"><b>💣 ${d.bombN} FAKE-BEWERTUNGEN MIT 1 STERN</b><br>${d.bombCut?`Google hat ${d.bombCut} davon gelöscht, weil deine echten Bewertungen gut waren.`:'Deine echten Bewertungen waren zu schwach, Google hat nichts gemerkt.'}${d.sab&&d.sab.t==='bomb'?(d.sab.from?`<br>Gesehen wurde: <b>${esc(d.sab.from)}</b>. Rache ist gratis.`:'<br>Absender unbekannt.'):''}</div>`:''}
+    ${d.sab&&d.sab.t!=='bomb'?`<hr><div class="c"><b>ANONYMER HINWEIS: ${SAB[d.sab.t].icon} ${esc(SAB[d.sab.t].name.split(' (')[0]).toUpperCase()}</b><br>${d.sab.t==='gesund'?(d.sab.hit?'Aufgewärmtes und Sonderposten gefunden. Ruf −12.':'Alles sauber. Der Hinweisgeber zahlt die Falschanzeige.'):d.sab.t==='finanz'?(d.sab.hit?'Betriebsprüfung mit Nachzahlung.':'Betriebsprüfung ohne Befund. Danke, Steuerberater.'):d.sab.t==='zoll'?'Zoll-Kontrolle, der Tresen stand still.':'Darius hat ausgeholfen. Leider.'}<br>${d.sab.from?`Gesehen wurde: <b>${esc(d.sab.from)}</b>. Rache ist gratis.`:'Absender unbekannt.'}</div>`:''}
     ${d.kontrolle?'<hr><div class="c"><b>KONTROLLE!</b> Aufgewärmte Ware gefunden. Ruf −15.</div>':''}
     ${d.tasks&&d.tasks.length?`<hr><div class="c"><b>MADDINS AUFTRÄGE</b></div>${d.tasks.map(t=>`<div class="l"><span>${t.done?'✔':'✘'} ${TASKS[t.k].txt(t.n)}</span><span>${t.done?'+'+TASK_COINS+' 🪙':''}</span></div>`).join('')}${d.taskBonus?`<div class="l"><span>Alle drei erledigt</span><span>+${TASK_BONUS} 🪙</span></div>`:''}`:''}
     ${d.comboMax>=3?`<div class="l"><span>Beste Combo</span><span>×${d.comboMax}</span></div>`:''}
@@ -2494,7 +2553,7 @@ function showEvening(){
         <p style="font-size:13px">Die Firma hat für ${S.night.workers} Leute bestellt, alles bezahlt. Pausen um 00:00 und 03:00. Pauschale inkl. Nachtzulage <b style="color:var(--phos)">${eur(S.night.value)}</b>, fehlende Portion = Vertragsstrafe, alles geliefert = +10 %. Kein Faxe.</p>
         <p class="dim" style="font-size:12.5px;margin-top:3px">Sammelbestellung: ${P.filter(p=>S.night.tot[p]>0).map(p=>`<b style="color:var(--mayo)">${S.night.tot[p]}</b> ${EMO[p]}`).join(' · ')}</p></div>`
       :`<div class="fcrow"><h3>Prognose Tag ${S.day}</h3><span class="fc">${S.forecast.name}</span><span class="dim" style="font-size:12.5px">${wxTxt()}${fcHint()}${calHint()}${isNightDay(S.day+1)?' Übermorgen Nachtschicht.':''}</span></div>`;
-    const tabs=[['up','🛠 Wagen'],['rez','🧪 Rezepte'],['lief','🛵 Liefern'],['sab','🕵 Hinweis'],['reg','❤ Stamm'],['staff','👷 Personal'],['hist','📈 Verlauf']];
+    const tabs=[['up','🛠 Wagen'],['rez','🧪 Rezepte'],['lief','🛵 Liefern'],['sab','🕵 Hinterzimmer'],['reg','❤ Stamm'],['staff','👷 Personal'],['hist','📈 Verlauf']];
     let tab='';
     if (EVE_TAB==='up') tab=`${Object.keys(UPG).map(k=>{ const u=UPG[k], mx=upMaxed(k), pr=upPrice(k); const lvl=k==='kuehl'?`${S.up.kuehl} Einh.`:k==='schul'?`Stufe ${S.up.schul}`:k==='spiess'||k==='rost'?`${S.up[k]} Plätze`:k==='fry'?`${S.up.fry} Plätze`:`Stufe ${S.up[k]}`;
         return `<div class="up"><div><b>${u.name}</b> <span class="dim" style="font-size:12px">· ${lvl}</span><small>${u.desc}</small></div><button class="btn sm" data-up="${k}" ${mx||S.cash<pr||(k==='schul'&&!S.auto)?'disabled':''}>${mx?'max':eur(pr)}</button></div>`; }).join('')}
@@ -2608,6 +2667,7 @@ function showEvening(){
     if($('cbHilfe')) $('cbHilfe').onchange=e=>{ S.hilfe=e.target.checked; };
     $('bStart').onclick=()=>{ const tot=P.reduce((a,p)=>a+S.order[p]*buyPrice(p),0); S.cash-=tot; S.lastBuy=tot; startDay(false); saveDayStart(); };
     if (EVE_TAB==='sab') sabFill();
+    if ($('bFake')) $('bFake').onclick=()=>{ fakeBuy(); draw(); };
     if (focus&&$(focus)) $(focus).focus();
   };
   EVE_REDRAW=draw; SAB_ROWS=null; S.sabMsg=null; S.sabNews=[];
