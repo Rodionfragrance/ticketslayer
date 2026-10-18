@@ -624,7 +624,8 @@ const inc = n=>firebase.firestore.FieldValue.increment(n);
 const slotOf = s => s && s.challenge ? 'week' : 'normal';
 const CLOUD_FIELD = {normal:'lscRun', week:'lscWeekRun'};
 let CLOUD_RUNS={normal:null, week:null}, CLOUD_WEEK=null, cloudFor='';
-function setLocalRun(slot,snap){ STORE.runs=STORE.runs||{}; if(snap) STORE.runs[slot]={S:snap, at:Date.now(), name:PLAYER}; else delete STORE.runs[slot]; saveStore(); }
+function setLocalRun(slot,snap){ STORE.runs=STORE.runs||{}; const at=Date.now(); if(snap) STORE.runs[slot]={S:snap, at, name:PLAYER}; else delete STORE.runs[slot]; saveStore();
+  if (cloudFor===PLAYER) CLOUD_RUNS[slot] = snap ? {savedAt:at, day:snap.day, S:snap} : null; }
 async function fbLoadMine(){
   CLOUD_BEST=null; CLOUD_RUNS={normal:null, week:null}; CLOUD_WEEK=null; cloudFor=PLAYER; const ref=profRef(); if(!ref) return;
   try{
@@ -644,6 +645,7 @@ async function fbLoadMine(){
     if (l && l.meta && (l.meta.earned||0) > (STORE.meta.earned||0)) STORE.meta=JSON.parse(JSON.stringify(l.meta));
     if (l && l.troph) for(const k in l.troph) if(!STORE.troph[k]) STORE.troph[k]=l.troph[k];
     if (l && l.tc) for(const k in l.tc) STORE.tc[k]=Math.max(STORE.tc[k]||0, l.tc[k]||0);
+    if (l && l.ended) for(const k in l.ended) STORE.ended[k]=Math.max(STORE.ended[k]||0, l.ended[k]||0);
     if (l && l.bestScore && !STORE.best.length) STORE.best.push({score:l.bestScore, days:l.bestDays||0, revenue:Math.round(l.bestRevenue||0), date:l.bestDate?new Date(l.bestDate).toLocaleDateString('de-DE'):'–'});
     saveStore();
     if (!$('ovTitle').hidden && !GATE_OPEN) showTitle(true);                  // Titel mit Cloud-Spielstand neu zeichnen
@@ -652,6 +654,7 @@ async function fbLoadMine(){
 // Sperre gegen Neustart eines schlechten Tages: Stand zu Tagesbeginn sichern (phase 'day').
 // Wird der Tab geschlossen, rechnet "Weiter" diesen Tag als abgebrochen ab, statt ihn neu spielen zu lassen.
 function saveDayStart(){
+  if (runEnded(S)){ S=null; hideAll(); showTitle(); return; }
   const snap=JSON.parse(JSON.stringify(S));
   setLocalRun(slotOf(S),snap);
   const ref=profRef(); if(ref) ref.set({[CLOUD_FIELD[slotOf(S)]]:runVal(snap)},{merge:true}).catch(e=>console.warn('LSC run save:',e));
@@ -664,7 +667,7 @@ function abandonDay(){
   S.time=DAYLEN;
   endDay('abandon');
 }
-let RUN_SAVE;   // undefined = nichts ändern, null = löschen, Objekt = speichern
+let RUN_SAVE, RUN_ENDED=null;   // RUN_SAVE: undefined = nichts ändern, null = löschen, Objekt = speichern
 function runVal(snap){ return snap ? {savedAt:Date.now(), day:snap.day, data:JSON.stringify(snap)} : null; }
 function fbRunStart(slot){ const ref=profRef(); if(!ref) return; ref.set({[CLOUD_FIELD[slot]]:null, lsc:{name:PLAYER, runs:inc(1), lastSeen:new Date().toISOString()}},{merge:true}).catch(e=>console.warn('LSC run:',e)); }
 function fbMeta(){ const ref=profRef(); if(ref) ref.set({lsc:{meta:STORE.meta}},{merge:true}).catch(e=>console.warn('LSC meta:',e)); }
@@ -684,6 +687,7 @@ function fbDay(d){
     CLOUD_BEST={score, days};
   }
   if (RUN_SAVE!==undefined){ payload[CLOUD_FIELD[slotOf(S)]]=RUN_SAVE; RUN_SAVE=undefined; }
+  if (RUN_ENDED){ lsc.ended={[RUN_ENDED]:Date.now()}; RUN_ENDED=null; }
   ref.set(payload,{merge:true}).catch(e=>console.warn('LSC save:',e));
 }
 let BOARD_TAB='alltime';
@@ -815,16 +819,28 @@ function migrate(){
 const SKEY='lschicken_v1';
 function loadStore(){ try{ return JSON.parse(localStorage.getItem(SKEY))||{}; }catch(e){ return {}; } }
 function saveStore(){ try{ localStorage.setItem(SKEY, JSON.stringify(STORE)); }catch(e){} }
-let STORE = loadStore();
-STORE.life = STORE.life || {sold:blank(), waste:blank(), revenue:0, days:0, runs:0, served:0, lost:0, stolen:0};
-fillKeys(STORE.life.sold); fillKeys(STORE.life.waste);
-STORE.best = STORE.best || [];   // [{score, days, revenue, date}]
-STORE.runs = STORE.runs || {};
-if (STORE.run){ STORE.runs.normal={S:STORE.run, at:STORE.runAt||0, name:STORE.runName||''}; delete STORE.run; delete STORE.runAt; delete STORE.runName; }
-STORE.troph = STORE.troph || {};   // freigeschaltete Trophäen {id: Datum}
-STORE.tc = STORE.tc || {};         // Zähler für Trophäen
-// Maddins Spardose: Münzen aus Runs und Tagesaufträgen, dauerhaft ausgegeben für Startvorteile
-STORE.meta = STORE.meta || {coins:0, earned:0, perks:{}};
+function normStore(o){
+  o.life = o.life || {sold:blank(), waste:blank(), revenue:0, days:0, runs:0, served:0, lost:0, stolen:0};
+  fillKeys(o.life.sold); fillKeys(o.life.waste);
+  o.best = o.best || [];   // [{score, days, revenue, date}]
+  o.runs = o.runs || {};
+  if (o.run){ o.runs.normal={S:o.run, at:o.runAt||0, name:o.runName||''}; delete o.run; delete o.runAt; delete o.runName; }
+  o.troph = o.troph || {};   // freigeschaltete Trophäen {id: Datum}
+  o.tc = o.tc || {};         // Zähler für Trophäen
+  // Maddins Spardose: Münzen aus Runs und Tagesaufträgen, dauerhaft ausgegeben für Startvorteile
+  o.meta = o.meta || {coins:0, earned:0, perks:{}};
+  o.ended = o.ended || {};   // beendete Runs {runId: Zeitpunkt}: deren Spielstände tauchen nie wieder als "Weiter" auf
+  return o;
+}
+let STORE = normStore(loadStore());
+// Run-Kennung. Alte Spielstände ohne Kennung: Fingerabdruck aus Tag 1, der in jedem Stand desselben Runs gleich ist.
+const runIdOf = s => s ? (s.runId || ('L'+hashStr(JSON.stringify((s.hist||[])[0]||{})+'|'+(s.challenge?s.challenge.seed:'')).toString(36))) : '';
+const runEnded = s => !!(s && STORE.ended[runIdOf(s)]);
+function markEnded(s){ const id=runIdOf(s); STORE.ended[id]=Date.now(); const ks=Object.keys(STORE.ended).sort((a,b)=>STORE.ended[b]-STORE.ended[a]); for(const k of ks.slice(40)) delete STORE.ended[k]; saveStore(); return id; }
+// Ein anderer Tab hat gespeichert: Stand übernehmen, statt ihn später mit alten Daten zu überschreiben
+window.addEventListener('storage', e=>{ if (e.key!==SKEY) return; STORE=normStore(loadStore());
+  if (S && runEnded(S)){ S=null; paused=false; hideAll(); showTitle(); }
+  else if (!$('ovTitle').hidden && !GATE_OPEN) showTitle(true); });
 const PERKS = {
   kapital:{name:'Startkapital',        icon:'💶', max:5, cost:[40,70,120,200,320], desc:l=>`+${l*100} € Kasse beim Start`},
   ruf:    {name:'Guter Ruf',           icon:'⭐', max:4, cost:[50,90,150,250], desc:l=>`+${l*5} Ruf beim Start`},
@@ -889,6 +905,7 @@ let S = null;
 function newRun(mode){
   const wk=weekId();
   S = {
+    runId: Date.now().toString(36)+Math.random().toString(36).slice(2,7),
     challenge: mode==='week' ? {week:wk, seed:'LSC-'+wk} : null,
     realStart: mode==='week' ? mondayOf(todayIso()) : todayIso(),
     loc:0, locMax:0, lief:{veh:null,navi:false,drv:null,on:true},
@@ -1044,8 +1061,8 @@ function endDay(reason){
   if (d.revenue-d.costSum-(d.notfall||0)>=1000) unlock('kasse');   // Tagesergebnis wie auf dem Bon
   if (d.ratingN>=5 && d.rating>=4.5) unlock('fuenf');
   if (d.abandoned) unlock('zu');
-  if (S.over){ recordBest(); S.runCoins=runCoins(S); addCoins(S.runCoins); setLocalRun(slotOf(S),null); RUN_SAVE=null; }
-  else { const snap=JSON.parse(JSON.stringify(S)); setLocalRun(slotOf(S),snap); RUN_SAVE=runVal(snap); }
+  if (S.over){ recordBest(); S.runCoins=runCoins(S); addCoins(S.runCoins); RUN_ENDED=markEnded(S); setLocalRun(slotOf(S),null); RUN_SAVE=null; }
+  else if (!runEnded(S)){ const snap=JSON.parse(JSON.stringify(S)); setLocalRun(slotOf(S),snap); RUN_SAVE=runVal(snap); }
   saveStore();
   fbDay(d);
   showBon(d);
@@ -2084,9 +2101,9 @@ function show(id,html){ hideAll(); const o=$(id); o.innerHTML=html; fixDigits(o)
 
 function pickRun(slot){
   const L=(STORE.runs||{})[slot];
-  const local = L && L.S && (!L.name || L.name===PLAYER) ? {S:L.S, savedAt:L.at||0, src:'local'} : null;
+  const local = L && L.S && (!L.name || L.name===PLAYER) && !runEnded(L.S) ? {S:L.S, savedAt:L.at||0, src:'local'} : null;
   const C=CLOUD_RUNS[slot];
-  const cloud = C && cloudFor===PLAYER ? {S:C.S, savedAt:C.savedAt, src:'cloud'} : null;
+  const cloud = C && cloudFor===PLAYER && !runEnded(C.S) ? {S:C.S, savedAt:C.savedAt, src:'cloud'} : null;
   let best = local && cloud ? (cloud.savedAt>local.savedAt ? cloud : local) : (local||cloud);
   if (best && slot==='week' && (!best.S.challenge || best.S.challenge.week!==weekId())) best=null;   // Challenge der Vorwoche verfällt
   return best;
