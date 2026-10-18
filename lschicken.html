@@ -649,10 +649,11 @@ const EVENTS = [
 const UPG = {
   spiess:{name:'Spieß-Erweiterung', desc:'+1 Stange mit 4 Plätzen', base:300, max:12, step:4, start:4},
   rost:  {name:'Zweiter Grillrost', desc:'+2 Bratwurst-Plätze', base:180, max:8, step:2, start:4},
-  lamp:  {name:'Wärmelampe', desc:'Pommes und Wurst bleiben 60 % länger knusprig', base:200, max:1, step:1, start:0},
-  kuehl: {name:'Kühlzelle', desc:'+60 Einheiten Lagerplatz', base:250, max:460, step:60, start:130},
+  lamp:  {name:'Wärmelampe', desc:l=>l>=3?'Pommes und Wurst bleiben 3× so lange knusprig':`Stufe ${l+1}: Pommes und Wurst ${[60,120,200][l]} % länger knusprig`, base:200, max:3, step:1, start:0},
+  salat: {name:'Salatplatz', desc:l=>['Stufe 1: Salat 35 % schneller angerichtet','Stufe 2: zwei Salate pro Durchgang','Stufe 3: Kloska richtet selbst an, sobald die Auslage leer ist','Salatprofi: schnell, doppelt, automatisch'][Math.min(l,3)], base:160, max:3, step:1, start:0},
+  kuehl: {name:'Kühlzelle', desc:'+60 Einheiten Lagerplatz', base:250, max:730, step:60, start:130},
   schild:{name:'Werbeschild', desc:'+12 % Kundschaft pro Stufe', base:220, max:3, step:1, start:0},
-  schul: {name:'Kloska-Schulung', desc:'Kloska verwechselt im Autopilot seltener', base:150, max:3, step:1, start:0},
+  schul: {name:'Kloska-Schulung', desc:l=>l<3?'Kloska verwechselt im Autopilot seltener':l===3?'Stufe 4: kaum noch Fehler, Autopilot verkauft schneller':l===4?'Stufe 5: Meisterkurs, fast fehlerfrei und flott':'Kloska hat ausgelernt. Sagt er.', base:150, max:5, step:1, start:0},
   fry:   {name:'Fritteusen-Einsatz', desc:'+1 Pommes-Platz (bis zu 4)', base:200, max:4, step:1, start:2},
   ordner:{name:'Ordner mit Stundenzetteln', desc:'Zoll-Kontrolle dauert 10 statt 40 Sekunden', base:240, max:1, step:1, start:0},
   stb:   {name:'Steuerberater', desc:'Betriebsprüfung vom Finanzamt endet ohne Befund', base:600, max:1, step:1, start:0},
@@ -1587,10 +1588,14 @@ function loadFry(){
   if(!takeStock('pommes',1)){ float(679,280,'Keine Pommes mehr!',C.ketchup); return; }
   S.fry[i]={t:0}; sfx('fry');
 }
-function prepSalat(){
+const lampF = () => 1+[0,0.6,1.2,2.0][Math.min(3,S.up.lamp||0)];
+const salatTime = () => SALAT_PREP*((S.up.salat||0)>=1?0.65:1);
+const klErr = () => Math.max(0.01, 0.16-0.04*Math.min(S.up.schul,3)-0.015*Math.max(0,S.up.schul-3));
+function prepSalat(auto){
   if (S.salatPrep>0) return;
-  if(!takeStock('salat',1)){ float(777,312,'Kein Salat mehr!',C.ketchup); return; }
-  S.salatPrep=SALAT_PREP;
+  const n=Math.min((S.up.salat||0)>=2?2:1, stockCount('salat'));
+  if(!n || !takeStock('salat',n)){ if(!auto) float(777,312,'Kein Salat mehr!',C.ketchup); return; }
+  S.salatN=n; S.salatPrep=S.salatMax=salatTime();
 }
 const NOT_RANGE = {salat:[7,13]};   // Salat: Menge wird beim Klick zufällig gewürfelt
 function notQty(p){ const r=NOT_RANGE[p]; return r ? r[0]+Math.floor(Math.random()*(r[1]-r[0]+1)) : NOTPACK[p]; }
@@ -1677,9 +1682,10 @@ function update(dt){
   for(const it of S.spiess) if(it) it.t+=dt*csp;
   for(const w of S.rost) if(w&&!w.burnt){ w.t+=dt*csp; if(w.side===1&&w.t>=WURST.flipLate) w.burnt=true; if(w.side===2&&w.t>=WURST.burn) w.burnt=true; }
   for(const b of S.fry) if(b) b.t+=dt*csp;
-  if (S.salatPrep>0){ S.salatPrep-=dt*sp; if(S.salatPrep<=0){ S.salatPrep=0; S.aus.salat.push({perf:true,age:0}); } }
+  if (S.salatPrep>0){ S.salatPrep-=dt*sp; if(S.salatPrep<=0){ S.salatPrep=0; for(let k=0;k<(S.salatN||1);k++) S.aus.salat.push({perf:true,age:0}); S.salatN=1; } }
+  else if ((S.up.salat||0)>=3 && S.aus.salat.length===0 && stockCount('salat')>0 && !(S.zoll>0)) prepSalat(true);
   // Auslage altert
-  const lf = S.up.lamp ? 1.6 : 1;
+  const lf = lampF();
   for(const p of ['pommes','wurst']){
     for(const it of S.aus[p]) it.age+=dt;
     const lim=LASCH[p]*lf, before=S.aus[p].length;
@@ -1708,10 +1714,10 @@ function update(dt){
   if (S.auto && !(S.zoll>0)){
     S.aCd-=dt;
     if (S.aCd<=0){
-      S.aCd=3.2;
+      S.aCd=3.2-Math.max(0,S.up.schul-3)*0.6;
       const i=S.queue.findIndex(canServe);
       if (i>=0){
-        if (Math.random() < 1-(0.16-S.up.schul*0.04)*(S.dariusDay?3:1)) reserve(S.queue[i]);
+        if (Math.random() < 1-klErr()*(S.dariusDay?3:1)) reserve(S.queue[i]);
         else {
           const p=pick(FOOD.filter(p=>S.aus[p].length>0));
           S.aus[p].shift(); d.waste[p]++; d.why.kloska++; bump('kloska'); S.ruf=clamp(S.ruf-2,0,100);
@@ -1925,14 +1931,14 @@ function render(){
     if (pf) txtS('★'+pf,r.x+r.w-8,r.y+13,11,C.phos,'right');
     { const rc=recOf(p); if(rc&&rc.id!=='klassik'&&!isNight()){ const t=taste(p), kn=tasteKnown(recKey(p),LOC().id); txtS(rc.name.length>13?rc.name.slice(0,12)+'.':rc.name,r.x+r.w/2,r.y-3,10,kn?(t>0?C.phos:t<0?'#ff8a6e':C.mayo):C.mayo,'center',F.body,700); } }
     const re=a.filter(t=>t.re).length; if(re) txtS('↻'+re,r.x+8,r.y+13,11,'#ff8a6e');
-    if (LASCH[p]&&n){ const f=1-a[0].age/(LASCH[p]*(S.up.lamp?1.6:1)); ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(r.x+6,r.y+r.h-6,r.w-12,4); ctx.fillStyle=f<0.3?C.ketchup:C.grill; ctx.fillRect(r.x+6,r.y+r.h-6,(r.w-12)*f,4); }
-    if (p==='salat'&&S.salatPrep>0){ ctx.fillStyle=C.phos; ctx.fillRect(r.x+6,r.y+r.h-6,(r.w-12)*(1-S.salatPrep/SALAT_PREP),4); }
+    if (LASCH[p]&&n){ const f=1-a[0].age/(LASCH[p]*lampF()); ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(r.x+6,r.y+r.h-6,r.w-12,4); ctx.fillStyle=f<0.3?C.ketchup:C.grill; ctx.fillRect(r.x+6,r.y+r.h-6,(r.w-12)*f,4); }
+    if (p==='salat'&&S.salatPrep>0){ ctx.fillStyle=C.phos; ctx.fillRect(r.x+6,r.y+r.h-6,(r.w-12)*(1-S.salatPrep/(S.salatMax||SALAT_PREP)),4); }
   });
   /* --- Salat-Station auf der Arbeitsfläche hinter Kloska --- */
   { const b=SALAD, on=hover===700, prep=S.salatPrep>0;
     if (on||prep){ ctx.fillStyle=on?'rgba(244,235,201,.16)':'rgba(0,0,0,.18)'; rr(b.x,b.y,b.w,b.h,6); ctx.fill(); }
     ctx.globalAlpha = prep||on ? 1 : .8; drawIcon('salat',b.x+24,b.y+22,24,0); ctx.globalAlpha=1;
-    if (prep){ ctx.fillStyle='rgba(0,0,0,.6)'; ctx.fillRect(b.x+6,b.y+b.h-6,b.w-12,4); ctx.fillStyle=C.phos; ctx.fillRect(b.x+6,b.y+b.h-6,(b.w-12)*(1-S.salatPrep/SALAT_PREP),4); }
+    if (prep){ ctx.fillStyle='rgba(0,0,0,.6)'; ctx.fillRect(b.x+6,b.y+b.h-6,b.w-12,4); ctx.fillStyle=C.phos; ctx.fillRect(b.x+6,b.y+b.h-6,(b.w-12)*(1-S.salatPrep/(S.salatMax||SALAT_PREP)),4); }
     else txtS(on?'+':'SALAT',b.x+52,b.y+(on?30:27),on?20:9,on?C.grill:C.mayo,'center',F.disp,700);
     if (on) glow(b,C.mayo); }
   /* --- Getränke im Kühlschrank --- */
@@ -2843,8 +2849,8 @@ function showEvening(){
     let tabs=[['up','🛠 Wagen'],['emp','🏢 Imperium'],['rez','🧪 Rezepte'],['lief','🛵 Liefern'],['sab','🕵 Hinterzimmer'],['reg','❤ Stamm'],['staff','👷 Personal'],['hist','📈 Verlauf']];
     { const tt=tutTabs(); if (tt){ tabs=tabs.filter(t=>tt.includes(t[0])); if(!tt.includes(EVE_TAB)) EVE_TAB='up'; } }
     let tab='';
-    if (EVE_TAB==='up') tab=`${Object.keys(UPG).map(k=>{ const u=UPG[k], mx=upMaxed(k), pr=upPrice(k); const lvl=k==='kuehl'?`${S.up.kuehl} Einh.`:k==='schul'?`Stufe ${S.up.schul}`:k==='spiess'||k==='rost'?`${S.up[k]} Plätze`:k==='fry'?`${S.up.fry} Plätze`:`Stufe ${S.up[k]}`;
-        return `<div class="up"><div><b>${u.name}</b> <span class="dim" style="font-size:12px">· ${lvl}</span><small>${u.desc}</small></div><button class="btn sm" data-up="${k}" ${mx||S.cash<pr||(k==='schul'&&!S.auto)?'disabled':''}>${mx?'max':eur(pr)}</button></div>`; }).join('')}
+    if (EVE_TAB==='up') tab=`${Object.keys(UPG).map(k=>{ const u=UPG[k], mx=upMaxed(k), pr=upPrice(k); const lvl=k==='kuehl'?`${S.up.kuehl} Einh.`:k==='schul'?`Stufe ${S.up.schul}`:k==='spiess'||k==='rost'?`${S.up[k]} Plätze`:k==='fry'?`${S.up.fry} Plätze`:`Stufe ${S.up[k]}/${u.max}`;
+        return `<div class="up"><div><b>${u.name}</b> <span class="dim" style="font-size:12px">· ${lvl}</span><small>${typeof u.desc==='function'?u.desc(S.up[k]):u.desc}</small></div><button class="btn sm" data-up="${k}" ${mx||S.cash<pr||(k==='schul'&&!S.auto)?'disabled':''}>${mx?'max':eur(pr)}</button></div>`; }).join('')}
         <p class="dim" style="font-size:12px">Kasse: <b style="color:var(--phos)">${eur(S.cash)}</b></p>`;
     else if (EVE_TAB==='rez'){ const L=LOC(), night=S.forecast.id==='nacht';
       tab=`<p class="dim" style="font-size:12.5px">Wie in Pizza Connection: Jeder Standplatz hat seinen eigenen Geschmack. Nach ${REVEAL_N} Verkäufen eines Rezepts weißt du, wie es dort ankommt. Beliebt = mehr Nachfrage, Trinkgeld und Ruf. Unbeliebt = Ruf sinkt. Der Aufpreis wird beim Wechsel automatisch auf deinen Verkaufspreis gelegt.${night?' <b style="color:#9fb6ff">Nachtschicht: Rezepte zählen erst wieder am Standplatz.</b>':''}</p>
@@ -2871,7 +2877,7 @@ function showEvening(){
     else if (EVE_TAB==='staff') tab=`<div class="peter" style="align-items:center">${IMG_SRC.hilfe?`<img src="${IMG_SRC.hilfe}" alt="Grill-Aushilfe" style="height:96px">`:'<div style="width:60px;font-size:40px;text-align:center">🧤</div>'}
         <label class="tog"><input type="checkbox" id="cbHilfe" ${S.hilfe?'checked':''}><span><b>Grill-Aushilfe</b> (Mindestlohn ${eur(MINDESTLOHN)} × ${LIEF_STD} h = ${eur(LIEF_LOHN)} pro Tag). Wendet jede Bratwurst pünktlich und perfekt. Runternehmen musst du sie selbst, das ist nicht sein Job.</span></label></div>
       <div class="peter" style="align-items:center"><img src="${IMG_SRC.kloska}" alt="Kloska" style="height:96px">
-        <label class="tog"><input type="checkbox" id="cbAuto" ${S.auto?'checked':''}><span><b>Kloska Autopilot</b> (60 € Überstunden pro Tag). Verkauft selbstständig, sobald eine Bestellung komplett ist. Verwechselt aktuell ${Math.round((0.16-S.up.schul*0.04)*100)} %. Ohne Autopilot nur auf deinen Klick, dafür fehlerfrei.</span></label></div>
+        <label class="tog"><input type="checkbox" id="cbAuto" ${S.auto?'checked':''}><span><b>Kloska Autopilot</b> (60 € Überstunden pro Tag). Verkauft selbstständig, sobald eine Bestellung komplett ist. Verwechselt aktuell ${Math.round(klErr()*100)} %. Ohne Autopilot nur auf deinen Klick, dafür fehlerfrei.</span></label></div>
       <label class="tog"><input type="checkbox" id="cbReheat" ${S.reheat?'checked':''}><span><b>Reste-Hähnchen aufwärmen</b>: Übrige Hähnchen und Haxen gehen morgen wieder in die Auslage statt in den Müll. Je mehr davon verkauft werden, desto wahrscheinlicher kommt die Kontrolle.</span></label>`;
     else tab=`<div class="tbl"><table><thead><tr><th>Tag</th><th>Ort</th><th>Ruf</th><th>★</th><th>Umsatz</th>${P.map(p=>`<th>${EMO[p]}</th>`).join('')}<th title="Verlust">🗑</th></tr></thead>
       <tbody>${S.hist.slice(-10).reverse().map(h=>`<tr><td>${h.n}</td><td title="${h.loc==='nacht'?'Nachtschicht':esc((LOCS.find(L=>L.id===h.loc)||{}).name||'')}">${LOC_ICON[h.loc]||''}</td><td>${h.ruf!=null?h.ruf:'–'}</td><td>${h.stars!=null?h.stars.toFixed(1).replace('.',','):'–'}</td><td>${eur(h.revenue)}</td>${P.map(p=>`<td>${h.sold[p]}</td>`).join('')}<td>${P.reduce((a,p)=>a+h.waste[p],0)}</td></tr>`).join('')||'<tr><td colspan="14" class="dim">Noch keine Tage.</td></tr>'}</tbody></table></div>
