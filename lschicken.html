@@ -2088,7 +2088,7 @@ function render(){
   txt(isNight()?S.event.name.toUpperCase():LOC().short,1172,20,11,isNight()?'#9fb6ff':C.phos,'right',F.disp,700);
   txt(isNight()&&S.night?`Geliefert ${S.day_.delivered}/${S.night.portions} · ${S.queue.length}/${QMAX} warten`:`${S.event.name} · Schlange ${S.queue.length}/${QMAX}`,1172,38,12.5,'#d9c7a8','right');
   btnDraw(BTN.pause,'PAUSE',hover===2);
-  btnDraw(BTN.music,musicOn?'♪ AN':'♪ AUS',hover===4);
+  btnDraw(BTN.music,musicMode==='radio'?(radioFail>=3?'♪ AN':'📻 BELLA'):musicMode==='musik'?'♪ AN':'♪ AUS',hover===4);
   btnDraw(BTN.sfx,sfxOn?'FX AN':'FX AUS',hover===5);
 
   /* --- Lager unten --- */
@@ -2186,7 +2186,7 @@ function tipFor(h){
     case 'raid': return 'Max und Moritz verjagen!';
     case 'tease': return 'Max und Moritz verjagen, Maddin braucht seine Ruhe!';
     case 'pause': return 'Pause';
-    case 'music': return musicOn?'Musik aus':'Musik an';
+    case 'music': return musicMode==='radio'?'Läuft: Radio Absolut Bella. Klick: eigene Musik':musicMode==='musik'?'Läuft: LS-Chicken-Musik. Klick: aus':'Aus. Klick: Radio Absolut Bella';
     case 'sfx': return sfxOn?'Soundeffekte aus':'Soundeffekte an';
     case 'gas': return `Feuer löschen (${S.fire.hp}× klicken)`;
     case 'ask': return i===0?'Teillieferung: nur was da ist, ohne Trinkgeld, Ruf −1':'Nichts verkaufen und wegschicken, Ruf −1,5';
@@ -2246,16 +2246,29 @@ addEventListener('keydown',e=>{
 });
 
 /* ===================== Musik ===================== */
-let music=null, musicOn=true;
-try{ musicOn = localStorage.getItem('lsc_music')!=='0'; }catch(e){}
+// Standard: Webradio Absolut Bella (Stream bleibt beim Sender). Fällt der Stream aus, läuft die eigene Titelmusik.
+const RADIO_SRC='https://absolut-bella.live-sm.absolutradio.de/absolut-bella/stream/mp3';
+let music=null, musicMode='radio', radioFail=0, radioRetry=null;
+try{ const m=localStorage.getItem('lsc_mmode'); musicMode = m || (localStorage.getItem('lsc_music')==='0'?'aus':'radio'); }catch(e){}
+let musicOn = musicMode!=='aus';
+function stopMusic(){ if(music){ music.pause(); music.src=''; music=null; } clearTimeout(radioRetry); }
 function startMusic(){
-  if (!musicOn) return;
-  if (!music){ music=new Audio(MUSIC_SRC); music.loop=true; music.volume=0.35; music.onerror=()=>{ music=null; }; }
+  if (musicMode==='aus') return;
+  if (music && !music.paused) return;
+  const radio = musicMode==='radio' && radioFail<3;
+  if (!music){
+    music=new Audio(radio?RADIO_SRC:MUSIC_SRC); music.volume=radio?0.3:0.35; music.loop=!radio; music.preload='none';
+    music.onerror=()=>{ const wasRadio=music&&music.src.indexOf('absolut')>=0; music=null;
+      if (wasRadio){ radioFail++; if(radioFail>=3){ log('📻 Absolut Bella ist gerade nicht erreichbar. Es läuft die LS-Chicken-Musik.'); } radioRetry=setTimeout(startMusic, radioFail>=3?0:2500); } };
+    if (radio){ music.onended=music.onstalled=()=>{ clearTimeout(radioRetry); radioRetry=setTimeout(()=>{ if(musicMode==='radio'){ stopMusic(); startMusic(); } },3000); }; music.onplaying=()=>{ radioFail=0; }; }
+  }
   const pr2=music.play(); if (pr2&&pr2.catch) pr2.catch(()=>{});
 }
 function toggleMusic(){
-  musicOn=!musicOn; try{ localStorage.setItem('lsc_music',musicOn?'1':'0'); }catch(e){}
-  if (musicOn) startMusic(); else if (music) music.pause();
+  musicMode = musicMode==='radio' ? 'musik' : musicMode==='musik' ? 'aus' : 'radio';
+  musicOn = musicMode!=='aus'; radioFail=0;
+  try{ localStorage.setItem('lsc_mmode',musicMode); }catch(e){}
+  stopMusic(); startMusic();
 }
 addEventListener('pointerdown',()=>startMusic(),{once:true});
 
