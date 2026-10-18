@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-09",
- "fetched": "2026-10-17",
+ "fetched": "2026-10-18",
  "week": "2026-W42",
  "yoy": {
   "food": 0.5,
@@ -22,8 +22,8 @@
  },
  "welt": {
   "kaub": {
-   "cm": 11,
-   "ts": "2026-10-17T09:45",
+   "cm": 10,
+   "ts": "2026-10-18T10:00",
    "state": "low"
   },
   "brent": {
@@ -266,8 +266,11 @@
     "club": "BVB",
     "heim": false,
     "gegner": "1. FC Union Berlin",
-    "done": false,
-    "tore": null,
+    "done": true,
+    "tore": [
+     0,
+     0
+    ],
     "liga": "bl1"
    },
    {
@@ -276,8 +279,11 @@
     "club": "S04",
     "heim": true,
     "gegner": "1. FSV Mainz 05",
-    "done": false,
-    "tore": null,
+    "done": true,
+    "tore": [
+     0,
+     1
+    ],
     "liga": "bl1"
    },
    {
