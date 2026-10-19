@@ -754,7 +754,9 @@ function mktBox(){ const M=S.mkt; if(!M || (S.tut&&S.day<=2)) return '';
 const todayIso = () => new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Berlin'});
 function isoAdd(iso,n){ const d=new Date(iso+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); }
 function mondayOf(iso){ const d=new Date(iso+'T12:00:00Z'); return isoAdd(iso,-((d.getUTCDay()+6)%7)); }
-const realDate = day => isoAdd((S&&S.realStart)||todayIso(), (day??S.day)-1);
+// Normaler Modus: der Spieltag, der gerade läuft (bzw. als Nächstes startet), ist immer das echte Heute.
+// Wochen-Challenge: Tag 1 = Montag der KW, damit alle dieselben Tage spielen.
+const realDate = day => S&&S.challenge ? isoAdd(S.realStart||mondayOf(todayIso()), (day??S.day)-1) : isoAdd(todayIso(), (day??(S?S.day:1))-(S?S.day:1));
 const isoDE = iso => { const d=new Date(iso+'T12:00:00Z'); return ['So','Mo','Di','Mi','Do','Fr','Sa'][d.getUTCDay()]+' '+d.getUTCDate()+'.'+(d.getUTCMonth()+1)+'.'; };
 const CLUB_N={BVB:'BVB',S04:'Schalke'};
 // DWD-Warnungen für Hamm (Bright Sky), nur im normalen Modus
@@ -2370,7 +2372,7 @@ function showWelt(){
   const card=(ico,title,real,eff,src,hot)=>`<div class="wl${hot?' hot':''}"><h3>${ico} ${title}</h3><p class="wv">${real}</p><p class="we">${eff}</p><p class="ws dim">${src}</p></div>`;
   const prod=P.map(p=>`<tr><td>${EMO[p]} ${NAME[p]}</td><td>${pct(M.y[p]||0)}</td><td>${x(M.food[p]||1)}</td><td><b>${x(M.f[p]||1)}</b></td></tr>`).join('');
   const k=W.kaub, b=W.brent, z=W.suez;
-  const wx=WETTER&&!(S&&S.challenge)?WETTER.map(w=>{ const e=wxEvent(w); return `<tr><td>${isoDE(w.d)}</td><td>${Math.round(w.t)}°</td><td>${String(Math.round(w.r*10)/10).replace('.',',')} mm</td><td>${w.sr?String(w.sr).slice(11,16)+'–'+String(w.ss).slice(11,16):''}</td><td>${e.name}</td></tr>`; }).join(''):'';
+  const wx=WETTER&&!(S&&S.challenge)?WETTER.map((w,i)=>{ const e=wxEvent(w); const gd=S?S.day+Math.round((new Date(w.d+'T12:00:00Z')-new Date(todayIso()+'T12:00:00Z'))/864e5):null; return `<tr><td>${gd!=null&&gd>=S.day?`<span class="dim">Tag ${gd} ·</span> `:''}${isoDE(w.d)}</td><td>${Math.round(w.t)}°</td><td>${String(Math.round(w.r*10)/10).replace('.',',')} mm</td><td>${w.sr?String(w.sr).slice(11,16)+'–'+String(w.ss).slice(11,16):''}</td><td>${e.name}</td></tr>`; }).join(''):'';
   o.innerHTML=`<div class="card" style="max-width:1100px"><div class="stack">
     <div class="row" style="justify-content:space-between;align-items:center"><h2>🌍 WELTLAGE · ECHTE DATEN</h2><button class="btn go sm" id="bWeltX">Schließen ✕</button></div>
     <p class="dim" style="font-size:12.5px">Alles hier ist echt und wird jeden Tag neu geholt. Peter rechnet die echte Teuerung ×${String(MKT_AMP).replace('.',',')} hoch, damit man sie spürt.${S&&S.challenge?` <b style="color:var(--mayo)">Wochen-Challenge: Alle spielen mit den Werten aus ${weekLabel(S.challenge.week)}, Wetter bleibt Zufall.</b>`:S?' Dein Run behält die Werte vom Start.':' Gilt für den nächsten Run.'}${M.live?'':' (Gespeicherte Werte, aktuelle Datei nicht erreichbar.)'}</p>
@@ -2395,7 +2397,7 @@ function showWelt(){
         <div class="tbl"><table><thead><tr><th>Ware</th><th>echt</th><th>Markt</th><th>EK gesamt</th></tr></thead><tbody>${prod}</tbody></table></div>
         <p class="dim" style="font-size:12px">„EK gesamt“ = Markt × Frachtzuschlag × Rhein. ${M.news.map(n=>`${MKT_LBL[n.k]||n.k} ${pct(n.v)}`).join(' · ')}</p></div>
       <div class="stack"><h3>Darius' Wetter-App · Hamm</h3>
-        ${wx?`<div class="tbl"><table><thead><tr><th>Tag</th><th>max</th><th>Regen</th><th>Sonne</th><th>im Spiel</th></tr></thead><tbody>${wx}</tbody></table></div><p class="dim" style="font-size:12px">Tag 2 im Spiel ist morgen, Tag 3 übermorgen. Nach Sonnenuntergang wird es am Wagen dunkel.</p>`
+        ${wx?`<div class="tbl"><table><thead><tr><th>Tag</th><th>max</th><th>Regen</th><th>Sonne</th><th>im Spiel</th></tr></thead><tbody>${wx}</tbody></table></div><p class="dim" style="font-size:12px">Der Spieltag, den du als Nächstes spielst, ist immer das echte Heute. Nach Sonnenuntergang wird es am Wagen dunkel.</p>`
           :`<p class="dim" style="font-size:13px">${S&&S.challenge?'In der Wochen-Challenge würfelt Darius. Fair bleibt fair.':'Wetterdaten nicht erreichbar. Darius rät.'}</p>`}
         <p class="dim" style="font-size:11.5px">Quellen: Eurostat (HICP Deutschland), Pegelonline WSV, FRED/EIA (Brent), IMF PortWatch (Suez), Autobahn GmbH, Nager.Date (Feiertage), OpenHolidays (Schulferien), OpenLigaDB (Bundesliga), DWD über Bright Sky, Open-Meteo (Wetter, Sonne). Stand Datei: ${esc((MARKT&&MARKT.fetched)||'eingebaut')}.</p></div>
     </div></div></div>`;
