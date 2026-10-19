@@ -89,6 +89,9 @@ td:first-child,th:first-child{text-align:left}
 .bon hr{border:0;border-top:1px dashed var(--ink);margin:8px 0}
 .bon .big{font-size:20px;font-weight:700}
 .bon .neg{color:#9b2b1b}
+.rank{display:flex;align-items:center;gap:16px;margin:14px 0 4px;padding:10px 12px;border:3px double var(--rc);transform:rotate(-2deg);color:var(--rc)}
+.rank .rg{font:700 64px/1 var(--f-disp);letter-spacing:-2px;min-width:52px;text-align:center}
+.rank .rt{font-size:13px;font-weight:700}
 .bonrow{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;align-items:flex-start;width:100%}
 .rev{background:var(--paper);color:var(--ink);max-width:440px;width:100%;padding:18px 20px;box-shadow:0 12px 40px rgba(0,0,0,.5);font-size:14px;line-height:1.45}
 .rev h4{margin:0;font:700 17px var(--f-body)}
@@ -1456,6 +1459,7 @@ function endDay(reason){
     d.reviews.unshift({name:FAKE_NAMES(), col:'#777', st:1, ago:'vor 3 Std.', txt:pick(BT), meta:'1 Rezension · kein Profilbild'}); }
   S.revSum+=d.rating*d.ratingN; S.revN+=d.ratingN;
   endDayRegulars(d);
+  d.rank=dayRank(d); if (d.rank.g==='S') unlock('srang'); S.hist[S.hist.length-1].rank=d.rank.g;
   { const h=S.hist[S.hist.length-1]; if (d.ratingN){ h.stars=d.rating; h.real=d.rating; h.rn=d.ratingN; } h.ruf=Math.round(S.ruf); }
   fakeCheck(d);
   d.locName=isNight()?'Lagerhalle Hamm-Rhynern':LOC().place;
@@ -2754,6 +2758,7 @@ const TROPHIES = [
   {id:'brauer',     icon:'🍺', name:'Braumeister',         desc:'Die Brauerei LS-Bräu eröffnet.'},
   {id:'imbiss',     icon:'🏠', name:'Eigener Laden',       desc:'Den LS-Chicken Imbiss in Hamm gekauft.'},
   {id:'grill',      icon:'🍽', name:'Toplage',             desc:'Das Grill-Restaurant mit Skyline gekauft.'},
+  {id:'srang',      icon:'🏆', name:'S-Rang', desc:'Einen Tag mit Rang S abgeschlossen. Maddin sagt nichts. Das ist ein Kompliment.'},
   {id:'martin',     icon:'🏮', name:'Sankt Martin', desc:'Am 11.11. acht Suppen geteilt.'},
   {id:'franchise',  icon:'🏢', name:'Darius ist Filialleiter', desc:'Die erste Filiale eröffnet. Gott steh uns bei.'},
   {id:'imperium',   icon:'💼', name:'Exit',                desc:'Das Imperium verkauft statt pleitezugehen.'},
@@ -2771,6 +2776,20 @@ const TROPHIES = [
   {id:'zu',         icon:'🚪', name:'Heute geschlossen',  desc:'Einen Tag abgebrochen.', anti:true, hidden:true},
 ];
 let toast=null;
+// Tagesrang F bis S: Service, Qualität, Verschnitt, Marge, Sterne. Steht ganz unten auf dem Bon.
+const RANKS=[{g:'S',min:90,c:'#d4a017',t:'S-RANG. Ich sag nichts. Doch: Weiter so.'},{g:'A',min:78,c:'#2c7a4e',t:'Stark. Fast Maddin-Niveau.'},{g:'B',min:64,c:'#3a6ea5',t:'Solide. Morgen will ich mehr.'},
+  {g:'C',min:50,c:'#7a6a3a',t:'Durchschnitt. Ein Wurm unter Würmern.'},{g:'D',min:35,c:'#b5651d',t:'Das war nix. NOCHMAL!'},{g:'F',min:-1,c:'#c0261b',t:'Ich zieh dir die Beine weg.'}];
+function dayRank(d){
+  const food=FOOD.reduce((a,p)=>a+d.sold[p],0), waste=P.reduce((a,p)=>a+d.waste[p],0);
+  const svc = d.night ? (d.night.portions?Math.min(1,d.night.delivered/d.night.portions):1) : (d.served+d.lost+d.missed>0 ? d.served/(d.served+d.lost+d.missed) : 0);
+  const parts=[
+    ['Service', 30, svc],
+    ['Qualität', 20, food?Math.min(1,d.perfect/food):0],
+    ['Kaum Verschnitt', 15, food+waste?Math.max(0,1-2*waste/(food+waste)):0],
+    ['Marge', 20, clamp((d.profit||0)/Math.max(50,d.revenue||0)/0.35,0,1)],
+    ['Sterne', 15, d.night?svc:clamp(((d.ratingN?d.rating:3.5)-2)/3,0,1)]];
+  const pts=Math.round(parts.reduce((a,[,w,v])=>a+w*v,0)), R=RANKS.find(r=>pts>=r.min);
+  return {g:R.g, pts, parts:parts.map(([n,w,v])=>[n,Math.round(w*v),w])}; }
 function unlock(id){
   if (STORE.troph[id]) return;
   const t=TROPHIES.find(x=>x.id===id); if(!t) return;
@@ -3067,11 +3086,14 @@ function showBon(d){
     <div class="l"><span>Gewinn inkl. Einkauf bei Peter</span><span class="${(d.profit||0)<0?'neg':''}">${eur(d.profit||0)}</span></div>
     ${S.challenge?`<div class="c">Wochen-Challenge ${weekLabel(S.challenge.week)}</div>`:''}
     ${(d.newTroph||[]).map(id=>{ const t=TROPHIES.find(x=>x.id===id); return `<hr><div class="c"><b>${t.anti?'ANTI-TROPHÄE':'TROPHÄE'}: ${t.icon} ${esc(t.name)}</b><br>${esc(t.desc)}</div>`; }).join('')}
+    ${d.rank?(()=>{ const R=RANKS.find(r=>r.g===d.rank.g); return `<hr><div class="c"><b>TAGESBEWERTUNG</b></div>${d.rank.parts.map(([n,v,w])=>`<div class="l"><span>${n}</span><span>${v}/${w}</span></div>`).join('')}
+      <div class="l"><b>Gesamt</b><b>${d.rank.pts}/100</b></div>
+      <div class="rank" style="--rc:${R.c}"><span class="rg">${R.g}</span><span class="rt">${esc(R.t)}<br><small>— Maddin</small></span></div>`; })():''}
     <hr><div class="c">Vielen Dank für Ihren Einkauf.<br>Maddin sieht alles.</div>
    </div>${revHtml}</div>
    <button class="btn go" id="bBon">${S.over?'Abrechnung lesen':'Weiter zu Peter'}</button>${INFO_BTN}</div>`);
   $('bBon').onclick=()=>S.over?showOver():showEvening();
-  $('bBon').focus();
+  $('bBon').focus({preventScroll:true}); $('ovBon').scrollTop=0;
 }
 
 function buyPrice(p,plain){ const r=recOf(p); return (BUY[p]*mktF(p)*Math.pow(1.012,S.day-1)*(!plain&&p==='huhn'&&S.cheapNext?0.65:1)+(r?r.cost*recMkt(p,r.id):0))*(1-perkOn('peter')*0.04); }
