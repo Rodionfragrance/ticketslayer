@@ -360,7 +360,7 @@ function delGo(){
   if (dl.charge>0){ float(1150,250,'Akku lädt…',C.mayo); return; }
   if (S.zoll>0){ float(1150,250,'Zoll prüft den Fahrer',C.ketchup); return; }
   const km=Math.max(...dl.bag.map(o=>o.km));
-  let spd=V.spd*D.spd; if (S.lief.veh==='rad' && S.event.id==='regen') spd*=0.7; if (S.lief.veh!=='rad' && S.mkt && S.mkt.abLvl) spd*=1-S.mkt.abLvl*0.06;
+  let spd=V.spd*D.spd; if (S.lief.veh==='rad' && S.event.id==='regen') spd*=0.7; if (S.lief.veh!=='rad' && trafLvl()) spd*=1-trafLvl()*0.06;
   let out=(5+km*4)/spd, lost=0;
   if (DLRG() < (S.lief.navi?D.lostNavi:D.lost)){ lost=12+DLRG()*20; out+=lost; S.day_.lief.lost++; if(S.lief.drv==='wlod') bump('wlodLost');
     log(S.lief.drv==='wlod'?pick(['Wlodzimierz ruft an: Er steht vor einem Kreisverkehr. Welcher, weiß er nicht.','Wlodzimierz hat den Stadtplan falsch rum gehalten.','Wlodzimierz ist in der Sackgasse. Schon wieder.']):'Der Fahrer sucht die Adresse. Ohne Navi dauert es.'); }
@@ -906,11 +906,27 @@ function ekTag(p){ const M=S.mkt; if(!M||M.v<2) return ''; const f=M.f[p]||1, r=
   if (Math.abs(f-1)<0.03 && !sz) return '';
   const parts=[`Markt ${pct((M.food[p]-1)*100)}`]; if(M.fracht) parts.push(`Fracht ${pct(M.fracht)}`); if(RHEIN_P.includes(p)&&M.rhein) parts.push(`Rhein +${M.rhein} %`); if(sz) parts.push(`Suez: ${r.name}-Zutaten ×${M.suez.toFixed(2).replace('.',',')}`);
   return ` <span class="ek ${f>=1?'ekup':'ekdn'}" title="${esc(parts.join(' · '))}">${f>=1?'▲':'▼'}${Math.round(Math.abs(f-1)*100)}%</span>`; }
+// Verkehr nach echter Uhrzeit beim Spielen: Baustellen gibt es in NRW immer, Stau nur zu den Stoßzeiten
+function verkehrNow(){
+  const base=(S&&S.mkt&&S.mkt.abLvl)||0;
+  if (S&&S.challenge) return {lvl:Math.floor(base*0.5), f:0.5, txt:'Wochen-Challenge: normaler Verkehr für alle', zeit:''};
+  const t=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Berlin'})), h=t.getHours()+t.getMinutes()/60, wd=t.getDay();
+  let f, lab;
+  if (wd===0){ f = h>=10&&h<19 ? 0.4 : 0; lab = f?'Sonntagsverkehr':'Sonntag, Straßen leer'; }
+  else if (wd===6){ f = h>=9&&h<18 ? 0.6 : h>=6&&h<22 ? 0.3 : 0; lab = f>=0.6?'Samstag, Einkaufsverkehr':f?'Samstag, ruhig':'Nacht, freie Fahrt'; }
+  else if ((h>=6.5&&h<9)||(h>=15.5&&h<18.5)){ f=1; lab='Berufsverkehr'; }
+  else if ((h>=9&&h<15.5)||(h>=18.5&&h<20)){ f=0.5; lab='normaler Verkehr'; }
+  else if ((h>=5&&h<6.5)||(h>=20&&h<22)){ f=0.2; lab='wenig los'; }
+  else { f=0; lab='Nacht, freie Fahrt'; }
+  const lvl=Math.max(0,Math.min(3,Math.floor(f>=1 ? base*0.75+1 : base*f)));
+  return {lvl, f, txt:lab, zeit:String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0')}; }
+const trafLvl = () => S&&S.traf ? S.traf.lvl : verkehrNow().lvl;
+const trafTxt = V => V.lvl>=2?`Peter steckt im Stau: ${V.lvl>=3?35:20} % der Bestellung kommt erst mittags · Lieferdienst ${V.lvl*6} % langsamer`:V.lvl?`Zähfließend: Lieferdienst ${V.lvl*6} % langsamer, Peter pünktlich`:'Peter liefert alles pünktlich, Lieferdienst normal.';
 function mktBox(){ const M=S.mkt; if(!M || (S.tut&&S.day<=2)) return '';
   const rows=P.map(p=>({p,d:M.f[p]-1})).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,4);
   const W=M.W||{}, tags=M.news.map(n=>n.v>0?`<b style="color:var(--grill)">${MKT_LBL[n.k]||n.k} ${pct(n.v)}</b>`:`<b style="color:var(--phos)">${MKT_LBL[n.k]||n.k} ${pct(n.v)}</b>`);
   if (M.rhein) tags.push(`<b style="color:var(--grill)">Rhein ${W.kaub?W.kaub.cm+' cm':''}</b>`); if (M.oelkrise) tags.push(`<b style="color:var(--grill)">Öl ${Math.round(W.brent.usd)} $</b>`);
-  if (M.suez>1) tags.push(`<b style="color:var(--grill)">Suez</b>`); if (M.abLvl>=2) tags.push(`<b style="color:var(--grill)">A1/A2 Stau</b>`);
+  if (M.suez>1) tags.push(`<b style="color:var(--grill)">Suez</b>`); { const V=verkehrNow(); if (V.lvl>=2) tags.push(`<b style="color:var(--grill)">Stau jetzt (${V.txt})</b>`); }
   const nws=tags.join(' · ');
   return `<div class="mkt"><b>📈 Peters Marktbericht</b> <span class="dim">· echte Preise ${mktPeriod(M.period)}, Eurostat${M.live?'':' (gespeichert)'}${S.challenge?' · gilt für alle in '+weekLabel(S.challenge.week):''}</span><br>
     ${rows.map(r=>`${EMO[r.p]} ${pct(r.d*100)}`).join(' · ')} <button class="btn sm" data-welt style="padding:1px 7px;font-size:11px">🌍 Details</button>${nws?'<br>'+nws:''}</div>`; }
@@ -1391,7 +1407,8 @@ function startDay(first){
   S.phase='day'; S.time=0; S.queue=[]; S.spawnAcc=0; S.raid=null;
   S.day_ = newDayStats();
   S.lateOrder=null;
-  const lateF = (S.mkt&&S.mkt.abLvl>=2) ? (S.mkt.abLvl>=3?0.35:0.2) : 0;
+  S.traf = verkehrNow();   // Verkehrslage zum Zeitpunkt des Tagesstarts gilt für den ganzen Spieltag
+  const lateF = S.traf.lvl>=2 ? (S.traf.lvl>=3?0.35:0.2) : 0;
   if (S.order){ const late={}; for(const p of P){ if(S.order[p]>0){ const lq=Math.floor(S.order[p]*lateF); if(lq>0) late[p]=lq; S.stock[p].push({q:S.order[p]-lq,age:0,cheap:p==='huhn'&&S.cheapNext}); } }
     if (Object.keys(late).length) S.lateOrder={t:DAYLEN*0.3, items:late, cheap:!!S.cheapNext}; }
   S.order=null;
@@ -2649,7 +2666,7 @@ let BAN_T=null;
 function showBanner(first){
   const b=$('wBan'); if(!b||!S) return; const M=mkt(), lines=[];
   if (first){ const W=M.W||{}; const bits=[];
-    if (W.kaub) bits.push(`🚢 Rhein ${W.kaub.cm} cm`); if (W.brent) bits.push(`🛢 Brent ${Math.round(W.brent.usd)} $`); if (M.diesel) bits.push(`⛽ Diesel ${pct(M.diesel)}`); if (M.abLvl) bits.push(`🚧 ${M.ab.baustellen??M.ab.n} Baustellen`);
+    if (W.kaub) bits.push(`🚢 Rhein ${W.kaub.cm} cm`); if (W.brent) bits.push(`🛢 Brent ${Math.round(W.brent.usd)} $`); if (M.diesel) bits.push(`⛽ Diesel ${pct(M.diesel)}`); { const V=verkehrNow(); if (V.lvl>=1) bits.push(`🚗 ${V.lvl>=2?'Stau':'zäh'} (${V.txt})`); }
     if (bits.length) lines.push(bits.join(' · ')+(M.welt.length||M.fracht>5?' · Peter wird teuer':'')); }
   if (S.cal) for(const l of S.cal.lines) lines.push(l);
   if (S.lateOrder) lines.push(`🚚 Peter steckt im Stau: ${Math.round(Object.values(S.lateOrder.items).reduce((a,b)=>a+b,0))} Teile kommen später`);
@@ -2674,8 +2691,8 @@ function showWelt(){
       ${card('🌊','Suezkanal',z?`⌀ ${String(z.avg7).replace('.',',')} Schiffe pro Tag (bis ${d(z.date)}) · normal ~${z.base}`:'keine Daten',
         M.suez>1?`Container fahren ums Kap: Curry, Habanero und Bowl-Zutaten ${x(M.suez)} im Einkauf`:'Gewürze normal.','IMF PortWatch',M.suez>1)}
       ${(()=>{ const A=M.ab; return card('🚧','Autobahn A1 · A2 · A44 · A445',A?`${A.baustellen??A.n} Baustellen${A.sperrungen?', '+A.sperrungen+' Sperrungen':''} rund um Hamm, Unna, Werl`:'keine Daten',
-        M.abLvl>=2?`Peter steckt im Stau: ${M.abLvl>=3?35:20} % der Bestellung kommt erst mittags · Lieferdienst ${M.abLvl*6} % langsamer`:M.abLvl?`Lieferdienst ${M.abLvl*6} % langsamer`:'Freie Fahrt.',
-        'Autobahn GmbH des Bundes'+(A&&A.liste&&A.liste[0]?' · z. B. '+esc(A.liste[0].titel):''),M.abLvl>=2); })()}
+        (()=>{ const V=verkehrNow(); return `${V.zeit?`Jetzt ${V.zeit} Uhr · `:''}${V.txt}. ${trafTxt(V)} <span class="dim">Gilt für den Tag, den du jetzt startest. Baustellen bremsen vor allem im Berufsverkehr.</span>`; })(),
+        'Autobahn GmbH des Bundes · Uhrzeit Europe/Berlin'+(A&&A.liste&&A.liste[0]?' · z. B. '+esc(A.liste[0].titel):''),verkehrNow().lvl>=2); })()}
       ${(()=>{ const w=WARN&&WARN.filter(x=>WARN_F[x.sev]<1); return card('⚠','DWD-Warnungen Hamm',w&&w.length?w.map(x=>esc(x.ev)+' ('+d(x.on)+')').join(' · '):WARN?'Keine Warnung.':'nicht erreichbar',
         w&&w.length?'Kundschaft bleibt zuhause: −15 % bis −50 % am betroffenen Tag':'Bei Sturm, Gewitter, Glätte bleiben die Kunden weg.','Deutscher Wetterdienst über Bright Sky',!!(w&&w.length)); })()}
       ${card('🔥','Gas & Strom',`Gas ${pct(Y.gas??0)} · Strom ${pct(Y.elec??0)} zum Vorjahr`,`„Gas & Strom“ am Wagen ${x(M.energie)}`,'Eurostat HICP',M.energie>1.1)}
