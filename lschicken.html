@@ -470,15 +470,30 @@ const MAILS=[
   {t:'Hab den Laden abgeschlossen und den Schlüssel innen liegen lassen. Und das Licht an. Und die Fritteuse.', a:['Schlüsseldienst','Durchs Fenster, Darius'], r:[()=>({cash:-90,txt:'Schlüsseldienst am Sonntag. −90 €'}), (g)=>g<0.5?{cash:0,txt:'Darius passt durchs Klofenster. Niemand weiß, wie.'}:{cash:-250,txt:'Glaser kommt Montag. −250 €'}]},
   {t:'Chef, Filiale läuft piko bello. Nur die Kasse piept komisch, seit ich draufgesessen hab. Neue kaufen?', a:['Neue Kasse','Piept halt'], r:[()=>({cash:-180,txt:'Neue Kasse. Darius sitzt jetzt auf einem Hocker. −180 €'}), (g)=>g<0.5?{cash:-90,txt:'Die Kasse hat 90 € einbehalten. Aus Protest. −90 €'}:{cash:40,txt:'Piept halt. Die Kundschaft findet es lustig. +40 € Trinkgeld'}]},
   {t:'Hab heute drei Stunden Pause gemacht. Volle Pulle erholt. Is okay, oder?', a:['Ich zieh dir die Beine weg','Passt schon'], r:[()=>({cash:60,txt:'Seit der Ansage arbeitet Darius doppelt so schnell. Und nuschelt leiser. +60 €'}), ()=>({cash:-80,txt:'Darius macht morgen vier Stunden Pause. Volle Pulle. −80 €'})]},
+  {t:'Chef, Maddin hat sein Lachsbrötchen in unserer Filiale vergessen. Von Montag. Was mach ich?', a:['Wegwerfen','Ins Kühlregal legen','Selbst essen'], r:[()=>({cash:0,ruf:0,txt:'Weggeworfen. Maddin hat es gemerkt. Er sagt nichts. Das ist schlimmer.'}), (g)=>g<0.5?{cash:-120,ruf:-3,txt:'Ein Kunde hat es gekauft. Er hat Fragen. Ruf −3, −120 € Entschädigung.'}:{cash:15,txt:'Ein Kunde hat es gekauft und fand es „rustikal“. +15 €'}, (g)=>g<0.6?{cash:-60,pause:1,txt:'Darius war einen halben Tag auf dem Klo. Filiale morgen auf halber Kraft, −60 €.'}:{cash:0,txt:'Darius hat es überlebt. Piko bello, sagt er.'}]},
+  {t:'Ein Wurm aus dem Homeoffice telefoniert seit 40 Minuten an unserer Theke. Er bestellt nix. Was soll ich machen?', a:['Rauswerfen','Ihm Pommes hinstellen','Mitreden'], r:[(g)=>g<0.3?{cash:-40,ruf:-2,txt:'Er war der Chef von der Firma nebenan. Die bestellen jetzt woanders. Ruf −2.'}:{cash:30,txt:'Platz frei, Schlange läuft wieder. +30 €'}, ()=>({cash:45,txt:'Er hat die Pommes gegessen und 3 Kollegen eingeladen. Ins Meeting. Und an die Theke. +45 €'}), ()=>({cash:-30,txt:'Darius hat in einem Teams-Call über Kartoffelsorten referiert. Keiner weiß warum. −30 €'})]},
+  {t:'Chef, isch hab bei Zalando Schuhe bestellt. Lieferung zur Filiale. Kann isch heute früher gehen, damit isch zuhause warte? Ach nee, kommt ja hierhin.', a:['Ja, geh','Bleib hier'], r:[()=>({cash:-90,pause:1,txt:'Darius ist nach Hause, das Paket kam zur Filiale. Jetzt ist er Paketbote. Morgen halbe Kraft.'}), ()=>({cash:40,txt:'Darius blieb. Die Schuhe passen nicht. Er arbeitet aus Frust doppelt so schnell. +40 €'})]},
+  {t:'Ein Influencer will ein TikTok mit unserem Hähnchen machen. „Mukbang“. Was is das?', a:['Mach mit','Lieber nicht'], r:[(g)=>g<0.6?{cash:-50,boost:3,txt:'2 Millionen Aufrufe. Darius ist im Hintergrund zu sehen, wie er Pommes vom Boden isst. Trotzdem: 3 Tage voller Laden.'}:{cash:-50,ruf:-3,txt:'Das Video heißt „Ekelhafteste Imbissbude NRW“. Ruf −3.'}, ()=>({cash:0,txt:'Er geht zum Döner-Imperium. Die haben jetzt 2 Millionen Aufrufe.'})]},
+  {t:'Max und Moritz sind hier. Die wollen Ferienjob. Isch find die eigentlich nett.', a:['Einstellen','RAUS!'], r:[(g)=>g<0.7?{cash:-200,ruf:-4,txt:'Sie haben den Spieß mit Juckpulver eingerieben. −200 €, Ruf −4. Darius findet sie immer noch nett.'}:{cash:120,txt:'Unglaublich: Sie haben einen ganzen Tag gearbeitet. Danach waren sie weg. Und die Kasse. Nein, Spaß. +120 €'}, ()=>({cash:0,txt:'Sie sind gegangen. Durch den Hinterausgang. Mit drei Würsten.'})]},
+  {t:'Das Gesundheitsamt kommt morgen. Isch hab aufgeräumt. Also, isch hab alles in den Keller gestellt.', a:['Alles wieder hochholen und putzen','Passt schon'], r:[()=>({cash:-80,ruf:3,txt:'Putzaktion bis 2 Uhr nachts. Prüfer: „Vorbildlich.“ Ruf +3, −80 € Überstunden.'}), (g)=>g<0.5?{cash:-350,ruf:-6,pause:1,txt:'Der Prüfer war im Keller. −350 € Bußgeld, Ruf −6, Filiale morgen halb zu.'}:{cash:0,txt:'Der Prüfer hatte Angst vor dem Keller. Glück gehabt.'}]},
+  {t:'Chef, die Mikrowelle in der Filiale macht „Ping“, aber es is nix drin. Seit gestern. Is das normal?', a:['Neue kaufen','Exorzisten rufen','Ignorieren'], r:[()=>({cash:-90,txt:'Neue Mikrowelle. Die alte macht im Müll immer noch „Ping“.'}), ()=>({cash:-150,boost:2,txt:'Der Exorzist war ein Kunde aus Unna. Er erzählt es überall. 2 Tage mehr Kundschaft, −150 €.'}), ()=>({cash:0,txt:'Ping. Ping. Ping. Darius hat sich dran gewöhnt. Die Kunden nicht ganz.'})]},
+  {t:'Mein Cousin aus Thailand will die Filiale übernehmen, wenn isch mal Urlaub mach. Er war noch nie in Deutschland.', a:['Probier es','Auf keinen Fall'], r:[(g)=>g<0.5?{cash:180,boost:2,txt:'Er macht Hähnchen mit Chili. Die Würmer lieben es. +180 €, 2 Tage mehr Kundschaft.'}:{cash:-140,pause:1,txt:'Er ist am Flughafen Düsseldorf verloren gegangen. Filiale morgen halb zu.'}, ()=>({cash:0,txt:'Darius macht keinen Urlaub. Darius wirkt erleichtert.'})]},
+  {t:'Maddin hat mich angerufen. Um 4 Uhr. Er hat nur „Licht an“ gesagt und aufgelegt. Was meint er?', a:['Licht an!','Zurückrufen','Weiterschlafen'], r:[()=>({cash:70,txt:'Darius hat um 4 aufgeschlossen. Erste Kunden: Bäcker und Taxifahrer. +70 €'}), ()=>({cash:0,ruf:1,txt:'Maddin: „NOCHMAL!“ Darius hat jetzt Angst vor dem Telefon. Aber er ist pünktlich. Ruf +1.'}), ()=>({cash:-60,txt:'Maddin stand um 6 vor der Filiale. Mit Fahrrad. Im Regen. Es wurde laut. −60 €'})]},
+  {t:'Ein Typ in Lederhose will 50 Haxen für ein Oktoberfest in Bönen. Bar. Heute.', a:['Annehmen','Nur gegen Vorkasse','Ablehnen'], r:[(g)=>g<0.65?{cash:380,txt:'Er hat bezahlt. In Münzen. Darius zählt noch. +380 €'}:{cash:-260,txt:'Er war weg, die Haxen auch. Die Lederhose lag noch da. −260 €'}, ()=>({cash:220,txt:'Er hat gemeckert, aber gezahlt. +220 €'}), ()=>({cash:0,txt:'Er ist zum Döner-Imperium. Die haben keine Haxen. Ha.'})]},
+  {t:'Chef, der Bierkaiser von Malle hat angerufen. Er will unser Rezept für Currywurst kaufen.', a:['Verkaufen','Niemals','Falsches Rezept schicken'], r:[()=>({cash:500,ruf:-2,txt:'+500 €. Jetzt gibt es LS-Currywurst auf Malle, aber ohne LS. Ruf −2.'}), ()=>({cash:0,ruf:2,txt:'Ehrensache. Maddin hat es gehört und genickt. Einmal. Ruf +2.'}), (g)=>g<0.5?{cash:300,txt:'Er hat 300 € gezahlt für ein Rezept mit Nutella. Es wird ein Hit. Auf Malle. Natürlich.'}:{cash:-100,ruf:-3,txt:'Er hat es gemerkt. Schlechte Bewertung aus Palma. Ruf −3.'}]},
+  {t:'Isch hab die Fritteuse mit Olivenöl gefüllt, weil das gesund is. Riecht komisch. Kunden finden es „mediterran“.', a:['Sofort tauschen','Als Spezialität verkaufen'], r:[()=>({cash:-110,txt:'Öl getauscht. Olivenöl war teuer. Lektion gelernt. Vielleicht. −110 €'}), (g)=>g<0.5?{cash:160,boost:1,txt:'„Mediterrane Pommes“: Die Würmer stehen Schlange. +160 €'}:{cash:-90,ruf:-2,pause:1,txt:'Rauchmelder, Feuerwehr, Nachbarn. Morgen halbe Kraft. −90 €, Ruf −2.'}]},
+  {t:'Ein Rentner sitzt seit 6 Uhr in der Filiale und erklärt allen, wie man richtig grillt. Er heißt Heinz.', a:['Ihn einstellen','Freundlich rauskomplimentieren','Gratis Kaffee geben'], r:[(g)=>g<0.6?{cash:90,boost:2,txt:'Heinz grillt besser als Darius. Er will kein Geld, nur Hähnchen. +90 €, 2 Tage mehr Kundschaft.'}:{cash:-50,txt:'Heinz hat den Grill umgebaut. Er funktioniert jetzt nur noch für Heinz. −50 €'}, ()=>({cash:0,ruf:-1,txt:'Heinz ist beleidigt. Er schreibt jetzt Google-Bewertungen. Ruf −1.'}), ()=>({cash:-5,ruf:2,txt:'Heinz ist jetzt Stammgast und Werbung auf zwei Beinen. Ruf +2.'})]},
+  {t:'Chef, die Würmer vom Lager nebenan wollen Rabatt, weil sie „jeden Tag kommen“. Sie kommen seit gestern.', a:['10 % Rabatt','Kein Rabatt','Stempelkarte'], r:[()=>({cash:-40,boost:2,txt:'Jetzt kommen sie wirklich jeden Tag. Mit Kollegen. 2 Tage mehr Kundschaft, −40 €.'}), (g)=>g<0.4?{cash:-30,ruf:-1,txt:'Sie gehen zum Döner. Ruf −1.'}:{cash:20,txt:'Sie haben gemeckert und trotzdem gekauft. +20 €'}, ()=>({cash:30,ruf:1,txt:'Stempelkarte: 10 Hähnchen, eins gratis. Darius stempelt aus Versehen immer doppelt. Ruf +1, +30 €.'})]},
+  {t:'Isch hab heute Wodka in den Kühlschrank gestellt. Für Maddin. Falls er vorbeikommt. Is das okay?', a:['Sofort weg damit','Für Maddin lassen'], r:[()=>({cash:0,ruf:1,txt:'Weg damit. Das Ordnungsamt kam eine Stunde später. Glück gehabt. Ruf +1.'}), (g)=>g<0.5?{cash:-200,ruf:-3,txt:'Ordnungsamt: kein Ausschank ohne Lizenz. −200 €, Ruf −3.'}:{cash:0,txt:'Maddin kam vorbei. Er hat nichts gesagt. Die Flasche ist leer. Darius hat befördert gewirkt.'}]},
   {t:'Ein Typ vom Döner-Imperium war hier und hat Fotos von unserer Theke gemacht.', a:['Rausschmeißen','Ihm ne Wurst geben'], r:[()=>({cash:0,txt:'Er kommt wieder. Mit einem Cousin.'}), (g)=>g<0.5?{cash:50,txt:'Er kündigt beim Döner und will bei uns anfangen. Darius hat Angst um seinen Job.'}:{cash:-10,txt:'Er isst die Wurst und geht. Fotos hat er trotzdem.'}]},
 ];
 function filEnd(d){ const E=emp(); if(!E.fil) return;
-  let inc=0; for(let i=0;i<E.fil;i++) inc+=Math.round((120+rngN('fil',i)*220)*(0.5+S.ruf/100)*((E.filBoost||0)>=S.day?1.25:1));
+  let inc=0; for(let i=0;i<E.fil;i++) inc+=Math.round((120+rngN('fil',i)*220)*(0.5+S.ruf/100)*((E.filBoost||0)>=S.day?1.25:1)*((E.filPause||0)>=S.day?0.5:1));
   let note=null;
-  if (E.mail && E.choice!=null){ const M=MAILS[E.mail.i], res=M.r[E.choice](rngN('mail',E.mail.i)); inc+=res.cash||0; if(res.ruf) S.ruf=clamp(S.ruf+res.ruf,0,100); if(res.boost) E.filBoost=S.day+res.boost; note=res.txt; }
+  if (E.mail && E.choice!=null && MAILS[E.mail.i] && MAILS[E.mail.i].r[E.choice]){ const M=MAILS[E.mail.i], res=M.r[E.choice](rngN('mail',S.day*100+E.mail.i)); if(res.pause) E.filPause=S.day+res.pause; inc+=res.cash||0; if(res.ruf) S.ruf=clamp(S.ruf+res.ruf,0,100); if(res.boost) E.filBoost=S.day+res.boost; note=res.txt; }
   else if (E.mail) note='Du hast Darius nicht geantwortet. Er hat einfach weitergemacht. Niemand weiß, was passiert ist.';
   E.mail=null; E.choice=null; S.cash+=inc; d.fil={n:E.fil, inc, note}; }
-function filMail(){ const E=emp(); if(!E.fil || E.mail) return; const i=Math.floor(rngN('mailpick',S.day)*MAILS.length); E.mail={i}; }
+function filMail(){ const E=emp(); if(!E.fil || E.mail) return; E.seen=E.seen||[]; const cand=MAILS.map((_,i)=>i).filter(i=>!E.seen.includes(i)); const i=cand[Math.floor(rngN('mailpick',S.day)*cand.length)]; E.mail={i}; E.seen.push(i); if(E.seen.length>Math.min(14,MAILS.length-3)) E.seen.shift(); }
 function empTab(){
   if (S.challenge) return '<p class="dim" style="font-size:13px">In der Wochen-Challenge gibt es kein Imperium. Hier zählt nur der Grill.</p>';
   const E=emp(), card=(id)=>{ const L=OWNLOC[id], own=E.own[id], req=empReq(id), ok=req.every(r=>r[0]);
@@ -1436,7 +1451,7 @@ function startDay(first){
   { const rg=dayRng('fire'); S.fireAt = S.day>=2 && rg()<Math.min(0.8,0.35+S.day*0.03) ? rndR(rg,35,DAYLEN-40) : null; }
   S.plan=makePlan(); S.planNext=0; planRegulars();
   S.combo=0;
-  S.zollAt=null; S.zollDur=0; S.zoll=0; S.dariusDay=false; S.klo=0; S.sulk=0; S.fuelErr=0;
+  S.otStart=null; S.zollAt=null; S.zollDur=0; S.zoll=0; S.dariusDay=false; S.klo=0; S.sulk=0; S.fuelErr=0;
   lachsApply();
   S.dl={plan:makeDelPlan(), next:0, orders:[], bag:[], trip:null, trips:0, charge:0, aCd:2}; DLRG=dayRng('liefx');
   // Darius-Panne
@@ -1496,8 +1511,9 @@ function endDay(reason){
   c.hof = hofTick(d); if (S.farm) S.farm.log=d.hofEv||(d.hofRot?`${d.hofRot} Salate auf dem Beet verdorben.`:null);
   c.lohn = d.lief&&d.lief.active ? LIEF_LOHN : 0; c.sprit = d.lief&&d.lief.active ? Math.round(VEH[S.lief.veh].fuel*((S.mkt&&S.mkt.sprit)||1)*100)/100 : 0;
   c.strafe = 0;
+  c.ot = d.overtime ? otCost(d.overtime,c.energie) : 0;
   if (d.reheatSold>0 && Math.random()<Math.min(0.85,0.12*d.reheatSold)){ c.strafe = 120+S.day*10; S.ruf=clamp(S.ruf-15,0,100); d.kontrolle=true; }
-  const sum = c.stand+c.energie+c.auto+c.strafe+(c.lohn||0)+(c.sprit||0)+(c.hilfe||0)+(c.hof||0);
+  const sum = c.stand+c.energie+c.auto+c.strafe+(c.ot||0)+(c.lohn||0)+(c.sprit||0)+(c.hilfe||0)+(c.hof||0);
   S.cash -= sum;
   d.costSum=sum; d.cashEnd=S.cash; d.ruf=S.ruf; d.event=S.event.name;
   d.buy=S.lastBuy||0; S.lastBuy=0;
@@ -1892,6 +1908,8 @@ function spRowOut(){
   }
   float(318,240,'noch nichts fertig',C.dim);
 }
+// Salat-Automatik nur, wenn wirklich jemand Salat will (Schlange oder Lieferzettel)
+const salatWanted = () => S.queue.some(c=>!c.res&&!c.cater&&(c.o.salat||0)>0) || !!(S.dl&&S.dl.orders&&S.dl.orders.some(o=>JSON.stringify(o).includes('"salat"')));
 function fryAll(){ let n=0; S.fry.forEach((b,i)=>{ if(b&&b.t>=COOK.pommes.done&&i<S.up.fry){ clickFry(i); n++; } }); if(!n) float(682,250,'noch nichts fertig',C.dim); }
 function flipAll(){ S.rost.forEach((w,i)=>{ if(w&&w.side===1&&!w.burnt&&w.t>=WURST.side) clickRost(i); }); }
 function clickFry(i){
@@ -1932,10 +1950,11 @@ function update(dt){
   if (S.sulk>0){ S.sulk-=dt; S.fuel=Math.min(S.fuel,S.sulkF||0); }
   // Spawn
   const hour=Math.min(7,Math.floor(S.time/(DAYLEN/8)));
-  if (isNight()) spawnNight();
-  else { spawnPlanned(); spawnRegulars(); }
+  if (!S.otStart && S.time<DAYLEN){   // nach Feierabend kommt niemand Neues mehr
+    if (isNight()) spawnNight();
+    else { spawnPlanned(); spawnRegulars(); }
+    bossTick(); sitzTick(); resvTick(); }
   updateLief(dt);
-  bossTick(); sitzTick(); resvTick();
   if (S.lateOrder && S.time>=S.lateOrder.t){ const L=S.lateOrder; S.lateOrder=null; for(const p in L.items) S.stock[p].push({q:L.items[p],age:0,cheap:p==='huhn'&&L.cheap}); log(`🚚 Peter ist aus dem Stau auf der A2 raus: Rest der Lieferung ist da (${Object.entries(L.items).map(([p,q])=>q+' '+EMO[p]).join(' ')}).`); sayM('PETER! Wo warst du?! Ah. Autobahn. Natürlich.'); }
   S.taskT=(S.taskT||0)-dt; if(S.taskT<=0){ S.taskT=0.5; taskTick(false); }
   if (S.hilfe && !(S.zoll>0)) S.rost.forEach((w,i)=>{ if(!w||w.burnt||w.side!==1||w.t<WURST.side) return; if(w.hd==null) w.hd=0.4+Math.random()*1.2; if(w.t>=WURST.side+w.hd){ clickRost(i); S.hilfeT=S.time; const r=slotRost(i); float(r.x+r.w/2,r.y-8,'gewendet',C.phos); } });
@@ -1947,7 +1966,7 @@ function update(dt){
   for(const w of S.rost) if(w&&!w.burnt){ w.t+=dt*csp; if(w.side===1&&w.t>=WURST.flipLate) w.burnt=true; if(w.side===2&&w.t>=WURST.burn) w.burnt=true; }
   for(const b of S.fry) if(b) b.t+=dt*csp;
   if (S.salatPrep>0){ S.salatPrep-=dt*sp; if(S.salatPrep<=0){ S.salatPrep=0; for(let k=0;k<(S.salatN||1);k++) S.aus.salat.push({perf:true,age:0}); S.salatN=1; } }
-  else if ((S.up.salat||0)>=3 && S.aus.salat.length===0 && stockCount('salat')>0 && !(S.zoll>0)) prepSalat(true);
+  else if ((S.up.salat||0)>=3 && S.aus.salat.length===0 && stockCount('salat')>0 && !(S.zoll>0) && salatWanted()) prepSalat(true);
   // Auslage altert
   const lf = lampF();
   for(const p of ['pommes','wurst']){
@@ -2030,8 +2049,20 @@ function update(dt){
   for(const fl of flies) fl.t+=dt; flies=flies.filter(fl=>fl.t<0.35);
   if (toast){ toast.t-=dt; if(toast.t<=0) toast=null; }
   if (S.ruf<=0){ endDay('ruf'); return; }
-  if (S.time>=DAYLEN) endDay();
+  if (S.time>=DAYLEN){
+    const open = S.queue.length + S.jobs.length + (S.kl.job?1:0);
+    if (!S.otStart){ if(!open){ endDay(); return; } S.otStart=S.time; sfx('horn');
+      sayM(pick(['FEIERABEND! Aber erst die Schlange. Keiner geht, bevor der letzte Wurm bedient ist.','Klappe zu für Neue. Die hier noch, und zwar ZACKIG. Überstunden zahlt keiner gern.']));
+      log('🔒 Feierabend: Es kommt niemand mehr dazu. Die Schlange noch abarbeiten, jede Minute ist Überstunde.'); }
+    const ot=S.time-S.otStart;
+    if (!open){ d.overtime=ot; endDay(); return; }
+    if (ot>=OT_MAX){ const left=S.queue.filter(c=>!c.res); d.otSent=left.length; d.lost+=left.length; S.ruf=clamp(S.ruf-left.length,0,100); S.queue=S.queue.filter(c=>c.res); d.overtime=ot;
+      sayM('Schluss jetzt. Klappe runter. Die Würmer kommen morgen wieder.'); endDay(); return; }
+  }
 }
+const OT_MAX = 90;   // Sekunden Spielzeit = 3 Stunden Überstunden, dann macht Maddin die Klappe zu
+const otHours = ot => ot*8/DAYLEN;
+const otCost = (ot,energie) => Math.round(otHours(ot)*(25+(S.hilfe?18:0)+(S.auto?12:0)+(energie||0)/8)*100)/100;
 
 /* ===================== Layout (Koordinaten auf dem Hintergrundbild, 1280×720) ===================== */
 const COUNTER_Y = 425, KLOSKA_X0 = 842;
@@ -2333,6 +2364,8 @@ function render(){
   if (say_m.t>0) bubble(940,318,262,70,say_m.txt,'down');
   if (say_d.t>0) bubble(892,240,220,62,say_d.txt,'left');
 
+  if (S.otStart){ const m=Math.round(otHours(S.time-S.otStart)*60), left=S.queue.filter(c=>!c.res).length; ctx.fillStyle='rgba(60,18,12,.9)'; rr(390,186,500,40,6); ctx.fill(); ctx.strokeStyle=C.ketchup; ctx.stroke();
+    txt(`🔒 FEIERABEND · ÜBERSTUNDEN ${m} MIN`,640,204,13,'#ffd2c4','center',F.disp,700); txt(`Noch ${left} ${left===1?'Wurm':'Würmer'} in der Schlange · nach 3 Std. ist Schluss`,640,220,12,C.mayo,'center',F.body,700); }
   if (S.zoll>0){ ctx.fillStyle='rgba(20,30,60,.88)'; rr(380,236,520,44,6); ctx.fill(); ctx.strokeStyle='#9fb6ff'; ctx.stroke();
     txt('🛃 ZOLL · KONTROLLE SCHWARZARBEIT',640,256,13,'#cfe0ff','center',F.disp,700); txt(`Kloska sucht die Stundenzettel · noch ${Math.ceil(S.zoll)} s`,640,273,13,C.mayo,'center',F.body,700); }
   if (S.dariusDay) txtS('DARIUS HILFT AUS',kX(),COUNTER_Y-138,9,C.ketchup,'center',F.disp,700);
@@ -2873,8 +2906,8 @@ function dayRank(d){
     ['Kaum Verschnitt', 15, food+waste?Math.max(0,1-2*waste/(food+waste)):0],
     ['Marge', 20, clamp((d.profit||0)/Math.max(50,d.revenue||0)/0.35,0,1)],
     ['Sterne', 15, d.night?svc:clamp(((d.ratingN?d.rating:3.5)-2)/3,0,1)]];
-  const pts=Math.round(parts.reduce((a,[,w,v])=>a+w*v,0)), R=RANKS.find(r=>pts>=r.min);
-  return {g:R.g, pts, parts:parts.map(([n,w,v])=>[n,Math.round(w*v),w])}; }
+  const otPen=Math.min(10,Math.round((d.overtime||0)/6)), pts=Math.max(0,Math.round(parts.reduce((a,[,w,v])=>a+w*v,0))-otPen), R=RANKS.find(r=>pts>=r.min);
+  return {g:R.g, pts, otPen, otMin:Math.round(otHours(d.overtime||0)*60), parts:parts.map(([n,w,v])=>[n,Math.round(w*v),w])}; }
 function unlock(id){
   if (STORE.troph[id]) return;
   const t=TROPHIES.find(x=>x.id===id); if(!t) return;
@@ -3124,6 +3157,8 @@ function showBon(d){
     ${c.stand?`<div class="l"><span>${S.at?'Miete':'Standgebühr'}</span><span class="neg">${eur(-c.stand)}</span></div>`:''}
     <div class="l"><span>Gas & Strom</span><span class="neg">${eur(-c.energie)}</span></div>
     ${!c.stand&&d.night?'<div class="l"><span>Standgebühr</span><span>übernimmt Firma</span></div>':''}
+    ${c.ot?`<div class="l"><span>Überstunden nach Feierabend (${Math.round(otHours(d.overtime)*60)} Min.)</span><span class="neg">${eur(-c.ot)}</span></div>`:''}
+    ${d.otSent?`<div class="l"><span>Nach 3 Std. Überstunden weggeschickt</span><span>${d.otSent}</span></div>`:''}
     ${c.auto?`<div class="l"><span>Kloska Autopilot (Überstunden)</span><span class="neg">${eur(-c.auto)}</span></div>`:''}
     ${c.hof?`<div class="l"><span>Hof & Brauerei (Futter, Unterhalt)</span><span class="neg">${eur(-c.hof)}</span></div>`:''}
     ${d.hofEv?`<div class="c" style="font-size:12px">${esc(d.hofEv)}</div>`:''}
@@ -3172,6 +3207,7 @@ function showBon(d){
     ${S.challenge?`<div class="c">Wochen-Challenge ${weekLabel(S.challenge.week)}</div>`:''}
     ${(d.newTroph||[]).map(id=>{ const t=TROPHIES.find(x=>x.id===id); return `<hr><div class="c"><b>${t.anti?'ANTI-TROPHÄE':'TROPHÄE'}: ${t.icon} ${esc(t.name)}</b><br>${esc(t.desc)}</div>`; }).join('')}
     ${d.rank?(()=>{ const R=RANKS.find(r=>r.g===d.rank.g); return `<hr><div class="c"><b>TAGESBEWERTUNG</b></div>${d.rank.parts.map(([n,v,w])=>`<div class="l"><span>${n}</span><span>${v}/${w}</span></div>`).join('')}
+      ${d.rank.otPen?`<div class="l"><span>Überstunden (${d.rank.otMin} Min.)</span><span class="neg">−${d.rank.otPen}</span></div>`:''}
       <div class="l"><b>Gesamt</b><b>${d.rank.pts}/100</b></div>
       <div class="rank" style="--rc:${R.c}"><span class="rg">${R.g}</span><span class="rt">${esc(R.t)}<br><small>— Maddin</small></span></div>`; })():''}
     <hr><div class="c">Vielen Dank für Ihren Einkauf.<br>Maddin sieht alles.</div>
