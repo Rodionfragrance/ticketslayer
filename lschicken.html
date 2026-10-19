@@ -510,7 +510,7 @@ function planBoss(){   // nach Feierabend für den nächsten Tag
   S.bossNext=B; S.lastBoss=S.day; }
 const clockTxt = t => { const mins=Math.floor(t/DAYLEN*480), hh=(LOC().open+Math.floor(mins/60))%24; return String(hh).padStart(2,'0')+':'+String(mins%60).padStart(2,'0'); };
 function bossHint(){ const B=S.bossNext; if(!B||B.day!==S.day) return ''; const T=BOSS[B.id];
-  const fc = B.id==='catering' ? `Der Schützenverein bestellt fürs Hochzeitsbuffet: ${P.filter(p=>B.o[p]).map(p=>B.o[p]+' '+EMO[p]).join(' ')}. Bus kommt gegen ${clockTxt(B.t)}. Bezahlt 30 % mehr, komplett = Bonus.` : T.fc;
+  const fc = B.id==='catering' ? `Der Schützenverein bestellt fürs Hochzeitsbuffet: ${P.filter(p=>B.o[p]).map(p=>B.o[p]+' '+EMO[p]).join(' ')}. Bus kommt gegen ${clockTxt(B.t)}. Festpreis: fairer Platzpreis +30 %, komplett = Bonus. Deine Tafelpreise ändern daran nichts.` : T.fc;
   return `<br><b style="color:var(--grill)">${T.icon} ${T.name}:</b> ${esc(fc)}`; }
 function bossStart(){ const B=S.bossNext; S.boss = B && B.day===S.day && !isNight() ? {...B, spawned:false, res:null, got:0, gotRev:0} : null; S.bossNext=null;
   if (S.boss) log(`${BOSS[S.boss.id].icon} ${BOSS[S.boss.id].name}${S.boss.id==='catering'?`: Bus gegen ${clockTxt(S.boss.t)}`:''}.`); }
@@ -525,7 +525,8 @@ function caterDeliver(c){
   if (!items.length){ float(c.x,490,'Noch nichts fertig',C.ketchup); return; }
   S.jobs.push({o:{}, items, res:true, caterOf:c}); float(c.x,490,`${items.length} Teile unterwegs`,C.phos);
 }
-function caterSale(job){ const c=job.caterOf, B=S.boss; let sum=0; for(const [p] of job.items){ sum+=pr(p)*1.3; S.day_.sold[p]++; }
+const fairP = p => (PRICE[p]+recPrem(p))*LOC().tol;   // vereinbarter Preis bei Aufträgen: fairer Platzpreis, nicht der Preis an der Tafel
+function caterSale(job){ const c=job.caterOf, B=S.boss; let sum=0; for(const [p] of job.items){ sum+=fairP(p)*1.3; S.day_.sold[p]++; }
   sum=Math.round(sum*100)/100; S.cash+=sum; S.day_.revenue+=sum; sfx('ding'); float(S.kl.x,500,'+'+eur(sum)+' Catering',C.phos);
   if (B){ B.got+=job.items.length; B.gotRev+=sum; }
   if (Object.values(c.o).every(n=>n<=0)){ const i=S.queue.indexOf(c); if(i>=0) S.queue.splice(i,1);
@@ -1521,7 +1522,7 @@ function sendAway(c){
 function finishSale(c){
   if (c.caterOf) return caterSale(c);
   if (isNight() && c.faxe){   // Faxe unter der Hand: zahlt bar, zählt nicht für die Firma
-    const i=S.queue.indexOf(c), x=i>=0?qx(i):S.kl.x, X=faxeX(), n=c.items.length, sum=n*pr('faxe'), tip=Math.round(sum*0.5*100)/100;
+    const i=S.queue.indexOf(c), x=i>=0?qx(i):S.kl.x, X=faxeX(), n=c.items.length, sum=n*Math.min(pr('faxe'),fairP('faxe')*1.5), tip=Math.round(sum*0.5*100)/100;
     X.sold+=n; X.cash+=sum+tip; S.cash+=sum+tip; S.day_.sold.faxe+=n; S.day_.served++; sfx('ding');
     float(x,500,'+'+eur(sum+tip)+' unter der Hand',C.grill); if (i>=0) S.queue.splice(i,1); return;
   }
@@ -1545,7 +1546,7 @@ function finishSale(c){
       if (S.recSeen[sk]===REVEAL_N){ float(x,450,`${recOf(p).name}: ${t>0?'Hit hier! 👍':t<0?'kommt hier nicht an 👎':'ganz okay 😐'}`,t>0?C.phos:t<0?C.ketchup:C.mayo); log(`Rezept-Erkenntnis: ${recOf(p).name} kommt in ${LOC().town} ${t>0?'richtig gut':t<0?'schlecht':'ganz normal'} an.`); }
       if (t>0){ liked++; pRuf+=0.3; if(it.perf&&recOf(p).id!=='klassik') bump('liked'); } else if (t<0){ hated++; pRuf-=0.6; } } }
   if (c.crit && S.boss) S.boss.res = allPerf && !c.partial && !cheap && !re ? 'perfekt' : 'ok';
-  if (c.resv){ c.resv.done='ok'; sum*=1.15; }
+  if (c.resv){ c.resv.done='ok'; sum=c.items.reduce((a,[p])=>a+fairP(p),0)*1.15; }
   if (LOC().picky){ const bad=c.items.filter(([,it])=>!it.perf).length; if(bad) pRuf-=1.5*bad; if(c.partial) pRuf-=2; }
   const comboHit = allPerf && !c.partial && !cheap && !re;
   if (comboHit){ S.combo=(S.combo||0)+1; S.day_.comboMax=Math.max(S.day_.comboMax||0,S.combo); if(S.combo>=15) unlock('fliessband'); if(S.combo%5===0) sayM(pick(['COMBO! So läuft das hier!','Fließband! Weiter so!','Das ist Wartime-Niveau!'])); }
