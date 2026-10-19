@@ -503,23 +503,26 @@ const FARM_UP={
   huhn: {name:'Hühnerstall', caps:[16,28,44,64], cost:[0,600,1200,2200], unit:'Plätze'},
   schwein:{name:'Schweinestall', caps:[2,3,4,6], cost:[0,800,1500,2800], unit:'Buchten'},
   salat:{name:'Salatbeete', caps:[1,2,3], cost:[0,500,1000], unit:'Beete'},
+  kartoffel:{name:'Kartoffeläcker', caps:[1,2,3], cost:[0,600,1200], unit:'Äcker'},
   kessel:{name:'Braukessel', caps:[1,2,3], cost:[0,1500,3000], unit:'Kessel'},
 };
 const HALTUNG=[{id:'stall',name:'Stallhaltung',up:1,ek:1,tol:0,ruf:0,txt:'Günstig. Den Gästen egal. Meistens.'},
   {id:'frei',name:'Freilandhaltung',up:1.4,ek:1.2,tol:0.06,ruf:0.5,txt:'Schild „Freiland“ am Wagen: Kundschaft akzeptiert 6 % höhere Fleischpreise, Ruf +0,5 am Tag.'},
   {id:'bio',name:'Bio-Hof',up:1.9,ek:1.5,tol:0.12,ruf:1,txt:'Bio-Siegel: 12 % höhere Fleischpreise gelten als fair, Ruf +1 am Tag. Futter teuer.'}];
-const HOF_EK={huhn:1.2, salat:0.5, schwein:12, faxe:0.45, monster:0.5};   // Schwein = Schlachtkosten pro Tier (4 Haxen + 20 Würste)
+const HOF_EK={huhn:1.2, salat:0.5, schwein:12, faxe:0.45, monster:0.5, pommes:0.15};   // Schwein = Schlachtkosten pro Tier (4 Haxen + 20 Würste)
+const KART_DAYS=4, KART_N=40, KART_CAP=120;   // Kartoffeln: alle 4 Tage Ernte, lagern im Hofkeller
+const farmFix = F => { if(F){ F.lv.kartoffel=F.lv.kartoffel||0; if(!F.acker){ F.acker=[{age:0}]; F.keller=F.keller||20; } } return F; };
 const PIG_YIELD={haxe:4, wurst:20}, PIG_DAYS=7, BEET_DAYS=3, BEET_N=12, BEET_ROT=2, BREW_N=15, BREW_CAP=75;
 const hofGrow = () => Math.round(fcap('huhn')/2);
-const hofUpkeep = () => { const F=S.farm, B=S.brew; let u=0; if(F) u+=(20+fcap('huhn')*0.3+F.pigs.length*4+F.beds.length*2+F.pigs.filter(p=>p.age>PIG_DAYS).length*3)*HALTUNG[F.hal].up; if(B) u+=15+8*fcap('kessel'); return Math.round(u); };
-const farm = () => S.farm || null, brew = () => S.brew || null;
+const hofUpkeep = () => { const F=S.farm, B=S.brew; let u=0; if(F) u+=(20+fcap('huhn')*0.3+F.pigs.length*4+F.beds.length*2+(farmFix(F).acker.length)*3+F.pigs.filter(p=>p.age>PIG_DAYS).length*3)*HALTUNG[F.hal].up; if(B) u+=15+8*fcap('kessel'); return Math.round(u); };
+const farm = () => farmFix(S.farm) || null, brew = () => S.brew || null;
 const flvl = k => k==='kessel' ? ((S.brew&&S.brew.lv.kessel)||0) : ((S.farm&&S.farm.lv[k])||0);
 const fcap = k => FARM_UP[k].caps[flvl(k)];
 function farmBuy(){ if(S.farm||S.challenge||S.day<FARM_DAY||S.cash<FARM_PRICE) return; S.cash-=FARM_PRICE;
-  S.farm={lv:{huhn:0,schwein:0,salat:0}, hal:0, huhn:8, pigs:[{age:3},{age:0}], beds:[{age:0}], first:true, since:S.day, log:null}; unlock('bauer'); sfx('fanfare'); }
+  S.farm={lv:{huhn:0,schwein:0,salat:0,kartoffel:0}, hal:0, huhn:8, pigs:[{age:3},{age:0}], beds:[{age:0}], acker:[{age:1}], keller:20, first:true, since:S.day, log:null}; unlock('bauer'); sfx('fanfare'); }
 function brewBuy(){ if(S.brew||S.challenge||S.day<FARM_DAY||S.cash<BREW_PRICE) return; S.cash-=BREW_PRICE; S.brew={lv:{kessel:0}, faxe:12, monster:12, first:true, since:S.day}; unlock('brauer'); sfx('fanfare'); }
 function farmUp(k){ const lv=flvl(k), U=FARM_UP[k]; if(lv>=U.caps.length-1) return; const pr=U.cost[lv+1]; if(S.cash<pr) return; S.cash-=pr;
-  if (k==='kessel') S.brew.lv.kessel++; else { S.farm.lv[k]++; if(k==='schwein') S.farm.pigs.push({age:0}); if(k==='salat') S.farm.beds.push({age:0}); } sfx('ping'); }
+  if (k==='kessel') S.brew.lv.kessel++; else { S.farm.lv[k]++; if(k==='schwein') S.farm.pigs.push({age:0}); if(k==='salat') S.farm.beds.push({age:0}); if(k==='kartoffel'){ farmFix(S.farm); S.farm.acker.push({age:0}); } } sfx('ping'); }
 const pigsReady = () => S.farm ? S.farm.pigs.filter(p=>p.age>=PIG_DAYS).length : 0;
 const bedsReady = () => S.farm ? S.farm.beds.filter(b=>b.age>=BEET_DAYS&&b.age<BEET_DAYS+BEET_ROT).length : 0;
 function hofAvail(p){
@@ -527,6 +530,7 @@ function hofAvail(p){
   if (p==='haxe') return pigsReady()*PIG_YIELD.haxe;
   if (p==='wurst') return pigsReady()*PIG_YIELD.wurst;
   if (p==='salat') return bedsReady()*BEET_N;
+  if (p==='pommes') return S.farm?(farmFix(S.farm).keller||0):0;
   if (p==='faxe'||p==='monster') return S.brew?S.brew[p]:0;
   return 0; }
 const hofOn = () => !!((S.farm||S.brew) && !S.challenge && S.hofFirst!==false);
@@ -537,6 +541,7 @@ function hofPlan(){
     const h=Math.min(o.huhn||0, S.farm.huhn); if(h){ r.take.huhn=h; r.cost+=h*HOF_EK.huhn*H.ek; }
     const need=Math.max(Math.ceil((o.haxe||0)/PIG_YIELD.haxe), Math.ceil((o.wurst||0)/PIG_YIELD.wurst)), pg=Math.min(need,pigsReady());
     if (pg){ r.pigs=pg; r.cost+=pg*HOF_EK.schwein*H.ek; for(const q of ['haxe','wurst']){ const got=pg*PIG_YIELD[q], use=Math.min(o[q]||0,got); if(use) r.take[q]=use; if(got>use) r.extra[q]=got-use; } }
+    farmFix(S.farm); const kp=Math.min(o.pommes||0, S.farm.keller); if(kp){ r.take.pommes=kp; r.cost+=kp*HOF_EK.pommes; }
     const bn=Math.min(Math.ceil((o.salat||0)/BEET_N), bedsReady()); if(bn){ const got=bn*BEET_N, use=Math.min(o.salat||0,got); r.beds=bn; r.take.salat=use; if(got>use) r.extra.salat=got-use; r.cost+=got*HOF_EK.salat; }
   }
   if (S.brew) for(const q of ['faxe','monster']){ const n=Math.min(o[q]||0, S.brew[q]); if(n){ r.take[q]=n; r.cost+=n*HOF_EK[q]; } }
@@ -546,7 +551,7 @@ function orderCost(){ const H=hofPlan(); return P.reduce((a,p)=>a+Math.max(0,(S.
 function hofDeliver(){
   const H=hofPlan(); if(!Object.keys(H.take).length && !H.pigs && !H.beds) return null;
   for(const p in H.take) S.order[p]=Math.max(0,S.order[p]-H.take[p]);
-  if (S.farm){ S.farm.huhn-=H.take.huhn||0; let k=H.pigs; S.farm.pigs.forEach(pg=>{ if(k>0&&pg.age>=PIG_DAYS){ pg.age=0; k--; } }); let b=H.beds; S.farm.beds.forEach(bd=>{ if(b>0&&bd.age>=BEET_DAYS&&bd.age<BEET_DAYS+BEET_ROT){ bd.age=0; b--; } }); }
+  if (S.farm){ S.farm.huhn-=H.take.huhn||0; S.farm.keller-=H.take.pommes||0; let k=H.pigs; S.farm.pigs.forEach(pg=>{ if(k>0&&pg.age>=PIG_DAYS){ pg.age=0; k--; } }); let b=H.beds; S.farm.beds.forEach(bd=>{ if(b>0&&bd.age>=BEET_DAYS&&bd.age<BEET_DAYS+BEET_ROT){ bd.age=0; b--; } }); }
   if (S.brew) for(const q of ['faxe','monster']) S.brew[q]-=H.take[q]||0;
   const got={}; for(const p of P){ const n=(H.take[p]||0)+(H.extra[p]||0); if(n){ got[p]=n; S.stock[p].push({q:n,age:0,cheap:false,hof:true}); } }
   return {got, cost:H.cost, pigs:H.pigs}; }
@@ -555,6 +560,7 @@ function hofTick(d){
   let up=0; const F=S.farm, B=S.brew; if(!F&&!B) return 0;
   if (F){ const H=HALTUNG[F.hal];
     F.huhn=Math.min(fcap('huhn'), F.huhn+hofGrow()); F.pigs.forEach(p=>p.age++); F.beds.forEach(b=>{ b.age++; if(b.age>=BEET_DAYS+BEET_ROT){ b.age=0; d.hofRot=(d.hofRot||0)+BEET_N; } });
+    farmFix(F); F.acker.forEach(a=>{ a.age++; if(a.age>=KART_DAYS){ a.age=0; F.keller=Math.min(KART_CAP*F.acker.length, F.keller+KART_N); } });
     const rg=dayRng('farm'), r=rg();
     if (r<0.07 && F.huhn>=3){ F.huhn-=3; d.hofEv='🦊 Ein Fuchs war im Hühnerstall. 3 Hühner weg.'; }
     else if (r<0.11 && F.pigs.some(p=>p.age>=4)){ const p=F.pigs.find(p=>p.age>=4); p.age=Math.max(0,p.age-3); d.hofEv='🐖 Ein Schwein ist ausgebrochen und über die B63 gelaufen. Drei Tage Diät, bis es wieder da ist.'; }
@@ -565,16 +571,16 @@ function hofTick(d){
 const halTol = p => (S&&S.farm&&['huhn','haxe','wurst'].includes(p)) ? HALTUNG[S.farm.hal].tol : 0;
 function hofTab(){
   if (S.challenge) return '';
-  const F=S.farm, B=S.brew, upBtn=(k)=>{ const lv=flvl(k), U=FARM_UP[k], mx=lv>=U.caps.length-1; return `<button class="btn sm" data-fup="${k}" ${mx||S.cash<U.cost[lv+1]?'disabled':''}>${{huhn:'🐔',schwein:'🐖',salat:'🥗',kessel:'🍺'}[k]} ${U.caps[lv]}${mx?` ${U.unit} · max`:`→${U.caps[lv+1]} ${U.unit} · ${eur(U.cost[lv+1])}`}</button>`; };
+  const F=S.farm, B=S.brew, upBtn=(k)=>{ const lv=flvl(k), U=FARM_UP[k], mx=lv>=U.caps.length-1; return `<button class="btn sm" data-fup="${k}" ${mx||S.cash<U.cost[lv+1]?'disabled':''}>${{huhn:'🐔',schwein:'🐖',salat:'🥗',kartoffel:'🥔',kessel:'🍺'}[k]} ${U.caps[lv]}${mx?` ${U.unit} · max`:`→${U.caps[lv+1]} ${U.unit} · ${eur(U.cost[lv+1])}`}</button>`; };
   const locked=S.day<FARM_DAY;
   const farmCard = F ? `<div class="sabt"><div class="row" style="justify-content:space-between"><b>🐓 Hof Hamm-Rhynern</b><span class="dim" style="font-size:12px">${HALTUNG[F.hal].name}</span></div>
-      <p style="font-size:12.5px">🐔 Hühner <b>${F.huhn}/${fcap('huhn')}</b> (+${hofGrow()}/Tag) · 🐖 ${F.pigs.map(p=>p.age>=PIG_DAYS?'<b style="color:var(--phos)">schlachtreif</b>':`in ${PIG_DAYS-p.age} T.`).join(', ')} · 🥗 ${F.beds.map(b=>b.age>=BEET_DAYS?`<b style="color:var(--phos)">erntereif</b> (noch ${BEET_DAYS+BEET_ROT-b.age} T.)`:`Ernte in ${BEET_DAYS-b.age} T.`).join(', ')}</p>
-      <p class="dim" style="font-size:12px">Hof-EK: Huhn ${eur(HOF_EK.huhn*HALTUNG[F.hal].ek)}, Schwein ${eur(HOF_EK.schwein*HALTUNG[F.hal].ek)} Schlachtung (= 4 Haxen + 20 Würste), Salat ${eur(HOF_EK.salat)}. Unterhalt Hof+Brauerei ~${eur(hofUpkeep())}/Tag, auch ohne Abholung.${F.log?`<br><span style="color:var(--mayo)">${esc(F.log)}</span>`:''}</p>
-      <div class="sabb">${upBtn('huhn')}${upBtn('schwein')}${upBtn('salat')}</div>
+      <p style="font-size:12.5px">🐔 Hühner <b>${F.huhn}/${fcap('huhn')}</b> (+${hofGrow()}/Tag) · 🐖 ${F.pigs.map(p=>p.age>=PIG_DAYS?'<b style="color:var(--phos)">schlachtreif</b>':`in ${PIG_DAYS-p.age} T.`).join(', ')} · 🥗 ${F.beds.map(b=>b.age>=BEET_DAYS?`<b style="color:var(--phos)">erntereif</b> (noch ${BEET_DAYS+BEET_ROT-b.age} T.)`:`Ernte in ${BEET_DAYS-b.age} T.`).join(', ')} · 🥔 Keller <b>${farmFix(F).keller}/${KART_CAP*F.acker.length}</b> Portionen, Ernte in ${Math.min(...F.acker.map(a=>KART_DAYS-a.age))} T.</p>
+      <p class="dim" style="font-size:12px">Hof-EK: Huhn ${eur(HOF_EK.huhn*HALTUNG[F.hal].ek)}, Schwein ${eur(HOF_EK.schwein*HALTUNG[F.hal].ek)} Schlachtung (= 4 Haxen + 20 Würste), Salat ${eur(HOF_EK.salat)}, Pommes ${eur(HOF_EK.pommes)}/Portion. Unterhalt Hof+Brauerei ~${eur(hofUpkeep())}/Tag, auch ohne Abholung.${F.log?`<br><span style="color:var(--mayo)">${esc(F.log)}</span>`:''}</p>
+      <div class="sabb">${upBtn('huhn')}${upBtn('schwein')}${upBtn('salat')}${upBtn('kartoffel')}</div>
       <p style="font-size:12.5px;margin-top:6px"><b>Haltungsform:</b></p><div class="sabb">${HALTUNG.map((H,i)=>`<button class="btn sm ${F.hal===i?'on':''}" data-hal="${i}" title="${esc(H.txt)}">${H.name}</button>`).join('')}</div>
       <p class="dim" style="font-size:12px">${esc(HALTUNG[F.hal].txt)} Unterhalt ×${String(HALTUNG[F.hal].up).replace('.',',')}, Hof-EK ×${String(HALTUNG[F.hal].ek).replace('.',',')}.</p></div>`
     : `<div class="sabt"><div class="row" style="justify-content:space-between"><b>🐓 Eigener Hof in Hamm-Rhynern</b><span class="dim" style="font-size:12px">${eur(FARM_PRICE)}</span></div>
-      <p class="dim" style="font-size:12.5px">Eigene Hühner (jeden Tag), Schweine (alle 7 Tage schlachtreif: Haxe und Wurst) und Salat (alle 3 Tage Ernte). Fester Hof-EK, egal was Weltlage und Peter sagen. Kleiner Hof = begrenzte Menge, Unterhalt kostet jeden Tag. Lohnt sich vor allem in der Krise.</p>
+      <p class="dim" style="font-size:12.5px">Eigene Hühner (jeden Tag), Schweine (alle 7 Tage schlachtreif: Haxe und Wurst), Salat (alle 3 Tage Ernte) und Kartoffeln für Pommes (alle 4 Tage, lagern im Keller). Fester Hof-EK, egal was Weltlage und Peter sagen. Kleiner Hof = begrenzte Menge, Unterhalt kostet jeden Tag. Lohnt sich vor allem in der Krise.</p>
       <button class="btn sm" id="bFarm" ${locked||S.cash<FARM_PRICE?'disabled':''}>${locked?`ab Tag ${FARM_DAY}`:`Hof kaufen · ${eur(FARM_PRICE)}`}</button></div>`;
   const brewCard = B ? `<div class="sabt"><div class="row" style="justify-content:space-between"><b>🍺 LS-Bräu</b><span class="dim" style="font-size:12px">${fcap('kessel')} Kessel</span></div>
       <p style="font-size:12.5px">🍺 LS-Starkbier (statt Faxe) <b>${B.faxe}</b> · ⚡ LS-Power (statt Monster) <b>${B.monster}</b> · je +${BREW_N*fcap('kessel')}/Tag, Lager max ${BREW_CAP*fcap('kessel')}</p>
