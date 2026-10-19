@@ -811,9 +811,9 @@ const UPG = {
   spiess:{name:'Spieß-Erweiterung', desc:'+1 Stange mit 4 Plätzen', base:300, max:12, step:4, start:4},
   spab:  {name:'Spieß-Abnehmer', desc:'Knopf „REIHE RAUS“ am Spieß: nimmt eine ganze Stange auf einmal ab (fertige in die Auslage, verbrannte in die Tonne)', base:280, max:1, step:1, start:0},
   rost:  {name:'Zweiter Grillrost', desc:'+2 Bratwurst-Plätze', base:180, max:8, step:2, start:4},
-  lamp:  {name:'Wärmelampe', desc:l=>l>=3?'Pommes und Wurst bleiben 3× so lange knusprig':`Stufe ${l+1}: Pommes und Wurst ${[60,120,200][l]} % länger knusprig`, base:200, max:3, step:1, start:0},
+  lamp:  {name:'Wärmelampe', desc:l=>l>=4?'Infrarot-Profi: Pommes und Wurst bleiben 4× so lange knusprig':`Stufe ${l+1}: Pommes und Wurst ${[60,120,200,300][l]} % länger knusprig`, base:200, max:4, step:1, start:0},
   salat: {name:'Salatplatz', desc:l=>['Stufe 1: Salat 35 % schneller angerichtet','Stufe 2: zwei Salate pro Durchgang','Stufe 3: Kloska richtet selbst an, sobald die Auslage leer ist','Salatprofi: schnell, doppelt, automatisch'][Math.min(l,3)], base:160, max:3, step:1, start:0},
-  kuehl: {name:'Kühlzelle', desc:'+60 Einheiten Lagerplatz', base:250, max:730, step:60, start:130},
+  kuehl: {name:'Kühlzelle', desc:l=>l>=970?'+30 Einheiten Lagerplatz (letzter Ausbau)':'+60 Einheiten Lagerplatz', base:250, max:1000, step:60, start:130},
   schild:{name:'Werbeschild', desc:'+12 % Kundschaft pro Stufe', base:220, max:3, step:1, start:0},
   schul: {name:'Kloska-Schulung', desc:l=>l<3?'Kloska verwechselt im Autopilot seltener':l===3?'Stufe 4: kaum noch Fehler, Autopilot verkauft schneller':l===4?'Stufe 5: Meisterkurs, fast fehlerfrei und flott':'Kloska hat ausgelernt. Sagt er.', base:150, max:5, step:1, start:0},
   fry:   {name:'Fritteusen-Einsatz', desc:'+1 Pommes-Platz (bis zu 4)', base:200, max:4, step:1, start:2},
@@ -1796,7 +1796,7 @@ function loadFry(){
   if(!takeStock('pommes',1)){ float(679,280,'Keine Pommes mehr!',C.ketchup); return; }
   S.fry[i]={t:0}; sfx('fry');
 }
-const lampF = () => 1+[0,0.6,1.2,2.0][Math.min(3,S.up.lamp||0)];
+const lampF = () => 1+[0,0.6,1.2,2.0,3.0][Math.min(4,S.up.lamp||0)];
 const salatTime = () => SALAT_PREP*((S.up.salat||0)>=1?0.65:1);
 const klErr = () => Math.max(0.01, 0.16-0.04*Math.min(S.up.schul,3)-0.015*Math.max(0,S.up.schul-3));
 function prepSalat(auto){
@@ -3158,7 +3158,7 @@ function showBon(d){
 }
 
 function buyPrice(p,plain){ const r=recOf(p); return (BUY[p]*mktF(p)*Math.pow(1.012,S.day-1)*(!plain&&p==='huhn'&&S.cheapNext?0.65:1)+(r?r.cost*recMkt(p,r.id):0))*(1-perkOn('peter')*0.04); }
-function upPrice(k){ const u=UPG[k]; return Math.round(u.base*0.5*Math.pow(1.5,S.upBought[k])); }  // 50 % günstiger
+function upPrice(k){ const u=UPG[k], b=S.upBought[k]; return Math.round(u.base*0.5*Math.pow(1.5,Math.min(b,9))*(b>9?1+0.25*(b-9):1)); }   // ab dem 10. Ausbau linear statt exponentiell  // 50 % günstiger
 function upMaxed(k){ const u=UPG[k]; return k==='kuehl'? S.up.kuehl>=u.max : S.up[k]>=u.max; }
 
 let EVE_TAB='up';
@@ -3325,7 +3325,7 @@ function fcHint(){ if(!S.forecast.mult) return ''; const m=S.forecast.mult, part
 function sparkBars(p,h){ const mx=Math.max(1,...h.map(d=>d.sold[p])); return h.map(d=>`<i style="height:${Math.max(4,d.sold[p]/mx*100)}%"></i>`).join('')||'<span class="dim">–</span>'; }
 function buyUp(k,redraw){
   const pr=upPrice(k); if(S.cash<pr||upMaxed(k)) return;
-  S.cash-=pr; S.upBought[k]++; S.up[k]+=UPG[k].step; redraw();
+  S.cash-=pr; S.upBought[k]++; S.up[k]=Math.min(UPG[k].max,S.up[k]+UPG[k].step); redraw();
 }
 
 function perkShop(){
