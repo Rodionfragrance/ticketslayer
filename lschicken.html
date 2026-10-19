@@ -267,7 +267,7 @@ const NIGHT_EVERY = 7, NIGHT_ZULAGE = 1.5, NIGHT_PENALTY = 2.0, NIGHT_BONUS = 0.
 const NIGHT = {id:'nacht', name:'Nachtschicht Lagerhalle', cust:1, mult:{}};
 const isNightDay = n => n>0 && n%NIGHT_EVERY===0;
 const isNight = () => S && S.event && S.event.id==='nacht';
-// Standplätze: freischalten über den Google-Schnitt der letzten 7 Tage. Fällt er zu tief, kündigt der Veranstalter.
+// Standplätze: freischalten über Wochenquoten (siehe LOC_Q). Wer die Quote nicht hält, fliegt eine Stufe runter.
 const LOCS = [
   {id:'industrie', lief:1, town:'Uentrop', open:6, curve:[0.8,1.0,0.5,0.6,0.9,1.4,1.9,1.2], short:'INDUSTRIEGEBIET', name:'Industriegebiet Hamm-Uentrop', place:'Schotterplatz Industriegebiet Hamm-Uentrop', req:0,   days:0,  fee:d=>25+d*2,  tol:0.85, cust:0.85, mult:{faxe:0,monster:1.5,wurst:1.3,salat:0.5},
    desc:'Billiger Schotterplatz zwischen Containern. Arbeiter in der Mittagspause, knapp bei Kasse. Faxe ist verboten.'},
@@ -435,7 +435,7 @@ const rngN = (tag,n) => S.challenge ? mulberry32(hashStr(S.challenge.seed+'|'+S.
 const FIL_MAX=3, filPrice = () => Math.round(5000*(1+emp().fil*0.5));
 function empReq(id){ const E=emp(), a=avg7();
   if (id==='imbiss') return [[S.locMax>=LOCS.length-1,'Oktoberfest freigeschaltet'],[S.cash>=OWNLOC.imbiss.price,`${eur(OWNLOC.imbiss.price)} in der Kasse`]];
-  if (id==='restaurant') return [[!!E.own.imbiss,'Imbiss gehört dir'],[E.own.imbiss&&S.day-(E.since.imbiss||S.day)>=7,'7 Tage Imbiss-Erfahrung'],[a.n>=3&&a.avg>=4.4,'Google 7 Tage ⌀ 4,4 ★'],[S.cash>=OWNLOC.restaurant.price,`${eur(OWNLOC.restaurant.price)} in der Kasse`]];
+  if (id==='restaurant') return [[!!E.own.imbiss,'Imbiss gehört dir'],[E.own.imbiss&&S.day-(E.since.imbiss||S.day)>=7,'7 Tage Imbiss-Erfahrung'],[a.n>=3&&a.avg>=4.0,'Google 7 Tage ⌀ 4,0 ★'],[S.cash>=OWNLOC.restaurant.price,`${eur(OWNLOC.restaurant.price)} in der Kasse`]];
   return []; }
 function empBuy(id){ const E=emp(); if(E.own[id] || !empReq(id).every(r=>r[0])) return; S.cash-=OWNLOC[id].price; E.own[id]=true; E.since[id]=S.day; setAt(id); unlock(id==='imbiss'?'imbiss':'grill'); sfx('fanfare'); }
 function empValue(){ const E=emp(), a=avg7(), f=clamp((a.n?a.avg:3.5)/4.5,0.6,1.2);
@@ -654,7 +654,7 @@ const TUT = {
     ['Max & Moritz: sofort anklicken, sonst klauen sie'],
     ['Gasflasche brennt: anklicken bis gelöscht'],
     ['Abends: Lieferdienst, Rezepte, Hinterzimmer, Weltlage'],
-    ['Google-Schnitt der letzten 7 Tage öffnet neue Standplätze']]},
+    ['Verkaufsquoten pro Woche öffnen neue Standplätze']]},
 };
 function tutBoxH(){ const T=S&&S.tut&&TUT[S.day]; return T ? 26+T.steps.length*19 : 0; }
 function drawTut(now){
@@ -718,7 +718,7 @@ function fakeCard(){
   if (S.challenge) return '<p class="dim" style="font-size:13px">In der Wochen-Challenge gibt es kein Hinterzimmer. Fair bleibt fair.</p>';
   const F=fakeSt(), pr=fakePrice(), fl=fakeFlag(), odds=fakeOdds();
   return `<div class="sabt"><div class="row" style="justify-content:space-between"><b>🤖 Google-Bewertungen kaufen</b><span class="dim" style="font-size:12px">${F.count}× gekauft</span></div>
-    <p class="dim" style="font-size:12.5px">${FAKE_N} × ★★★★★ von „Kunden“ ohne Profilbild, sofort im 7-Tage-Schnitt. Google prüft über Nacht: Risiko jetzt <b style="color:${odds>0.3?'var(--grill)':'var(--mayo)'}">${Math.round(odds*100)} %</b>. Erwischt = alle gekauften Sterne weg, Ruf −${FAKE_RUF}, ${FAKE_FLAG_DAYS} Tage Warnhinweis (−0,5 ★ im Schnitt). Das kann den Standplatz kosten.</p>
+    <p class="dim" style="font-size:12.5px">${FAKE_N} × ★★★★★ von „Kunden“ ohne Profilbild, sofort im 7-Tage-Schnitt. Google prüft über Nacht: Risiko jetzt <b style="color:${odds>0.3?'var(--grill)':'var(--mayo)'}">${Math.round(odds*100)} %</b>. Erwischt = alle gekauften Sterne weg, Ruf −${FAKE_RUF}, ${FAKE_FLAG_DAYS} Tage Warnhinweis (−0,5 ★ im Schnitt).</p>
     ${fl?`<p style="font-size:13px;color:var(--ketchup)">⚠ Google-Warnhinweis „Bewertungen manipuliert“ bis Tag ${fl.until}.</p>`:''}
     ${F.msg?`<p style="font-size:13px;color:var(--mayo)">${esc(F.msg)}</p>`:''}
     <button class="btn sm" id="bFake" ${S.cash<pr?'disabled':''}>🤖 ${FAKE_N} Bewertungen kaufen · ${eur(pr)}</button></div>`;
@@ -726,15 +726,22 @@ function fakeCard(){
 const locPrice = (p,i) => Math.round((PRICE[p]+(S&&S.recipe?recPrem(p):0))*(i==null?LOC():LOCS[i]).tol*10)/10;
 // Standortwechsel: Preise relativ mitnehmen, sonst ist jeder Wechsel eine Preisfalle
 function setLoc(i){ if(i===S.loc && !S.at) return; const f=LOCS[i].tol/LOC().tol; S.at=null; for(const p of P) S.price[p]=Math.round(clamp(pr(p)*f,PRICE[p]*0.5,PRICE[p]*2.5)*10)/10; S.loc=i; }
+// Standplätze: Wochenquote statt Google-Schnitt. Freischalten = Quote der nächsten Stufe in 7 Tagen verkauft (+ Mindesttag).
+// Halten = nach 7 Tagen Schonfrist mindestens 80 % der Quote der aktuellen Stufe pro 7 Tage, sonst eine Stufe runter.
+const LOC_Q = {markt:{p:'huhn',n:60}, stadtfest:{p:'salat',n:90}, kirmes:{p:'wurst',n:160}, wiesn:{p:'haxe',n:70}};
+const LOC_HOLD = 0.8, LOC_GRACE = 7;
+const sold7 = p => S.hist.slice(-7).reduce((a,h)=>a+((h.sold&&h.sold[p])||0),0);
+const qTxt = (id,f=1) => { const q=LOC_Q[id]; return q ? `${Math.ceil(q.n*f)} ${EMO[q.p]}` : ''; };
 function locCheck(d){
-  const a=avg7(); d.locNews=d.locNews||[];
-  if (S.locMax>0 && a.n>=3 && a.avg < LOCS[S.locMax].req-0.2){
-    const lost=LOCS[S.locMax]; S.locMax--; if(S.loc>S.locMax){ if(S.at) S.loc=S.locMax; else setLoc(S.locMax); }
-    d.locNews.push({bad:true, txt:`Der Veranstalter von „${lost.name}“ hat gekündigt. Google-Schnitt der letzten 7 Tage: ${a.avg.toFixed(1).replace('.',',')} ★ (nötig: ${lost.req.toFixed(1).replace('.',',')}). Du musst eine Stufe runter.`});
+  d.locNews=d.locNews||[]; if (S.locSince==null) S.locSince=d.n;
+  const cur=LOCS[S.locMax], cq=LOC_Q[cur.id];
+  if (S.locMax>0 && cq && d.n-S.locSince>=LOC_GRACE && sold7(cq.p) < cq.n*LOC_HOLD){
+    const lost=cur; S.locMax--; S.locSince=d.n; if(S.loc>S.locMax){ if(S.at) S.loc=S.locMax; else setLoc(S.locMax); }
+    d.locNews.push({bad:true, txt:`Der Veranstalter von „${lost.name}“ hat gekündigt: In den letzten 7 Tagen nur ${sold7(cq.p)} ${NAME[cq.p]} verkauft, nötig sind ${Math.ceil(cq.n*LOC_HOLD)}. Du musst eine Stufe runter.`});
     unlock('gekuendigt');
   } else if (S.locMax<LOCS.length-1){
-    const nx=LOCS[S.locMax+1];
-    if (a.n>=3 && a.avg>=nx.req && d.n>=nx.days){ S.locMax++; d.locNews.push({bad:false, txt:`Neuer Standplatz freigeschaltet: ${nx.name}! Ab morgen wählbar.`}); if(nx.id==='kirmes') unlock('kirmes'); if(nx.id==='wiesn') unlock('wiesn'); }
+    const nx=LOCS[S.locMax+1], q=LOC_Q[nx.id];
+    if (d.n>=nx.days && q && sold7(q.p)>=q.n){ S.locMax++; S.locSince=d.n; d.locNews.push({bad:false, txt:`Neuer Standplatz freigeschaltet: ${nx.name}! ${sold7(q.p)} ${NAME[q.p]} in 7 Tagen überzeugen den Veranstalter. Ab morgen wählbar. Halten: ${qTxt(nx.id,LOC_HOLD)} pro Woche.`}); if(nx.id==='kirmes') unlock('kirmes'); if(nx.id==='wiesn') unlock('wiesn'); }
   }
 }
 const EVENTS = [
@@ -1478,22 +1485,27 @@ function makeOrder(rg=Math.random){
   if (S.day>=1){ const wm=0.17*locMult('monster')*demandMult('monster'), wf=0.17*locMult('faxe')*demandMult('faxe'), q=rg(); if(q<wm) o.monster=1; else if(q<wm+wf) o.faxe=1; }
   return o;
 }
-function makeNightOrder(rg=Math.random){
+function makeNightOrder(rg=Math.random,big=false){
   const o={}, r=rg();
-  const m = r<0.48?'huhn': r<0.72?'wurst': r<0.90?'haxe':'salat';
-  o[m] = rg()<0.18 ? 2 : 1;
-  if (m!=='salat' && rg()<0.65) o.pommes=1;
-  if (rg()<0.55) o.monster = rg()<0.25 ? 2 : 1;      // Nachtschicht = Monster
+  // Große Schicht: mehr Wurst und Pommes (schnell), weniger Haxe (langsam). Kleine Schicht wie gehabt.
+  const m = big ? (r<0.32?'huhn': r<0.74?'wurst': r<0.84?'haxe':'salat') : (r<0.48?'huhn': r<0.72?'wurst': r<0.90?'haxe':'salat');
+  o[m] = !big && rg()<0.18 ? 2 : 1;
+  if (m!=='salat' && rg()<(big?0.42:0.65)) o.pommes=1;
+  if (rg()<(big?0.6:0.55)) o.monster = !big && rg()<0.25 ? 2 : 1;      // Nachtschicht = Monster
   return o;
 }
+const NIGHT_MAX = 300;
+const nightWorkers = day => Math.min(NIGHT_MAX, Math.round(20 + day*2.6));
+const nightTrupp = w => w>200 ? 4 : w>120 ? 3 : w>60 ? 2 : 1;   // so viele Leute kommen zusammen an den Tresen
 function makeContract(day){
   const rg=dayRng('night',day);
-  const workers = Math.round(20 + day*1.3);
+  const workers = nightWorkers(day), tr=nightTrupp(workers), big=workers>60;
   const orders=[]; const tot=Object.fromEntries(P.map(p=>[p,0]));
-  for(let k=0;k<workers;k++){
-    const o=makeNightOrder(rg); for(const [p,n] of Object.entries(o)) tot[p]+=n;
+  for(let k=0;k<workers;k+=tr){
+    const o={}, ppl=Math.min(tr,workers-k); for(let j=0;j<ppl;j++){ const oo=makeNightOrder(rg,big); for(const [p,n] of Object.entries(oo)) o[p]=(o[p]||0)+n; }
+    for(const [p,n] of Object.entries(o)) tot[p]+=n;
     const w=rg(); const t = w<0.38 ? rndR(rg,52,78) : w<0.76 ? rndR(rg,142,168) : rndR(rg,8,DAYLEN-25);   // Pausen um 00:00 und 03:00
-    orders.push({o,t});
+    orders.push({o,t,ppl});
   }
   orders.sort((a,b)=>a.t-b.t);
   const value = Object.entries(tot).reduce((a,[p,n])=>a+n*PRICE[p]*NIGHT_ZULAGE,0);
@@ -1507,7 +1519,7 @@ function spawnNight(){
   const N=S.night; if(!N) return;
   while(N.next<N.orders.length && N.orders[N.next].t<=S.time && S.queue.length<QMAX){
     const ord=N.orders[N.next++];
-    S.queue.push({o:{...ord.o}, pat:45, max:45, spr:Math.random()<0.35?'wBlue':'wHappy', bob:rnd(0,6), x:W+60});
+    S.queue.push({o:{...ord.o}, pat:45+((ord.ppl||1)-1)*8, max:45+((ord.ppl||1)-1)*8, tag:(ord.ppl||1)>1?`👷 ×${ord.ppl}`:null, spr:Math.random()<0.35?'wBlue':'wHappy', bob:rnd(0,6), x:W+60});
   }
   N.xnext=N.xnext||0;
   while(N.extra && N.xnext<N.extra.length && N.extra[N.xnext].t<=S.time && S.queue.length<QMAX){
@@ -2561,7 +2573,7 @@ function showTitle(fromCloud){
     </div>
     <div class="stack">
       <h1>LS-CHICKEN</h1>
-      <p>Du startest mit dem Grillwagen auf einem Schotterplatz im Industriegebiet. Gute Bewertungen bringen dich auf den Wochenmarkt, das Stadtfest, die Soester Kirmes und am Ende aufs Oktoberfest. Ein Patriarch. Ein Kloska am Tresen. Die Schlange wird jeden Tag länger, die Preise steigen, und irgendwo auf dem Dach sitzen Max und Moritz. Halte durch, so lange du kannst.</p>
+      <p>Du startest mit dem Grillwagen auf einem Schotterplatz im Industriegebiet. Wer genug verkauft, kommt auf den Wochenmarkt, das Stadtfest, die Soester Kirmes und am Ende aufs Oktoberfest. Ein Patriarch. Ein Kloska am Tresen. Die Schlange wird jeden Tag länger, die Preise steigen, und irgendwo auf dem Dach sitzen Max und Moritz. Halte durch, so lange du kannst.</p>
       <div class="row">
         ${run?`<button class="btn go" id="bCont">${contLabel(pr0)}</button>`:''}
         <button class="btn ${run?'':'go'}" id="bNew">Neuer Run</button>
@@ -2964,7 +2976,7 @@ function showEvening(){
     const tot=orderCost(), HP=hofPlan();
     const space=S.up.kuehl-stockTotal(), ordered=P.reduce((a,p)=>a+S.order[p]+(HP.extra[p]||0),0);
     const fcBox = S.forecast.id==='nacht'&&S.night?`<div class="night"><h3>Morgen: Nachtschicht Lagerhalle</h3>
-        <p style="font-size:13px">Die Firma hat für ${S.night.workers} Leute bestellt, alles bezahlt. Pausen um 00:00 und 03:00. Pauschale inkl. Nachtzulage <b style="color:var(--phos)">${eur(nightValue(S.night))}</b>, fehlende Portion = Vertragsstrafe, alles geliefert = +10 %. Kein Faxe.</p>
+        <p style="font-size:13px">Die Firma hat für ${S.night.workers} Leute bestellt, alles bezahlt.${nightTrupp(S.night.workers)>1?` Sie kommen in Trupps zu ${nightTrupp(S.night.workers)}.`:''} Pausen um 00:00 und 03:00. Pauschale inkl. Nachtzulage <b style="color:var(--phos)">${eur(nightValue(S.night))}</b>, fehlende Portion = Vertragsstrafe, alles geliefert = +10 %. Kein Faxe.</p>
         <p class="dim" style="font-size:12.5px;margin-top:3px">Sammelbestellung: ${P.filter(p=>S.night.tot[p]>0).map(p=>`<b style="color:var(--mayo)">${S.night.tot[p]}</b> ${EMO[p]}`).join(' · ')}</p></div>`
       :`<div class="fcrow"><h3>Prognose Tag ${S.day}</h3><span class="fc">${S.forecast.name}</span><span class="dim" style="font-size:12.5px">${wxTxt()}${fcHint()}${calHint()}${bossHint()}${isNightDay(S.day+1)?' Übermorgen Nachtschicht.':''}</span></div>`;
     let tabs=[['up','🛠 Wagen'],['emp','🏢 Imperium'],['rez','🧪 Rezepte'],['lief','🛵 Liefern'],['sab','🕵 Hinterzimmer'],['reg','❤ Stamm'],['staff','👷 Personal'],['hist','📈 Verlauf']];
@@ -3036,11 +3048,11 @@ function showEvening(){
     <section class="col">
       ${S.forecast.id==='nacht'?'<div class="night"><h3>Standplatz</h3><p class="dim" style="font-size:13px">Morgen stehst du vor der Lagerhalle. Den Standplatz wählst du wieder am Abend danach.</p></div>':`<h3>Standplatz für Tag ${S.day}</h3>
       <div class="locs">${LOCS.map((L,i)=>{ const open=i<=S.locMax, cur=i===S.loc;
-        const need = i>S.locMax ? `🔒 ⌀ ${L.req.toFixed(1).replace('.',',')} ★ (7 Tage)${L.days?` · ab Tag ${L.days}`:''}` : `Gebühr ~${eur(L.fee(S.day))} · ${L.tol===1?'Standardpreise fair':`fair ${L.tol>1?'+':'−'}${Math.abs(Math.round((L.tol-1)*100))} %`}`;
+        const need = i>S.locMax ? `🔒 ${qTxt(L.id)} in 7 Tagen (jetzt ${LOC_Q[L.id]?sold7(LOC_Q[L.id].p):0})${L.days?` · ab Tag ${L.days}`:''}` : `Gebühr ~${eur(L.fee(S.day))} · ${L.tol===1?'Standardpreise fair':`fair ${L.tol>1?'+':'−'}${Math.abs(Math.round((L.tol-1)*100))} %`}`;
         return `<button class="loc ${cur&&!S.at?'cur':''} ${open?'':'lock'}" data-loc="${i}" ${open?'':'disabled'} title="${esc(L.desc)}"><span class="lt"><b>${LOC_ICON[L.id]} ${esc(L.name)}</b><span>${hoursTxt(L)}</span></span><small class="need">${need}</small></button>`; }).join('')}
       ${S.challenge?'':Object.values(OWNLOC).map(L=>{ const own=S.emp&&S.emp.own[L.id], cur=S.at===L.id;
         return `<button class="loc ${cur?'cur':''} ${own?'':'lock'}" data-at="${L.id}" ${own?'':'disabled'} title="${esc(L.desc)}"><span class="lt"><b>${LOC_ICON[L.id]} ${esc(L.name)}</b><span>${hoursTxt(L)}</span></span><small class="need">${own?`Miete ~${eur(L.fee(S.day))} · fair +${Math.round((L.tol-1)*100)} %`:`🏢 kaufen im Tab Imperium · ${eur(L.price)}`}</small></button>`; }).join('')}</div>
-      <p class="dim" style="font-size:12px">Google 7 Tage: <b style="color:var(--mayo)">${avg7().n?avg7().avg.toFixed(1).replace('.',','):'–'} ★</b>${S.locMax>0?` · unter ${(LOCS[S.locMax].req-0.2).toFixed(1).replace('.',',')} ★ kündigt „${esc(LOCS[S.locMax].short)}“.`:''}</p>`}
+      <p class="dim" style="font-size:12px">${S.locMax>0&&LOC_Q[LOCS[S.locMax].id]?(()=>{ const q=LOC_Q[LOCS[S.locMax].id], need=Math.ceil(q.n*LOC_HOLD), have=sold7(q.p), left=LOC_GRACE-(S.day-1-(S.locSince??S.day-1)); return `„${esc(LOCS[S.locMax].short)}“ halten: <b style="color:${have>=need?'var(--phos)':'var(--grill)'}">${have}/${need} ${EMO[q.p]}</b> in 7 Tagen${left>0?` · Schonfrist noch ${left} ${left===1?'Tag':'Tage'}`:''}.`; })():'Standplätze schaltest du mit Verkaufszahlen frei, nicht mit Sternen.'}</p>`}
       <h3>Verkaufspreise</h3>
       <div class="tbl"><table class="ptbl"><thead><tr><th>Ware</th><th>Dein Preis</th><th>Marge</th><th>Kundschaft</th></tr></thead><tbody>
       ${P.map(p=>{ const ratio=pRatio(p), f=priceFeel(ratio), m=pr(p)-buyPrice(p,true), dm=Math.round((demandMult(p)-1)*100);
