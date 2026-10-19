@@ -1495,9 +1495,9 @@ function endDay(reason){
   { const rg=dayRng('fc'); S.forecast = rg()<0.45 ? EVENTS[0] : pickR(rg,pool); }
   { const rf=realForecast(); if (rf) S.forecast=rf; }
   if (isNightDay(S.day)){ S.forecast = NIGHT; S.night = makeContract(S.day); }
-  planBoss(); filMail(); lachsRoll();
+  planBoss(); lachsRoll();
   if (S.soup){ d.soup={g:S.soup.g,left:S.soup.n}; if (S.soup.g>=8){ unlock('martin'); S.ruf=clamp(S.ruf+2,0,100); } S.soup=null; }
-  bossEnd(d); filEnd(d);
+  bossEnd(d); filEnd(d); filMail(); if (d.fil && emp().mail) d.fil.mailNew=true;   // erst gestrige Antwort auswerten, dann neue Mail für heute Abend
   if (S.resv&&S.resv.length) d.resv={n:S.resv.length, ok:S.resv.filter(r=>r.done==='ok').length};
   if (S.emp&&S.at) d.own=S.at;
   if (rivalOn() && S.rival && S.rival.today){ const st=rivalSteal(); d.rivalLost=Math.round(d.served*st/Math.max(0.05,1-st)); S.rival.lost=d.rivalLost; d.rivalToday=S.rival.today; }
@@ -3136,7 +3136,7 @@ function showBon(d){
       :d.boss.id==='catering'?({komplett:`Alles geliefert: ${d.boss.got} Teile, ${eur(d.boss.rev)} plus ${eur(d.boss.bonus)} Bonus. Ruf +5.`,teil:`Nur ${d.boss.got} Teile geliefert (${eur(d.boss.rev)}). Der Bus fuhr ohne den Rest. Ruf −5.`,verpasst:'Der Bus fand keinen Platz in der Schlange. Ruf −5.'})[d.boss.res]
       :d.boss.res==='praemie'?'Nichts verbrannt, kaum jemand verloren: 250 € Prämie, Ruf +5.':'Verbranntes oder verlorene Kunden: Abmahnung, Ruf −5.'}</div>`:''}
     ${d.resv?`<hr><div class="c"><b>🍽 RESERVIERUNGEN</b><br>${d.resv.ok} von ${d.resv.n} Tischen bedient.</div>`:''}
-    ${d.fil?`<hr><div class="c"><b>🏢 FILIALEN (${d.fil.n})</b><br>Darius meldet: ${eur(d.fil.inc)}${d.fil.note?'<br>'+esc(d.fil.note):''}</div>`:''}
+    ${d.fil?`<hr><div class="c"><b>🏢 FILIALEN (${d.fil.n})</b><br>Darius meldet: ${eur(d.fil.inc)}${d.fil.note?'<br>'+esc(d.fil.note):''}${d.fil.mailNew?'<br><b>📧 Neue Mail von Darius. Antworten im Tab „Imperium“.</b>':''}</div>`:''}
     ${d.rivalToday?`<hr><div class="c"><b>🥙 DÖNER-IMPERIUM NEBENAN</b><br>${d.rivalToday.closed?'Heute geschlossen. Mehr Kundschaft für dich.':`Rübergegangen: ~${d.rivalLost} Kunden${d.rivalToday.happy?' (Happy Hour)':''}.`}</div>`:''}
     ${d.bombN?`<hr><div class="c"><b>💣 ${d.bombN} FAKE-BEWERTUNGEN MIT 1 STERN</b><br>${d.bombCut?`Google hat ${d.bombCut} davon gelöscht, weil deine echten Bewertungen gut waren.`:'Deine echten Bewertungen waren zu schwach, Google hat nichts gemerkt.'}${d.sab&&d.sab.t==='bomb'?(d.sab.from?`<br>Gesehen wurde: <b>${esc(d.sab.from)}</b>. Rache ist gratis.`:'<br>Absender unbekannt.'):''}</div>`:''}
     ${d.sab&&d.sab.t!=='bomb'?`<hr><div class="c"><b>ANONYMER HINWEIS: ${SAB[d.sab.t].icon} ${esc(SAB[d.sab.t].name.split(' (')[0]).toUpperCase()}</b><br>${d.sab.t==='gesund'?(d.sab.hit?'Aufgewärmtes und Sonderposten gefunden. Ruf −12.':'Alles sauber. Der Hinweisgeber zahlt die Falschanzeige.'):d.sab.t==='finanz'?(d.sab.hit?'Betriebsprüfung mit Nachzahlung.':'Betriebsprüfung ohne Befund. Danke, Steuerberater.'):d.sab.t==='zoll'?'Zoll-Kontrolle, der Tresen stand still.':'Darius hat ausgeholfen. Leider.'}<br>${d.sab.from?`Gesehen wurde: <b>${esc(d.sab.from)}</b>. Rache ist gratis.`:'Absender unbekannt.'}</div>`:''}
@@ -3179,7 +3179,7 @@ function showEvening(){
         <p style="font-size:13px">Die Firma hat für ${S.night.workers} Leute bestellt, alles bezahlt.${nightTrupp(S.night.workers)>1?` Sie kommen in Trupps zu ${nightTrupp(S.night.workers)}.`:''} Pausen um 00:00 und 03:00. Manche schleichen sich vorher raus (⚠️): schnell bedienen, sonst erwischt sie der Vorarbeiter. Pauschale inkl. Nachtzulage <b style="color:var(--phos)">${eur(nightValue(S.night))}</b>, fehlende Portion = Vertragsstrafe, alles geliefert = +10 %. Kein Faxe.</p>
         <p class="dim" style="font-size:12.5px;margin-top:3px">Sammelbestellung: ${P.filter(p=>S.night.tot[p]>0).map(p=>`<b style="color:var(--mayo)">${S.night.tot[p]}</b> ${EMO[p]}`).join(' · ')}</p></div>`
       :`<div class="fcrow"><h3>Prognose Tag ${S.day}</h3><span class="fc">${S.forecast.name}</span><span class="dim" style="font-size:12.5px">${wxTxt()}${fcHint()}${calHint()}${bossHint()}${isNightDay(S.day+1)?' Übermorgen Nachtschicht.':''}</span></div>`;
-    let tabs=[['up','🛠 Wagen'],['emp','🏢 Imperium'],...(S.challenge?[]:[['hof','🐓 Hof']]),['rez','🧪 Rezepte'],['lief','🛵 Liefern'],['sab','🕵 Hinterzimmer'],['reg','❤ Stamm'],['staff','👷 Personal'],['hist','📈 Verlauf']];
+    let tabs=[['up','🛠 Wagen'],['emp',(!S.challenge&&emp().mail&&emp().choice==null)?'🏢 Imperium 📧':'🏢 Imperium'],...(S.challenge?[]:[['hof','🐓 Hof']]),['rez','🧪 Rezepte'],['lief','🛵 Liefern'],['sab','🕵 Hinterzimmer'],['reg','❤ Stamm'],['staff','👷 Personal'],['hist','📈 Verlauf']];
     { const tt=tutTabs(); if (tt){ tabs=tabs.filter(t=>tt.includes(t[0])); if(!tt.includes(EVE_TAB)) EVE_TAB='up'; } }
     let tab='';
     if (EVE_TAB==='up') tab=`${Object.keys(UPG).map(k=>{ const u=UPG[k], mx=upMaxed(k), pr=upPrice(k); const lvl=k==='kuehl'?`${S.up.kuehl} Einh.`:k==='schul'?`Stufe ${S.up.schul}`:k==='spiess'||k==='rost'?`${S.up[k]} Plätze`:k==='fry'?`${S.up.fry} Plätze`:`Stufe ${S.up[k]}/${u.max}`;
