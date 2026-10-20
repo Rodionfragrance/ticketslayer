@@ -1457,7 +1457,7 @@ function startDay(first){
   { const rg=dayRng('fire'); S.fireAt = S.day>=2 && rg()<Math.min(0.8,0.35+S.day*0.03) ? rndR(rg,35,DAYLEN-40) : null; }
   S.plan=makePlan(); S.planNext=0; planRegulars();
   S.combo=0;
-  S.otStart=null; S.zollAt=null; S.zollDur=0; S.zoll=0; S.dariusDay=false; S.klo=0; S.sulk=0; S.fuelErr=0;
+  S.otStart=null; S.zeroAt={}; S.zollAt=null; S.zollDur=0; S.zoll=0; S.dariusDay=false; S.klo=0; S.sulk=0; S.fuelErr=0;
   lachsApply();
   S.dl={plan:makeDelPlan(), next:0, orders:[], bag:[], trip:null, trips:0, charge:0, aCd:2}; DLRG=dayRng('liefx');
   // Darius-Panne
@@ -1472,6 +1472,7 @@ function startDay(first){
   if (tutOn(1)||tutOn(2)){ S.raids=[]; S.teases=[]; S.dl.plan=[]; if(tutOn(1)) S.fireAt=null; S.boss=null; }
   if (S.tut && S.day<=3) S.tutSeen={};
   setTimeout(()=>voice(isNight()?'nacht':'start'),600);
+  S.zeroAt={}; for(const p of FOOD) if(stockCount(p)===0) S.zeroAt[p]=-99;   // schon morgens leer: Notlieferung sofort möglich
   hideAll(); paused=false;
 }
 
@@ -1855,6 +1856,10 @@ function notPrice(p,q){ return Math.round((q??NOTPACK[p])*buyPrice(p,true)*2*100
 const notLabel = p => NOT_RANGE[p] ? `${NOT_RANGE[p][0]}–${NOT_RANGE[p][1]}` : NOTPACK[p];
 const notPriceTxt = p => NOT_RANGE[p] ? `${eur(notPrice(p,NOT_RANGE[p][0]))}–${eur(notPrice(p,NOT_RANGE[p][1]))}` : eur(notPrice(p));
 function rushPending(p){ return S.rush.find(x=>x.p===p); }
+// Abklingzeit: Wer schnell klickt und dabei auf 0 kommt, soll nicht aus Versehen die Notlieferung bestellen
+const NOT_LOCK = 2.5;
+const notLock = p => { const z=S.zeroAt&&S.zeroAt[p]; return z==null ? 0 : Math.max(0, NOT_LOCK-(S.time-z)); };
+function zeroTick(){ S.zeroAt=S.zeroAt||{}; for(const p of FOOD){ if(stockCount(p)===0){ if(S.zeroAt[p]==null) S.zeroAt[p]=S.time; } else delete S.zeroAt[p]; } }
 function emergency(p){
   if (rushPending(p)){ float(640,640,'Peter ist schon unterwegs',C.mayo); return; }
   const q=notQty(p), cost=notPrice(p,q);
@@ -1951,6 +1956,7 @@ function update(dt){
   const d=S.day_;
   const sp = S.wt>0 ? 1.6 : 1, csp = S.fire ? 0 : sp;  // csp: Garen steht, solange die Gasflasche brennt
   S.time+=dt;
+  zeroTick();
   if (S.wt>0) S.wt-=dt;
   if (S.klo>0) S.klo-=dt;
   if (S.sulk>0){ S.sulk-=dt; S.fuel=Math.min(S.fuel,S.sulkF||0); }
@@ -2444,6 +2450,7 @@ function render(){
     if (n===0 || rush){
       ctx.fillStyle=h?'#5a2318':'#3a1712'; rr(r.x,r.y,r.w,r.h,5); ctx.fill(); ctx.strokeStyle=rush?C.phos:'#ff8a6e'; ctx.stroke();
       if (rush) txt(`Peter: ${Math.ceil(rush.t)} s`,r.x+r.w/2,r.y+25,13,C.phos,'center');
+      else if (notLock(p)>0){ txt('LEER',r.x+r.w/2,r.y+17,11,'#ffd2c4','center',F.disp,700); txt(`Notlieferung in ${Math.ceil(notLock(p))} s`,r.x+r.w/2,r.y+33,11,C.mayo,'center'); }
       else { txt('NOTLIEFERUNG',r.x+r.w/2,r.y+17,11,'#ffd2c4','center',F.disp,700); txt(NOT_RANGE[p]?'ab '+eur(notPrice(p,NOT_RANGE[p][0])):eur(notPrice(p)),r.x+r.w/2,r.y+33,11,'#ff8a6e','center'); }
     } else {
       ctx.fillStyle=h?'#4a3322':'#2c1e14'; rr(r.x,r.y,r.w,r.h,5); ctx.fill(); ctx.strokeStyle=h?C.grill:'rgba(240,160,58,.35)'; ctx.stroke();
@@ -2519,7 +2526,7 @@ function tipFor(h){
     case 'rost': { const w=S.rost[i]; return w.burnt?'Schwarz: anklicken zum Wegwerfen':w.side===1?(w.t>=WURST.side?'Jetzt wenden!':'Seite 1 brät'):(w.t>=WURST.side?'Runternehmen':'Seite 2 brät'); }
     case 'fry': { const b=S.fry[i]; if(!b) return 'Klick: 1 Portion Pommes rein'; return b.t>=COOK.pommes.burn?'Verbrannt: wegwerfen':b.t>=COOK.pommes.done?'Pommes raus!':`noch ${Math.ceil(COOK.pommes.done-b.t)} s`; }
     case 'locked': return `${h[2]}: abends bei den Upgrades freischalten`;
-    case 'lager': { const p=FOOD[i]; if(rushPending(p)) return `Peter ist unterwegs: ${Math.ceil(rushPending(p).t)} s`; if(stockCount(p)===0) return `Notlieferung: ${notLabel(p)} ${RAW[p]} für ${notPriceTxt(p)} (doppelter Preis), kommt in ${NOT_ETA} s`; return ['Hähnchen auf den Spieß','Haxe auf den Spieß (40 s)','Bratwurst auf den Rost','Pommes in die Fritteuse','Salat anrichten (hinter Kloska)'][i]; }
+    case 'lager': { const p=FOOD[i]; if(rushPending(p)) return `Peter ist unterwegs: ${Math.ceil(rushPending(p).t)} s`; if(stockCount(p)===0&&notLock(p)>0) return `Gerade leer geworden. Notlieferung erst in ${Math.ceil(notLock(p))} s, damit du sie nicht aus Versehen bestellst`; if(stockCount(p)===0) return `Notlieferung: ${notLabel(p)} ${RAW[p]} für ${notPriceTxt(p)} (doppelter Preis), kommt in ${NOT_ETA} s`; return ['Hähnchen auf den Spieß','Haxe auf den Spieß (40 s)','Bratwurst auf den Rost','Pommes in die Fritteuse','Salat anrichten (hinter Kloska)'][i]; }
     case 'salad': return S.salatPrep>0?'Salat wird angerichtet…':stockCount('salat')?'Klick: Salat anrichten':'Kein Salat mehr im Lager';
     case 'crate': { const n=stockCount(i); if(rushPending(i)) return `Peter bringt ${NAME[i]}: ${Math.ceil(rushPending(i).t)} s`; return n?`${NAME[i]}: ${n} Dosen im Kühlschrank, Kloska nimmt sie direkt mit`:`${NAME[i]} leer. Klick: Notlieferung ${NOTPACK[i]} Dosen für ${eur(notPrice(i))}`; }
     case 'cust': { const c=S.queue[i]; if(c.cater) return 'Hochzeits-Catering: Klick, Kloska bringt alles, was fertig ist'; if(c.faxe) return 'Will heimlich Faxe. Steht nicht auf der Firmenliste. Kunde ist König.'; return c.res?'Kloska verkauft gerade':canServe(c)?'Klick: Kloska verkauft':'Unvollständig. Klick: Teillieferung oder wegschicken'; }
@@ -2570,7 +2577,8 @@ cv.addEventListener('mousedown',e=>{
   else if(k==='rostLoad') loadRost(i);
   else if(k==='rost') clickRost(i);
   else if(k==='fry') clickFry(i);
-  else if(k==='lager'){ const p=FOOD[i]; if(stockCount(p)===0||rushPending(p)) emergency(p); else [()=>loadSpiess('huhn'),()=>loadSpiess('haxe'),()=>loadRost(),loadFry,prepSalat][i](); }
+  else if(k==='lager'){ const p=FOOD[i]; zeroTick(); if(stockCount(p)===0 && !rushPending(p) && notLock(p)>0){ const r=lagerBtn(i); float(r.x+r.w/2,r.y-6,`Leer! Notlieferung in ${Math.ceil(notLock(p))} s`,C.mayo); }
+    else if(stockCount(p)===0||rushPending(p)) emergency(p); else { [()=>loadSpiess('huhn'),()=>loadSpiess('haxe'),()=>loadRost(),loadFry,prepSalat][i](); zeroTick(); } }
   else if(k==='salad') prepSalat();
   else if(k==='delT') delPack(i,false);
   else if(k==='delGo') delGo();
