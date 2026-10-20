@@ -563,6 +563,12 @@ function farmUp(k){ const lv=flvl(k), U=FARM_UP[k]; if(lv>=U.caps.length-1) retu
   if (k==='kessel') S.brew.lv.kessel++; else { S.farm.lv[k]++; if(k==='schwein') S.farm.pigs.push({age:0}); if(k==='salat') S.farm.beds.push({age:0}); if(k==='kartoffel'){ farmFix(S.farm); S.farm.acker.push({age:0}); } } sfx('ping'); }
 const pigsReady = () => S.farm ? S.farm.pigs.filter(p=>p.age>=PIG_DAYS).length : 0;
 const bedsReady = () => S.farm ? S.farm.beds.filter(b=>b.age>=BEET_DAYS&&b.age<BEET_DAYS+BEET_ROT).length : 0;
+// Was der Hof gerade noch nicht liefern kann, aber bald: damit Peters Tabelle nicht so tut, als gäbe es keine Schweine
+function hofWait(p){ const F=S.farm; if(!F) return '';
+  if ((p==='haxe'||p==='wurst') && F.pigs.length){ const n=Math.min(...F.pigs.map(q=>Math.max(0,PIG_DAYS-q.age))); return n>0?`🐖 schlachtreif in ${n} ${n===1?'Tag':'Tagen'}`:''; }
+  if (p==='salat' && F.beds.length){ const n=Math.min(...F.beds.map(b=>Math.max(0,BEET_DAYS-b.age))); return n>0?`🥗 erntereif in ${n} ${n===1?'Tag':'Tagen'}`:''; }
+  if (p==='pommes'){ const a=farmFix(F).acker.length?Math.min(...F.acker.map(x=>KART_DAYS-x.age)):0; return a>0?`🥔 Ernte in ${a} ${a===1?'Tag':'Tagen'}`:''; }
+  return ''; }
 function hofAvail(p){
   if (p==='huhn') return S.farm?S.farm.huhn:0;
   if (p==='haxe') return pigsReady()*PIG_YIELD.haxe;
@@ -3298,7 +3304,7 @@ function showEvening(){
           <td>${avg(p).toFixed(1)}</td>
           <td>${stockCount(p)}${S.stock[p].some(b=>b.age>=SPOIL[p]-1)?' <span style="color:var(--ketchup)" title="Läuft bald ab">!</span>':''}</td>
           <td><div class="row" style="gap:3px;flex-wrap:nowrap;justify-content:flex-end"><button class="btn sm" data-q="${p}" data-d="-5">−5</button><button class="btn sm" data-q="${p}" data-d="-1">−</button><input class="qty" id="q_${p}" data-p="${p}" inputmode="numeric" value="${S.order[p]}"><button class="btn sm" data-q="${p}" data-d="1">+</button><button class="btn sm" data-q="${p}" data-d="5">+5</button></div></td>
-          <td style="white-space:nowrap">${eur(buyPrice(p))}${ekTag(p)}${hofOn()&&hofAvail(p)?`<br><span class="hofb" title="Kommt vom eigenen Hof/aus der Brauerei zum Hof-EK">${p==='faxe'||p==='monster'?'🍺':'🐓'} ${HP.take[p]||0}/${hofAvail(p)} vom Hof${HP.extra[p]?` +${HP.extra[p]}`:''}</span>`:''}</td></tr>`).join('')}</tbody></table></div>
+          <td style="white-space:nowrap">${eur(buyPrice(p))}${ekTag(p)}${hofOn()&&!hofAvail(p)&&hofWait(p)?`<br><span class="hofb" style="opacity:.75" title="Kommt vom Hof, sobald es reif ist. Bis dahin liefert Peter.">${hofWait(p)}</span>`:''}${hofOn()&&hofAvail(p)?`<br><span class="hofb" title="Kommt vom eigenen Hof/aus der Brauerei zum Hof-EK">${p==='faxe'||p==='monster'?'🍺':'🐓'} ${HP.take[p]||0}/${hofAvail(p)} vom Hof${HP.extra[p]?` +${HP.extra[p]}`:''}</span>`:''}</td></tr>`).join('')}</tbody></table></div>
       <label class="tog"><input type="checkbox" id="cbCheap" ${S.cheapNext?'checked':''}><span><b>Peters Sonderposten-Hühner</b> (−35 %). Manche Kunden merken es. Ruf leidet.</span></label>
       <div title="Haltbarkeit roh: Salat 2 Tage, Hühner und Haxen 4, Würste 5, Pommes 7. Getränke halten ewig."><div class="row" style="justify-content:space-between"><span class="dim" style="font-size:13px">Kühlung nach Lieferung <span style="cursor:help">ⓘ</span></span><span style="font-size:13px">${stockTotal()+ordered} / ${S.up.kuehl}</span></div>
         <div class="bar ${ordered>space?'warn':''}"><i style="width:${Math.min(100,(stockTotal()+ordered)/S.up.kuehl*100)}%"></i></div></div>
