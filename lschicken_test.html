@@ -264,7 +264,7 @@ const recPrem = p => { const r=recOf(p); return r?r.prem:0; };
 const recKey = p => p+':'+(recOf(p)?recOf(p).id:'klassik');
 const taste = (p,locId) => !RECIPES[p]||isNight() ? 0 : ((LOC_TASTE[locId||LOC().id]||{})[recKey(p)]||0);
 const tasteKnown = (key,locId) => ((S.recSeen||{})[locId+'|'+key]||0) >= REVEAL_N;
-const EMI = (p,raw) => { const k='ic_'+ICK(p,raw); return IMG_SRC[k]?`<img class="emi" src="${IMG_SRC[k]}" alt="${EMO[p]}">`:EMO[p]; };
+const EMI = (p,raw) => { if(isDrink(p)) return `<img class="emi" src="${canURL(p)}" alt="${EMO[p]}">`; const k='ic_'+ICK(p,raw); return IMG_SRC[k]?`<img class="emi" src="${IMG_SRC[k]}" alt="${EMO[p]}">`:EMO[p]; };
 const LIC = id => IMG_SRC['ic_loc_'+id]?`<img class="emi" src="${IMG_SRC['ic_loc_'+id]}" alt="">`:(LOC_ICON[id]||'');
 const MEDAL = t => IMG_SRC['ic_'+['','bronze','silver','gold'][t]]?`<img class="emi" src="${IMG_SRC['ic_'+['','bronze','silver','gold'][t]]}" alt="">`:REG_ICON[t];
 const pRatio = p => pr(p)/((PRICE[p]+recPrem(p))*((S&&S.loc!=null)?LOC().tol:1)*(1+halTol(p)));   // Kirmes-Publikum zahlt mehr, Rezepte haben Aufpreis
@@ -2235,15 +2235,18 @@ function icon(p,s,raw,dark){
   x.font=`${s}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; x.fillText(EMO[p],s*0.6,s*0.65);
   return iconCache[k]=c;
 }
-function drawCan(p,cx,cy,s){
+function drawCan(p,cx,cy,s,g){ g=g||ctx; const rr_=(x,y,w,h,r)=>{ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); };
   const w=s*0.52, h=s*0.92, x=cx-w/2, y=cy-h/2;
-  ctx.fillStyle='rgba(0,0,0,.35)'; rr(x+2,y+2,w,h,3); ctx.fill();
-  if (p==='monster'){ ctx.fillStyle='#f4f4f0'; rr(x,y,w,h,3); ctx.fill(); ctx.fillStyle='#1d1d1d'; ctx.fillRect(x,y+h*0.12,w,h*0.1); ctx.fillRect(x,y+h*0.78,w,h*0.1);
-    ctx.strokeStyle='#9aa0a6'; ctx.lineWidth=Math.max(1,s/18); for(let k=-1;k<=1;k++){ ctx.beginPath(); ctx.moveTo(cx+k*w*0.2,y+h*0.3); ctx.lineTo(cx+k*w*0.2+w*0.06,y+h*0.68); ctx.stroke(); } ctx.lineWidth=1; }
-  else { ctx.fillStyle='#c9ced4'; rr(x,y,w,h,3); ctx.fill(); ctx.fillStyle='#1f4fa3'; ctx.fillRect(x,y+h*0.22,w,h*0.5); ctx.fillStyle='#d1342b'; ctx.fillRect(x,y+h*0.42,w,h*0.1);
-    ctx.fillStyle='#fff'; ctx.font=`700 ${Math.max(6,s*0.2)}px ${F.disp}`; ctx.textAlign='center'; ctx.fillText('10%',cx,y+h*0.38); }
-  ctx.fillStyle='#8d949b'; ctx.fillRect(x+w*0.1,y,w*0.8,Math.max(1.5,h*0.05));
+  g.fillStyle='rgba(0,0,0,.35)'; rr_(x+2,y+2,w,h,3); g.fill();
+  if (p==='monster'){ g.fillStyle='#f4f4f0'; rr_(x,y,w,h,3); g.fill(); g.fillStyle='#1d1d1d'; g.fillRect(x,y+h*0.12,w,h*0.1); g.fillRect(x,y+h*0.78,w,h*0.1);
+    g.strokeStyle='#9aa0a6'; g.lineWidth=Math.max(1,s/18); for(let k=-1;k<=1;k++){ g.beginPath(); g.moveTo(cx+k*w*0.2,y+h*0.3); g.lineTo(cx+k*w*0.2+w*0.06,y+h*0.68); g.stroke(); } g.lineWidth=1; }
+  else { g.fillStyle='#c9ced4'; rr_(x,y,w,h,3); g.fill(); g.fillStyle='#1f4fa3'; g.fillRect(x,y+h*0.22,w,h*0.5); g.fillStyle='#d1342b'; g.fillRect(x,y+h*0.42,w,h*0.1);
+    g.fillStyle='#fff'; g.font=`700 ${Math.max(6,s*0.2)}px ${F.disp}`; g.textAlign='center'; g.fillText('10%',cx,y+h*0.38); }
+  g.fillStyle='#8d949b'; g.fillRect(x+w*0.1,y,w*0.8,Math.max(1.5,h*0.05));
 }
+// Dosen als kleine Bilder für Tabellen und Bestellungen (aus derselben Zeichnung wie am Wagen)
+const CAN_URL={};
+function canURL(p){ if(CAN_URL[p]) return CAN_URL[p]; const c=document.createElement('canvas'); c.width=c.height=96; const g=c.getContext('2d'); drawCan(p,48,48,92,g); return CAN_URL[p]=c.toDataURL(); }
 function drawIcon(p,cx,cy,s,dark,raw){
   if (isDrink(p)) return drawCan(p,cx,cy,s);
   const hasImg=!!(IMG['ic_'+ICK(p,raw)]&&IMG['ic_'+ICK(p,raw)].naturalWidth), c=icon(p,s,raw,hasImg?dark:0), w=s*1.2*(hasImg?1.15:1);
