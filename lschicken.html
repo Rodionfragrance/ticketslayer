@@ -611,7 +611,8 @@ function hofDeliver(){
   for(const p in H.take) S.order[p]=Math.max(0,S.order[p]-H.take[p]);
   if (S.farm){ S.farm.huhn-=H.take.huhn||0; S.farm.keller-=H.take.pommes||0; let k=H.pigs; S.farm.pigs.forEach(pg=>{ if(k>0&&pg.age>=PIG_DAYS){ pg.age=0; k--; } }); let b=H.beds; S.farm.beds.forEach(bd=>{ if(b>0&&bd.age>=BEET_DAYS&&bd.age<BEET_DAYS+BEET_ROT){ bd.age=0; b--; } }); }
   if (S.brew) for(const q of ['faxe','monster']) S.brew[q]-=H.take[q]||0;
-  const got={}; for(const p of P){ const n=(H.take[p]||0)+(H.extra[p]||0); if(n){ got[p]=n; S.stock[p].push({q:n,age:0,cheap:false,hof:true}); } }
+  const got={}; for(const p of P){ const n=(H.take[p]||0)+(H.extra[p]||0); if(n){ got[p]=n; } }
+  { const tot=Object.values(got).reduce((a,b)=>a+b,0), uc=tot?H.cost/tot:0; for(const p in got) S.stock[p].push({q:got[p],age:0,cheap:false,hof:true,c:uc}); }
   return {got, cost:H.cost, pigs:H.pigs}; }
 // Nach Feierabend: Tiere wachsen, Beete reifen, Kessel brauen, Unterhalt
 function hofTick(d){
@@ -1438,7 +1439,7 @@ const stockTotal = () => P.reduce((a,p)=>a+stockCount(p),0);
 function takeStock(p,n){
   if (stockCount(p) < n) return null;
   let cheap=false;
-  while(n>0){ const b=S.stock[p][0]; const t=Math.min(b.q,n); b.q-=t; n-=t; if(b.cheap) cheap=true; if(b.q<=0) S.stock[p].shift(); }
+  while(n>0){ const b=S.stock[p][0]; const t=Math.min(b.q,n); b.q-=t; n-=t; if(b.cheap) cheap=true; if(S.day_) S.day_.cogs=(S.day_.cogs||0)+t*(b.c!=null?b.c:buyPrice(p)); if(b.q<=0) S.stock[p].shift(); }
   return {cheap};
 }
 
@@ -1449,8 +1450,8 @@ function startDay(first){
   S.lateOrder=null;
   S.traf = verkehrNow();   // Verkehrslage zum Zeitpunkt des Tagesstarts gilt für den ganzen Spieltag
   const lateF = S.traf.lvl>=2 ? (S.traf.lvl>=3?0.35:0.2) : 0;
-  if (S.order){ const late={}; for(const p of P){ if(S.order[p]>0){ const lq=Math.floor(S.order[p]*lateF); if(lq>0) late[p]=lq; S.stock[p].push({q:S.order[p]-lq,age:0,cheap:p==='huhn'&&S.cheapNext}); } }
-    if (Object.keys(late).length) S.lateOrder={t:DAYLEN*0.3, items:late, cheap:!!S.cheapNext}; }
+  if (S.order){ const late={}; for(const p of P){ if(S.order[p]>0){ const lq=Math.floor(S.order[p]*lateF); if(lq>0) late[p]=lq; S.stock[p].push({q:S.order[p]-lq,age:0,cheap:p==='huhn'&&S.cheapNext,c:buyPrice(p)}); } }
+    if (Object.keys(late).length) S.lateOrder={t:DAYLEN*0.3, items:late, cheap:!!S.cheapNext, c:Object.fromEntries(Object.keys(late).map(p=>[p,buyPrice(p)]))}; }
   S.order=null;
   if (isNightDay(S.day)){
     S.event = NIGHT;
@@ -1495,7 +1496,7 @@ function endDay(reason){
   if (S.phase!=='day') return;
   voice('feierabend');
   S.phase='bon';
-  for(const x of (S.rush||[])) S.stock[x.p].push({q:x.q,age:0,cheap:false}); S.rush=[];
+  for(const x of (S.rush||[])) S.stock[x.p].push({q:x.q,age:0,cheap:false,c:0}); S.rush=[];   // Notlieferung ist schon als Notfall-Kosten gebucht
   if (S.kl.job){ finishSale(S.kl.job); S.kl.job=null; } S.jobs.splice(0).forEach(finishSale);
   const d=S.day_;
   taskTick(true);
@@ -1513,7 +1514,7 @@ function endDay(reason){
   }
   for(const p of ['wurst','pommes','salat']){ toss(p,S.aus[p].length,'uebrig'); S.aus[p]=[]; }
   // Rohware altert
-  for(const p of P){ for(const b of S.stock[p]) b.age++; const bad=S.stock[p].filter(b=>b.age>=SPOIL[p]); for(const b of bad) toss(p,b.q,'verdorben'); S.stock[p]=S.stock[p].filter(b=>b.age<SPOIL[p]); }
+  for(const p of P){ for(const b of S.stock[p]) b.age++; const bad=S.stock[p].filter(b=>b.age>=SPOIL[p]); for(const b of bad){ toss(p,b.q,'verdorben'); d.cogs=(d.cogs||0)+b.q*(b.c!=null?b.c:buyPrice(p)); } S.stock[p]=S.stock[p].filter(b=>b.age<SPOIL[p]); }
   // Nachtschicht: Pauschale der Firma, Vertragsstrafe für Fehlendes
   if (isNight() && S.night){
     const N=S.night, missing=Math.max(0,N.portions-d.delivered);
@@ -1540,7 +1541,9 @@ function endDay(reason){
   S.cash -= sum;
   d.costSum=sum; d.cashEnd=S.cash; d.ruf=S.ruf; d.event=S.event.name;
   d.buy=S.lastBuy||0; S.lastBuy=0;
-  d.profit=d.revenue-d.costSum-(d.notfall||0)-d.buy;
+  d.cogs=Math.round((d.cogs||0)*100)/100;
+  d.stockVal=Math.round(P.reduce((a,p)=>a+S.stock[p].reduce((q,b)=>q+b.q*(b.c!=null?b.c:buyPrice(p)),0),0)*100)/100;
+  d.profit=d.revenue-d.costSum-(d.notfall||0)-d.cogs;   // fair: nur Ware, die verkauft oder weggeworfen wurde
   S.run.profit=(S.run.profit||0)+d.profit;
   // Tracking
   for(const p of P){ S.run.sold[p]+=d.sold[p]; S.run.waste[p]+=d.waste[p]; STORE.life.sold[p]+=d.sold[p]; STORE.life.waste[p]+=d.waste[p]; }
@@ -2074,7 +2077,7 @@ function update(dt){
     else { spawnPlanned(); spawnRegulars(); }
     bossTick(); sitzTick(); resvTick(); }
   updateLief(dt);
-  if (S.lateOrder && S.time>=S.lateOrder.t){ const L=S.lateOrder; S.lateOrder=null; for(const p in L.items) S.stock[p].push({q:L.items[p],age:0,cheap:p==='huhn'&&L.cheap}); log(`🚚 Peter ist aus dem Stau auf der A2 raus: Rest der Lieferung ist da (${Object.entries(L.items).map(([p,q])=>q+' '+EMO[p]).join(' ')}).`); sayM('PETER! Wo warst du?! Ah. Autobahn. Natürlich.'); }
+  if (S.lateOrder && S.time>=S.lateOrder.t){ const L=S.lateOrder; S.lateOrder=null; for(const p in L.items) S.stock[p].push({q:L.items[p],age:0,cheap:p==='huhn'&&L.cheap,c:L.c?L.c[p]:buyPrice(p)}); log(`🚚 Peter ist aus dem Stau auf der A2 raus: Rest der Lieferung ist da (${Object.entries(L.items).map(([p,q])=>q+' '+EMO[p]).join(' ')}).`); sayM('PETER! Wo warst du?! Ah. Autobahn. Natürlich.'); }
   S.taskT=(S.taskT||0)-dt; if(S.taskT<=0){ S.taskT=0.5; taskTick(false); }
   if (hilfeOn() && !(S.zoll>0)) S.rost.forEach((w,i)=>{ if(!w||w.burnt||w.side!==1||w.t<WURST.side) return; if(w.hd==null) w.hd=0.4+Math.random()*1.2+(teamE()<50?(50-teamE())/25:0); if(w.t>=WURST.side+w.hd){ clickRost(i); S.hilfeT=S.time; const r=slotRost(i); float(r.x+r.w/2,r.y-8,'gewendet',C.phos); } });
   if (S.zollAt!=null && S.time>=S.zollAt){ S.zollAt=null; S.zoll=S.zollDur; sfx('horn'); sayM('ZOLL?! Kloska, wo sind die Stundenzettel?'); voice('zoll'); log('Zoll, Kontrolle Schwarzarbeit: Kloska und der Fahrer zeigen Papiere. Der Tresen steht.'); }
@@ -2136,7 +2139,7 @@ function update(dt){
   if (kasseOn() && !(S.zoll>0) && !hoBlock()){ S.oCd=(S.oCd||0)-dt;
     if (S.oCd<=0){ S.oCd=2.2*(teamE()<40?1.3:1); const i=S.queue.findIndex(canServe); if(i>=0 && reserve(S.queue[i]) && Math.random()<0.15) say('d',pick(['Olga macht.','Bitte, kommt sofort.','Ja, ja, verstanden.','Hier, schnell, schnell.'])); } }
   // Notlieferungen kommen an
-  for(const x of S.rush){ x.t-=dt; if(x.t<=0){ S.stock[x.p].push({q:x.q,age:0,cheap:false}); float(isDrink(x.p)?703:118+FOOD.indexOf(x.p)*232+60,isDrink(x.p)?470:650,`+${x.q} ${RAW[x.p]}`,C.phos); log(`Peter ist da: ${x.q} ${RAW[x.p]} ${isDrink(x.p)?NAME[x.p]:''} geliefert.`); } }
+  for(const x of S.rush){ x.t-=dt; if(x.t<=0){ S.stock[x.p].push({q:x.q,age:0,cheap:false,c:0}); float(isDrink(x.p)?703:118+FOOD.indexOf(x.p)*232+60,isDrink(x.p)?470:650,`+${x.q} ${RAW[x.p]}`,C.phos); log(`Peter ist da: ${x.q} ${RAW[x.p]} ${isDrink(x.p)?NAME[x.p]:''} geliefert.`); } }
   S.rush=S.rush.filter(x=>x.t>0);
   // Gasflasche
   if (S.fireAt!=null && S.time>=S.fireAt && !S.fire){ S.fireAt=null; S.fire={hp:5,max:5,t:0}; sfx('whoosh'); voice('feuer'); d.fires++; sayM(pick(SAY_M.fire)); log('Die Gasflasche brennt! Anklicken zum Löschen, bis dahin brät nichts.'); }
@@ -3395,7 +3398,11 @@ function showBon(d){
     ${d.tasks&&d.tasks.length?`<hr><div class="c"><b>MADDINS AUFTRÄGE</b></div>${d.tasks.map(t=>`<div class="l"><span>${t.done?'✔':'✘'} ${TASKS[t.k].txt(t.n)}</span><span>${t.done?'+'+TASK_COINS+' 🪙':''}</span></div>`).join('')}${d.taskBonus?`<div class="l"><span>Alle drei erledigt</span><span>+${TASK_BONUS} 🪙</span></div>`:''}`:''}
     ${d.comboMax>=3?`<div class="l"><span>Beste Combo</span><span>×${d.comboMax}</span></div>`:''}
     <hr><div class="l big"><span>SCORE</span><span>${fmtN(d.score||0)}</span></div>
-    <div class="l"><span>Gewinn inkl. Einkauf bei Peter</span><span class="${(d.profit||0)<0?'neg':''}">${eur(d.profit||0)}</span></div>
+    ${d.buy?`<div class="l"><span>Einkauf bei Peter (gestern Abend)</span><span class="neg">${eur(-d.buy)}</span></div>`:''}
+    ${d.cogs!=null?`<div class="l"><span>  davon heute verbraucht (Wareneinsatz)</span><span class="neg">${eur(-d.cogs)}</span></div>`:''}
+    ${d.stockVal!=null?`<div class="l"><span>Ware noch im Lager (Einkaufswert)</span><span>${eur(d.stockVal)}</span></div>`:''}
+    <div class="l"><b>GEWINN</b><b class="${(d.profit||0)<0?'neg':''}">${eur(d.profit||0)}</b></div>
+    <div class="c dim" style="font-size:11px">Gewinn = Tagesergebnis minus Wareneinsatz. Was noch im Lager liegt, zählt erst, wenn es verkauft oder weggeworfen wird.</div>
     ${S.challenge?`<div class="c">Wochen-Challenge ${weekLabel(S.challenge.week)}</div>`:''}
     ${(d.newTroph||[]).map(id=>{ const t=TROPHIES.find(x=>x.id===id); return `<hr><div class="c"><b>${t.anti?'ANTI-TROPHÄE':'TROPHÄE'}: ${t.icon} ${esc(t.name)}</b><br>${esc(t.desc)}</div>`; }).join('')}
     ${d.rank?(()=>{ const R=RANKS.find(r=>r.g===d.rank.g); return `<hr><div class="c"><b>TAGESBEWERTUNG</b></div>${d.rank.parts.map(([n,v,w])=>`<div class="l"><span>${n}</span><span>${v}/${w}</span></div>`).join('')}
