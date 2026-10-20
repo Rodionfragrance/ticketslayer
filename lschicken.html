@@ -324,7 +324,7 @@ const OWNLOC = {
     desc:'Schinkenstraße, Playa de Palma. Ballermann-Publikum bis tief in die Nacht: Durst ohne Ende, Bratwurst mit Meerblick, Salat interessiert keinen. Teure Miete, volle Kasse.'},
 };
 const LOC = () => (S&&S.at&&OWNLOC[S.at]) || LOCS[(S&&S.loc)||0];
-function setAt(id){ if(S.at===id) return; const f=OWNLOC[id].tol/LOC().tol; for(const p of P) S.price[p]=clampPrice(p,pr(p)*f,OWNLOC[id].tol); S.at=id; }
+function setAt(id){ if(S.at===id) return; setTimeout(()=>{ loadWetter(); },0); const f=OWNLOC[id].tol/LOC().tol; for(const p of P) S.price[p]=clampPrice(p,pr(p)*f,OWNLOC[id].tol); S.at=id; }
 /* ===================== Lieferdienst ===================== */
 const MINDESTLOHN = 13.90, LIEF_STD = 8, LIEF_LOHN = Math.round(MINDESTLOHN*LIEF_STD*100)/100;   // gesetzlicher Mindestlohn 2026, mehr gibt es nicht
 const LIEF_FEE = 2.5, NAVI_PRICE = 180, LIEF_SHOW = 3;
@@ -823,7 +823,7 @@ function fakeCard(){
 }
 const locPrice = (p,i) => Math.round((PRICE[p]+(S&&S.recipe?recPrem(p):0))*(i==null?LOC():LOCS[i]).tol*10)/10;
 // Standortwechsel: Preise relativ mitnehmen, sonst ist jeder Wechsel eine Preisfalle
-function setLoc(i){ if(i===S.loc && !S.at) return; const f=LOCS[i].tol/LOC().tol; S.at=null; for(const p of P) S.price[p]=clampPrice(p,pr(p)*f,LOCS[i].tol); S.loc=i; }
+function setLoc(i){ if(i===S.loc && !S.at) return; setTimeout(()=>{ loadWetter(); },0); const f=LOCS[i].tol/LOC().tol; S.at=null; for(const p of P) S.price[p]=clampPrice(p,pr(p)*f,LOCS[i].tol); S.loc=i; }
 // Standplätze: Wochenquote statt Google-Schnitt. Freischalten = Quote der nächsten Stufe in 7 Tagen verkauft (+ Mindesttag).
 // Halten = nach 7 Tagen Schonfrist mindestens 80 % der Quote der aktuellen Stufe pro 7 Tage, sonst eine Stufe runter.
 const LOC_Q = {markt:{p:'huhn',n:60}, stadtfest:{p:'salat',n:90}, kirmes:{p:'wurst',n:160}, wiesn:{p:'haxe',n:70}};
@@ -1003,22 +1003,37 @@ const calMood = () => { const c=S&&S.cal; if(!c) return 0; return c.letzte.reduc
 
 // ===== Darius' Wetter-App: echtes Wetter in Hamm (Open-Meteo, ohne Schlüssel) =====
 let WETTER=null;
-function loadWetter(){ if(!/^https?:/.test(location.protocol)) return;
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=51.68&longitude=7.82&daily=temperature_2m_max,precipitation_sum,weather_code,sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=7')
-    .then(r=>r.ok?r.json():null).then(j=>{ const d=j&&j.daily; if(!d||!d.time||!d.time.length) return;
-      WETTER=d.time.map((t,i)=>({d:t,t:d.temperature_2m_max[i],r:d.precipitation_sum[i]||0,c:d.weather_code[i]||0,sr:(d.sunrise||[])[i]||null,ss:(d.sunset||[])[i]||null})); }).catch(()=>{}); }
+/* Echtes Wetter am Ort des Standplatzes, zum Zeitpunkt, an dem gespielt wird (Open-Meteo, ohne Schlüssel) */
+const WX_LOC={hamm:[51.68,7.82,'Hamm'], soest:[51.57,8.11,'Soest'], muc:[48.14,11.55,'München'], palma:[39.52,2.74,'Palma'], dus:[51.22,6.78,'Düsseldorf']};
+const wxKey = () => (S&&!isNight()&&({kirmes:'soest',wiesn:'muc',malle:'palma',restaurant:'dus'})[LOC().id]) || 'hamm';
+const WXC={};
+function wxSync(){ const c=WXC[wxKey()]; WETTER=c&&c.daily||null; }
+function loadWetter(k){ k=k||wxKey(); if(!/^https?:/.test(location.protocol)) return; const c=WXC[k]; if(c&&(c.busy||Date.now()-(c.at||0)<15*60e3)){ wxSync(); return; }
+  WXC[k]={...(c||{}),busy:true}; const [la,lo]=WX_LOC[k];
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}&current=temperature_2m,precipitation,weather_code&hourly=precipitation,temperature_2m&daily=temperature_2m_max,precipitation_sum,weather_code,sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=7`)
+    .then(r=>r.ok?r.json():null).then(j=>{ const d=j&&j.daily; if(!d||!d.time) { WXC[k]={...(WXC[k]||{}),busy:false}; return; }
+      const daily=d.time.map((t,i)=>({d:t,t:d.temperature_2m_max[i],r:d.precipitation_sum[i]||0,c:d.weather_code[i]||0,sr:(d.sunrise||[])[i]||null,ss:(d.sunset||[])[i]||null}));
+      const cu=j.current||{}, H=j.hourly||{}, now=String(cu.time||'').slice(0,13), hi=Math.max(0,(H.time||[]).findIndex(t=>String(t).slice(0,13)===now));
+      const next3=(H.precipitation||[]).slice(hi,hi+3).reduce((a,v)=>a+(v||0),0), tmax3=Math.max(cu.temperature_2m??-99,...(H.temperature_2m||[]).slice(hi,hi+4).map(v=>v??-99));
+      WXC[k]={at:Date.now(), busy:false, daily, cur:{t:cu.temperature_2m, r:cu.precipitation||0, c:cu.weather_code||0, time:cu.time}, next3, tmax3};
+      wxSync(); }).catch(()=>{ WXC[k]={...(WXC[k]||{}),busy:false}; }); }
+function wxNow(){ const c=WXC[wxKey()]; return c&&c.cur&&Date.now()-c.at<3*3600e3 ? c : null; }
+function wxEventNow(c){ const code=c.cur.c, rain=c.cur.r>=0.2||c.next3>=1.5||(code>=61&&code<=67)||(code>=80&&code<=82)||code>=95;
+  const id = rain ? 'regen' : c.tmax3>=29 ? 'hitze' : (c.tmax3>=20&&code<=2) ? 'sonne' : 'normal'; return EVENTS.find(e=>e.id===id)||EVENTS[0]; }
 const hm = s => { if(!s) return null; const t=String(s).slice(11,16).split(':'); return +t[0]*60+ +t[1]; };
 function darkness(){ if(!S||isNight()||!WETTER) return 0; const w=WETTER.find(x=>x.d===realDate(S.day)); if(!w||!w.sr||!w.ss) return 0;
   const clock=LOC().open*60+S.time/DAYLEN*480, sr=hm(w.sr), ss=hm(w.ss);
   return clock<sr ? clampN((sr-clock)/40,0,1) : clock>ss ? clampN((clock-ss)/40,0,1) : 0; }
 function wxEvent(w){ const id = w.r>=3||(w.c>=61&&w.r>=1) ? 'regen' : w.t>=29 ? 'hitze' : (w.t>=20&&w.c<=2) ? 'sonne' : 'normal'; return EVENTS.find(e=>e.id===id)||EVENTS[0]; }
-function realForecast(){ if(!WETTER||!S||S.challenge) return null;            // Wochen-Challenge bleibt deterministisch
-  const w=WETTER.find(x=>x.d===realDate(S.day))||WETTER[(S.day-1)%WETTER.length]; return {...wxEvent(w), wx:{d:w.d,t:Math.round(w.t),r:Math.round(w.r*10)/10,c:w.c}}; }
+function realForecast(){ if(!S||S.challenge) return null;            // Wochen-Challenge bleibt deterministisch
+  const c=wxNow(); if(c) return {...wxEventNow(c), wx:{now:true, d:String(c.cur.time||todayIso()).slice(0,10), hm:String(c.cur.time||'').slice(11,16), t:Math.round(c.cur.t), r:Math.round((c.cur.r+c.next3)*10)/10, c:c.cur.c, ort:WX_LOC[wxKey()][2]}};
+  if(!WETTER) return null; const w=WETTER.find(x=>x.d===realDate(S.day))||WETTER[(S.day-1)%WETTER.length]; return {...wxEvent(w), wx:{d:w.d,t:Math.round(w.t),r:Math.round(w.r*10)/10,c:w.c,ort:WX_LOC[wxKey()][2]}}; }
 function calHint(){ if(!S||S.forecast.id==='nacht') return ''; const c=calDay(S.day); return c.short.length?'<br>'+c.short.map(esc).join(' · ')+(c.cust!==1?` · Kundschaft ×${c.cust.toFixed(2).replace('.',',')}`:''):''; }
 function wxTxt(){ const x=S.forecast.wx; if(!x) return "Darius' Wetter-App, ~80 %.";
+  const ort=x.ort||'Hamm';
+  if (x.now) return `Echtes Wetter ${ort}, jetzt ${x.hm} Uhr: ${x.t}°${x.r>0?', Regen '+String(x.r).replace('.',',')+' mm in den nächsten Stunden':', trocken'}. Wird beim Tagesstart nochmal geprüft.`;
   const dt=new Date(x.d+'T12:00:00'), tag=['So','Mo','Di','Mi','Do','Fr','Sa'][dt.getDay()]+' '+dt.getDate()+'.'+(dt.getMonth()+1)+'.';
-  const far=LOC().id==='wiesn'?' Darius hat die App nie auf München umgestellt.':LOC().id==='malle'?' Darius zeigt dir das Wetter in Hamm. In Palma ist es warm. Immer.':'';
-  return `Darius' Wetter-App, echtes Wetter Hamm ${tag}: ${x.t}°${x.r>0?', '+String(x.r).replace('.',',')+' mm':''}. ~80 %.${far}`; }
+  return `Darius' Wetter-App, echtes Wetter ${ort} ${tag}: ${x.t}°${x.r>0?', '+String(x.r).replace('.',',')+' mm':''}. ~80 %.`; }
 const pick = a=>a[Math.floor(Math.random()*a.length)];
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const eur = v=>(v<0?'−':'')+Math.abs(v).toFixed(2).replace('.',',')+' €';
@@ -1458,6 +1473,7 @@ function startDay(first){
     if (!S.night || S.night.day!==S.day) S.night = makeContract(S.day);
     S.night.next = 0; S.night.value = nightValue(S.night);   // Rechnung an die Firma: nach der Preisliste beim Schichtbeginn
   } else { const rg=dayRng('event'); S.night=null; S.event = rg()<0.8 && S.forecast.id!=='nacht' ? S.forecast : pickR(rg,EVENTS.filter(e=>!e.minDay||e.minDay<=S.day)); }
+  if (!isNight() && !S.challenge && S.event===S.forecast){ wxSync(); const rf=realForecast(); if (rf){ S.forecast=rf; S.event=rf; } }
   S.cal = isNight() ? null : calDay(S.day);
   rivalDay(); bossStart(); resvPlan(); S.sitzQ=[];
   S.soup = S.cal&&S.cal.martin ? {n:10,g:0} : null;
@@ -2198,10 +2214,10 @@ const kX = () => S&&S.hilfe ? HILFE_LAYOUT.kx : KLOSKA_X0;
 const AUS_EDGES = [322,420,515,605,695,795];
 function slotSpiess(i){ const c=i%4, r=Math.floor(i/4); return {x:219+c*50, y:[253,290,325][r], w:50, h:34}; }
 // Eigene Läden haben andere Hintergrundbilder: Grillrost und Fritteuse sitzen dort etwas tiefer
-const LAYOFF = () => ({imbiss:{rost:34,fry:22}, restaurant:{rost:4,fry:12}})[S&&!isNight()&&S.at]||{rost:0,fry:0};
-function slotRost(i){ const c=i%4, r=Math.floor(i/4); return {x:465+c*39, y:272+r*37+LAYOFF().rost, w:38, h:33}; }
+const LAYOFF = () => ({imbiss:{rost:34,fry:20,rx:-7,ry:304,rh:27}, restaurant:{rost:4,fry:12}})[S&&!isNight()&&S.at]||{rost:0,fry:0};
+function slotRost(i){ const c=i%4, r=Math.floor(i/4), L=LAYOFF(); return L.ry!=null ? {x:465+(L.rx||0)+c*39.3, y:L.ry+r*L.rh, w:38, h:L.rh-1} : {x:465+c*39, y:272+r*37+L.rost, w:38, h:33}; }
 // Klickfläche pro Wurst deutlich größer als das Feld im Bild: nach oben bis zur Rückwand, nach unten bis zur Vitrine
-function hitRost(i){ const c=i%4, r=Math.floor(i/4); return {x:463+c*39, y:(r?306:256)+LAYOFF().rost, w:39, h:r?46:50}; }
+function hitRost(i){ const c=i%4, r=Math.floor(i/4), L=LAYOFF(); return L.ry!=null ? {x:463+(L.rx||0)+c*39.3, y:r?L.ry+L.rh:L.ry-22, w:39, h:r?L.rh+18:L.rh+22} : {x:463+c*39, y:(r?306:256)+L.rost, w:39, h:r?46:50}; }
 const FRY_N = () => S&&S.up.fry>2 ? 4 : 2;
 function slotFry(i){ const y=290+LAYOFF().fry; return FRY_N()===2 ? {x:[640,681][i], y, w:37, h:38} : {x:[640,660,683,703][i], y, w:19, h:38}; }
 function ausRect(k){ return {x:AUS_EDGES[k]+3, y:376, w:AUS_EDGES[k+1]-AUS_EDGES[k]-6, h:48}; }
@@ -2887,10 +2903,10 @@ function showWelt(){
       <div class="stack"><h3>Lebensmittel · ${mktPeriod(M.period)}</h3>
         <div class="tbl"><table><thead><tr><th>Ware</th><th>echt</th><th>Markt</th><th>EK gesamt</th></tr></thead><tbody>${prod}</tbody></table></div>
         <p class="dim" style="font-size:12px">„EK gesamt“ = Markt × Frachtzuschlag × Rhein. ${M.news.map(n=>`${MKT_LBL[n.k]||n.k} ${pct(n.v)}`).join(' · ')}</p></div>
-      <div class="stack"><h3>Darius' Wetter-App · Hamm</h3>
+      <div class="stack"><h3>Darius' Wetter-App · ${WX_LOC[wxKey()][2]}${wxNow()?` · jetzt ${Math.round(wxNow().cur.t)}°, ${wxNow().cur.r>0||wxNow().next3>0.2?'Regen':'trocken'}`:''}</h3>
         ${wx?`<div class="tbl"><table><thead><tr><th>Tag</th><th>max</th><th>Regen</th><th>Sonne</th><th>im Spiel</th></tr></thead><tbody>${wx}</tbody></table></div><p class="dim" style="font-size:12px">Der Spieltag, den du als Nächstes spielst, ist immer das echte Heute. Nach Sonnenuntergang wird es am Wagen dunkel.</p>`
           :`<p class="dim" style="font-size:13px">${S&&S.challenge?'In der Wochen-Challenge würfelt Darius. Fair bleibt fair.':'Wetterdaten nicht erreichbar. Darius rät.'}</p>`}
-        <p class="dim" style="font-size:11.5px">Quellen: Eurostat (HICP Deutschland), Pegelonline WSV, FRED/EIA (Brent), IMF PortWatch (Suez), Autobahn GmbH, Nager.Date (Feiertage), OpenHolidays (Schulferien), OpenLigaDB (Bundesliga), DWD über Bright Sky, Open-Meteo (Wetter, Sonne). Stand Datei: ${esc((MARKT&&MARKT.fetched)||'eingebaut')}.</p></div>
+        <p class="dim" style="font-size:11.5px">Quellen: Eurostat (HICP Deutschland), Pegelonline WSV, FRED/EIA (Brent), IMF PortWatch (Suez), Autobahn GmbH, Nager.Date (Feiertage), OpenHolidays (Schulferien), OpenLigaDB (Bundesliga), DWD über Bright Sky, Open-Meteo (Wetter und Sonne am Ort des Standplatzes, live). Stand Datei: ${esc((MARKT&&MARKT.fetched)||'eingebaut')}.</p></div>
     </div></div></div>`;
   fixDigits(o); o.hidden=false; o.scrollTop=0;
   $('bWeltX').onclick=()=>{ o.hidden=true; };
@@ -3422,7 +3438,7 @@ function upMaxed(k){ const u=UPG[k]; return k==='kuehl'? S.up.kuehl>=u.max : S.u
 
 let EVE_TAB='up';
 function showEvening(){
-  S.phase='evening';
+  S.phase='evening'; loadWetter(); wxSync();
   // auch alte Spielstände (vor dem Nachtschicht-Update gespeichert) bekommen die Ankündigung
   if (isNightDay(S.day) && (!S.night || S.night.day!==S.day)){ S.forecast=NIGHT; S.night=makeContract(S.day); }
   if (!S.order) S.order=blank();
