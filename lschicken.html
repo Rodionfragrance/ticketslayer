@@ -2393,6 +2393,9 @@ function render(){
     ctx.fillStyle='rgba(20,12,8,.88)'; rr(bx,by,40,24,5); ctx.fill(); ctx.strokeStyle=n===0?'#ff8a6e':'rgba(240,160,58,.45)'; ctx.stroke();
     txt(String(n),bx+20,by+18,15,n===0?'#ff8a6e':C.mayo,'center',F.disp,700);
   }
+  /* --- Olga hinter dem Tresen, rechts neben Kloska --- */
+  if (kasseOn()){ const oi=IMG.pt_olga; if (oi&&oi.complete&&oi.naturalWidth){ const h=138, w=oi.naturalWidth*h/oi.naturalHeight, bob=Math.sin(now/380+2)*1.2, lean=S.oCd!=null&&S.oCd>1.8?-6:0;
+      ctx.save(); ctx.beginPath(); ctx.rect(0,0,W,COUNTER_Y+2); ctx.clip(); ctx.drawImage(oi,922-w/2+lean,COUNTER_Y-h+30+bob,w,h); ctx.restore(); } }
   /* --- Kloska hinter dem Tresen (unterhalb der Theke abgeschnitten) --- */
   const k=S.kl, busy=!!k.job, serving=busy&&k.t>0.1&&k.t<0.6;
   const ki=serving?IMG.kloskaServe:IMG.kloska, breathe=serving?0:Math.sin(now/420)*1.2;
@@ -2403,7 +2406,7 @@ function render(){
   if (S.auto&&klOn()) txtS('AUTOPILOT',kX(),COUNTER_Y-124,9,C.grill,'center',F.disp,700);
   if (!klOn()) txtS(S.sickToday&&S.sickToday.temp?'ZEITARBEIT':'KLOSKA KRANK',kX(),COUNTER_Y-124,9,C.ketchup,'center',F.disp,700);
   if (fryOn()) txtS('POMMES-PAUL',682,232,9,C.phos,'center',F.disp,700);
-  if (kasseOn()) txtS('OLGA',kX(),COUNTER_Y-136,9,C.phos,'center',F.disp,700);
+  if (kasseOn()) txtS('OLGA',922,COUNTER_Y-112,9,C.phos,'center',F.disp,700);
   /* --- Max & Moritz auf der Markise --- */
   if (S.raid){
     const b=BTN.raid; ctx.fillStyle='rgba(217,71,47,0.22)'; rr(b.x,b.y,b.w,b.h,6); ctx.fill();
