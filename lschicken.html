@@ -104,6 +104,13 @@ body:has(.hofov) #wBan{display:none}
 .hoftag .btn.sm{padding:1px 6px;font-size:10.5px}
 .hofsay{position:absolute;transform:translate(0,-100%);max-width:34%;background:var(--paper);color:var(--ink);border-radius:8px;padding:5px 8px;font-size:11px;line-height:1.3;z-index:2}
 .hofsale{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-3deg);background:var(--paper);color:var(--ink);border:3px solid #8a5a2b;padding:10px 16px;text-align:center;font-size:14px;z-index:2}
+.htiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;margin-bottom:8px}
+.htile{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:6px;padding:6px 8px;display:flex;flex-direction:column;gap:1px;font-size:12px}
+.htile small{color:var(--dim);font-size:11px}.htile b{font-size:16px}
+.hchart{margin:4px 0 10px}.hchart svg{width:100%;height:150px;display:block;background:rgba(0,0,0,.18);border-radius:6px}
+.htips{margin:6px 0 0 18px;padding:0;font-size:12.5px;line-height:1.45}
+.hbest{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:3px 10px;font-size:12.5px;margin-top:4px}
+@media (max-width:700px){.htiles{grid-template-columns:repeat(2,1fr)}.hbest{grid-template-columns:auto 1fr}}
 .bonrow{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;align-items:flex-start;width:100%}
 .rev{background:var(--paper);color:var(--ink);max-width:440px;width:100%;padding:18px 20px;box-shadow:0 12px 40px rgba(0,0,0,.5);font-size:14px;line-height:1.45}
 .rev h4{margin:0;font:700 17px var(--f-body)}
@@ -1530,7 +1537,7 @@ function endDay(reason){
   for(const p of P){ S.run.sold[p]+=d.sold[p]; S.run.waste[p]+=d.waste[p]; STORE.life.sold[p]+=d.sold[p]; STORE.life.waste[p]+=d.waste[p]; }
   S.run.revenue+=d.revenue; S.run.served+=d.served; S.run.lost+=d.lost+d.missed; S.run.stolen+=d.why.gestohlen;
   STORE.life.revenue+=d.revenue; STORE.life.days++; STORE.life.served+=d.served; STORE.life.lost+=d.lost+d.missed; STORE.life.stolen+=d.why.gestohlen;
-  S.hist.push({n:d.n, sold:{...d.sold}, waste:{...d.waste}, revenue:d.revenue, ev:S.event.id, loc:isNight()?'nacht':LOC().id});
+  S.hist.push({n:d.n, sold:{...d.sold}, waste:{...d.waste}, revenue:d.revenue, profit:Math.round(d.profit), served:d.served, lost:d.lost+d.missed, combo:d.comboMax||0, ev:S.event.id, loc:isNight()?'nacht':LOC().id});
   if (S.hist.length>30) S.hist.shift();
   S.over = reason==='ruf' || S.ruf<=0 ? 'ruf' : S.cash<0 ? 'pleite' : null;
   if (d.fil) emp().filLog=d.fil.note?`${eur(d.fil.inc)} · ${d.fil.note}`:eur(d.fil.inc);
@@ -1554,6 +1561,9 @@ function endDay(reason){
   S.revSum+=d.rating*d.ratingN; S.revN+=d.ratingN;
   endDayRegulars(d);
   d.rank=dayRank(d); if (d.rank.g==='S') unlock('srang'); S.hist[S.hist.length-1].rank=d.rank.g;
+  { const h=S.hist[S.hist.length-1], B=S.run.best=S.run.best||{}, upd=(k,v)=>{ if(v!=null && (!B[k]||v>B[k].v)) B[k]={v,day:d.n}; };
+    if (h.loc!=='nacht'){ upd('profit',h.profit); upd('rev',Math.round(d.revenue)); if(d.ratingN) upd('stars',Math.round(d.rating*10)/10); }
+    upd('combo',d.comboMax||0); upd('served',d.served); B.ranks=B.ranks||{}; B.ranks[d.rank.g]=(B.ranks[d.rank.g]||0)+1; }
   { const h=S.hist[S.hist.length-1]; if (d.ratingN){ h.stars=d.rating; h.real=d.rating; h.rn=d.ratingN; } h.ruf=Math.round(S.ruf); }
   fakeCheck(d);
   d.locName=isNight()?'Lagerhalle Hamm-Rhynern':LOC().place;
@@ -2922,6 +2932,52 @@ function dayRank(d){
     ['Sterne', 15, d.night?svc:clamp(((d.ratingN?d.rating:3.5)-2)/3,0,1)]];
   const otPen=Math.min(10,Math.round((d.overtime||0)/6)), pts=Math.max(0,Math.round(parts.reduce((a,[,w,v])=>a+w*v,0))-otPen), R=RANKS.find(r=>pts>=r.min);
   return {g:R.g, pts, otPen, otMin:Math.round(otHours(d.overtime||0)*60), parts:parts.map(([n,w,v])=>[n,Math.round(w*v),w])}; }
+/* Verlauf als Rückblick: Kennzahlen mit Trend, Kurve, Auswertung mit Tipps, Bestwerte */
+function histTab(){
+  const H=S.hist||[]; if(!H.length) return '<p class="dim">Noch keine Tage gespielt. Nach dem ersten Feierabend steht hier, wie es läuft.</p>';
+  const day=H.filter(h=>h.loc!=='nacht'), last7=day.slice(-7), prev7=day.slice(-14,-7), last5=day.slice(-5);
+  const avg=(a,f)=>{ const v=a.map(f).filter(x=>x!=null&&!Number.isNaN(x)); return v.length?v.reduce((q,x)=>q+x,0)/v.length:null; };
+  const RK={S:6,A:5,B:4,C:3,D:2,F:1}, rcol=g=>(RANKS.find(r=>r.g===g)||{}).c||'var(--dim)';
+  const gP=avg(last7,h=>h.profit), gP0=avg(prev7,h=>h.profit), st=avg(last7,h=>h.stars), st0=avg(prev7,h=>h.stars);
+  const rk=avg(last7,h=>h.rank?RK[h.rank]:null), rkG=rk?Object.keys(RK).find(k=>RK[k]===Math.round(rk)):null, rk0=avg(prev7,h=>h.rank?RK[h.rank]:null);
+  const wq=a=>{ let w=0,q=0; for(const h of a) for(const p of P){ w+=h.waste[p]; q+=h.sold[p]; } return q+w?w/(q+w):null; }, wQ=wq(last7), wQ0=wq(prev7);
+  const arrow=(v,v0,good)=>v==null||v0==null?'':Math.abs(v-v0)<(good==='abs'?0.05:Math.abs(v0)*0.05+0.01)?'<span class="dim">→</span>':((v>v0)===(good!=='low')?'<b style="color:var(--phos)">▲</b>':'<b style="color:var(--ketchup)">▼</b>');
+  const tile=(lab,val,tr,sub)=>`<div class="htile"><small>${lab}</small><b>${val} ${tr}</b>${sub?`<span class="dim">${sub}</span>`:''}</div>`;
+  const tiles=`<div class="htiles">
+    ${tile('Ø Gewinn / Tag', gP==null?'–':`<span style="color:${gP<0?'var(--ketchup)':'var(--phos)'}">${eur(gP)}</span>`, arrow(gP,gP0), gP0!=null?`Woche davor ${eur(gP0)}`:'letzte 7 Tage')}
+    ${tile('Ø Tagesrang', rkG?`<span style="color:${rcol(rkG)}">${rkG}</span>`:'–', arrow(rk,rk0,'abs'), 'F schlecht · S top')}
+    ${tile('Ø Google-Sterne', st==null?'–':st.toFixed(1).replace('.',',')+' ★', arrow(st,st0,'abs'), st0!=null?`davor ${st0.toFixed(1).replace('.',',')}`:'')}
+    ${tile('Verschnitt', wQ==null?'–':Math.round(wQ*100)+' %', arrow(wQ,wQ0,'low'), 'Anteil weggeworfen')}</div>`;
+  // Kurve: Gewinn-Balken (Nacht blau), Sterne als Linie
+  const N=H.slice(-30), mx=Math.max(50,...N.map(h=>Math.abs(h.profit||0))), W=600, Hh=150, z=90, bw=W/Math.max(N.length,10);
+  const bars=N.map((h,i)=>{ const v=h.profit; if(v==null) return ''; const hh=Math.abs(v)/mx*(v>=0?z-12:Hh-z-14), x=i*bw+2, col=h.loc==='nacht'?'#6f8fd8':v>=0?'#5fbf7f':'#d9472f';
+    return `<rect x="${x.toFixed(1)}" y="${(v>=0?z-hh:z).toFixed(1)}" width="${(bw-4).toFixed(1)}" height="${Math.max(1,hh).toFixed(1)}" fill="${col}" rx="2"><title>Tag ${h.n}: ${eur(v)}${h.rank?' · Rang '+h.rank:''}</title></rect>${h.rank&&bw>14?`<text x="${(x+bw/2-2).toFixed(1)}" y="${(v>=0?z-hh-3:z+hh+10).toFixed(1)}" font-size="9" text-anchor="middle" fill="${rcol(h.rank)}">${h.rank}</text>`:''}`; }).join('');
+  const pts=N.map((h,i)=>h.stars!=null?[i*bw+bw/2, 8+(5-h.stars)/4*(z-20)]:null).filter(Boolean);
+  const line=pts.length>1?`<polyline points="${pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="#f0c060" stroke-width="1.5" stroke-dasharray="3 2"/>`:'';
+  const lbl=N.map((h,i)=>i%5===0||i===N.length-1?`<text x="${(i*bw+bw/2).toFixed(1)}" y="${Hh-2}" font-size="9" text-anchor="middle" fill="#8a8170">${h.n}</text>`:'').join('');
+  const chart=`<div class="hchart"><svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" role="img" aria-label="Gewinn pro Tag"><line x1="0" x2="${W}" y1="${z}" y2="${z}" stroke="#4a4438"/>${bars}${line}${lbl}</svg>
+    <div class="dim" style="font-size:11px">Balken = Gewinn pro Tag (<span style="color:#5fbf7f">■</span> Plus, <span style="color:#d9472f">■</span> Minus, <span style="color:#6f8fd8">■</span> Nachtschicht) · Buchstabe = Tagesrang · <span style="color:#f0c060">┄</span> Sterne</div></div>`;
+  // Auswertung
+  const tips=[];
+  for(const p of P){ const w=avg(last5,h=>h.waste[p]), q=avg(last5,h=>h.sold[p]); if(w!=null && w>=3 && w/((q||0)+w)>=0.15) tips.push(`🗑 <b>${NAME[p]}</b>: im Schnitt ${Math.round(w)} pro Tag weggeworfen (${Math.round(w/((q||0)+w)*100)} %). ${FOOD.includes(p)?'Weniger bestellen oder später nachlegen.':'Weniger bestellen.'}`); }
+  const lost=avg(last5,h=>h.lost); if(lost!=null && lost>=3) tips.push(`🏃 Im Schnitt <b>${Math.round(lost)} Würmer</b> pro Tag weggelaufen oder abgewiesen. Mehr vorgaren, Wartime früher zünden oder den Autopilot nutzen.`);
+  if (gP!=null&&gP0!=null&&gP0>0){ if(gP<gP0*0.85) tips.push(`📉 Der Gewinn ist gegenüber der Woche davor um ${Math.round((1-gP/gP0)*100)} % gesunken. Preise, Miete und Verschnitt prüfen.`); else if(gP>gP0*1.15) tips.push(`📈 Der Gewinn ist um ${Math.round((gP/gP0-1)*100)} % gestiegen. Weiter so.`); }
+  if (st!=null && st<4.0) tips.push('⭐ Unter 4,0 Sternen: perfekt garen, nichts Aufgewärmtes verkaufen, keine Abzocke-Preise.');
+  if (gP!=null && gP<0) tips.push('💸 Im Schnitt Verlust. Größte Hebel: Verschnitt runter, Preise rauf, teure Miete prüfen.');
+  const tipBox=`<div class="sabt"><b>🧐 Maddins Auswertung</b>${tips.length?`<ul class="htips">${tips.slice(0,5).map(t=>`<li>${t}</li>`).join('')}</ul>`:'<p style="font-size:12.5px">Läuft. Keine Auffälligkeiten in den letzten Tagen. Maddin sagt nichts. Das ist ein Kompliment.</p>'}</div>`;
+  // Bestwerte
+  const B=S.run.best||{}, bw_=(k,f)=>B[k]?`${f(B[k].v)} <span class="dim">(Tag ${B[k].day})</span>`:'–';
+  const ranks=B.ranks?['S','A','B','C','D','F'].filter(g=>B.ranks[g]).map(g=>`<b style="color:${rcol(g)}">${g}</b>×${B.ranks[g]}`).join(' '):'–';
+  const best=`<div class="sabt"><b>🏆 Bestwerte in diesem Run</b><div class="hbest">
+    <span>Bester Gewinn</span><span>${bw_('profit',eur)}</span><span>Bester Umsatz</span><span>${bw_('rev',eur)}</span>
+    <span>Beste Sterne</span><span>${bw_('stars',v=>String(v).replace('.',',')+' ★')}</span><span>Längste Combo</span><span>${bw_('combo',v=>'×'+v)}</span>
+    <span>Meiste Kunden</span><span>${bw_('served',v=>v)}</span><span>Ränge</span><span>${ranks}</span></div></div>`;
+  // Tagesliste
+  const rows=H.slice(-10).reverse().map(h=>`<tr style="${h.loc==='nacht'?'opacity:.7':''}"><td>${h.n}</td><td title="${h.loc==='nacht'?'Nachtschicht':esc((LOCS.find(L=>L.id===h.loc)||OWNLOC[h.loc]||{}).name||'')}">${LOC_ICON[h.loc]||''}</td>
+    <td><b style="color:${rcol(h.rank)}">${h.rank||'–'}</b></td><td style="color:${h.profit==null?'inherit':h.profit<0?'var(--ketchup)':'var(--phos)'}">${h.profit==null?'–':(h.profit>0?'+':'')+eur(h.profit)}</td>
+    <td>${h.stars!=null?h.stars.toFixed(1).replace('.',','):'–'}</td><td>${h.ruf!=null?h.ruf:'–'}</td><td>${h.served!=null?h.served:'–'}${h.lost?` <span style="color:var(--ketchup)">−${h.lost}</span>`:''}</td><td>${P.reduce((a,p)=>a+h.waste[p],0)}</td></tr>`).join('');
+  const table=`<div class="tbl"><table><thead><tr><th>Tag</th><th>Ort</th><th>Rang</th><th>Gewinn</th><th>★</th><th>Ruf</th><th title="bedient, rot = weggelaufen">Kunden</th><th title="weggeworfen">🗑</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  return tiles+chart+tipBox+best+table; }
 function unlock(id){
   if (STORE.troph[id]) return;
   const t=TROPHIES.find(x=>x.id===id); if(!t) return;
@@ -3287,8 +3343,8 @@ function showEvening(){
       <div class="peter" style="align-items:center"><img src="${IMG_SRC.kloska}" alt="Kloska" style="height:96px">
         <label class="tog"><input type="checkbox" id="cbAuto" ${S.auto?'checked':''}><span><b>Kloska Autopilot</b> (60 € Überstunden pro Tag). Verkauft selbstständig, sobald eine Bestellung komplett ist. Verwechselt aktuell ${Math.round(klErr()*100)} %. Ohne Autopilot nur auf deinen Klick, dafür fehlerfrei.</span></label></div>
       <label class="tog"><input type="checkbox" id="cbReheat" ${S.reheat?'checked':''}><span><b>Reste-Hähnchen aufwärmen</b>: Übrige Hähnchen und Haxen gehen morgen wieder in die Auslage statt in den Müll. Je mehr davon verkauft werden, desto wahrscheinlicher kommt die Kontrolle.</span></label>`;
-    else tab=`<div class="tbl"><table><thead><tr><th>Tag</th><th>Ort</th><th>Ruf</th><th>★</th><th>Umsatz</th>${P.map(p=>`<th>${EMO[p]}</th>`).join('')}<th title="Verlust">🗑</th></tr></thead>
-      <tbody>${S.hist.slice(-10).reverse().map(h=>`<tr><td>${h.n}</td><td title="${h.loc==='nacht'?'Nachtschicht':esc((LOCS.find(L=>L.id===h.loc)||{}).name||'')}">${LOC_ICON[h.loc]||''}</td><td>${h.ruf!=null?h.ruf:'–'}</td><td>${h.stars!=null?h.stars.toFixed(1).replace('.',','):'–'}</td><td>${eur(h.revenue)}</td>${P.map(p=>`<td>${h.sold[p]}</td>`).join('')}<td>${P.reduce((a,p)=>a+h.waste[p],0)}</td></tr>`).join('')||'<tr><td colspan="14" class="dim">Noch keine Tage.</td></tr>'}</tbody></table></div>
+    else tab=histTab()+`<details class="dim" style="font-size:12px;margin-top:8px"><summary>Verkaufszahlen der letzten 10 Tage</summary><div class="tbl"><table><thead><tr><th>Tag</th><th>Ort</th><th>Ruf</th><th>★</th><th>Umsatz</th>${P.map(p=>`<th>${EMO[p]}</th>`).join('')}<th title="Verlust">🗑</th></tr></thead>
+      <tbody>${S.hist.slice(-10).reverse().map(h=>`<tr><td>${h.n}</td><td title="${h.loc==='nacht'?'Nachtschicht':esc((LOCS.find(L=>L.id===h.loc)||{}).name||'')}">${LOC_ICON[h.loc]||''}</td><td>${h.ruf!=null?h.ruf:'–'}</td><td>${h.stars!=null?h.stars.toFixed(1).replace('.',','):'–'}</td><td>${eur(h.revenue)}</td>${P.map(p=>`<td>${h.sold[p]}</td>`).join('')}<td>${P.reduce((a,p)=>a+h.waste[p],0)}</td></tr>`).join('')||'<tr><td colspan="14" class="dim">Noch keine Tage.</td></tr>'}</tbody></table></div></details>
       <p class="dim" style="font-size:12.5px">Dieser Run: ${S.run.served} bedient · ${P.map(p=>`${S.run.sold[p]} ${EMO[p]}`).join(' · ')}</p>`;
     const ks=kundenScore(), cmv=Math.round((custMult()-1)*100), kcol=ks>=70?'var(--phos)':ks>=45?'var(--grill)':'var(--ketchup)';
     const verdict = ks>=85?'Die Würmer stehen Schlange. Marge eher dünn.':ks>=70?'Passt. Keiner meckert, alle zahlen.':ks>=45?'Einige murren an der Theke. Ruf sinkt leicht.':ks>=25?'Abzocke-Alarm. Weniger Kundschaft, schlechtere Bewertungen.':'Die Würmer gehen lieber zum Döner.';
