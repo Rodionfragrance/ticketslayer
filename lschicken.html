@@ -2394,19 +2394,20 @@ function render(){
     txt(String(n),bx+20,by+18,15,n===0?'#ff8a6e':C.mayo,'center',F.disp,700);
   }
   /* --- Olga hinter dem Tresen, rechts neben Kloska --- */
+  const klShow = (S.auto&&klOn()) || !kasseOn(), oX = klShow ? 922 : kX();   // Olga allein: sie steht an Kloskas Platz
   if (kasseOn()){ const oi=IMG.pt_olga; if (oi&&oi.complete&&oi.naturalWidth){ const h=138, w=oi.naturalWidth*h/oi.naturalHeight, bob=Math.sin(now/380+2)*1.2, lean=S.oCd!=null&&S.oCd>1.8?-6:0;
-      ctx.save(); ctx.beginPath(); ctx.rect(0,0,W,COUNTER_Y+2); ctx.clip(); ctx.drawImage(oi,922-w/2+lean,COUNTER_Y-h+30+bob,w,h); ctx.restore(); } }
+      ctx.save(); ctx.beginPath(); ctx.rect(0,0,W,COUNTER_Y+2); ctx.clip(); ctx.drawImage(oi,oX-w/2+lean,COUNTER_Y-h+30+bob,w,h); ctx.restore(); } }
   /* --- Kloska hinter dem Tresen (unterhalb der Theke abgeschnitten) --- */
   const k=S.kl, busy=!!k.job, serving=busy&&k.t>0.1&&k.t<0.6;
   const ki=serving?IMG.kloskaServe:IMG.kloska, breathe=serving?0:Math.sin(now/420)*1.2;
-  if (ki.complete){ ctx.save(); ctx.beginPath(); ctx.rect(0,0,W,COUNTER_Y+2); ctx.clip();
+  if (klShow && ki.complete){ ctx.save(); ctx.beginPath(); ctx.rect(0,0,W,COUNTER_Y+2); ctx.clip();
     if (serving){ ctx.translate(kX()+46,0); ctx.scale(-1,1); ctx.drawImage(ki,0,COUNTER_Y-120,141,190); }
     else ctx.drawImage(ki,kX()-48,COUNTER_Y-120+breathe,96,190);
     ctx.restore(); }
   if (S.auto&&klOn()) txtS('AUTOPILOT',kX(),COUNTER_Y-124,9,C.grill,'center',F.disp,700);
-  if (!klOn()) txtS(S.sickToday&&S.sickToday.temp?'ZEITARBEIT':'KLOSKA KRANK',kX(),COUNTER_Y-124,9,C.ketchup,'center',F.disp,700);
+  if (!klOn() && klShow) txtS(S.sickToday&&S.sickToday.temp?'ZEITARBEIT':'KLOSKA KRANK',kX(),COUNTER_Y-124,9,C.ketchup,'center',F.disp,700);
   if (fryOn()) txtS('POMMES-PAUL',682,232,9,C.phos,'center',F.disp,700);
-  if (kasseOn()) txtS('OLGA',922,COUNTER_Y-112,9,C.phos,'center',F.disp,700);
+  if (kasseOn()) txtS('OLGA',oX,COUNTER_Y-112,9,C.phos,'center',F.disp,700);
   /* --- Max & Moritz auf der Markise --- */
   if (S.raid){
     const b=BTN.raid; ctx.fillStyle='rgba(217,71,47,0.22)'; rr(b.x,b.y,b.w,b.h,6); ctx.fill();
