@@ -1008,7 +1008,14 @@ const WX_LOC={hamm:[51.68,7.82,'Hamm'], soest:[51.57,8.11,'Soest'], muc:[48.14,1
 const wxKey = () => (S&&!isNight()&&({kirmes:'soest',wiesn:'muc',malle:'palma',restaurant:'dus'})[LOC().id]) || 'hamm';
 const WXC={};
 function wxSync(){ const c=WXC[wxKey()]; WETTER=c&&c.daily||null; }
-function loadWetter(k){ k=k||wxKey(); if(!/^https?:/.test(location.protocol)) return; const c=WXC[k]; if(c&&(c.busy||Date.now()-(c.at||0)<15*60e3)){ wxSync(); return; }
+// Am Feierabend: Prognose für morgen mit dem Live-Wetter des gewählten Ortes neu setzen (auch bei alten Spielständen)
+function wxRefreshForecast(){ if(!S||S.phase!=='evening'||S.challenge||!S.forecast||S.forecast.id==='nacht'||isNightDay(S.day)) return false;
+  const rf=realForecast(); if(!rf||!rf.wx) return false; const old=S.forecast.wx;
+  if (old&&old.now&&old.hm===rf.wx.hm&&old.ort===rf.wx.ort&&S.forecast.id===rf.id) return false;
+  if (!old && S.forecast.id!==EVENTS[0].id && !rf.wx.now) return false;   // gewürfeltes Sonder-Event nur durch Live-Wetter ersetzen
+  S.forecast=rf; return true; }
+function loadWetter(k){ k=k||wxKey(); const c=WXC[k]; if(c&&(c.busy||Date.now()-(c.at||0)<15*60e3)){ wxSync(); if(!c.busy && wxRefreshForecast() && EVE_REDRAW) EVE_REDRAW(); return; }
+  if(!/^https?:/.test(location.protocol)) return;
   WXC[k]={...(c||{}),busy:true}; const [la,lo]=WX_LOC[k];
   fetch(`https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}&current=temperature_2m,precipitation,weather_code&hourly=precipitation,temperature_2m&daily=temperature_2m_max,precipitation_sum,weather_code,sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=7`)
     .then(r=>r.ok?r.json():null).then(j=>{ const d=j&&j.daily; if(!d||!d.time) { WXC[k]={...(WXC[k]||{}),busy:false}; return; }
@@ -1016,7 +1023,7 @@ function loadWetter(k){ k=k||wxKey(); if(!/^https?:/.test(location.protocol)) re
       const cu=j.current||{}, H=j.hourly||{}, now=String(cu.time||'').slice(0,13), hi=Math.max(0,(H.time||[]).findIndex(t=>String(t).slice(0,13)===now));
       const next3=(H.precipitation||[]).slice(hi,hi+3).reduce((a,v)=>a+(v||0),0), tmax3=Math.max(cu.temperature_2m??-99,...(H.temperature_2m||[]).slice(hi,hi+4).map(v=>v??-99));
       WXC[k]={at:Date.now(), busy:false, daily, cur:{t:cu.temperature_2m, r:cu.precipitation||0, c:cu.weather_code||0, time:cu.time}, next3, tmax3};
-      wxSync(); }).catch(()=>{ WXC[k]={...(WXC[k]||{}),busy:false}; }); }
+      wxSync(); if (wxRefreshForecast() && EVE_REDRAW) EVE_REDRAW(); }).catch(()=>{ WXC[k]={...(WXC[k]||{}),busy:false}; }); }
 function wxNow(){ const c=WXC[wxKey()]; return c&&c.cur&&Date.now()-c.at<3*3600e3 ? c : null; }
 function wxEventNow(c){ const code=c.cur.c, rain=c.cur.r>=0.2||c.next3>=1.5||(code>=61&&code<=67)||(code>=80&&code<=82)||code>=95;
   const id = rain ? 'regen' : c.tmax3>=29 ? 'hitze' : (c.tmax3>=20&&code<=2) ? 'sonne' : 'normal'; return EVENTS.find(e=>e.id===id)||EVENTS[0]; }
@@ -1024,7 +1031,7 @@ const hm = s => { if(!s) return null; const t=String(s).slice(11,16).split(':');
 function darkness(){ if(!S||isNight()||!WETTER) return 0; const w=WETTER.find(x=>x.d===realDate(S.day)); if(!w||!w.sr||!w.ss) return 0;
   const clock=LOC().open*60+S.time/DAYLEN*480, sr=hm(w.sr), ss=hm(w.ss);
   return clock<sr ? clampN((sr-clock)/40,0,1) : clock>ss ? clampN((clock-ss)/40,0,1) : 0; }
-function wxEvent(w){ const id = w.r>=3||(w.c>=61&&w.r>=1) ? 'regen' : w.t>=29 ? 'hitze' : (w.t>=20&&w.c<=2) ? 'sonne' : 'normal'; return EVENTS.find(e=>e.id===id)||EVENTS[0]; }
+function wxEvent(w){ const id = w.r>=5||(w.c>=63&&w.r>=3) ? 'regen' : w.t>=29 ? 'hitze' : (w.t>=20&&w.c<=2) ? 'sonne' : 'normal'; return EVENTS.find(e=>e.id===id)||EVENTS[0]; }
 function realForecast(){ if(!S||S.challenge) return null;            // Wochen-Challenge bleibt deterministisch
   const c=wxNow(); if(c) return {...wxEventNow(c), wx:{now:true, d:String(c.cur.time||todayIso()).slice(0,10), hm:String(c.cur.time||'').slice(11,16), t:Math.round(c.cur.t), r:Math.round((c.cur.r+c.next3)*10)/10, c:c.cur.c, ort:WX_LOC[wxKey()][2]}};
   if(!WETTER) return null; const w=WETTER.find(x=>x.d===realDate(S.day))||WETTER[(S.day-1)%WETTER.length]; return {...wxEvent(w), wx:{d:w.d,t:Math.round(w.t),r:Math.round(w.r*10)/10,c:w.c,ort:WX_LOC[wxKey()][2]}}; }
@@ -3438,7 +3445,7 @@ function upMaxed(k){ const u=UPG[k]; return k==='kuehl'? S.up.kuehl>=u.max : S.u
 
 let EVE_TAB='up';
 function showEvening(){
-  S.phase='evening'; loadWetter(); wxSync();
+  S.phase='evening'; loadWetter(); wxSync(); wxRefreshForecast();
   // auch alte Spielstände (vor dem Nachtschicht-Update gespeichert) bekommen die Ankündigung
   if (isNightDay(S.day) && (!S.night || S.night.day!==S.day)){ S.forecast=NIGHT; S.night=makeContract(S.day); }
   if (!S.order) S.order=blank();
