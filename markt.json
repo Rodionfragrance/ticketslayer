@@ -1,8 +1,8 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-09",
- "fetched": "2026-10-25",
- "week": "2026-W43",
+ "fetched": "2026-10-26",
+ "week": "2026-W44",
  "yoy": {
   "food": 0.5,
   "poultry": 3.6,
@@ -22,8 +22,8 @@
  },
  "welt": {
   "kaub": {
-   "cm": 27,
-   "ts": "2026-10-25T09:15",
+   "cm": 56,
+   "ts": "2026-10-26T09:45",
    "state": "low"
   },
   "brent": {
@@ -2759,6 +2759,967 @@
     "autobahn": {
      "n": 44,
      "baustellen": 44,
+     "sperrungen": 0,
+     "voll": 0,
+     "liste": [
+      {
+       "ab": "A1",
+       "typ": "roadworks",
+       "titel": "A1 | Lichtendorf - Dortmund/Unna",
+       "ort": " Köln -> Münster",
+       "voll": false
+      },
+      {
+       "ab": "A1",
+       "typ": "roadworks",
+       "titel": "A1 | Lichtendorf - Unna",
+       "ort": " Köln -> Münster",
+       "voll": false
+      },
+      {
+       "ab": "A1",
+       "typ": "roadworks",
+       "titel": "A1 | Dortmund/Unna - Lichtendorf",
+       "ort": " Münster -> Köln",
+       "voll": false
+      },
+      {
+       "ab": "A1",
+       "typ": "roadworks",
+       "titel": "A1 | Dortmund/Unna - Kamen-Zentrum",
+       "ort": " Dortmund -> Münster",
+       "voll": false
+      },
+      {
+       "ab": "A1",
+       "typ": "roadworks",
+       "titel": "A1 | Unna - Kamen-Zentrum",
+       "ort": " Dortmund -> Münster",
+       "voll": false
+      },
+      {
+       "ab": "A1",
+       "typ": "roadworks",
+       "titel": "A1 | Kamen-Zentrum - Unna",
+       "ort": " Münster -> Dortmund",
+       "voll": false
+      }
+     ]
+    },
+    "ferien": [
+     {
+      "s": "2025-12-22",
+      "e": "2026-01-06",
+      "name": "Weihnachtsferien"
+     },
+     {
+      "s": "2026-03-30",
+      "e": "2026-04-11",
+      "name": "Osterferien"
+     },
+     {
+      "s": "2026-05-26",
+      "e": "2026-05-26",
+      "name": "Pfingstferien"
+     },
+     {
+      "s": "2026-07-20",
+      "e": "2026-09-01",
+      "name": "Sommerferien"
+     },
+     {
+      "s": "2026-10-17",
+      "e": "2026-10-31",
+      "name": "Herbstferien"
+     },
+     {
+      "s": "2026-12-23",
+      "e": "2027-01-06",
+      "name": "Weihnachtsferien"
+     },
+     {
+      "s": "2027-03-22",
+      "e": "2027-04-03",
+      "name": "Osterferien"
+     },
+     {
+      "s": "2027-05-18",
+      "e": "2027-05-18",
+      "name": "Pfingstferien"
+     },
+     {
+      "s": "2027-07-19",
+      "e": "2027-08-31",
+      "name": "Sommerferien"
+     },
+     {
+      "s": "2027-10-23",
+      "e": "2027-11-06",
+      "name": "Herbstferien"
+     },
+     {
+      "s": "2027-12-24",
+      "e": "2028-01-08",
+      "name": "Weihnachtsferien"
+     }
+    ]
+   }
+  },
+  "2026-W44": {
+   "period": "2026-09",
+   "yoy": {
+    "food": 0.5,
+    "poultry": 3.6,
+    "pork": -3.2,
+    "beef": 3.7,
+    "meatprep": -0.4,
+    "oils": -14.5,
+    "veg": 9.0,
+    "bread": 1.9,
+    "soft": 2.0,
+    "beer": 2.8,
+    "coffee": -4.2,
+    "fuel": 36.8,
+    "diesel": 47.7,
+    "elec": -5.5,
+    "gas": -3.4
+   },
+   "welt": {
+    "kaub": {
+     "cm": 56,
+     "ts": "2026-10-26T09:45",
+     "state": "low"
+    },
+    "brent": {
+     "usd": 115.22,
+     "date": "2026-10-20",
+     "yoy": 89.8,
+     "src": "FRED"
+    },
+    "suez": {
+     "avg7": 44.3,
+     "base": 72,
+     "date": "2026-10-18"
+    }
+   },
+   "kal": {
+    "feiertage": [
+     {
+      "d": "2026-01-01",
+      "name": "Neujahr"
+     },
+     {
+      "d": "2026-04-03",
+      "name": "Karfreitag"
+     },
+     {
+      "d": "2026-04-06",
+      "name": "Ostermontag"
+     },
+     {
+      "d": "2026-05-01",
+      "name": "Tag der Arbeit"
+     },
+     {
+      "d": "2026-05-14",
+      "name": "Christi Himmelfahrt"
+     },
+     {
+      "d": "2026-05-25",
+      "name": "Pfingstmontag"
+     },
+     {
+      "d": "2026-06-04",
+      "name": "Fronleichnam"
+     },
+     {
+      "d": "2026-10-03",
+      "name": "Tag der Deutschen Einheit"
+     },
+     {
+      "d": "2026-11-01",
+      "name": "Allerheiligen"
+     },
+     {
+      "d": "2026-12-25",
+      "name": "Erster Weihnachtstag"
+     },
+     {
+      "d": "2026-12-26",
+      "name": "Zweiter Weihnachtstag"
+     },
+     {
+      "d": "2027-01-01",
+      "name": "Neujahr"
+     },
+     {
+      "d": "2027-03-26",
+      "name": "Karfreitag"
+     },
+     {
+      "d": "2027-03-29",
+      "name": "Ostermontag"
+     },
+     {
+      "d": "2027-05-01",
+      "name": "Tag der Arbeit"
+     },
+     {
+      "d": "2027-05-06",
+      "name": "Christi Himmelfahrt"
+     },
+     {
+      "d": "2027-05-17",
+      "name": "Pfingstmontag"
+     },
+     {
+      "d": "2027-05-27",
+      "name": "Fronleichnam"
+     },
+     {
+      "d": "2027-10-03",
+      "name": "Tag der Deutschen Einheit"
+     },
+     {
+      "d": "2027-11-01",
+      "name": "Allerheiligen"
+     },
+     {
+      "d": "2027-12-25",
+      "name": "Erster Weihnachtstag"
+     },
+     {
+      "d": "2027-12-26",
+      "name": "Zweiter Weihnachtstag"
+     }
+    ],
+    "bl": [
+     {
+      "d": "2026-08-29",
+      "t": "18:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "Hamburger SV",
+      "done": true,
+      "tore": [
+       2,
+       0
+      ],
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-08-30",
+      "t": "17:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "FC Augsburg",
+      "done": true,
+      "tore": [
+       0,
+       3
+      ],
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-09-05",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "TSG Hoffenheim",
+      "done": true,
+      "tore": [
+       3,
+       2
+      ],
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-09-05",
+      "t": "18:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "FC Bayern München",
+      "done": true,
+      "tore": [
+       0,
+       0
+      ],
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-09-11",
+      "t": "20:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "1. FC Union Berlin",
+      "done": true,
+      "tore": [
+       3,
+       1
+      ],
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-09-12",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "SC Paderborn 07",
+      "done": true,
+      "tore": [
+       3,
+       0
+      ],
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-09-19",
+      "t": "18:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "VfB Stuttgart",
+      "done": true,
+      "tore": [
+       1,
+       0
+      ],
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-09-20",
+      "t": "17:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "SV 07 Elversberg",
+      "done": true,
+      "tore": [
+       0,
+       0
+      ],
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-10-09",
+      "t": "20:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "SV Werder Bremen",
+      "done": true,
+      "tore": [
+       2,
+       2
+      ],
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-10-11",
+      "t": "17:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "SC Freiburg",
+      "done": true,
+      "tore": [
+       1,
+       2
+      ],
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-10-17",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "1. FC Union Berlin",
+      "done": true,
+      "tore": [
+       0,
+       0
+      ],
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-10-17",
+      "t": "15:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "1. FSV Mainz 05",
+      "done": true,
+      "tore": [
+       0,
+       1
+      ],
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-10-24",
+      "t": "15:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "1. FC Köln",
+      "done": true,
+      "tore": [
+       0,
+       0
+      ],
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-10-24",
+      "t": "18:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "Eintracht Frankfurt",
+      "done": true,
+      "tore": [
+       1,
+       0
+      ],
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-10-31",
+      "t": "15:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "RB Leipzig",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-10-31",
+      "t": "18:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "FC Bayern München",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-11-07",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "SV 07 Elversberg",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-11-08",
+      "t": "19:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "TSG Hoffenheim",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-11-21",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "Borussia Mönchengladbach",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-11-21",
+      "t": "18:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "VfB Stuttgart",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-11-28",
+      "t": "15:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "SC Paderborn 07",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-11-29",
+      "t": "19:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "Bayer 04 Leverkusen",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-12-05",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "FC Schalke 04",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-12-05",
+      "t": "15:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "Borussia Dortmund",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-12-12",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "FC Augsburg",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-12-12",
+      "t": "15:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "Hamburger SV",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-12-19",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "RB Leipzig",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2026-12-19",
+      "t": "15:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "Borussia Mönchengladbach",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-01-09",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "1. FSV Mainz 05",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-01-09",
+      "t": "15:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "Eintracht Frankfurt",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-01-12",
+      "t": "20:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "1. FC Köln",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-01-12",
+      "t": "20:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "SV Werder Bremen",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-01-16",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "SC Freiburg",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-01-16",
+      "t": "15:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "Bayer 04 Leverkusen",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-01-23",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "Hamburger SV",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-01-23",
+      "t": "15:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "FC Augsburg",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-01-30",
+      "t": "15:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "FC Bayern München",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-01-30",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "TSG Hoffenheim",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-02-06",
+      "t": "15:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "1. FC Union Berlin",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-02-06",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "SC Paderborn 07",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-02-13",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "VfB Stuttgart",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-02-13",
+      "t": "15:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "SV 07 Elversberg",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-02-20",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "SV Werder Bremen",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-02-20",
+      "t": "15:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "SC Freiburg",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-02-27",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "1. FC Union Berlin",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-02-27",
+      "t": "15:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "1. FSV Mainz 05",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-03-02",
+      "t": "20:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "Eintracht Frankfurt",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-03-02",
+      "t": "20:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "1. FC Köln",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-03-06",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "FC Bayern München",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-03-06",
+      "t": "15:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "RB Leipzig",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-03-13",
+      "t": "15:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "TSG Hoffenheim",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-03-13",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "SV 07 Elversberg",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-03-20",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "Borussia Mönchengladbach",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-03-20",
+      "t": "15:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "VfB Stuttgart",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-04-03",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "Bayer 04 Leverkusen",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-04-03",
+      "t": "15:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "SC Paderborn 07",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-04-10",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "FC Schalke 04",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-04-10",
+      "t": "15:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "Borussia Dortmund",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-04-17",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "FC Augsburg",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-04-17",
+      "t": "15:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "Hamburger SV",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-04-24",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "RB Leipzig",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-04-24",
+      "t": "15:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "Borussia Mönchengladbach",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-05-08",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "1. FSV Mainz 05",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-05-08",
+      "t": "15:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "Eintracht Frankfurt",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-05-15",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": true,
+      "gegner": "1. FC Köln",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-05-15",
+      "t": "15:30",
+      "club": "S04",
+      "heim": false,
+      "gegner": "SV Werder Bremen",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-05-22",
+      "t": "15:30",
+      "club": "BVB",
+      "heim": false,
+      "gegner": "SC Freiburg",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     },
+     {
+      "d": "2027-05-22",
+      "t": "15:30",
+      "club": "S04",
+      "heim": true,
+      "gegner": "Bayer 04 Leverkusen",
+      "done": false,
+      "tore": null,
+      "liga": "bl1"
+     }
+    ],
+    "autobahn": {
+     "n": 47,
+     "baustellen": 47,
      "sperrungen": 0,
      "voll": 0,
      "liste": [
