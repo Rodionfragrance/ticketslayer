@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-09",
- "fetched": "2026-10-30",
+ "fetched": "2026-10-31",
  "week": "2026-W44",
  "yoy": {
   "food": 0.5,
@@ -22,8 +22,8 @@
  },
  "welt": {
   "kaub": {
-   "cm": 42,
-   "ts": "2026-10-30T11:00",
+   "cm": 32,
+   "ts": "2026-10-31T10:30",
    "state": "low"
   },
   "brent": {
