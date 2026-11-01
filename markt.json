@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-09",
- "fetched": "2026-10-31",
+ "fetched": "2026-11-01",
  "week": "2026-W44",
  "yoy": {
   "food": 0.5,
@@ -22,8 +22,8 @@
  },
  "welt": {
   "kaub": {
-   "cm": 32,
-   "ts": "2026-10-31T10:30",
+   "cm": 24,
+   "ts": "2026-11-01T11:15",
    "state": "low"
   },
   "brent": {
@@ -318,8 +318,11 @@
     "club": "S04",
     "heim": true,
     "gegner": "RB Leipzig",
-    "done": false,
-    "tore": null,
+    "done": true,
+    "tore": [
+     0,
+     2
+    ],
     "liga": "bl1"
    },
    {
@@ -328,8 +331,11 @@
     "club": "BVB",
     "heim": false,
     "gegner": "FC Bayern München",
-    "done": false,
-    "tore": null,
+    "done": true,
+    "tore": [
+     2,
+     2
+    ],
     "liga": "bl1"
    },
    {
@@ -961,7 +967,9 @@
    }
   ]
  },
- "errors": [],
+ "errors": [
+  "Suez: 'features'"
+ ],
  "hist": {
   "2026-W42": {
    "period": "2026-09",
