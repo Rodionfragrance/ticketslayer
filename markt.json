@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-09",
- "fetched": "2026-11-04",
+ "fetched": "2026-11-05",
  "week": "2026-W45",
  "yoy": {
   "food": 0.5,
@@ -22,14 +22,14 @@
  },
  "welt": {
   "kaub": {
-   "cm": 23,
-   "ts": "2026-11-04T11:45",
+   "cm": 20,
+   "ts": "2026-11-05T11:45",
    "state": "low"
   },
   "brent": {
-   "usd": 123.1,
-   "date": "2026-10-27",
-   "yoy": 87.9,
+   "usd": 107.03,
+   "date": "2026-11-03",
+   "yoy": 62.7,
    "src": "FRED"
   },
   "suez": {
@@ -860,11 +860,18 @@
    }
   ],
   "autobahn": {
-   "n": 46,
-   "baustellen": 46,
-   "sperrungen": 0,
+   "n": 49,
+   "baustellen": 48,
+   "sperrungen": 1,
    "voll": 0,
    "liste": [
+    {
+     "ab": "A1",
+     "typ": "closure",
+     "titel": "A1 - Fahrbahninstandsetzung - AkD 56447",
+     "ort": " AS Kamen-Zentrum (aus Richtung Kamener Kreuz) nach A1",
+     "voll": false
+    },
     {
      "ab": "A1",
      "typ": "roadworks",
@@ -898,13 +905,6 @@
      "typ": "roadworks",
      "titel": "A1 | Unna - Kamen-Zentrum",
      "ort": " Dortmund -> Münster",
-     "voll": false
-    },
-    {
-     "ab": "A1",
-     "typ": "roadworks",
-     "titel": "A1 | Kamen-Zentrum - Unna",
-     "ort": " Münster -> Dortmund",
      "voll": false
     }
    ]
