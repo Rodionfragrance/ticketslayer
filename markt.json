@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-09",
- "fetched": "2026-11-05",
+ "fetched": "2026-11-06",
  "week": "2026-W45",
  "yoy": {
   "food": 0.5,
@@ -22,8 +22,8 @@
  },
  "welt": {
   "kaub": {
-   "cm": 20,
-   "ts": "2026-11-05T11:45",
+   "cm": 23,
+   "ts": "2026-11-06T11:45",
    "state": "low"
   },
   "brent": {
@@ -399,7 +399,7 @@
     "liga": "bl1"
    },
    {
-    "d": "2026-12-05",
+    "d": "2026-12-06",
     "t": "15:30",
     "club": "BVB",
     "heim": false,
@@ -409,11 +409,21 @@
     "liga": "bl1"
    },
    {
-    "d": "2026-12-05",
+    "d": "2026-12-06",
     "t": "15:30",
     "club": "S04",
     "heim": true,
     "gegner": "Borussia Dortmund",
+    "done": false,
+    "tore": null,
+    "liga": "bl1"
+   },
+   {
+    "d": "2026-12-11",
+    "t": "20:30",
+    "club": "S04",
+    "heim": false,
+    "gegner": "Hamburger SV",
     "done": false,
     "tore": null,
     "liga": "bl1"
@@ -429,18 +439,8 @@
     "liga": "bl1"
    },
    {
-    "d": "2026-12-12",
-    "t": "15:30",
-    "club": "S04",
-    "heim": false,
-    "gegner": "Hamburger SV",
-    "done": false,
-    "tore": null,
-    "liga": "bl1"
-   },
-   {
     "d": "2026-12-19",
-    "t": "15:30",
+    "t": "18:30",
     "club": "BVB",
     "heim": false,
     "gegner": "RB Leipzig",
@@ -449,8 +449,8 @@
     "liga": "bl1"
    },
    {
-    "d": "2026-12-19",
-    "t": "15:30",
+    "d": "2026-12-20",
+    "t": "19:30",
     "club": "S04",
     "heim": true,
     "gegner": "Borussia Mönchengladbach",
@@ -459,8 +459,8 @@
     "liga": "bl1"
    },
    {
-    "d": "2027-01-09",
-    "t": "15:30",
+    "d": "2027-01-08",
+    "t": "20:30",
     "club": "BVB",
     "heim": true,
     "gegner": "1. FSV Mainz 05",
@@ -489,7 +489,7 @@
     "liga": "bl1"
    },
    {
-    "d": "2027-01-12",
+    "d": "2027-01-13",
     "t": "20:30",
     "club": "S04",
     "heim": true,
@@ -509,8 +509,8 @@
     "liga": "bl1"
    },
    {
-    "d": "2027-01-16",
-    "t": "15:30",
+    "d": "2027-01-17",
+    "t": "17:30",
     "club": "S04",
     "heim": false,
     "gegner": "Bayer 04 Leverkusen",
@@ -521,19 +521,19 @@
    {
     "d": "2027-01-23",
     "t": "15:30",
-    "club": "BVB",
-    "heim": false,
-    "gegner": "Hamburger SV",
+    "club": "S04",
+    "heim": true,
+    "gegner": "FC Augsburg",
     "done": false,
     "tore": null,
     "liga": "bl1"
    },
    {
     "d": "2027-01-23",
-    "t": "15:30",
-    "club": "S04",
-    "heim": true,
-    "gegner": "FC Augsburg",
+    "t": "18:30",
+    "club": "BVB",
+    "heim": false,
+    "gegner": "Hamburger SV",
     "done": false,
     "tore": null,
     "liga": "bl1"
@@ -860,18 +860,11 @@
    }
   ],
   "autobahn": {
-   "n": 49,
-   "baustellen": 48,
-   "sperrungen": 1,
+   "n": 47,
+   "baustellen": 47,
+   "sperrungen": 0,
    "voll": 0,
    "liste": [
-    {
-     "ab": "A1",
-     "typ": "closure",
-     "titel": "A1 - Fahrbahninstandsetzung - AkD 56447",
-     "ort": " AS Kamen-Zentrum (aus Richtung Kamener Kreuz) nach A1",
-     "voll": false
-    },
     {
      "ab": "A1",
      "typ": "roadworks",
@@ -905,6 +898,13 @@
      "typ": "roadworks",
      "titel": "A1 | Unna - Kamen-Zentrum",
      "ort": " Dortmund -> Münster",
+     "voll": false
+    },
+    {
+     "ab": "A1",
+     "typ": "roadworks",
+     "titel": "A1 | Kamen-Zentrum - Unna",
+     "ort": " Münster -> Dortmund",
      "voll": false
     }
    ]
