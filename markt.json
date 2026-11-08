@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-09",
- "fetched": "2026-11-07",
+ "fetched": "2026-11-08",
  "week": "2026-W45",
  "yoy": {
   "food": 0.5,
@@ -22,8 +22,8 @@
  },
  "welt": {
   "kaub": {
-   "cm": 17,
-   "ts": "2026-11-07T11:00",
+   "cm": 12,
+   "ts": "2026-11-08T11:15",
    "state": "low"
   },
   "brent": {
@@ -33,9 +33,9 @@
    "src": "FRED"
   },
   "suez": {
-   "avg7": 41.3,
+   "avg7": 43.0,
    "base": 72,
-   "date": "2026-10-25"
+   "date": "2026-11-01"
   }
  },
  "kal": {
@@ -344,8 +344,11 @@
     "club": "BVB",
     "heim": true,
     "gegner": "SV 07 Elversberg",
-    "done": false,
-    "tore": null,
+    "done": true,
+    "tore": [
+     2,
+     1
+    ],
     "liga": "bl1"
    },
    {
@@ -860,8 +863,8 @@
    }
   ],
   "autobahn": {
-   "n": 43,
-   "baustellen": 42,
+   "n": 39,
+   "baustellen": 38,
    "sperrungen": 1,
    "voll": 0,
    "liste": [
