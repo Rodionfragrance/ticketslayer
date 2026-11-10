@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-09",
- "fetched": "2026-11-09",
+ "fetched": "2026-11-10",
  "week": "2026-W46",
  "yoy": {
   "food": 0.5,
@@ -22,8 +22,8 @@
  },
  "welt": {
   "kaub": {
-   "cm": 12,
-   "ts": "2026-11-09T12:30",
+   "cm": 13,
+   "ts": "2026-11-10T12:00",
    "state": "low"
   },
   "brent": {
@@ -866,9 +866,9 @@
    }
   ],
   "autobahn": {
-   "n": 42,
-   "baustellen": 41,
-   "sperrungen": 1,
+   "n": 45,
+   "baustellen": 43,
+   "sperrungen": 2,
    "voll": 0,
    "liste": [
     {
@@ -876,6 +876,13 @@
      "typ": "closure",
      "titel": "A1 - Fahrbahninstandsetzung - AkD 56447",
      "ort": " AS Kamen-Zentrum (aus Richtung Kamener Kreuz) nach A1",
+     "voll": false
+    },
+    {
+     "ab": "A1",
+     "typ": "closure",
+     "titel": "A1 - Einfahrt gesperrt - AkD 577065",
+     "ort": " AS Kamen-Zentrum (aus Richtung Kamener Kreuz)",
      "voll": false
     },
     {
@@ -903,13 +910,6 @@
      "ab": "A1",
      "typ": "roadworks",
      "titel": "A1 | Dortmund/Unna - Kamen-Zentrum",
-     "ort": " Dortmund -> Münster",
-     "voll": false
-    },
-    {
-     "ab": "A1",
-     "typ": "roadworks",
-     "titel": "A1 | Unna - Kamen-Zentrum",
      "ort": " Dortmund -> Münster",
      "voll": false
     }
@@ -973,7 +973,9 @@
    }
   ]
  },
- "errors": [],
+ "errors": [
+  "Suez: 'features'"
+ ],
  "hist": {
   "2026-W42": {
    "period": "2026-09",
