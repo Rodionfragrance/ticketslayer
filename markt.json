@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-09",
- "fetched": "2026-11-13",
+ "fetched": "2026-11-14",
  "week": "2026-W46",
  "yoy": {
   "food": 0.5,
@@ -22,8 +22,8 @@
  },
  "welt": {
   "kaub": {
-   "cm": 66,
-   "ts": "2026-11-13T11:45",
+   "cm": 71,
+   "ts": "2026-11-14T11:15",
    "state": "normal"
   },
   "brent": {
@@ -866,9 +866,9 @@
    }
   ],
   "autobahn": {
-   "n": 51,
-   "baustellen": 40,
-   "sperrungen": 11,
+   "n": 49,
+   "baustellen": 39,
+   "sperrungen": 10,
    "voll": 0,
    "liste": [
     {
