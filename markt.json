@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-09",
- "fetched": "2026-11-16",
+ "fetched": "2026-11-17",
  "week": "2026-W47",
  "yoy": {
   "food": 0.5,
@@ -22,9 +22,9 @@
  },
  "welt": {
   "kaub": {
-   "cm": 61,
-   "ts": "2026-11-16T12:15",
-   "state": "low"
+   "cm": 68,
+   "ts": "2026-11-17T12:45",
+   "state": "normal"
   },
   "brent": {
    "usd": 92.14,
@@ -866,9 +866,9 @@
    }
   ],
   "autobahn": {
-   "n": 50,
-   "baustellen": 39,
-   "sperrungen": 11,
+   "n": 58,
+   "baustellen": 43,
+   "sperrungen": 15,
    "voll": 0,
    "liste": [
     {
@@ -883,6 +883,13 @@
      "typ": "closure",
      "titel": "A1 | Kamener Kreuz - Dortmund/Unna",
      "ort": " Münster -> Dortmund",
+     "voll": false
+    },
+    {
+     "ab": "A1",
+     "typ": "closure",
+     "titel": "A1 - Fahrbahninstandsetzung - AkD 59211",
+     "ort": " AK Kamener Kreuz (aus Richtung Kolberg)",
      "voll": false
     },
     {
@@ -904,13 +911,6 @@
      "typ": "closure",
      "titel": "A1 - Fahrbahninstandsetzung - AkD 56447",
      "ort": " AS Kamen-Zentrum (aus Richtung Kamener Kreuz) nach A1",
-     "voll": false
-    },
-    {
-     "ab": "A1",
-     "typ": "closure",
-     "titel": "A1 - Ersatzneubau BW Nordlippestraße - AlD 4481",
-     "ort": " AS Hamm-Bockum/Werne (aus Richtung An der Landwehr)",
      "voll": false
     }
    ]
@@ -973,7 +973,9 @@
    }
   ]
  },
- "errors": [],
+ "errors": [
+  "Suez: 'features'"
+ ],
  "hist": {
   "2026-W42": {
    "period": "2026-09",
