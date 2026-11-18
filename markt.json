@@ -1,29 +1,29 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
- "period": "2026-09",
- "fetched": "2026-11-17",
+ "period": "2026-10",
+ "fetched": "2026-11-18",
  "week": "2026-W47",
  "yoy": {
-  "food": 0.5,
-  "poultry": 3.6,
-  "pork": -3.2,
-  "beef": 3.7,
-  "meatprep": -0.4,
-  "oils": -14.5,
-  "veg": 9.0,
-  "bread": 1.9,
-  "soft": 2.0,
-  "beer": 2.8,
-  "coffee": -4.2,
-  "fuel": 36.8,
-  "diesel": 47.7,
-  "elec": -5.5,
-  "gas": -3.4
+  "food": 0.6,
+  "poultry": 3.0,
+  "pork": -4.5,
+  "beef": 2.0,
+  "meatprep": -0.6,
+  "oils": -9.3,
+  "veg": 8.8,
+  "bread": 1.5,
+  "soft": -1.1,
+  "beer": 3.8,
+  "coffee": -4.7,
+  "fuel": 28.6,
+  "diesel": 39.6,
+  "elec": -5.2,
+  "gas": -1.1
  },
  "welt": {
   "kaub": {
-   "cm": 68,
-   "ts": "2026-11-17T12:45",
+   "cm": 98,
+   "ts": "2026-11-18T12:30",
    "state": "normal"
   },
   "brent": {
@@ -33,9 +33,9 @@
    "src": "FRED"
   },
   "suez": {
-   "avg7": 44.4,
+   "avg7": 46.1,
    "base": 72,
-   "date": "2026-11-08"
+   "date": "2026-11-15"
   }
  },
  "kal": {
@@ -866,9 +866,9 @@
    }
   ],
   "autobahn": {
-   "n": 58,
-   "baustellen": 43,
-   "sperrungen": 15,
+   "n": 61,
+   "baustellen": 45,
+   "sperrungen": 16,
    "voll": 0,
    "liste": [
     {
@@ -883,6 +883,13 @@
      "typ": "closure",
      "titel": "A1 | Kamener Kreuz - Dortmund/Unna",
      "ort": " Münster -> Dortmund",
+     "voll": false
+    },
+    {
+     "ab": "A1",
+     "typ": "closure",
+     "titel": "A1 - Fahrbahninstandsetzung - AkD 59211",
+     "ort": " AK Kamener Kreuz (aus Richtung Kamen/Bergkamen)",
      "voll": false
     },
     {
@@ -904,13 +911,6 @@
      "typ": "closure",
      "titel": "A1 - Ersatzneubau BW B1 über A1 und BW Unnaer Str. - AlD 4622",
      "ort": " AK Kamener Kreuz (aus Richtung Kolberg)",
-     "voll": false
-    },
-    {
-     "ab": "A1",
-     "typ": "closure",
-     "titel": "A1 - Fahrbahninstandsetzung - AkD 56447",
-     "ort": " AS Kamen-Zentrum (aus Richtung Kamener Kreuz) nach A1",
      "voll": false
     }
    ]
@@ -973,9 +973,7 @@
    }
   ]
  },
- "errors": [
-  "Suez: 'features'"
- ],
+ "errors": [],
  "hist": {
   "2026-W42": {
    "period": "2026-09",
