@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-10",
- "fetched": "2026-11-18",
+ "fetched": "2026-11-19",
  "week": "2026-W47",
  "yoy": {
   "food": 0.6,
@@ -22,14 +22,14 @@
  },
  "welt": {
   "kaub": {
-   "cm": 98,
-   "ts": "2026-11-18T12:30",
+   "cm": 116,
+   "ts": "2026-11-19T12:30",
    "state": "normal"
   },
   "brent": {
-   "usd": 92.14,
-   "date": "2026-11-11",
-   "yoy": 44.3,
+   "usd": 92.94,
+   "date": "2026-11-17",
+   "yoy": 47.2,
    "src": "FRED"
   },
   "suez": {
@@ -866,9 +866,9 @@
    }
   ],
   "autobahn": {
-   "n": 61,
-   "baustellen": 45,
-   "sperrungen": 16,
+   "n": 62,
+   "baustellen": 49,
+   "sperrungen": 13,
    "voll": 0,
    "liste": [
     {
@@ -888,20 +888,6 @@
     {
      "ab": "A1",
      "typ": "closure",
-     "titel": "A1 - Fahrbahninstandsetzung - AkD 59211",
-     "ort": " AK Kamener Kreuz (aus Richtung Kamen/Bergkamen)",
-     "voll": false
-    },
-    {
-     "ab": "A1",
-     "typ": "closure",
-     "titel": "A1 - Fahrbahninstandsetzung - AkD 59211",
-     "ort": " AK Kamener Kreuz (aus Richtung Kolberg)",
-     "voll": false
-    },
-    {
-     "ab": "A1",
-     "typ": "closure",
      "titel": "A1 - Ersatzneubau BW B1 über A1 und BW Unnaer Str. - AlD 4622",
      "ort": " AK Dortmund/Unna (aus Richtung Unna-Ost)",
      "voll": false
@@ -911,6 +897,20 @@
      "typ": "closure",
      "titel": "A1 - Ersatzneubau BW B1 über A1 und BW Unnaer Str. - AlD 4622",
      "ort": " AK Kamener Kreuz (aus Richtung Kolberg)",
+     "voll": false
+    },
+    {
+     "ab": "A1",
+     "typ": "closure",
+     "titel": "A1 - Fahrbahninstandsetzung - AkD 56447",
+     "ort": " AS Kamen-Zentrum (aus Richtung Kamener Kreuz) nach A1",
+     "voll": false
+    },
+    {
+     "ab": "A1",
+     "typ": "closure",
+     "titel": "A1 - Ersatzneubau BW Nordlippestraße - AlD 4481",
+     "ort": " AS Hamm-Bockum/Werne (aus Richtung An der Landwehr)",
      "voll": false
     }
    ]
