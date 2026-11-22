@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-10",
- "fetched": "2026-11-21",
+ "fetched": "2026-11-22",
  "week": "2026-W47",
  "yoy": {
   "food": 0.6,
@@ -22,8 +22,8 @@
  },
  "welt": {
   "kaub": {
-   "cm": 182,
-   "ts": "2026-11-21T12:00",
+   "cm": 215,
+   "ts": "2026-11-22T12:15",
    "state": "normal"
   },
   "brent": {
@@ -370,8 +370,11 @@
     "club": "BVB",
     "heim": false,
     "gegner": "Borussia Mönchengladbach",
-    "done": false,
-    "tore": null,
+    "done": true,
+    "tore": [
+     1,
+     0
+    ],
     "liga": "bl1"
    },
    {
@@ -380,8 +383,11 @@
     "club": "S04",
     "heim": true,
     "gegner": "VfB Stuttgart",
-    "done": false,
-    "tore": null,
+    "done": true,
+    "tore": [
+     0,
+     0
+    ],
     "liga": "bl1"
    },
    {
@@ -866,8 +872,8 @@
    }
   ],
   "autobahn": {
-   "n": 56,
-   "baustellen": 42,
+   "n": 55,
+   "baustellen": 41,
    "sperrungen": 14,
    "voll": 0,
    "liste": [
