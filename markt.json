@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-10",
- "fetched": "2026-11-24",
+ "fetched": "2026-11-25",
  "week": "2026-W48",
  "yoy": {
   "food": 0.6,
@@ -22,8 +22,8 @@
  },
  "welt": {
   "kaub": {
-   "cm": 221,
-   "ts": "2026-11-24T14:30",
+   "cm": 240,
+   "ts": "2026-11-25T13:45",
    "state": "normal"
   },
   "brent": {
@@ -33,9 +33,9 @@
    "src": "FRED"
   },
   "suez": {
-   "avg7": 46.1,
+   "avg7": 45.6,
    "base": 72,
-   "date": "2026-11-15"
+   "date": "2026-11-22"
   }
  },
  "kal": {
@@ -872,9 +872,9 @@
    }
   ],
   "autobahn": {
-   "n": 55,
-   "baustellen": 50,
-   "sperrungen": 5,
+   "n": 49,
+   "baustellen": 46,
+   "sperrungen": 3,
    "voll": 0,
    "liste": [
     {
@@ -892,20 +892,6 @@
      "voll": false
     },
     {
-     "ab": "A44",
-     "typ": "closure",
-     "titel": "A44 | Werl - Soest",
-     "ort": " Dortmund -> Kassel",
-     "voll": false
-    },
-    {
-     "ab": "A44",
-     "typ": "closure",
-     "titel": "A44 - Fahrbahninstandsetzung - AkD 58356",
-     "ort": " AS Werl-Süd (aus Richtung Werl)",
-     "voll": false
-    },
-    {
      "ab": "A445",
      "typ": "closure",
      "titel": "A445 - Erneuerung der Fahrbahn - AlD 59810",
@@ -917,6 +903,20 @@
      "typ": "roadworks",
      "titel": "A1 | Lichtendorf - Dortmund/Unna",
      "ort": " Köln -> Münster",
+     "voll": false
+    },
+    {
+     "ab": "A1",
+     "typ": "roadworks",
+     "titel": "A1 | Lichtendorf - Unna",
+     "ort": " Köln -> Münster",
+     "voll": false
+    },
+    {
+     "ab": "A1",
+     "typ": "roadworks",
+     "titel": "A1 | Dortmund/Unna - Lichtendorf",
+     "ort": " Münster -> Köln",
      "voll": false
     }
    ]
@@ -979,9 +979,7 @@
    }
   ]
  },
- "errors": [
-  "Suez: 'features'"
- ],
+ "errors": [],
  "hist": {
   "2026-W42": {
    "period": "2026-09",
