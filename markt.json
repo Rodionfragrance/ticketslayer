@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-10",
- "fetched": "2026-11-26",
+ "fetched": "2026-11-27",
  "week": "2026-W48",
  "yoy": {
   "food": 0.6,
@@ -22,8 +22,8 @@
  },
  "welt": {
   "kaub": {
-   "cm": 225,
-   "ts": "2026-11-26T13:30",
+   "cm": 194,
+   "ts": "2026-11-27T13:15",
    "state": "normal"
   },
   "brent": {
@@ -872,16 +872,23 @@
    }
   ],
   "autobahn": {
-   "n": 48,
-   "baustellen": 46,
-   "sperrungen": 2,
+   "n": 50,
+   "baustellen": 47,
+   "sperrungen": 3,
    "voll": 0,
    "liste": [
     {
-     "ab": "A1",
+     "ab": "A2",
      "typ": "closure",
-     "titel": "A1 - Ersatzneubau BW Nordlippestraße - AlD 4481",
-     "ort": " AS Hamm-Bockum/Werne (aus Richtung An der Landwehr)",
+     "titel": "A2 - Fahrbahninstandsetzung - AkD 2026-61535",
+     "ort": " AS Hamm (aus Richtung Rhynern) nach A2",
+     "voll": false
+    },
+    {
+     "ab": "A2",
+     "typ": "closure",
+     "titel": "A2 - Fahrbahninstandsetzung - AkD 2026-61535",
+     "ort": " AS Hamm (aus Richtung Rhynern)",
      "voll": false
     },
     {
@@ -910,13 +917,6 @@
      "typ": "roadworks",
      "titel": "A1 | Dortmund/Unna - Lichtendorf",
      "ort": " Münster -> Köln",
-     "voll": false
-    },
-    {
-     "ab": "A1",
-     "typ": "roadworks",
-     "titel": "A1 | Dortmund/Unna - Kamen-Zentrum",
-     "ort": " Dortmund -> Münster",
      "voll": false
     }
    ]
