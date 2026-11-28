@@ -1,7 +1,7 @@
 {
  "src": "Eurostat HICP Deutschland (prc_hicp_minr, Veränderung zum Vorjahresmonat)",
  "period": "2026-10",
- "fetched": "2026-11-27",
+ "fetched": "2026-11-28",
  "week": "2026-W48",
  "yoy": {
   "food": 0.6,
@@ -22,15 +22,15 @@
  },
  "welt": {
   "kaub": {
-   "cm": 194,
-   "ts": "2026-11-27T13:15",
+   "cm": 177,
+   "ts": "2026-11-28T12:45",
    "state": "normal"
   },
   "brent": {
-   "usd": 91.8,
-   "date": "2026-11-24",
-   "yoy": 41.6,
-   "src": "FRED"
+   "usd": 95.44,
+   "date": "2026-11-27",
+   "yoy": 51.2,
+   "src": "Yahoo BZ=F"
   },
   "suez": {
    "avg7": 45.6,
@@ -872,8 +872,8 @@
    }
   ],
   "autobahn": {
-   "n": 50,
-   "baustellen": 47,
+   "n": 48,
+   "baustellen": 45,
    "sperrungen": 3,
    "voll": 0,
    "liste": [
@@ -979,7 +979,9 @@
    }
   ]
  },
- "errors": [],
+ "errors": [
+  "Brent FRED: The read operation timed out"
+ ],
  "hist": {
   "2026-W42": {
    "period": "2026-09",
